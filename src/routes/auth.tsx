@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({ mode: s.mode === "login" ? ("login" as const) : ("signup" as const) }),
+  validateSearch: (s: Record<string, unknown>): { mode?: "login" | "signup" } => (s['mode'] === "login" || s['mode'] === "signup" ? { mode: s['mode'] } : {}),
   head: () => ({
     meta: [
       { title: "Essayer HostBuddy gratuitement" },
@@ -32,7 +32,7 @@ function AuthPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
-  const isSignup = mode === "signup";
+  const isSignup = mode !== "login";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -15,7 +15,7 @@ const fail = (e: unknown, msg = "Votre connexion a été interrompue. Vos inform
 
 export async function ensureOrganization() {
   const { data: u } = await supabase.auth.getUser();
-  const first = (u.user?.user_metadata?.first_name as string | undefined) ?? "";
+  const first = (u.user?.user_metadata?.['first_name'] as string | undefined) ?? "";
   const { data: orgId, error } = await supabase.rpc("ensure_my_organization", { _first_name: first });
   if (error || !orgId) return fail(error);
   const { data: org, error: e2 } = await supabase.from("organizations").select("id,name,trial_ends_at").eq("id", orgId).single();

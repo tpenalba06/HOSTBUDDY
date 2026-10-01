@@ -10,7 +10,7 @@ const propertyQuery = (id: string) => queryOptions({ queryKey: ["property", id],
 
 export const Route = createFileRoute("/_authenticated/app/p/$id")({
   validateSearch: (s: Record<string, unknown>): { step?: Step } =>
-    s.step === "complete" || s.step === "ready" || s.step === "review" ? { step: s.step } : {},
+    s['step'] === "complete" || s['step'] === "ready" || s['step'] === "review" ? { step: s['step'] } : {},
   loader: async ({ context, params }) => {
     const d = await context.queryClient.ensureQueryData(propertyQuery(params.id));
     if (!d) throw notFound();

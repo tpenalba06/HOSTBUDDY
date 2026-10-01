@@ -121,3 +121,10 @@
   @keyframes float-soft { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .motion-float { animation: float-soft 6s ease-in-out infinite; }
 }
+
+.demo-container { container-type: inline-size; }
+@container (max-width: 460px) {
+  .guide-editor-compact .\@sm\:grid-cols-2, .guide-editor-compact .\@sm\:grid-cols-3 { grid-template-columns: minmax(0, 1fr); }
+  .guide-editor-compact h2 { font-size: 1.65rem; }
+  .guide-editor-compact button, .guide-editor-compact label, .guide-editor-compact p { overflow-wrap: normal; word-break: normal; }
+}

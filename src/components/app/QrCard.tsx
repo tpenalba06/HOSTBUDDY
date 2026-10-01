@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
 export function guideUrl(slug: string) {
+  if (typeof window === "undefined") return `/l/${slug}`;
   return new URL(`/l/${slug}`, window.location.origin).toString();
 }
 
 export function QrCard({ slug, name }: { slug: string; name: string }) {
-  const url = guideUrl(slug);
+  const [url, setUrl] = useState(`/l/${slug}`);
   const [png, setPng] = useState<string | null>(null);
+  useEffect(() => setUrl(guideUrl(slug)), [slug]);
   useEffect(() => {
     QRCode.toDataURL(url, { width: 1024, margin: 2, errorCorrectionLevel: "M" }).then(setPng).catch(() => setPng(null));
   }, [url]);

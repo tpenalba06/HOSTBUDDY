@@ -20,7 +20,7 @@ export async function ensureOrganization() {
   const first = (u.user?.user_metadata?.['first_name'] as string | undefined) ?? "";
   const { data: orgId, error } = await supabase.rpc("ensure_my_organization", { _first_name: first });
   if (error || !orgId) return fail(error);
-  const { data: org, error: e2 } = await supabase.from("organizations").select("id,name,trial_ends_at").eq("id", orgId).single();
+  const { data: org, error: e2 } = await supabase.from("organizations").select("id,name,trial_ends_at,preferred_locale,operator_type").eq("id", orgId).single();
   if (e2) return fail(e2);
   return { ...org, firstName: first };
 }

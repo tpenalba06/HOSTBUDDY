@@ -141,6 +141,12 @@ export async function saveMessagingSetting(propertyId: string, isEnabled: boolea
   if (error) fail(error);
 }
 
+export async function reorderSectionMedia(items: SectionMedia[]) {
+  const results = await Promise.all(items.map((item, index) => supabase.from("section_media").update({ sort_order: index }).eq("id", item.id)));
+  const error = results.find((result) => result.error)?.error;
+  if (error) fail(error);
+}
+
 export async function saveReviewConfiguration(propertyId: string, settings: { title: string; message: string; isEnabled: boolean }, destinations: { label: string; url: string }[]) {
   const safeDestinations = destinations.filter((d) => d.label.trim() && /^https:\/\//i.test(d.url.trim())).slice(0, 5);
   const { error } = await supabase.from("property_review_settings").upsert({

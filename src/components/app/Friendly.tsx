@@ -1,7 +1,9 @@
 import { useRouter } from "@tanstack/react-router";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
+import { useI18n } from "@/lib/i18n";
 
 export function FriendlyError({ message }: { message?: string }) {
+  const { t } = useI18n();
   const router = useRouter();
   const { reset } = useQueryErrorResetBoundary();
   return (
@@ -9,7 +11,7 @@ export function FriendlyError({ message }: { message?: string }) {
       <p className="text-4xl">🌥️</p>
       <h2 className="mt-2 text-2xl font-semibold">Un petit souci de connexion</h2>
       <p className="mt-2">{message ?? "Votre connexion a été interrompue. Vos informations déjà enregistrées sont conservées."}</p>
-      <button className="btn btn-primary mt-6 w-full" onClick={() => { reset(); router.invalidate(); }}>Réessayer</button>
+      <button className="btn btn-primary mt-6 w-full" onClick={() => { reset(); router.invalidate(); }}>{t("common.retry")}</button>
     </div>
   );
 }

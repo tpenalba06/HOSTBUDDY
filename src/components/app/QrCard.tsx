@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { useI18n } from "@/lib/i18n";
 
 export function guideUrl(slug: string) {
   if (typeof window === "undefined") return `/l/${slug}`;
@@ -7,6 +8,7 @@ export function guideUrl(slug: string) {
 }
 
 export function QrCard({ slug, name }: { slug: string; name: string }) {
+  const { t } = useI18n();
   const [url, setUrl] = useState(`/l/${slug}`);
   const [png, setPng] = useState<string | null>(null);
   useEffect(() => setUrl(guideUrl(slug)), [slug]);
@@ -20,7 +22,7 @@ export function QrCard({ slug, name }: { slug: string; name: string }) {
       </div>
       <p className="mt-3 break-all text-sm text-muted-foreground">{url}</p>
       {png && (
-        <a className="btn btn-secondary mt-4" href={png} download={`qr-${slug}.png`}>Télécharger le QR</a>
+        <a className="btn btn-secondary mt-4" href={png} download={`qr-${slug}.png`}>{t("common.save")} QR</a>
       )}
     </div>
   );

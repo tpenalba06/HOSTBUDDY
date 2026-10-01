@@ -6,6 +6,7 @@ import { createPropertyFromExtraction, finishImportRun, startImportRun } from "@
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
 import { useOrg } from "@/components/app/useOrg";
 import { friendlyMessage } from "@/components/app/Friendly";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/app/import-url")({ component: ImportUrl });
 
@@ -18,6 +19,7 @@ const STAGES = [
 ];
 
 function ImportUrl() {
+  const { t } = useI18n();
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -68,7 +70,7 @@ function ImportUrl() {
 
   return (
     <div className="mt-6">
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← Retour</Link>
+      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("common.back")}</Link>
       <h1 className="text-3xl font-semibold">Collez simplement le lien de votre logement</h1>
       {stage !== null ? <ImportProgress stages={STAGES} current={stage} /> : (
         <div className="mt-6 space-y-4">

@@ -14,16 +14,296 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      guide_sections: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_visible: boolean
+          property_id: string
+          section_key: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          property_id: string
+          section_key: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          property_id?: string
+          section_key?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_sections_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          organization_id: string
+          property_id: string | null
+          raw_text: string | null
+          source_type: string
+          source_url: string | null
+          status: Database["public"]["Enums"]["import_status"]
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          property_id?: string | null
+          raw_text?: string | null
+          source_type: string
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["import_status"]
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          property_id?: string | null
+          raw_text?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["import_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_runs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          organization_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          branding: Json
+          created_at: string
+          id: string
+          name: string
+          trial_ends_at: string
+          trial_started_at: string
+        }
+        Insert: {
+          branding?: Json
+          created_at?: string
+          id?: string
+          name: string
+          trial_ends_at?: string
+          trial_started_at?: string
+        }
+        Update: {
+          branding?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          trial_ends_at?: string
+          trial_started_at?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          published_at: string | null
+          slug: string
+          source_type: string | null
+          source_url: string | null
+          status: Database["public"]["Enums"]["property_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id: string
+          published_at?: string | null
+          slug: string
+          source_type?: string | null
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["property_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          published_at?: string | null
+          slug?: string
+          source_type?: string | null
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["property_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_fields: {
+        Row: {
+          category: string
+          confidence: number
+          essential: boolean
+          id: string
+          imported_at: string | null
+          key: string
+          label: string
+          manually_overridden: boolean
+          manually_verified: boolean
+          property_id: string
+          question: string | null
+          raw_value: string | null
+          source_type: string | null
+          source_url: string | null
+          status: Database["public"]["Enums"]["field_status"]
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          category: string
+          confidence?: number
+          essential?: boolean
+          id?: string
+          imported_at?: string | null
+          key: string
+          label: string
+          manually_overridden?: boolean
+          manually_verified?: boolean
+          property_id: string
+          question?: string | null
+          raw_value?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["field_status"]
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          category?: string
+          confidence?: number
+          essential?: boolean
+          id?: string
+          imported_at?: string | null
+          key?: string
+          label?: string
+          manually_overridden?: boolean
+          manually_verified?: boolean
+          property_id?: string
+          question?: string | null
+          raw_value?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["field_status"]
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_fields_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_property: { Args: { _property: string }; Returns: boolean }
+      ensure_my_organization: { Args: { _first_name: string }; Returns: string }
+      get_public_guide: { Args: { _slug: string }; Returns: Json }
+      is_org_admin: { Args: { _org: string }; Returns: boolean }
+      is_org_member: { Args: { _org: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      field_status: "found" | "to_verify" | "missing"
+      import_status:
+        | "pending"
+        | "running"
+        | "succeeded"
+        | "insufficient"
+        | "failed"
+      org_role: "owner" | "admin" | "member"
+      property_status: "draft" | "published" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +430,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      field_status: ["found", "to_verify", "missing"],
+      import_status: [
+        "pending",
+        "running",
+        "succeeded",
+        "insufficient",
+        "failed",
+      ],
+      org_role: ["owner", "admin", "member"],
+      property_status: ["draft", "published", "archived"],
+    },
   },
 } as const

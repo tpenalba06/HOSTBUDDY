@@ -4,7 +4,7 @@ import type { ExtractedField, ExtractionResult, Extractor } from "./types";
 import { FIELD_DEFS } from "./fields";
 
 const RULES: Record<string, RegExp> = {
-  address: /\b(adresse|situ[ée]e? (au|à|rue)|\d{1,4},? (rue|avenue|av\.|bd|boulevard|chemin|impasse|route|allée|place)\b|\b\d{5}\b)/i,
+  address: /\b(adresse\b(?! ?s)|situ[ée]e? (au|à|rue)|\d{1,4},? (rue|avenue|av\.|bd|boulevard|chemin|impasse|route|allée|place)\b|\b\d{5}\b)/i,
   arrival: /(arriv[ée]e?|check.?in|à partir de \d{1,2}\s?h|accueil)/i,
   access: /(cl[ée]s?\b|bo[iî]te [àa] cl|code (d'acc[eè]s|portail|porte|bo[iî]te)|digicode|portail|serrure|badge|keynest|cadenas)/i,
   parking: /(parking|se garer|garez|stationn|place de park|garage|voiture)/i,
@@ -21,7 +21,7 @@ const RULES: Record<string, RegExp> = {
   emergency: /(urgence|pompiers|samu|\b15\b|\b18\b|\b112\b|m[ée]decin|pharmacie de garde|h[oô]pital)/i,
   recommendations: /(restaurant|boulangerie|march[ée]|plage|recommand|on adore|nos adresses|supermarch[ée]|caf[ée] |bar |balade|randonn)/i,
   services: /(petit.?d[ée]jeuner|m[ée]nage|massage|transfert|navette|location de v[ée]lo|chef [àa] domicile|draps|serviettes en option)/i,
-  description: /(bienvenue|magnifique|charmant|lumineux|vue (mer|sur)|au c[œo]eur de|maison|villa|appartement)/i,
+  description: /(bienvenue|magnifique|charmant|lumineux|vue (mer|sur)|au c[œo]eur de|situ[ée]e? [àa])/i,
 };
 
 const AMBIGUOUS = /(\?|peut.?[êe]tre|environ|à confirmer|je crois|normalement|sauf si|à v[ée]rifier|xx+)/i;
@@ -36,13 +36,15 @@ export function splitSnippets(text: string): string[] {
 
 function guessName(snippets: string[]): string | null {
   const first = snippets[0];
-  if (!first || first.length > 60 || /[.:]$/.test(first)) return null;
+  if (!first || first.length > 60 || /[.:!?]$/.test(first)) return null;
   const hit = Object.values(RULES).some((r) => r.test(first)) && !/(villa|maison|appartement|chalet|studio|gîte|loft)/i.test(first);
   return hit ? null : first;
 }
 
 export function extractFromText(text: string, baseConfidence = 0.85): ExtractionResult {
-  const snippets = splitSnippets(text);
+  const all = splitSnippets(text);
+  const name = guessName(all);
+  const snippets = name ? all.slice(1) : all;
   const fields: ExtractedField[] = FIELD_DEFS.map((def) => {
     const rule = RULES[def.key];
     const hits = rule ? snippets.filter((s) => rule.test(s)) : [];
@@ -53,7 +55,7 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
     const confidence = ambiguous ? Math.min(0.5, baseConfidence) : baseConfidence;
     return { key: def.key, value: joined, status: confidence >= 0.7 ? "found" : "to_verify", rawValue: joined, confidence };
   });
-  return { propertyName: guessName(snippets), fields };
+  return { propertyName: name, fields };
 }
 
 export const rulesExtractor: Extractor = {

@@ -32,7 +32,7 @@ function AppLayout() {
         <div className="flex items-center gap-2">
           <span className="hidden text-muted-foreground md:inline">{org.name}</span>
           <LanguageSelect compact />
-          <button className="min-h-12 px-2 font-medium text-muted-foreground underline-offset-4 hover:underline" onClick={signOut}>{t("app.signOut")}</button>
+          <button className="min-h-12 whitespace-nowrap px-1 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline" onClick={signOut}>{t("app.signOut")}</button>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-5 pb-16"><Outlet /></main>

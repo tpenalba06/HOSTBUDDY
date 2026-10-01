@@ -25,11 +25,7 @@ export const Route = createFileRoute("/_authenticated/app/p/$id")({
   component: PropertyPage,
 });
 
-const BADGE = {
-  found: ["Trouvé", "bg-success-soft text-success"],
-  to_verify: ["À vérifier", "bg-warning-soft text-warning"],
-  missing: ["Manquant", "bg-muted text-muted-foreground"],
-} as const;
+const BADGE_CLASS = { found: "bg-success-soft text-success", to_verify: "bg-warning-soft text-warning", missing: "bg-muted text-muted-foreground" } as const;
 
 function useSaved() {
   const [saved, setSaved] = useState(false);
@@ -61,7 +57,7 @@ function PropertyPage() {
 
   const SavedBadge = (
     <div aria-live="polite" className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground shadow-phone transition ${saved ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-      ✓ Enregistré
+      ✓ {t("common.saved")}
     </div>
   );
 
@@ -88,26 +84,26 @@ function PropertyPage() {
   return (
     <div className="mt-6">
       {SavedBadge}
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← Mes logements</Link>
-      <h1 className="text-3xl font-semibold">Voici ce que nous avons préparé</h1>
+      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("app.myProperties")}</Link>
+      <h1 className="text-3xl font-semibold">{t("property.prepared")}</h1>
       <NameEditor id={property.id} initial={property.name} onSaved={() => { flashSaved(); qc.invalidateQueries({ queryKey: ["properties"] }); }} />
       <p className={`mt-4 rounded-xl p-3 text-lg font-medium ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}>
         {remaining ? `Il reste ${remaining} information${remaining > 1 ? "s" : ""} importante${remaining > 1 ? "s" : ""} à compléter` : "Les informations importantes sont complètes 👍"}
         {found.length > 0 && <span className="block text-base font-normal">{found.length} information{found.length > 1 ? "s" : ""} déjà trouvée{found.length > 1 ? "s" : ""}.</span>}
       </p>
       <button className="btn btn-primary mt-4 w-full text-lg" onClick={() => setStep(remaining ? "complete" : "ready")}>
-        {remaining ? `Compléter (${remaining})` : "Continuer vers la publication"}
+        {remaining ? `${t("property.complete")} (${remaining})` : t("property.publishNext")}
       </button>
       <ul className="mt-8 space-y-3">
         {fields.map((f) => (
           <li key={f.id} className="surface p-4">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold">{f.label}{f.essential && <span className="text-muted-foreground"> · important</span>}</span>
-              <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${BADGE[f.status][1]}`}>{BADGE[f.status][0]}</span>
+              <span className="font-semibold">{f.label}{f.essential && <span className="text-muted-foreground"> · {t("property.important")}</span>}</span>
+              <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${BADGE_CLASS[f.status]}`}>{t(`property.${f.status === "to_verify" ? "verify" : f.status}`)}</span>
             </div>
-            <p className="mt-2 whitespace-pre-line">{f.value ?? <span className="text-muted-foreground">Pas encore d'information</span>}</p>
+            <p className="mt-2 whitespace-pre-line">{f.value ?? <span className="text-muted-foreground">{t("property.none")}</span>}</p>
             <button className="mt-2 min-h-12 font-semibold text-primary underline" onClick={() => setEditing(f)}>
-              {f.value ? (f.status === "to_verify" ? "Vérifier" : "Modifier") : "Ajouter"}
+              {f.value ? (f.status === "to_verify" ? t("property.verify") : t("common.edit")) : t("property.add")}
             </button>
           </li>
         ))}
@@ -149,11 +145,12 @@ function ReviewEditor({ propertyId, initial, initialDestinations, onSaved }: {
 }
 
 function NameEditor({ id, initial, onSaved }: { id: string; initial: string; onSaved: () => void }) {
+  const { t: translate } = useI18n();
   const [name, setName] = useState(initial);
   const t = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(t.current), []);
   return (
-    <label className="mt-4 block"><span className="mb-1 block font-medium">Nom du logement</span>
+    <label className="mt-4 block"><span className="mb-1 block font-medium">{translate("property.name")}</span>
       <input className="field text-lg" value={name} onChange={(e) => {
         const v = e.target.value; setName(v); clearTimeout(t.current);
         t.current = setTimeout(() => renameProperty(id, v).then(onSaved).catch(() => {}), 700);
@@ -205,6 +202,7 @@ function CompletionFlow({ fields, onSaved, onDone }: { fields: PropertyField[]; 
 function ReadyScreen({ property, fields, onEdit, onPublished }: {
   property: { id: string; name: string; slug: string; status: string } & Parameters<typeof publishProperty>[0]; fields: PropertyField[]; onEdit: () => void; onPublished: () => void;
 }) {
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const published = property.status === "published";
@@ -218,22 +216,22 @@ function ReadyScreen({ property, fields, onEdit, onPublished }: {
       <div className="mt-6">
         <button className="min-h-12 font-semibold text-primary" onClick={onEdit}>← Revoir les informations</button>
         <h1 className="mt-2 text-3xl font-semibold">Prêt à publier {property.name} ?</h1>
-        <p className="mt-3 text-lg">Seules les informations confirmées seront visibles par vos voyageurs.</p>
+        <p className="mt-3 text-lg">{t("property.confirmed")}</p>
         {pending > 0 && <p className="mt-3 rounded-xl bg-warning-soft p-3">{pending} information{pending > 1 ? "s" : ""} à vérifier ou manquante{pending > 1 ? "s" : ""} ne {pending > 1 ? "seront" : "sera"} pas affichée{pending > 1 ? "s" : ""}. Vous pourrez les ajouter plus tard.</p>}
         {error && <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">{error}</p>}
-        <button className="btn btn-primary mt-6 w-full text-lg" disabled={busy} onClick={publish}>{busy ? "Publication…" : "Publier mon livret"}</button>
+        <button className="btn btn-primary mt-6 w-full text-lg" disabled={busy} onClick={publish}>{busy ? "…" : t("property.publish")}</button>
       </div>
     );
   }
   return (
     <div className="mt-8 text-center">
       <p className="text-5xl">🎉</p>
-      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Votre livret est prêt</h1>
-      <p className="mt-2 text-muted-foreground">Imprimez ce QR code et posez-le dans le logement.</p>
+      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{t("property.ready")}</h1>
+      <p className="mt-2 text-muted-foreground">{t("property.readyD")}</p>
       <div className="my-8"><QrCard slug={property.slug} name={property.name} /></div>
       <div className="mx-auto grid max-w-sm gap-3">
-        <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-primary text-lg">Voir mon livret</a>
-        <button className="btn btn-secondary" onClick={onEdit}>Continuer la personnalisation</button>
+        <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-primary text-lg">{t("property.viewGuide")}</a>
+        <button className="btn btn-secondary" onClick={onEdit}>{t("property.customize")}</button>
         {error && <p role="alert" className="rounded-xl bg-warning-soft p-3">{error}</p>}
         <button className="min-h-12 font-medium text-muted-foreground underline" disabled={busy} onClick={publish}>{busy ? "Mise à jour…" : "Mettre à jour le livret avec mes dernières modifications"}</button>
         <Link to="/app" className="min-h-12 py-3 font-medium text-muted-foreground">Retour à mes logements</Link>

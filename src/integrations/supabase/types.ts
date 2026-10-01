@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          guest_contact: string | null
+          guest_display_name: string
+          id: string
+          last_message_at: string
+          organization_id: string
+          property_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          guest_contact?: string | null
+          guest_display_name: string
+          id?: string
+          last_message_at?: string
+          organization_id: string
+          property_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          guest_contact?: string | null
+          guest_display_name?: string
+          id?: string
+          last_message_at?: string
+          organization_id?: string
+          property_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_message_rate_limits: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          id?: string
+        }
+        Relationships: []
+      }
       guide_section_translations: {
         Row: {
           content: Json
@@ -155,6 +221,44 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_type: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_type: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_type?: string
+          sender_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -342,6 +446,32 @@ export type Database = {
           },
         ]
       }
+      property_messaging_settings: {
+        Row: {
+          is_enabled: boolean
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          is_enabled?: boolean
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          is_enabled?: boolean
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_messaging_settings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_review_destinations: {
         Row: {
           created_at: string
@@ -415,6 +545,76 @@ export type Database = {
           },
         ]
       }
+      section_media: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          created_at: string
+          file_size: number
+          id: string
+          media_type: string
+          mime_type: string
+          organization_id: string
+          property_id: string
+          section_id: string
+          sort_order: number
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string
+          file_size: number
+          id?: string
+          media_type: string
+          mime_type: string
+          organization_id: string
+          property_id: string
+          section_id: string
+          sort_order?: number
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string
+          file_size?: number
+          id?: string
+          media_type?: string
+          mime_type?: string
+          organization_id?: string
+          property_id?: string
+          section_id?: string
+          sort_order?: number
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_media_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_media_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_media_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "guide_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -425,6 +625,17 @@ export type Database = {
       get_public_guide: { Args: { _slug: string }; Returns: Json }
       is_org_admin: { Args: { _org: string }; Returns: boolean }
       is_org_member: { Args: { _org: string }; Returns: boolean }
+      submit_guest_message: {
+        Args: {
+          _body: string
+          _contact: string
+          _fingerprint: string
+          _name: string
+          _slug: string
+          _website?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       field_status: "found" | "to_verify" | "missing"

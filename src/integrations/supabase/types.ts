@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      guide_section_translations: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_stale: boolean
+          locale: string
+          section_id: string
+          source_type: string
+          source_updated_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_stale?: boolean
+          locale: string
+          section_id: string
+          source_type?: string
+          source_updated_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_stale?: boolean
+          locale?: string
+          section_id?: string
+          source_type?: string
+          source_updated_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_section_translations_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "guide_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guide_sections: {
         Row: {
           content: Json
@@ -147,6 +194,8 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          operator_type: string | null
+          preferred_locale: string
           trial_ends_at: string
           trial_started_at: string
         }
@@ -155,6 +204,8 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          operator_type?: string | null
+          preferred_locale?: string
           trial_ends_at?: string
           trial_started_at?: string
         }
@@ -163,6 +214,8 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          operator_type?: string | null
+          preferred_locale?: string
           trial_ends_at?: string
           trial_started_at?: string
         }
@@ -170,10 +223,12 @@ export type Database = {
       }
       properties: {
         Row: {
+          accommodation_type: string | null
           created_at: string
           id: string
           name: string
           organization_id: string
+          original_locale: string
           published_at: string | null
           slug: string
           source_type: string | null
@@ -182,10 +237,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accommodation_type?: string | null
           created_at?: string
           id?: string
           name?: string
           organization_id: string
+          original_locale?: string
           published_at?: string | null
           slug: string
           source_type?: string | null
@@ -194,10 +251,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accommodation_type?: string | null
           created_at?: string
           id?: string
           name?: string
           organization_id?: string
+          original_locale?: string
           published_at?: string | null
           slug?: string
           source_type?: string | null
@@ -278,6 +337,79 @@ export type Database = {
             foreignKeyName: "property_fields_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_review_destinations: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          label: string
+          property_id: string
+          sort_order: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          label: string
+          property_id: string
+          sort_order?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          label?: string
+          property_id?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_review_destinations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_review_settings: {
+        Row: {
+          is_enabled: boolean
+          message: string
+          property_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          is_enabled?: boolean
+          message?: string
+          property_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          is_enabled?: boolean
+          message?: string
+          property_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_review_settings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },

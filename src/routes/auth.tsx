@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Logo } from "@/components/shared/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +33,9 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
   const isSignup = mode !== "login";
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => { if (data.session) nav({ to: "/app", replace: true }); });
+  }, [nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

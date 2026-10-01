@@ -91,6 +91,12 @@ export async function reorderGuideSections(sections: GuideSection[]) {
 }
 
 export async function deleteGuideSection(sectionId: string) {
+  const { data: media, error: mediaError } = await supabase.from("section_media").select("storage_path").eq("section_id", sectionId);
+  if (mediaError) return fail(mediaError);
+  if (media.length) {
+    const { error: storageError } = await supabase.storage.from("guide-media").remove(media.map((item) => item.storage_path));
+    if (storageError) return fail(storageError);
+  }
   const { error } = await supabase.from("guide_sections").delete().eq("id", sectionId);
   if (error) fail(error);
 }
@@ -127,6 +133,11 @@ export async function saveOrganizationPreferences(orgId: string, values: { prefe
     ...(values.preferredLocale ? { preferred_locale: values.preferredLocale } : {}),
     ...(values.operatorType ? { operator_type: values.operatorType } : {}),
   }).eq("id", orgId);
+  if (error) fail(error);
+}
+
+export async function saveMessagingSetting(propertyId: string, isEnabled: boolean) {
+  const { error } = await supabase.from("property_messaging_settings").upsert({ property_id: propertyId, is_enabled: isEnabled });
   if (error) fail(error);
 }
 

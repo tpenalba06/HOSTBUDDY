@@ -33,9 +33,9 @@
 - [x] Translation consistency, responsive checks and security regression verification
 
 ## Phase 5.1
-- [ ] Reuse real manager presentation in demo with container-safe compact mode
-- [ ] Complete six-locale UI dictionaries and missing-key coverage test
-- [ ] Localize Villa Mare traveler and manager demo content
-- [ ] Upgrade public guide home and section-specific inner layouts
-- [ ] Remove mixed-language marketing and authenticated app copy
-- [ ] Verify all requested responsive and language-switch scenarios
+- [x] Reuse real manager presentation in demo with container-safe compact mode
+- [x] Complete six-locale UI dictionaries and missing-key coverage test
+- [x] Localize Villa Mare traveler and manager demo content
+- [x] Upgrade public guide home and section-specific inner layouts
+- [x] Remove mixed-language marketing and authenticated app copy
+- [x] Verify all requested responsive and language-switch scenarios

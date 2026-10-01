@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { BarChart3, Cable, ClipboardList, Home, LogOut, Menu, MessageCircle, Plus, Settings, Star, Users, X } from "lucide-react";
+import { BarChart3, Cable, ClipboardList, Home, LogOut, Menu, MessageCircle, Plus, Star, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Logo } from "@/components/shared/Logo";

@@ -24,10 +24,10 @@
 - [x] Verify authenticated manager, publishing, isolation, and all target viewports
 
 ## Phase 5
-- [ ] Compact traveler guide and richer shared demo experience
-- [ ] Progressive section templates, editable icons/CTAs, autosave and live preview
-- [ ] Authenticated app shell with role-aware navigation and home behavior
-- [ ] Tenant-safe services, orders, feedback, team invitations and role controls
-- [ ] Owner dashboard, order inbox, feedback inbox and team screens
-- [ ] QR download/print actions and explicit unpublish control
-- [ ] Translation consistency, responsive checks and security regression verification
+- [x] Compact traveler guide and richer shared demo experience
+- [x] Progressive section templates, editable icons/CTAs, autosave and live preview
+- [x] Authenticated app shell with role-aware navigation and home behavior
+- [x] Tenant-safe services, orders, feedback, team invitations and role controls
+- [x] Owner dashboard, order inbox, feedback inbox and team screens
+- [x] QR download/print actions and explicit unpublish control
+- [x] Translation consistency, responsive checks and security regression verification

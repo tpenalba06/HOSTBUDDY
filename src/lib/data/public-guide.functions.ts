@@ -7,8 +7,15 @@ export interface PublicSection {
   key: string;
   title: string;
   content: { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
+  translations?: { locale: string; title: string; content: PublicSection["content"]; sourceType: "machine" | "human"; isStale: boolean }[];
 }
-export interface PublicGuide { name: string; sections: PublicSection[] }
+export interface PublicGuide {
+  name: string;
+  originalLocale: string;
+  accommodationType?: string | null;
+  sections: PublicSection[];
+  review?: { title: string; message: string; destinations: { label: string; url: string }[] } | null;
+}
 
 // Public read path: only the security-definer RPC (published + visible only).
 export const getPublicGuide = createServerFn({ method: "GET" })

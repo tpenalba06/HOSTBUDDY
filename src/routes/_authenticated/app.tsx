@@ -4,6 +4,8 @@ import { Logo } from "@/components/shared/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { orgQuery, useOrg } from "@/components/app/useOrg";
 import { FriendlyError, Loading } from "@/components/app/Friendly";
+import { LanguageSelect } from "@/components/i18n/LanguageSelect";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Mon espace — HostBuddy" }, { name: "robots", content: "noindex" }] }),
@@ -14,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 function AppLayout() {
+  const { t } = useI18n();
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -27,8 +30,9 @@ function AppLayout() {
       <header className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-4">
         <Logo />
         <div className="flex items-center gap-2">
-          <span className="hidden text-muted-foreground sm:inline">{org.name}</span>
-          <button className="min-h-12 px-3 font-medium text-muted-foreground underline-offset-4 hover:underline" onClick={signOut}>Se déconnecter</button>
+          <span className="hidden text-muted-foreground md:inline">{org.name}</span>
+          <LanguageSelect compact />
+          <button className="min-h-12 px-2 font-medium text-muted-foreground underline-offset-4 hover:underline" onClick={signOut}>{t("app.signOut")}</button>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-5 pb-16"><Outlet /></main>

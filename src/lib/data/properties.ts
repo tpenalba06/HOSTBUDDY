@@ -6,6 +6,8 @@ import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
 
 export type Property = Tables<"properties">;
 export type PropertyField = Tables<"property_fields">;
+export type ReviewSettings = Tables<"property_review_settings">;
+export type ReviewDestination = Tables<"property_review_destinations">;
 
 export class FriendlyError extends Error {}
 const fail = (e: unknown, msg = "Votre connexion a été interrompue. Vos informations déjà enregistrées sont conservées."): never => {
@@ -18,7 +20,7 @@ export async function ensureOrganization() {
   const first = (u.user?.user_metadata?.['first_name'] as string | undefined) ?? "";
   const { data: orgId, error } = await supabase.rpc("ensure_my_organization", { _first_name: first });
   if (error || !orgId) return fail(error);
-  const { data: org, error: e2 } = await supabase.from("organizations").select("id,name,trial_ends_at").eq("id", orgId).single();
+  const { data: org, error: e2 } = await supabase.from("organizations").select("id,name,trial_ends_at,preferred_locale,operator_type").eq("id", orgId).single();
   if (e2) return fail(e2);
   return { ...org, firstName: first };
 }
@@ -30,14 +32,41 @@ export async function listProperties(orgId: string) {
 }
 
 export async function getProperty(id: string) {
-  const [{ data: property, error }, { data: fields, error: e2 }] = await Promise.all([
+  const [{ data: property, error }, { data: fields, error: e2 }, { data: review }, { data: destinations }] = await Promise.all([
     supabase.from("properties").select("*").eq("id", id).maybeSingle(),
     supabase.from("property_fields").select("*").eq("property_id", id),
+    supabase.from("property_review_settings").select("*").eq("property_id", id).maybeSingle(),
+    supabase.from("property_review_destinations").select("*").eq("property_id", id).order("sort_order"),
   ]);
   if (error || e2) return fail(error ?? e2);
   if (!property) return null;
   const order = FIELD_DEFS.map((f) => f.key);
-  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)) };
+  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)), review: review ?? null, destinations: destinations ?? [] };
+}
+
+export async function saveOrganizationPreferences(orgId: string, values: { preferredLocale?: string; operatorType?: string }) {
+  const { error } = await supabase.from("organizations").update({
+    ...(values.preferredLocale ? { preferred_locale: values.preferredLocale } : {}),
+    ...(values.operatorType ? { operator_type: values.operatorType } : {}),
+  }).eq("id", orgId);
+  if (error) fail(error);
+}
+
+export async function saveReviewConfiguration(propertyId: string, settings: { title: string; message: string; isEnabled: boolean }, destinations: { label: string; url: string }[]) {
+  const safeDestinations = destinations.filter((d) => d.label.trim() && /^https:\/\//i.test(d.url.trim())).slice(0, 5);
+  const { error } = await supabase.from("property_review_settings").upsert({
+    property_id: propertyId,
+    title: settings.title.trim().slice(0, 120),
+    message: settings.message.trim().slice(0, 500),
+    is_enabled: settings.isEnabled && safeDestinations.length > 0,
+  });
+  if (error) return fail(error);
+  const { error: deleteError } = await supabase.from("property_review_destinations").delete().eq("property_id", propertyId);
+  if (deleteError) return fail(deleteError);
+  if (safeDestinations.length) {
+    const { error: insertError } = await supabase.from("property_review_destinations").insert(safeDestinations.map((d, index) => ({ property_id: propertyId, label: d.label.trim().slice(0, 80), url: d.url.trim().slice(0, 1000), sort_order: index })));
+    if (insertError) return fail(insertError);
+  }
 }
 
 const slugify = (s: string) =>

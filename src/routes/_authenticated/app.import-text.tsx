@@ -6,6 +6,7 @@ import { createPropertyFromExtraction, finishImportRun, startImportRun } from "@
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
 import { useOrg } from "@/components/app/useOrg";
 import { friendlyMessage } from "@/components/app/Friendly";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/app/import-text")({ component: ImportText });
 
@@ -32,6 +33,7 @@ Nos adresses : boulangerie Lou Fournil, restaurant Le Cabanon sur la plage.
 Petit-déjeuner livré possible sur demande.`;
 
 function ImportText() {
+  const { t } = useI18n();
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -60,7 +62,7 @@ function ImportText() {
 
   return (
     <div className="mt-6">
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← Retour</Link>
+      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("common.back")}</Link>
       <h1 className="text-3xl font-semibold">Collez tout ce que vous avez. Même si c'est mal rangé.</h1>
       <p className="mt-2 text-lg text-muted-foreground">HostBuddy s'occupe du reste.</p>
       {stage !== null ? <ImportProgress stages={STAGES} current={stage} /> : (

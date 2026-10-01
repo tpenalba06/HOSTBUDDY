@@ -4,6 +4,8 @@ import { z } from "zod";
 import { Logo } from "@/components/shared/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { LanguageSelect } from "@/components/i18n/LanguageSelect";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { mode?: "login" | "signup" } => (s['mode'] === "login" || s['mode'] === "signup" ? { mode: s['mode'] } : {}),
@@ -26,6 +28,7 @@ const signupSchema = z.object({
 });
 
 function AuthPage() {
+  const { t } = useI18n();
   const { mode } = Route.useSearch();
   const nav = useNavigate();
   const [form, setForm] = useState({ firstName: "", email: "", password: "" });
@@ -78,37 +81,37 @@ function AuthPage() {
   if (checkEmail) {
     return (
       <main className="mx-auto max-w-md px-5 py-8 text-center">
-        <Logo />
+        <div className="flex items-center justify-between"><Logo /><LanguageSelect compact /></div>
         <p className="mt-12 text-5xl">📬</p>
-        <h1 className="mt-4 text-3xl font-semibold">Vérifiez votre boîte e-mail</h1>
-        <p className="mt-3 text-lg">Nous avons envoyé un lien à <strong>{form.email}</strong>. Cliquez dessus pour activer votre compte.</p>
+        <h1 className="mt-4 text-3xl font-semibold">{t("auth.checkTitle")}</h1>
+        <p className="mt-3 text-lg">{t("auth.checkBody")} <strong>{form.email}</strong></p>
       </main>
     );
   }
 
   return (
     <main className="mx-auto max-w-md px-5 py-8">
-      <Logo />
-      <h1 className="mt-10 text-3xl font-semibold">{isSignup ? "Commençons" : "Bon retour 👋"}</h1>
-      {isSignup && <p className="mt-2 text-muted-foreground">30 jours gratuits. Sans carte bancaire.</p>}
-      <button type="button" className="btn btn-secondary mt-6 w-full" onClick={google}>Continuer avec Google</button>
-      <p className="my-5 text-center text-muted-foreground">ou</p>
+      <div className="flex items-center justify-between"><Logo /><LanguageSelect compact /></div>
+      <h1 className="mt-10 text-3xl font-semibold">{isSignup ? t("auth.signupTitle") : `${t("auth.loginTitle")} 👋`}</h1>
+      {isSignup && <p className="mt-2 text-muted-foreground">{t("auth.subtitle")}</p>}
+      <button type="button" className="btn btn-secondary mt-6 w-full" onClick={google}>{t("auth.google")}</button>
+      <p className="my-5 text-center text-muted-foreground">{t("auth.or")}</p>
       <form onSubmit={submit} className="space-y-4">
         {isSignup && (
-          <label className="block"><span className="mb-1 block font-medium">Votre prénom</span>
+          <label className="block"><span className="mb-1 block font-medium">{t("auth.firstName")}</span>
             <input className="field" autoComplete="given-name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} /></label>
         )}
-        <label className="block"><span className="mb-1 block font-medium">Votre e-mail</span>
+        <label className="block"><span className="mb-1 block font-medium">{t("common.email")}</span>
           <input className="field" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-        <label className="block"><span className="mb-1 block font-medium">{isSignup ? "Choisissez un mot de passe" : "Mot de passe"}</span>
+        <label className="block"><span className="mb-1 block font-medium">{isSignup ? t("auth.choosePassword") : t("common.password")}</span>
           <input className="field" type="password" autoComplete={isSignup ? "new-password" : "current-password"} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
         {error && <p role="alert" className="rounded-xl bg-warning-soft p-3">{error}</p>}
-        <button className="btn btn-primary w-full text-lg" disabled={busy}>{busy ? "Un instant…" : isSignup ? "Créer mon compte" : "Me connecter"}</button>
+        <button className="btn btn-primary w-full text-lg" disabled={busy}>{busy ? "…" : isSignup ? t("auth.create") : t("auth.signIn")}</button>
       </form>
       <p className="mt-6 text-center">
-        {isSignup ? "Déjà un compte ? " : "Pas encore de compte ? "}
+        {isSignup ? `${t("auth.existing")} ` : `${t("auth.new")} `}
         <Link to="/auth" search={{ mode: isSignup ? "login" : "signup" }} className="inline-block min-h-12 py-3 font-semibold text-primary underline">
-          {isSignup ? "Se connecter" : "Créer un compte"}
+          {isSignup ? t("auth.signIn") : t("auth.create")}
         </Link>
       </p>
     </main>

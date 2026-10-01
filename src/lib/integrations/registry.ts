@@ -53,16 +53,16 @@ export const INTEGRATIONS = [
   integration({ id: "apple-pay", name: "Apple Pay", category: "payments", capabilityType: "payment_method", status: "planned", connectMethod: "internal", capabilities: ["guest_checkout_via_payment_provider"], logoPlaceholder: "AP", marketingVisible: true, note: "Moyen de paiement proposé via le prestataire de paiement." }),
   integration({ id: "google-pay", name: "Google Pay", category: "payments", capabilityType: "payment_method", status: "planned", connectMethod: "internal", capabilities: ["guest_checkout_via_payment_provider"], logoPlaceholder: "GP", marketingVisible: true, note: "Moyen de paiement proposé via le prestataire de paiement." }),
 
-  ...[
+  ...([
     ["instagram", "Instagram", "embed"], ["youtube", "YouTube", "embed"], ["facebook", "Facebook", "link"],
     ["tiktok", "TikTok", "embed"], ["vimeo", "Vimeo", "embed"], ["linkedin", "LinkedIn", "link"],
-  ].map(([id, name, method]) => integration({ id, name, category: "social_media" as const, capabilityType: "embed_provider" as const, status: "planned" as const, connectMethod: method as "embed" | "link", capabilities: method === "embed" ? ["official_embed"] : ["official_link"], logoPlaceholder: name.slice(0, 2).toUpperCase(), marketingVisible: true })),
+  ] as const).map(([id, name, method]) => integration({ id, name, category: "social_media" as const, capabilityType: "embed_provider" as const, status: "planned" as const, connectMethod: method, capabilities: method === "embed" ? ["official_embed"] : ["official_link"], logoPlaceholder: name.slice(0, 2).toUpperCase(), marketingVisible: true })),
 
-  ...[
+  ...([
     ["guesty", "Guesty", "oauth"], ["hostaway", "Hostaway", "oauth"], ["beds24", "Beds24", "api_key"],
     ["superhote", "Superhôte", "api_key"], ["lodgify", "Lodgify", "api_key"], ["rental-ready", "Rental Ready", "api_key"],
     ["amenitiz", "Amenitiz", "oauth"], ["eviivo", "eviivo", "oauth"],
-  ].map(([id, name, method]) => integration({ id, name, category: "pms" as const, capabilityType: "official_connector" as const, status: "planned" as const, connectMethod: method as "oauth" | "api_key", capabilities: ["connection_test", "bulk_property_list", "bulk_property_import", "provenance_sync"], logoPlaceholder: name.slice(0, 2).toUpperCase(), marketingVisible: true, note: "Connexion officielle à venir pour l’import en nombre." })),
+  ] as const).map(([id, name, method]) => integration({ id, name, category: "pms" as const, capabilityType: "official_connector" as const, status: "planned" as const, connectMethod: method, capabilities: ["connection_test", "bulk_property_list", "bulk_property_import", "provenance_sync"], logoPlaceholder: name.slice(0, 2).toUpperCase(), marketingVisible: true, note: "Connexion officielle à venir pour l’import en nombre." })),
 
   integration({ id: "google-fonts", name: "Google Fonts", category: "personalization", capabilityType: "content_provider", status: "planned", connectMethod: "internal", capabilities: ["curated_fonts"], logoPlaceholder: "GF", marketingVisible: true }),
   integration({ id: "pixabay", name: "Pixabay", category: "personalization", capabilityType: "content_provider", status: "planned", connectMethod: "api_key", capabilities: ["royalty_free_image_search"], logoPlaceholder: "PX", marketingVisible: true }),
@@ -78,4 +78,4 @@ export const INTEGRATIONS = [
 export type IntegrationId = (typeof INTEGRATIONS)[number]["id"];
 export const INTEGRATION_CATEGORIES: readonly IntegrationCategory[] = ["listing_import", "pms", "payments", "social_media", "local_recommendations", "translation", "personalization", "smart_access", "ai"];
 export const getIntegration = (id: string) => INTEGRATIONS.find((item) => item.id === id);
-export const getVisibleIntegrations = () => INTEGRATIONS.filter((item) => item.marketingVisible);
+export const getVisibleIntegrations = (): IntegrationDefinition[] => INTEGRATIONS.filter((item) => item.marketingVisible);

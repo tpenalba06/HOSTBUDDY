@@ -3,6 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { FIELD_DEFS, FIELD_BY_KEY } from "@/lib/import-engine/fields";
 import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
+import {
+  buildGuideContent,
+  fieldUpdatesForGuideSection,
+  mergeFieldIntoGuideContent,
+  type GuideContentItem,
+} from "@/lib/data/guide-content";
 
 export type Property = Tables<"properties">;
 export type PropertyField = Tables<"property_fields">;
@@ -53,14 +59,31 @@ export async function getProperty(id: string) {
 }
 
 const DEFAULT_SECTIONS = [
-  ["arrival", "Arrivée", "🔑"], ["wifi", "Wi-Fi", "📶"], ["house", "Le logement", "🏡"], ["places", "Bonnes adresses", "📍"],
-  ["services", "Services", "✨"], ["departure", "Départ", "🧳"], ["contact", "Contact", "💬"],
+  ["welcome", "Bienvenue", "👋"],
+  ["arrival", "Mon arrivée", "🔑"],
+  ["wifi", "Wi-Fi", "📶"],
+  ["house", "La maison", "🏡"],
+  ["pool", "Piscine", "🏊"],
+  ["places", "Bonnes adresses", "📍"],
+  ["services", "Services", "✨"],
+  ["departure", "Mon départ", "🧳"],
+  ["contact", "Contact", "💬"],
 ] as const;
 
 function sectionsFromFields(propertyId: string, fields: PropertyField[]) {
   return DEFAULT_SECTIONS.map(([key, title, icon], index) => {
-    const items = fields.filter((f) => FIELD_BY_KEY[f.key]?.section.key === key && f.value && f.status === "found").map((f) => ({ label: f.label, text: f.value as string }));
-    return { property_id: propertyId, section_key: key, title, icon, sort_order: index, is_visible: true, content: { items, ...(key === "contact" ? contactContent(items.map((item) => item.text).join("\n")) : {}) } };
+    const items: GuideContentItem[] = fields
+      .filter((field) => FIELD_BY_KEY[field.key]?.section.key === key && field.value && field.status === "found")
+      .map((field) => ({ fieldKey: field.key, label: field.label, text: field.value as string }));
+    return {
+      property_id: propertyId,
+      section_key: key,
+      title,
+      icon,
+      sort_order: index,
+      is_visible: true,
+      content: buildGuideContent(key, {}, items),
+    };
   });
 }
 
@@ -73,11 +96,28 @@ export async function ensureGuideSections(propertyId: string, fields: PropertyFi
   return data.sort((a, b) => a.sort_order - b.sort_order);
 }
 
-export async function saveGuideSection(section: GuideSection, values: { title: string; text: string; isVisible: boolean; icon?: string; ctaLabel?: string }) {
-  const existing = (section.content && typeof section.content === "object" && !Array.isArray(section.content) ? section.content : {}) as { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
-  const content = { ...existing, items: values.text.trim() ? [{ label: "", text: values.text.trim() }] : [], ...(section.section_key === "contact" ? contactContent(values.text) : {}) };
-  const { data, error } = await supabase.from("guide_sections").update({ title: values.title.trim().slice(0, 120) || "Sans titre", content, is_visible: values.isVisible, icon: values.icon?.slice(0, 8) ?? section.icon, cta_label: values.ctaLabel?.trim().slice(0, 80) || null }).eq("id", section.id).select("*").single();
+export async function saveGuideSection(section: GuideSection, values: { title: string; items: GuideContentItem[]; isVisible: boolean; icon?: string; ctaLabel?: string }) {
+  const content = buildGuideContent(section.section_key, section.content, values.items);
+  const fieldUpdates = fieldUpdatesForGuideSection(section.section_key, section.content, values.items);
+  const { data, error } = await supabase.from("guide_sections").update({
+    title: values.title.trim().slice(0, 120) || "Sans titre",
+    content,
+    is_visible: values.isVisible,
+    icon: values.icon?.slice(0, 8) ?? section.icon,
+    cta_label: values.ctaLabel?.trim().slice(0, 80) || null,
+  }).eq("id", section.id).select("*").single();
   if (error) return fail(error);
+
+  for (const update of fieldUpdates) {
+    const value = update.value;
+    const { error: fieldError } = await supabase.from("property_fields").update({
+      value,
+      status: value ? "found" : "missing",
+      manually_verified: !!value,
+      manually_overridden: true,
+    }).eq("property_id", section.property_id).eq("key", update.key);
+    if (fieldError) return fail(fieldError);
+  }
   return data;
 }
 
@@ -205,7 +245,26 @@ export async function createPropertyFromExtraction(orgId: string, source: Import
   return property;
 }
 
-/** Human answer: always wins over imported values. */
+async function syncFieldToGuide(field: PropertyField) {
+  const definition = FIELD_BY_KEY[field.key];
+  if (!definition) return;
+  const { data: section, error } = await supabase.from("guide_sections")
+    .select("*")
+    .eq("property_id", field.property_id)
+    .eq("section_key", definition.section.key)
+    .maybeSingle();
+  if (error) return fail(error);
+  if (!section) return;
+  const content = mergeFieldIntoGuideContent(definition.section.key, section.content, {
+    key: field.key,
+    label: field.label,
+    value: field.value,
+  });
+  const { error: updateError } = await supabase.from("guide_sections").update({ content }).eq("id", section.id);
+  if (updateError) return fail(updateError);
+}
+
+/** Human answer: always wins over imported values and keeps an existing guide in sync. */
 export async function saveFieldAnswer(field: PropertyField, value: string) {
   const v = value.trim();
   const overridden = field.raw_value != null ? v !== (field.value ?? "").trim() || field.manually_overridden : true;
@@ -213,18 +272,13 @@ export async function saveFieldAnswer(field: PropertyField, value: string) {
     .update({ value: v || null, status: v ? "found" : "missing", manually_verified: !!v, manually_overridden: overridden })
     .eq("id", field.id).select("*").single();
   if (error) return fail(error);
+  await syncFieldToGuide(data);
   return data;
 }
 
 export async function renameProperty(id: string, name: string) {
   const { error } = await supabase.from("properties").update({ name: name.trim().slice(0, 120) || "Mon logement" }).eq("id", id);
   if (error) fail(error);
-}
-
-function contactContent(text: string) {
-  const phones = [...text.matchAll(/(\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}/g)].map((m) => m[0].replace(/[\s.-]/g, "").replace(/^0/, "+33"));
-  const emails = [...text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]+/g)].map((m) => m[0]);
-  return { phones: [...new Set(phones)].slice(0, 3), emails: [...new Set(emails)].slice(0, 2) };
 }
 
 /** Publishing rebuilds visible guide sections from confirmed fields only. */

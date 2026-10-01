@@ -20,3 +20,5 @@
 - Every field stores provenance (source, raw snippet, confidence, imported_at, manually_verified, manually_overridden); human answers always set verified/overridden.
 - Concierge data access lives in `src/lib/data/properties.ts` (browser client + RLS) and throws only friendly French messages.
 - Server functions get the user's token via the `attachAuth` function middleware in `src/start.ts`.
+- Interface localization and property-content translation are separate layers: UI copy uses the shared locale provider, while guide translations remain normalized with provenance, human overrides, and machine-translation staleness.
+- Review requests use tenant-protected property settings and legitimate HTTPS destinations; the public guide receives enabled review content only through `get_public_guide`.

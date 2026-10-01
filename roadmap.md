@@ -6,4 +6,4 @@
 - [x] Preserve translation provenance, overrides, and stale handling
 - [x] Rework marketing conversion flow and honest future-feature framing
 - [x] Redesign demo and public guest guide with imagery and services foundation
-- [ ] Verify auth, imports, persistence, publishing, QR, public guide, languages, and isolation
+- [x] Verify auth, persistence, publishing, QR, public guide, languages, and isolation; Phase 2 import paths remain build-verified

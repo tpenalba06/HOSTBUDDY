@@ -62,6 +62,63 @@ export type Database = {
           },
         ]
       }
+      guest_feedback: {
+        Row: {
+          comment: string
+          created_at: string
+          guest_name: string | null
+          id: string
+          is_read: boolean
+          manager_note: string | null
+          organization_id: string
+          property_id: string
+          rating: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          is_read?: boolean
+          manager_note?: string | null
+          organization_id: string
+          property_id: string
+          rating: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          is_read?: boolean
+          manager_note?: string | null
+          organization_id?: string
+          property_id?: string
+          rating?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_feedback_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_feedback_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guest_message_rate_limits: {
         Row: {
           created_at: string
@@ -131,6 +188,8 @@ export type Database = {
         Row: {
           content: Json
           created_at: string
+          cta_label: string | null
+          icon: string
           id: string
           is_visible: boolean
           property_id: string
@@ -142,6 +201,8 @@ export type Database = {
         Insert: {
           content?: Json
           created_at?: string
+          cta_label?: string | null
+          icon?: string
           id?: string
           is_visible?: boolean
           property_id: string
@@ -153,6 +214,8 @@ export type Database = {
         Update: {
           content?: Json
           created_at?: string
+          cta_label?: string | null
+          icon?: string
           id?: string
           is_visible?: boolean
           property_id?: string
@@ -259,6 +322,111 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          guest_contact: string | null
+          guest_name: string | null
+          id: string
+          organization_id: string
+          property_id: string
+          quantity: number
+          requested_for: string | null
+          service_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guest_contact?: string | null
+          guest_name?: string | null
+          id?: string
+          organization_id: string
+          property_id: string
+          quantity?: number
+          requested_for?: string | null
+          service_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guest_contact?: string | null
+          guest_name?: string | null
+          id?: string
+          organization_id?: string
+          property_id?: string
+          quantity?: number
+          requested_for?: string | null
+          service_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          organization_id: string
+          role: Database["public"]["Enums"]["org_role"]
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -545,6 +713,27 @@ export type Database = {
           },
         ]
       }
+      public_submission_rate_limits: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          id: string
+          submission_type: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          id?: string
+          submission_type: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          submission_type?: string
+        }
+        Relationships: []
+      }
       section_media: {
         Row: {
           alt_text: string | null
@@ -615,6 +804,63 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_path: string | null
+          is_active: boolean
+          name: string
+          organization_id: string
+          price: number
+          pricing_type: Database["public"]["Enums"]["pricing_type"]
+          property_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name: string
+          organization_id: string
+          price: number
+          pricing_type?: Database["public"]["Enums"]["pricing_type"]
+          property_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          price?: number
+          pricing_type?: Database["public"]["Enums"]["pricing_type"]
+          property_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -625,12 +871,37 @@ export type Database = {
       get_public_guide: { Args: { _slug: string }; Returns: Json }
       is_org_admin: { Args: { _org: string }; Returns: boolean }
       is_org_member: { Args: { _org: string }; Returns: boolean }
+      is_org_owner: { Args: { _org: string }; Returns: boolean }
+      submit_guest_feedback: {
+        Args: {
+          _comment: string
+          _fingerprint: string
+          _name: string
+          _rating: number
+          _slug: string
+          _website?: string
+        }
+        Returns: string
+      }
       submit_guest_message: {
         Args: {
           _body: string
           _contact: string
           _fingerprint: string
           _name: string
+          _slug: string
+          _website?: string
+        }
+        Returns: string
+      }
+      submit_guest_order: {
+        Args: {
+          _contact: string
+          _fingerprint: string
+          _name: string
+          _quantity: number
+          _requested_for: string
+          _service: string
           _slug: string
           _website?: string
         }
@@ -645,7 +916,9 @@ export type Database = {
         | "succeeded"
         | "insufficient"
         | "failed"
+      order_status: "pending" | "confirmed" | "completed" | "cancelled"
       org_role: "owner" | "admin" | "member"
+      pricing_type: "fixed" | "per_person"
       property_status: "draft" | "published" | "archived"
     }
     CompositeTypes: {
@@ -782,7 +1055,9 @@ export const Constants = {
         "insufficient",
         "failed",
       ],
+      order_status: ["pending", "confirmed", "completed", "cancelled"],
       org_role: ["owner", "admin", "member"],
+      pricing_type: ["fixed", "per_person"],
       property_status: ["draft", "published", "archived"],
     },
   },

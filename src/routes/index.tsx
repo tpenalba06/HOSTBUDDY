@@ -62,7 +62,7 @@ function Landing() {
 
       <section className="bg-ink py-20 text-ink-foreground"><div className="mx-auto max-w-7xl px-3 sm:px-5">
         <div className="mx-auto max-w-3xl text-center"><p className="font-bold text-accent">HostBuddy</p><h2 className="mt-3 text-balance text-4xl font-semibold sm:text-5xl">{t("demo.homePreviewTitle")}</h2><p className="mx-auto mt-4 max-w-2xl text-lg text-ink-foreground/80">{t("demo.homePreviewDesc")}</p><div className="mt-5 flex items-center justify-center gap-3 text-sm font-semibold"><ShieldCheck className="h-5 w-5 text-accent"/>{t("marketing.qrLine")}</div></div>
-        <div id="demo" className="mt-9"><PhoneDemo /><Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">{t("marketing.openDemo")}</Link></div>
+        <div id="demo" className="mt-9"><div className="mx-auto w-full max-w-6xl"><PhoneDemo /></div><Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">{t("marketing.openDemo")}</Link></div>
       </div></section>
 
       <section className="mx-auto max-w-6xl px-5 py-24"><div className="grid gap-12 lg:grid-cols-2">

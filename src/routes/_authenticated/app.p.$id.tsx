@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getProperty, publishProperty, renameProperty, saveFieldAnswer, type PropertyField } from "@/lib/data/properties";
+import { getProperty, publishProperty, renameProperty, saveFieldAnswer, saveReviewConfiguration, type PropertyField } from "@/lib/data/properties";
 import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
+import { useI18n } from "@/lib/i18n";
 
 type Step = "review" | "complete" | "ready";
 const propertyQuery = (id: string) => queryOptions({ queryKey: ["property", id], queryFn: () => getProperty(id) });
@@ -38,12 +39,13 @@ function useSaved() {
 }
 
 function PropertyPage() {
+  const { t } = useI18n();
   const { id } = Route.useParams();
   const search = Route.useSearch();
   const nav = useNavigate({ from: Route.fullPath });
   const qc = useQueryClient();
   const { data } = useSuspenseQuery(propertyQuery(id));
-  const { property, fields } = data!;
+  const { property, fields, review, destinations } = data!;
   const step: Step = search.step ?? (property.status === "published" ? "ready" : "review");
   const setStep = (s: Step) => nav({ search: { step: s } });
   const [saved, flashSaved] = useSaved();
@@ -110,8 +112,40 @@ function PropertyPage() {
           </li>
         ))}
       </ul>
+      <ReviewEditor propertyId={property.id} initial={review} initialDestinations={destinations} onSaved={flashSaved} />
     </div>
   );
+}
+
+function ReviewEditor({ propertyId, initial, initialDestinations, onSaved }: {
+  propertyId: string;
+  initial: { title: string; message: string; is_enabled: boolean } | null;
+  initialDestinations: { label: string; url: string }[];
+  onSaved: () => void;
+}) {
+  const { t } = useI18n();
+  const [expanded, setExpanded] = useState(false);
+  const [enabled, setEnabled] = useState(initial?.is_enabled ?? false);
+  const [title, setTitle] = useState(initial?.title ?? "Votre séjour vous a plu ?");
+  const [message, setMessage] = useState(initial?.message ?? "Partagez votre expérience sur la plateforme de votre choix.");
+  const [destinations, setDestinations] = useState(initialDestinations.length ? initialDestinations : [{ label: "Google", url: "" }]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const save = async () => {
+    if (enabled && destinations.some((d) => d.url && !/^https:\/\//i.test(d.url))) return setError(t("review.invalid"));
+    setBusy(true); setError("");
+    try { await saveReviewConfiguration(propertyId, { title, message, isEnabled: enabled }, destinations); onSaved(); setExpanded(false); }
+    catch (e) { setError(friendlyMessage(e)); } finally { setBusy(false); }
+  };
+  return <section className="mt-8 border-t pt-8"><button className="flex min-h-14 w-full items-center justify-between text-left" onClick={() => setExpanded(!expanded)}><span><span className="block text-xl font-semibold">{t("review.title")}</span><span className="text-sm text-muted-foreground">{t("review.description")}</span></span><span aria-hidden>{expanded ? "−" : "+"}</span></button>{expanded && <div className="mt-5 space-y-4">
+    <label className="flex min-h-12 items-center justify-between gap-4 rounded-lg bg-muted px-4"><span className="font-medium">{t("review.enable")}</span><input type="checkbox" className="h-5 w-5 accent-primary" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /></label>
+    <label className="block"><span className="mb-1 block font-medium">{t("review.heading")}</span><input className="field" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} /></label>
+    <label className="block"><span className="mb-1 block font-medium">{t("review.message")}</span><textarea className="field min-h-28" maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} /></label>
+    {destinations.map((destination, index) => <div key={index} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[0.7fr_1.3fr]"><input className="field" aria-label={t("review.label")} placeholder={t("review.label")} maxLength={80} value={destination.label} onChange={(e) => setDestinations(destinations.map((item, i) => i === index ? { ...item, label: e.target.value } : item))}/><input className="field" aria-label={t("review.url")} placeholder="https://…" inputMode="url" maxLength={1000} value={destination.url} onChange={(e) => setDestinations(destinations.map((item, i) => i === index ? { ...item, url: e.target.value } : item))}/></div>)}
+    {destinations.length < 5 && <button className="min-h-12 font-semibold text-primary" onClick={() => setDestinations([...destinations, { label: "", url: "" }])}>+ {t("review.add")}</button>}
+    {error && <p role="alert" className="rounded-lg bg-warning-soft p-3">{error}</p>}
+    <button className="btn btn-primary w-full" onClick={save} disabled={busy}>{busy ? "…" : t("common.save")}</button>
+  </div>}</section>;
 }
 
 function NameEditor({ id, initial, onSaved }: { id: string; initial: string; onSaved: () => void }) {

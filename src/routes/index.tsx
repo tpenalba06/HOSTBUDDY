@@ -21,19 +21,19 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const sourceLabels = ["Airbnb", "Booking", "Sunver", "Site web", "Texte"];
+const sourceLabels = ["Airbnb", "Booking", "Sunver"];
 
 function Landing() {
   const { t } = useI18n();
   return <div className="overflow-hidden">
     <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-5">
       <Logo />
-      <nav className="flex items-center gap-2"><LanguageSelect compact /><Link to="/auth" search={{ mode: "login" }} className="btn btn-secondary hidden sm:inline-flex">{t("common.login")}</Link></nav>
+      <nav className="flex items-center gap-2"><Link to="/integrations" className="inline-flex min-h-12 items-center px-2 font-semibold text-foreground hover:text-primary">{t("marketing.integrations")}</Link><LanguageSelect compact /><Link to="/auth" search={{ mode: "login" }} className="btn btn-secondary hidden md:inline-flex">{t("common.login")}</Link></nav>
     </header>
 
     <main>
        <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
-         <img src={arrivalAsset.url} alt="Accueil lumineux d'une villa méditerranéenne" width={1536} height={1024} className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]" />
+         <img src={arrivalAsset.url} alt={t("marketing.arrivalAlt")} width={1536} height={1024} className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover object-center sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]" />
          <div className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] rounded-xl bg-gradient-to-r from-ink/95 via-ink/70 to-ink/20 sm:inset-x-5 lg:inset-x-8" />
          <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-7rem)] max-w-6xl items-center px-4 py-8 sm:px-10 sm:py-14 lg:px-16">
           <div className="max-w-2xl text-ink-foreground">
@@ -57,7 +57,7 @@ function Landing() {
         <div className="mt-12 grid gap-0 overflow-hidden rounded-2xl border bg-card shadow-soft md:grid-cols-3">
           {[[Link2,"01","marketing.step1","marketing.step1d"],[Sparkles,"02","marketing.step2","marketing.step2d"],[Check,"03","marketing.step3","marketing.step3d"]].map(([Icon,n,title,desc], i) => { const C = Icon as typeof Link2; return <div key={n as string} className={`relative p-7 ${i < 2 ? "border-b md:border-b-0 md:border-r" : ""}`}><span className="text-sm font-extrabold text-primary">{n as string}</span><C className="mt-8 h-8 w-8 text-success"/><h3 className="mt-4 text-2xl font-semibold">{t(title as string)}</h3><p className="mt-2 text-muted-foreground">{t(desc as string)}</p></div>; })}
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-2"><span className="mr-2 text-sm font-semibold text-muted-foreground">{t("marketing.sources")}:</span>{sourceLabels.map((s) => <span key={s} className="rounded-full border bg-card px-3 py-1.5 text-sm font-semibold">{s}</span>)}</div>
+        <div className="mt-6 flex flex-wrap items-center gap-2"><span className="mr-2 text-sm font-semibold text-muted-foreground">{t("marketing.sources")}:</span>{[...sourceLabels,t("marketing.sourceWebsite"),t("marketing.sourceText")].map((s) => <span key={s} className="rounded-full border bg-card px-3 py-1.5 text-sm font-semibold">{s}</span>)}</div>
       </section>
 
       <section className="bg-ink py-24 text-ink-foreground"><div className="mx-auto grid max-w-6xl items-center gap-12 px-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -66,10 +66,10 @@ function Landing() {
       </div></section>
 
       <section className="mx-auto max-w-6xl px-5 py-24"><div className="grid gap-12 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl"><img src={breakfastAsset.url} alt="Petit-déjeuner servi sur une terrasse" loading="lazy" width={1200} height={912} className="aspect-[4/3] h-full w-full object-cover" /></div>
+        <div className="overflow-hidden rounded-2xl"><img src={breakfastAsset.url} alt={t("marketing.breakfastAlt")} loading="lazy" width={1200} height={912} className="aspect-[4/3] h-full w-full object-cover object-center" /></div>
         <div className="self-center"><span className="rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-foreground">{t("marketing.upcoming")}</span><h2 className="mt-5 text-4xl font-semibold">{t("marketing.services")}</h2><p className="mt-4 text-lg text-muted-foreground">{t("marketing.servicesD")}</p><div className="mt-8 grid grid-cols-2 gap-3">{[t("guest.breakfast"),t("guest.massage"),t("guest.transfer"),t("guest.late")].map((x) => <div key={x} className="rounded-lg border bg-card p-4 font-semibold">{x}</div>)}</div></div>
         <div className="self-center lg:order-3"><Star className="h-9 w-9 text-primary"/><h2 className="mt-5 text-4xl font-semibold">{t("marketing.reviews")}</h2><p className="mt-4 text-lg text-muted-foreground">{t("marketing.reviewsD")}</p><p className="mt-6 border-l-4 border-success pl-4 font-semibold">{t("marketing.noGating")}</p></div>
-        <div className="overflow-hidden rounded-2xl lg:order-4"><img src={spaAsset.url} alt="Massage au bord d'une piscine" loading="lazy" width={1200} height={912} className="aspect-[4/3] h-full w-full object-cover" /></div>
+        <div className="overflow-hidden rounded-2xl lg:order-4"><img src={spaAsset.url} alt={t("marketing.spaAlt")} loading="lazy" width={1200} height={912} className="aspect-[4/3] h-full w-full object-cover object-center" /></div>
       </div></section>
 
       <section className="bg-accent py-20"><div className="mx-auto max-w-5xl px-5 text-center"><Globe2 className="mx-auto h-10 w-10 text-accent-foreground"/><h2 className="mt-5 text-4xl font-semibold">{t("marketing.language")}</h2><p className="mx-auto mt-4 max-w-2xl text-lg text-accent-foreground">{t("marketing.languageD")}</p><div className="mt-7 flex flex-wrap justify-center gap-2">{["Français","English","Español","Deutsch","Italiano","Português"].map((x) => <span key={x} className="rounded-full bg-card px-4 py-2 font-semibold shadow-sm">{x}</span>)}</div></div></section>

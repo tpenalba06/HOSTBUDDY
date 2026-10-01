@@ -22,9 +22,12 @@ export async function ensureOrganization() {
   const first = (u.user?.user_metadata?.['first_name'] as string | undefined) ?? "";
   const { data: orgId, error } = await supabase.rpc("ensure_my_organization", { _first_name: first });
   if (error || !orgId) return fail(error);
-  const { data: org, error: e2 } = await supabase.from("organizations").select("id,name,trial_ends_at,preferred_locale,operator_type").eq("id", orgId).single();
-  if (e2) return fail(e2);
-  return { ...org, firstName: first };
+  const [{ data: org, error: e2 }, { data: membership, error: e3 }] = await Promise.all([
+    supabase.from("organizations").select("id,name,trial_ends_at,preferred_locale,operator_type").eq("id", orgId).single(),
+    supabase.from("organization_members").select("role").eq("organization_id", orgId).eq("user_id", u.user!.id).single(),
+  ]);
+  if (e2 || e3) return fail(e2 ?? e3);
+  return { ...org, role: membership.role, firstName: first };
 }
 
 export async function listProperties(orgId: string) {
@@ -50,14 +53,14 @@ export async function getProperty(id: string) {
 }
 
 const DEFAULT_SECTIONS = [
-  ["arrival", "Arrivée"], ["wifi", "Wi-Fi"], ["house", "Le logement"], ["places", "Bonnes adresses"],
-  ["services", "Services"], ["departure", "Départ"], ["contact", "Contact"],
+  ["arrival", "Arrivée", "🔑"], ["wifi", "Wi-Fi", "📶"], ["house", "Le logement", "🏡"], ["places", "Bonnes adresses", "📍"],
+  ["services", "Services", "✨"], ["departure", "Départ", "🧳"], ["contact", "Contact", "💬"],
 ] as const;
 
 function sectionsFromFields(propertyId: string, fields: PropertyField[]) {
-  return DEFAULT_SECTIONS.map(([key, title], index) => {
+  return DEFAULT_SECTIONS.map(([key, title, icon], index) => {
     const items = fields.filter((f) => FIELD_BY_KEY[f.key]?.section.key === key && f.value && f.status === "found").map((f) => ({ label: f.label, text: f.value as string }));
-    return { property_id: propertyId, section_key: key, title, sort_order: index, is_visible: true, content: { items, ...(key === "contact" ? contactContent(items.map((item) => item.text).join("\n")) : {}) } };
+    return { property_id: propertyId, section_key: key, title, icon, sort_order: index, is_visible: true, content: { items, ...(key === "contact" ? contactContent(items.map((item) => item.text).join("\n")) : {}) } };
   });
 }
 
@@ -70,17 +73,17 @@ export async function ensureGuideSections(propertyId: string, fields: PropertyFi
   return data.sort((a, b) => a.sort_order - b.sort_order);
 }
 
-export async function saveGuideSection(section: GuideSection, values: { title: string; text: string; isVisible: boolean }) {
+export async function saveGuideSection(section: GuideSection, values: { title: string; text: string; isVisible: boolean; icon?: string; ctaLabel?: string }) {
   const existing = (section.content && typeof section.content === "object" && !Array.isArray(section.content) ? section.content : {}) as { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
   const content = { ...existing, items: values.text.trim() ? [{ label: "", text: values.text.trim() }] : [], ...(section.section_key === "contact" ? contactContent(values.text) : {}) };
-  const { data, error } = await supabase.from("guide_sections").update({ title: values.title.trim().slice(0, 120) || "Sans titre", content, is_visible: values.isVisible }).eq("id", section.id).select("*").single();
+  const { data, error } = await supabase.from("guide_sections").update({ title: values.title.trim().slice(0, 120) || "Sans titre", content, is_visible: values.isVisible, icon: values.icon?.slice(0, 8) ?? section.icon, cta_label: values.ctaLabel?.trim().slice(0, 80) || null }).eq("id", section.id).select("*").single();
   if (error) return fail(error);
   return data;
 }
 
-export async function addGuideSection(propertyId: string, order: number) {
-  const key = `custom-${crypto.randomUUID().slice(0, 8)}`;
-  const { data, error } = await supabase.from("guide_sections").insert({ property_id: propertyId, section_key: key, title: "Nouvelle section", content: { items: [] }, sort_order: order }).select("*").single();
+export async function addGuideSection(propertyId: string, order: number, template?: { key: string; title: string; icon: string }) {
+  const key = template?.key && !template.key.startsWith("custom") ? `${template.key}-${crypto.randomUUID().slice(0, 4)}` : `custom-${crypto.randomUUID().slice(0, 8)}`;
+  const { data, error } = await supabase.from("guide_sections").insert({ property_id: propertyId, section_key: key, title: template?.title ?? "Nouvelle section", icon: template?.icon ?? "📌", content: { items: [] }, sort_order: order }).select("*").single();
   if (error) return fail(error);
   return data;
 }
@@ -229,4 +232,9 @@ export async function publishProperty(property: Property, fields: PropertyField[
   await ensureGuideSections(property.id, fields);
   const { error: e3 } = await supabase.from("properties").update({ status: "published", published_at: new Date().toISOString() }).eq("id", property.id);
   if (e3) return fail(e3);
+}
+
+export async function unpublishProperty(propertyId: string) {
+  const { error } = await supabase.from("properties").update({ status: "draft" }).eq("id", propertyId);
+  if (error) fail(error);
 }

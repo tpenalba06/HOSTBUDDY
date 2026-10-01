@@ -6,7 +6,9 @@ import type { Database } from "@/integrations/supabase/types";
 export interface PublicSection {
   id: string;
   key: string;
+  icon?: string;
   title: string;
+  ctaLabel?: string | null;
   content: { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
   translations?: { locale: string; title: string; content: PublicSection["content"]; sourceType: "machine" | "human"; isStale: boolean }[];
   media?: { id: string; type: "image" | "video"; path: string; url?: string | null; mimeType: string; caption?: string | null; altText?: string | null; sortOrder: number }[];
@@ -18,6 +20,7 @@ export interface PublicGuide {
   accommodationType?: string | null;
   messagingEnabled?: boolean;
   sections: PublicSection[];
+  services?: { id: string; name: string; description: string; price: number; pricingType: "fixed" | "per_person"; imagePath?: string | null }[];
   review?: { title: string; message: string; destinations: { label: string; url: string }[] } | null;
 }
 

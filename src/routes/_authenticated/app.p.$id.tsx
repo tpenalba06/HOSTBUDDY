@@ -23,11 +23,16 @@ export const Route = createFileRoute("/_authenticated/app/p/$id")({
   pendingComponent: () => <Loading />,
   errorComponent: () => <FriendlyError />,
   notFoundComponent: () => (
-    <div className="mt-10 text-center"><h1 className="text-2xl font-semibold">Ce logement est introuvable</h1>
-      <Link to="/app" className="btn btn-primary mt-6">Retour à mes logements</Link></div>
+    <PropertyNotFound />
   ),
   component: PropertyPage,
 });
+
+
+function PropertyNotFound() {
+  const { t } = useI18n();
+  return <div className="mt-10 text-center"><h1 className="text-2xl font-semibold">{t("property.notFound")}</h1><Link to="/app" className="btn btn-primary mt-6">{t("property.backProperties")}</Link></div>;
+}
 
 const BADGE_CLASS = { found: "bg-success-soft text-success", to_verify: "bg-warning-soft text-warning", missing: "bg-muted text-muted-foreground" } as const;
 
@@ -92,9 +97,9 @@ function PropertyPage() {
     <div className="mt-6">
       {SavedBadge}
       <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("app.myProperties")}</Link>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-bold text-primary">Éditeur</p><h1 className="text-3xl font-semibold">{property.name}</h1></div>{property.status === "published" && <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-secondary">Voir le guide</a>}</div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-bold text-primary">{t("app.editor")}</p><h1 className="text-3xl font-semibold">{property.name}</h1></div>{property.status === "published" && <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-secondary">{t("app.viewGuide")}</a>}</div>
       <NameEditor id={property.id} initial={property.name} onSaved={() => { flashSaved(); qc.invalidateQueries({ queryKey: ["properties"] }); }} />
-      <div className="mt-6 grid grid-cols-2 rounded-lg bg-muted p-1 sm:grid-cols-4"><Button variant={mode === "guide" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("guide")}>Guide</Button><Button variant={mode === "details" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("details")}>Informations</Button><Button variant={mode === "services" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("services")}>Services</Button><Button variant={mode === "reviews" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("reviews")}>Avis</Button></div>
+      <div className="mt-6 grid grid-cols-2 rounded-lg bg-muted p-1 sm:grid-cols-4"><Button variant={mode === "guide" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("guide")}>{t("app.guide")}</Button><Button variant={mode === "details" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("details")}>{t("app.information")}</Button><Button variant={mode === "services" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("services")}>{t("app.services")}</Button><Button variant={mode === "reviews" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("reviews")}>{t("app.reviews")}</Button></div>
       {mode === "guide" && <div className="mt-7"><GuideEditor data={{ property, fields, sections, media }} onChanged={() => qc.invalidateQueries({ queryKey: ["property", id] })} onPreview={() => property.status === "published" ? window.open(`/l/${property.slug}`, "_blank") : setStep("ready")}/></div>}
       {mode === "details" && <>
       <p className={`mt-4 rounded-xl p-3 text-lg font-medium ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}>

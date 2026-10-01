@@ -37,7 +37,7 @@ export const getPublicGuide = createServerFn({ method: "GET" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: signed } = await supabaseAdmin.storage.from("guide-media").createSignedUrls(paths, 3600);
       const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]));
-      result.sections = result.sections.map((section) => ({ ...section, media: section.media?.map((item) => ({ ...item, url: urls.get(item.path) })) }));
+      result.sections = result.sections.map((section) => section.media ? ({ ...section, media: section.media.map((item) => ({ ...item, url: urls.get(item.path) ?? null })) }) : section);
     }
     return result;
   });

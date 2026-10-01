@@ -25,7 +25,9 @@ export function GuideEditor({ data, onChanged, onPreview }: { data: EditorData; 
   const move = async (id: string, direction: -1 | 1) => {
     const index = sorted.findIndex((item) => item.id === id); const target = index + direction;
     if (target < 0 || target >= sorted.length) return;
-    const next = [...sorted]; [next[index], next[target]] = [next[target], next[index]];
+    const next = [...sorted]; const current = next[index]; const replacement = next[target];
+    if (!current || !replacement) return;
+    next[index] = replacement; next[target] = current;
     setSections(next.map((item, i) => ({ ...item, sort_order: i })));
     try { await reorderGuideSections(next); flash(); } catch (e) { setError(friendlyMessage(e)); }
   };

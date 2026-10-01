@@ -9,7 +9,7 @@ export interface PublicSection {
   title: string;
   content: { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
   translations?: { locale: string; title: string; content: PublicSection["content"]; sourceType: "machine" | "human"; isStale: boolean }[];
-  media?: { id: string; type: "image" | "video"; path: string; url?: string; mimeType: string; caption?: string | null; altText?: string | null; sortOrder: number }[];
+  media?: { id: string; type: "image" | "video"; path: string; url?: string | null; mimeType: string; caption?: string | null; altText?: string | null; sortOrder: number }[];
 }
 export interface PublicGuide {
   id: string;

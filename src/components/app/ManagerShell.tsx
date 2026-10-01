@@ -21,10 +21,10 @@ export function ManagerShell({ children, orgName, role = "owner", active = "prop
     { id: "feedback", to: "/app/feedback", label: t("nav.feedback"), icon: Star },
   ];
   const management: NavItem[] = [
-    ...(role !== "member" ? [{ id: "connections" as const, to: "/app/connections", label: t("nav.connections"), icon: Cable }] : []),
+    ...(role !== "member" ? [{ id: "connections" as const, to: "/app/connections" as const, label: t("nav.connections"), icon: Cable }] : []),
     ...(role === "owner" ? [
-      { id: "dashboard" as const, to: "/app/dashboard", label: t("nav.dashboard"), icon: BarChart3 },
-      { id: "team" as const, to: "/app/team", label: t("nav.team"), icon: Users },
+      { id: "dashboard" as const, to: "/app/dashboard" as const, label: t("nav.dashboard"), icon: BarChart3 },
+      { id: "team" as const, to: "/app/team" as const, label: t("nav.team"), icon: Users },
     ] : []),
   ];
   const properties: NavItem = { id: "properties", to: "/app", label: t("nav.properties"), icon: Home };
@@ -45,17 +45,17 @@ export function ManagerShell({ children, orgName, role = "owner", active = "prop
   </div>;
 }
 
-function ShellItem({ item, active, primary, onNavigate }: { item: NavItem; active: boolean; primary?: boolean; onNavigate?: (area: ManagerArea) => void }) {
+function ShellItem({ item, active, primary, onNavigate }: { item: NavItem; active: boolean; primary?: boolean; onNavigate?: ((area: ManagerArea) => void) | undefined }) {
   const classes = `flex min-h-12 w-full items-center gap-3 rounded-lg px-3 font-semibold transition ${primary ? "mt-5 bg-primary text-primary-foreground" : active ? "bg-secondary text-primary" : "hover:bg-muted"}`;
   if (onNavigate) return <Button variant="ghost" className={classes} onClick={() => onNavigate(item.id)}><item.icon className="h-5 w-5"/><span className="min-w-0 truncate">{item.label}</span></Button>;
   return <Link to={item.to} preload="intent" className={classes}><item.icon className="h-5 w-5"/><span className="min-w-0 truncate">{item.label}</span></Link>;
 }
-function MobileItem({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate?: (area: ManagerArea) => void }) {
+function MobileItem({ item, active, onNavigate }: { item: NavItem; active: boolean; onNavigate?: ((area: ManagerArea) => void) | undefined }) {
   const classes = `flex h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-none px-1 text-[11px] font-semibold ${active ? "text-primary" : "text-foreground"}`;
   if (onNavigate) return <Button variant="ghost" className={classes} onClick={() => onNavigate(item.id)}><item.icon className="h-5 w-5"/><span className="max-w-full truncate">{item.label}</span></Button>;
   return <Link to={item.to} preload="intent" className={classes}><item.icon className="h-5 w-5"/><span className="max-w-full truncate">{item.label}</span></Link>;
 }
-function DrawerItem({ item, onNavigate }: { item: NavItem; onNavigate?: (area: ManagerArea) => void }) {
+function DrawerItem({ item, onNavigate }: { item: NavItem; onNavigate?: ((area: ManagerArea) => void) | undefined }) {
   if (onNavigate) return <Button variant="outline" className="min-h-14 justify-start gap-3 px-4" onClick={() => onNavigate(item.id)}><item.icon/>{item.label}</Button>;
   return <Link to={item.to} className="flex min-h-14 items-center gap-3 rounded-lg border bg-card px-4 font-semibold"><item.icon/>{item.label}</Link>;
 }

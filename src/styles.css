@@ -124,6 +124,7 @@
 
 .demo-container { container-type: inline-size; }
 .demo-viewport { height: clamp(680px, 76dvh, 880px); }
+.manager-shell { container-type: inline-size; }
 .manager-shell-grid { display: grid; grid-template-columns: 230px minmax(0, 1fr); min-height: 100%; }
 .manager-shell-sidebar { display: block; }
 .manager-shell-mobile { display: none; }

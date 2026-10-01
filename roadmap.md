@@ -21,4 +21,4 @@
 - [x] Add private tenant-scoped photo/video uploads and public signed delivery
 - [x] Add real guide-to-manager messaging with abuse protection
 - [x] Upgrade public guide media, typography, contact, and responsive layouts
-- [ ] Verify authenticated manager, publishing, isolation, and all target viewports
+- [x] Verify authenticated manager, publishing, isolation, and all target viewports

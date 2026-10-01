@@ -12,4 +12,4 @@
 - [x] Add typed registry and provider interfaces
 - [x] Add public integrations catalog and suggestion flow
 - [x] Add calm signed-in Connections entry
-- [ ] Verify existing Phase 2 and Phase 3 flows remain healthy
+- [x] Verify existing Phase 2 and Phase 3 flows remain healthy

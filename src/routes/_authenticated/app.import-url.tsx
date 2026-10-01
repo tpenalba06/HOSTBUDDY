@@ -59,10 +59,10 @@ function ImportUrl() {
     return (
       <div className="mt-6">
         <p className="text-4xl">🔍</p>
-        <h1 className="mt-2 text-3xl font-semibold">Nous n'avons pas pu récupérer suffisamment d'informations depuis ce lien.</h1>
-        <p className="mt-3 text-lg text-muted-foreground">Certains sites ne se laissent pas lire automatiquement. Pas de souci : copiez le texte de votre annonce, on s'occupe du reste.</p>
-        <Link to="/app/import-text" className="btn btn-primary mt-8 w-full text-lg">Coller le texte de l'annonce</Link>
-        <Link to="/app/manual" className="btn btn-secondary mt-3 w-full">Ajouter les informations moi-même</Link>
+        <h1 className="mt-2 text-3xl font-semibold">{t("import.fallbackTitle")}</h1>
+        <p className="mt-3 text-lg text-muted-foreground">{t("import.fallbackText")}</p>
+        <Link to="/app/import-text" className="btn btn-primary mt-8 w-full text-lg">{t("import.fallbackPrimary")}</Link>
+        <Link to="/app/manual" className="btn btn-secondary mt-3 w-full">{t("import.fallbackSecondary")}</Link>
         <button className="mt-3 min-h-12 w-full font-medium text-muted-foreground underline" onClick={() => setFallback(false)}>Essayer un autre lien</button>
       </div>
     );
@@ -71,13 +71,13 @@ function ImportUrl() {
   return (
     <div className="mt-6">
       <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("common.back")}</Link>
-      <h1 className="text-3xl font-semibold">Collez simplement le lien de votre logement</h1>
+      <h1 className="text-3xl font-semibold">{t("import.urlTitle")}</h1>
       {stage !== null ? <ImportProgress stages={STAGES} current={stage} /> : (
         <div className="mt-6 space-y-4">
           <input className="field text-lg" inputMode="url" autoComplete="url" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && go()} />
           {error && <p role="alert" className="rounded-xl bg-warning-soft p-3">{error}</p>}
-          <button className="btn btn-primary w-full text-lg" onClick={go} disabled={!url.trim()}>Importer</button>
-          <p className="text-center text-muted-foreground">Vous pourrez tout vérifier et modifier avant publication.</p>
+          <button className="btn btn-primary w-full text-lg" onClick={go} disabled={!url.trim()}>{t("import.action")}</button>
+          <p className="text-center text-muted-foreground">{t("import.urlHelp")}</p>
         </div>
       )}
     </div>

@@ -63,14 +63,14 @@ function ImportText() {
   return (
     <div className="mt-6">
       <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("common.back")}</Link>
-      <h1 className="text-3xl font-semibold">Collez tout ce que vous avez. Même si c'est mal rangé.</h1>
-      <p className="mt-2 text-lg text-muted-foreground">HostBuddy s'occupe du reste.</p>
+      <h1 className="text-3xl font-semibold">{t("import.textTitle")}</h1>
+      <p className="mt-2 text-lg text-muted-foreground">{t("import.textHelp")}</p>
       {stage !== null ? <ImportProgress stages={STAGES} current={stage} /> : (
         <div className="mt-6 space-y-4">
           <textarea className="field min-h-72 text-lg" placeholder="Vos notes, un message WhatsApp, un e-mail, le texte de votre annonce…" value={text} onChange={(e) => setText(e.target.value)} />
           <button className="min-h-12 font-semibold text-primary underline" onClick={() => setText(EXAMPLE)}>Essayer avec un exemple</button>
           {error && <p role="alert" className="rounded-xl bg-warning-soft p-3">{error}</p>}
-          <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>Ranger mes informations</button>
+          <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>{t("import.textAction")}</button>
         </div>
       )}
     </div>

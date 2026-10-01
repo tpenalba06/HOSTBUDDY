@@ -16,13 +16,13 @@ export const SECTIONS = [
 export type SectionId = "welcome" | (typeof SECTIONS)[number]["id"];
 const primary = ["arrival", "wifi", "house", "places", "services", "departure"];
 
-export function GuestGuide({ data, section, onSection }: { data: GuideData; section: SectionId; onSection: (s: SectionId) => void }) {
+export function GuestGuide({ data, section, onSection, heroImage = arrivalAsset.url }: { data: GuideData; section: SectionId; onSection: (s: SectionId) => void; heroImage?: string }) {
   const { t } = useI18n();
   const [cart, setCart] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
   const back = () => { onSection("welcome"); setCart(null); setPaid(false); };
-  if (section === "welcome") return <div className="space-y-4">
-    <div className="relative -mx-4 -mt-4 h-60 overflow-hidden rounded-t-[1.9rem]"><img src={arrivalAsset.url} alt="Villa Mare" width={1536} height={1024} className="h-full w-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-transparent to-ink/20"/><div className="absolute inset-x-4 top-4 flex justify-end"><LanguageSelect compact /></div><div className="absolute inset-x-5 bottom-5 text-ink-foreground"><p className="text-sm font-semibold text-ink-foreground/80">{t("guest.welcome")}</p><h3 className="text-3xl font-semibold">{data.name}</h3><p className="mt-1 text-sm">{data.host}</p></div></div>
+  if (section === "welcome") return <div className="space-y-4 text-foreground">
+    <div className="relative -mx-4 -mt-4 h-64 overflow-hidden rounded-t-[1.5rem]"><img src={heroImage} alt="Villa Mare" width={1536} height={1024} className="h-full w-full object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/20 to-ink/45"/><div className="absolute inset-x-4 top-4 flex justify-end"><LanguageSelect compact /></div><div className="absolute inset-x-5 bottom-5 text-ink-foreground"><p className="text-sm font-semibold text-ink-foreground/90">{t("guest.welcome")}</p><h3 className="text-3xl font-semibold">{data.name}</h3><p className="mt-1 text-sm font-semibold">{data.host}</p></div></div>
     <p className="font-semibold">{t("guest.stay")}</p>
     <div className="grid grid-cols-2 gap-2">{SECTIONS.filter((s) => primary.includes(s.id)).map((s) => <button key={s.id} onClick={() => onSection(s.id)} className="flex min-h-20 flex-col justify-between rounded-lg border bg-card p-3 text-left font-semibold transition hover:border-primary"><span className="text-xl" aria-hidden>{s.icon}</span>{s.label}</button>)}</div>
     <div className="grid grid-cols-2 gap-2"><button onClick={() => onSection("contact")} className="btn btn-primary px-3"><MessageCircle className="h-4 w-4"/>Contact</button><button onClick={() => onSection("pool")} className="btn btn-secondary px-3">🏊 Piscine</button></div>
@@ -31,7 +31,7 @@ export function GuestGuide({ data, section, onSection }: { data: GuideData; sect
   const meta = SECTIONS.find((s) => s.id === section);
   const service = data.services.find((s) => s.id === cart);
   if (!meta) return null;
-  return <div className="space-y-4"><button onClick={back} className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary"><ArrowLeft className="h-4 w-4"/>{t("guest.back")}</button><h3 className="text-3xl font-semibold"><span aria-hidden>{meta.icon}</span> {meta.label}</h3>
+  return <div className="space-y-4 text-foreground"><button onClick={back} className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary"><ArrowLeft className="h-4 w-4"/>{t("guest.back")}</button><h3 className="text-3xl font-semibold"><span aria-hidden>{meta.icon}</span> {meta.label}</h3>
     {section === "arrival" && <p>{data.arrival}</p>}{section === "house" && <p>{data.house}</p>}{section === "pool" && <p>{data.pool}</p>}{section === "departure" && <p>{data.departure}</p>}
     {section === "wifi" && <div className="rounded-lg bg-muted p-4"><p className="text-sm text-muted-foreground">Réseau</p><p className="text-lg font-semibold">{data.wifi.network}</p><p className="mt-2 text-sm text-muted-foreground">Mot de passe</p><p className="text-lg font-semibold">{data.wifi.password}</p><button className="btn btn-primary mt-4 w-full" onClick={() => navigator.clipboard?.writeText(data.wifi.password)}><Copy className="h-4 w-4"/>Copier</button></div>}
     {section === "places" && data.places.map((p) => <div key={p.name} className="rounded-lg border p-3"><p className="font-semibold">{p.name}</p><p className="text-sm text-muted-foreground">{p.note}</p></div>)}

@@ -32,10 +32,10 @@ function Landing() {
     </header>
 
     <main>
-      <section className="relative mx-auto min-h-[950px] max-w-[1600px] px-5 pb-12 pt-3 sm:min-h-[780px] lg:px-8">
-        <img src={arrivalAsset.url} alt="Accueil lumineux d'une villa méditerranéenne" width={1536} height={1024} className="absolute inset-x-5 top-3 h-[900px] w-[calc(100%-2.5rem)] rounded-3xl object-cover sm:h-[710px] lg:inset-x-8 lg:w-[calc(100%-4rem)]" />
-        <div className="absolute inset-x-5 top-3 h-[900px] rounded-3xl bg-gradient-to-r from-ink/90 via-ink/60 to-transparent sm:h-[710px] lg:inset-x-8" />
-        <div className="relative z-10 mx-auto flex h-[900px] max-w-6xl items-start px-5 py-8 sm:h-[710px] sm:items-center sm:px-10 sm:py-14 lg:px-16">
+       <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
+         <img src={arrivalAsset.url} alt="Accueil lumineux d'une villa méditerranéenne" width={1536} height={1024} className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]" />
+         <div className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] rounded-xl bg-gradient-to-r from-ink/95 via-ink/70 to-ink/20 sm:inset-x-5 lg:inset-x-8" />
+         <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-7rem)] max-w-6xl items-center px-4 py-8 sm:px-10 sm:py-14 lg:px-16">
           <div className="max-w-2xl text-ink-foreground">
             <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-card/95 px-4 py-2 text-sm font-bold text-foreground shadow-soft"><WandSparkles className="h-4 w-4 text-primary" />{t("marketing.badge")}</p>
              <h1 className="text-balance text-5xl font-semibold leading-[1.05] sm:text-7xl">{t("marketing.title")}</h1>
@@ -44,7 +44,7 @@ function Landing() {
               {["marketing.benefit1","marketing.benefit2","marketing.benefit3","marketing.benefit4"].map((k) => <li key={k} className="flex items-center gap-2"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground"><Check className="h-4 w-4" /></span>{t(k)}</li>)}
             </ul>
             <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><strong className="font-display text-4xl font-semibold">{t("marketing.price")}</strong><span className="text-ink-foreground/80">{t("marketing.priceNote")}</span></div>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row"><Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">{t("common.try")}<ArrowRight className="h-5 w-5" /></Link><a href="#demo" className="btn border-2 border-ink-foreground/60 bg-ink/20 text-ink-foreground backdrop-blur hover:bg-ink/35">{t("common.demo")}</a></div>
+             <div className="mt-7 flex flex-col gap-3 sm:flex-row"><Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">{t("common.try")}<ArrowRight className="h-5 w-5" /></Link><Link to="/demo" className="btn border-2 border-ink-foreground/60 bg-ink/20 text-ink-foreground backdrop-blur hover:bg-ink/35">{t("common.demo")}</Link></div>
             <p className="mt-4 text-sm font-semibold text-ink-foreground/80">{t("marketing.trial")}</p>
           </div>
         </div>
@@ -62,7 +62,7 @@ function Landing() {
 
       <section className="bg-ink py-24 text-ink-foreground"><div className="mx-auto grid max-w-6xl items-center gap-12 px-5 lg:grid-cols-[0.9fr_1.1fr]">
         <div><p className="font-bold text-accent">HostBuddy</p><h2 className="mt-3 text-balance text-4xl font-semibold sm:text-5xl">{t("marketing.arrival")}</h2><p className="mt-5 max-w-lg text-lg text-ink-foreground/75">{t("marketing.arrivalD")}</p><div className="mt-8 flex items-center gap-3 text-sm font-semibold"><ShieldCheck className="h-5 w-5 text-accent"/>QR ou lien · sans compte · sans installation</div></div>
-        <div id="demo" className="motion-float"><PhoneDemo /></div>
+        <div id="demo" className="motion-float"><PhoneDemo /><Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">Ouvrir la démo complète</Link></div>
       </div></section>
 
       <section className="mx-auto max-w-6xl px-5 py-24"><div className="grid gap-12 lg:grid-cols-2">

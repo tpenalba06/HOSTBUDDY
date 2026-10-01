@@ -4,15 +4,19 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 export interface PublicSection {
+  id: string;
   key: string;
   title: string;
   content: { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
   translations?: { locale: string; title: string; content: PublicSection["content"]; sourceType: "machine" | "human"; isStale: boolean }[];
+  media?: { id: string; type: "image" | "video"; path: string; url?: string | null; mimeType: string; caption?: string | null; altText?: string | null; sortOrder: number }[];
 }
 export interface PublicGuide {
+  id: string;
   name: string;
   originalLocale: string;
   accommodationType?: string | null;
+  messagingEnabled?: boolean;
   sections: PublicSection[];
   review?: { title: string; message: string; destinations: { label: string; url: string }[] } | null;
 }
@@ -26,5 +30,14 @@ export const getPublicGuide = createServerFn({ method: "GET" })
     });
     const { data: guide, error } = await sb.rpc("get_public_guide", { _slug: data.slug });
     if (error) { console.error(error); throw new Error("unavailable"); }
-    return (guide as unknown as PublicGuide | null) ?? null;
+    const result = (guide as unknown as PublicGuide | null) ?? null;
+    if (!result) return null;
+    const paths = result.sections.flatMap((section) => section.media?.map((item) => item.path) ?? []);
+    if (paths.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed } = await supabaseAdmin.storage.from("guide-media").createSignedUrls(paths, 3600);
+      const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]));
+      result.sections = result.sections.map((section) => section.media ? ({ ...section, media: section.media.map((item) => ({ ...item, url: urls.get(item.path) ?? null })) }) : section);
+    }
+    return result;
   });

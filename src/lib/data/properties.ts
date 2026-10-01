@@ -8,6 +8,8 @@ export type Property = Tables<"properties">;
 export type PropertyField = Tables<"property_fields">;
 export type ReviewSettings = Tables<"property_review_settings">;
 export type ReviewDestination = Tables<"property_review_destinations">;
+export type GuideSection = Tables<"guide_sections">;
+export type SectionMedia = Tables<"section_media">;
 
 export class FriendlyError extends Error {}
 const fail = (e: unknown, msg = "Votre connexion a été interrompue. Vos informations déjà enregistrées sont conservées."): never => {
@@ -32,16 +34,98 @@ export async function listProperties(orgId: string) {
 }
 
 export async function getProperty(id: string) {
-  const [{ data: property, error }, { data: fields, error: e2 }, { data: review }, { data: destinations }] = await Promise.all([
+  const [{ data: property, error }, { data: fields, error: e2 }, { data: review }, { data: destinations }, { data: sections }, { data: media }] = await Promise.all([
     supabase.from("properties").select("*").eq("id", id).maybeSingle(),
     supabase.from("property_fields").select("*").eq("property_id", id),
     supabase.from("property_review_settings").select("*").eq("property_id", id).maybeSingle(),
     supabase.from("property_review_destinations").select("*").eq("property_id", id).order("sort_order"),
+    supabase.from("guide_sections").select("*").eq("property_id", id).order("sort_order"),
+    supabase.from("section_media").select("*").eq("property_id", id).order("sort_order"),
   ]);
   if (error || e2) return fail(error ?? e2);
   if (!property) return null;
   const order = FIELD_DEFS.map((f) => f.key);
-  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)), review: review ?? null, destinations: destinations ?? [] };
+  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)), review: review ?? null, destinations: destinations ?? [], sections: sections ?? [], media: media ?? [] };
+}
+
+const DEFAULT_SECTIONS = [
+  ["arrival", "Arrivée"], ["wifi", "Wi-Fi"], ["house", "Le logement"], ["places", "Bonnes adresses"],
+  ["services", "Services"], ["departure", "Départ"], ["contact", "Contact"],
+] as const;
+
+function sectionsFromFields(propertyId: string, fields: PropertyField[]) {
+  return DEFAULT_SECTIONS.map(([key, title], index) => {
+    const items = fields.filter((f) => FIELD_BY_KEY[f.key]?.section.key === key && f.value && f.status === "found").map((f) => ({ label: f.label, text: f.value as string }));
+    return { property_id: propertyId, section_key: key, title, sort_order: index, is_visible: true, content: { items, ...(key === "contact" ? contactContent(items.map((item) => item.text).join("\n")) : {}) } };
+  });
+}
+
+export async function ensureGuideSections(propertyId: string, fields: PropertyField[]) {
+  const { data: current, error } = await supabase.from("guide_sections").select("*").eq("property_id", propertyId).order("sort_order");
+  if (error) return fail(error);
+  if (current.length) return current;
+  const { data, error: insertError } = await supabase.from("guide_sections").insert(sectionsFromFields(propertyId, fields)).select("*");
+  if (insertError) return fail(insertError);
+  return data.sort((a, b) => a.sort_order - b.sort_order);
+}
+
+export async function saveGuideSection(section: GuideSection, values: { title: string; text: string; isVisible: boolean }) {
+  const existing = (section.content && typeof section.content === "object" && !Array.isArray(section.content) ? section.content : {}) as { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
+  const content = { ...existing, items: values.text.trim() ? [{ label: "", text: values.text.trim() }] : [], ...(section.section_key === "contact" ? contactContent(values.text) : {}) };
+  const { data, error } = await supabase.from("guide_sections").update({ title: values.title.trim().slice(0, 120) || "Sans titre", content, is_visible: values.isVisible }).eq("id", section.id).select("*").single();
+  if (error) return fail(error);
+  return data;
+}
+
+export async function addGuideSection(propertyId: string, order: number) {
+  const key = `custom-${crypto.randomUUID().slice(0, 8)}`;
+  const { data, error } = await supabase.from("guide_sections").insert({ property_id: propertyId, section_key: key, title: "Nouvelle section", content: { items: [] }, sort_order: order }).select("*").single();
+  if (error) return fail(error);
+  return data;
+}
+
+export async function reorderGuideSections(sections: GuideSection[]) {
+  const results = await Promise.all(sections.map((section, index) => supabase.from("guide_sections").update({ sort_order: index }).eq("id", section.id)));
+  const error = results.find((result) => result.error)?.error;
+  if (error) fail(error);
+}
+
+export async function deleteGuideSection(sectionId: string) {
+  const { data: media, error: mediaError } = await supabase.from("section_media").select("storage_path").eq("section_id", sectionId);
+  if (mediaError) return fail(mediaError);
+  if (media.length) {
+    const { error: storageError } = await supabase.storage.from("guide-media").remove(media.map((item) => item.storage_path));
+    if (storageError) return fail(storageError);
+  }
+  const { error } = await supabase.from("guide_sections").delete().eq("id", sectionId);
+  if (error) fail(error);
+}
+
+export async function uploadSectionMedia(orgId: string, propertyId: string, sectionId: string, file: File) {
+  const isImage = file.type.startsWith("image/");
+  const allowed = isImage ? ["image/jpeg", "image/png", "image/webp", "image/avif"] : ["video/mp4", "video/webm"];
+  const max = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+  if (!allowed.includes(file.type) || file.size > max) throw new FriendlyError(isImage ? "Choisissez une image JPG, PNG, WebP ou AVIF de moins de 10 Mo." : "Choisissez une vidéo MP4 ou WebM de moins de 50 Mo.");
+  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || (isImage ? "jpg" : "mp4");
+  const path = `${orgId}/${propertyId}/${sectionId}/${crypto.randomUUID()}.${ext}`;
+  const { error: uploadError } = await supabase.storage.from("guide-media").upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) return fail(uploadError, "L’envoi du fichier a échoué. Réessayez.");
+  const { data, error } = await supabase.from("section_media").insert({ organization_id: orgId, property_id: propertyId, section_id: sectionId, media_type: isImage ? "image" : "video", storage_path: path, mime_type: file.type, file_size: file.size }).select("*").single();
+  if (error) { await supabase.storage.from("guide-media").remove([path]); return fail(error); }
+  return data;
+}
+
+export async function updateSectionMedia(media: SectionMedia, values: { caption?: string; altText?: string; sortOrder?: number }) {
+  const { data, error } = await supabase.from("section_media").update({ caption: values.caption?.slice(0, 240) ?? media.caption, alt_text: values.altText?.slice(0, 240) ?? media.alt_text, sort_order: values.sortOrder ?? media.sort_order }).eq("id", media.id).select("*").single();
+  if (error) return fail(error);
+  return data;
+}
+
+export async function removeSectionMedia(media: SectionMedia) {
+  const { error: storageError } = await supabase.storage.from("guide-media").remove([media.storage_path]);
+  if (storageError) return fail(storageError);
+  const { error } = await supabase.from("section_media").delete().eq("id", media.id);
+  if (error) fail(error);
 }
 
 export async function saveOrganizationPreferences(orgId: string, values: { preferredLocale?: string; operatorType?: string }) {
@@ -49,6 +133,11 @@ export async function saveOrganizationPreferences(orgId: string, values: { prefe
     ...(values.preferredLocale ? { preferred_locale: values.preferredLocale } : {}),
     ...(values.operatorType ? { operator_type: values.operatorType } : {}),
   }).eq("id", orgId);
+  if (error) fail(error);
+}
+
+export async function saveMessagingSetting(propertyId: string, isEnabled: boolean) {
+  const { error } = await supabase.from("property_messaging_settings").upsert({ property_id: propertyId, is_enabled: isEnabled });
   if (error) fail(error);
 }
 
@@ -130,25 +219,7 @@ function contactContent(text: string) {
 
 /** Publishing rebuilds visible guide sections from confirmed fields only. */
 export async function publishProperty(property: Property, fields: PropertyField[]) {
-  const sections = new Map<string, { title: string; order: number; items: { label: string; text: string }[] }>();
-  for (const f of fields) {
-    if (!f.value || f.status !== "found") continue;
-    const def = FIELD_BY_KEY[f.key];
-    if (!def) continue;
-    const s = sections.get(def.section.key) ?? { title: `${def.section.icon} ${def.section.title}`, order: def.section.order, items: [] };
-    s.items.push({ label: def.label, text: f.value });
-    sections.set(def.section.key, s);
-  }
-  const rows = [...sections.entries()].map(([key, s]) => ({
-    property_id: property.id, section_key: key, title: s.title, sort_order: s.order, is_visible: true,
-    content: { items: s.items, ...(key === "contact" ? contactContent(s.items.map((i) => i.text).join("\n")) : {}) },
-  }));
-  const { error: d } = await supabase.from("guide_sections").delete().eq("property_id", property.id);
-  if (d) return fail(d);
-  if (rows.length) {
-    const { error } = await supabase.from("guide_sections").insert(rows);
-    if (error) return fail(error);
-  }
+  await ensureGuideSections(property.id, fields);
   const { error: e3 } = await supabase.from("properties").update({ status: "published", published_at: new Date().toISOString() }).eq("id", property.id);
   if (e3) return fail(e3);
 }

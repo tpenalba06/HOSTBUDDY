@@ -81,7 +81,7 @@ function AuthPage() {
   if (checkEmail) {
     return (
       <main className="mx-auto max-w-md px-5 py-8 text-center">
-        <div className="flex items-center justify-between"><Logo /><LanguageSelect compact /></div>
+       <div className="flex items-center justify-between"><Link to="/" className="inline-flex min-h-12 items-center gap-1 font-semibold text-primary">← Retour</Link><LanguageSelect compact /></div><div className="mt-4"><Logo /></div>
         <p className="mt-12 text-5xl">📬</p>
         <h1 className="mt-4 text-3xl font-semibold">{t("auth.checkTitle")}</h1>
         <p className="mt-3 text-lg">{t("auth.checkBody")} <strong>{form.email}</strong></p>
@@ -91,7 +91,7 @@ function AuthPage() {
 
   return (
     <main className="mx-auto max-w-md px-5 py-8">
-      <div className="flex items-center justify-between"><Logo /><LanguageSelect compact /></div>
+       <div className="flex items-center justify-between"><Link to="/" className="inline-flex min-h-12 items-center gap-1 font-semibold text-primary">← Retour au site</Link><LanguageSelect compact /></div><div className="mt-4"><Logo /></div>
       <h1 className="mt-10 text-3xl font-semibold">{isSignup ? t("auth.signupTitle") : `${t("auth.loginTitle")} 👋`}</h1>
       {isSignup && <p className="mt-2 text-muted-foreground">{t("auth.subtitle")}</p>}
       <button type="button" className="btn btn-secondary mt-6 w-full" onClick={google}>{t("auth.google")}</button>

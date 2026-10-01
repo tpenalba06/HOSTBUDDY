@@ -15,6 +15,20 @@
       "when": 1790857523364,
       "tag": "0001_phase3_international_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790859295822,
+      "tag": "0002_phase4_editor_media_messaging",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790859642650,
+      "tag": "0003_harden_phase4_tenant_media_messaging",
+      "breakpoints": true
     }
   ]
 }

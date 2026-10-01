@@ -44,3 +44,9 @@
 - [x] Add Integrations to the top navigation
 - [x] Improve demo cover-image framing and align Piscine / Spa with guide sections
 - [x] Verify all six language switches and remove remaining mixed-language homepage copy
+## Focused homepage preview and manager demo parity
+- [ ] Extract and share the authenticated manager navigation shell
+- [ ] Add working local demo screens for every owner navigation area
+- [ ] Replace the homepage phone mockup with a large container-responsive preview
+- [ ] Preserve the full demo and traveler/editor handoff
+- [ ] Verify all requested preview widths and production app health

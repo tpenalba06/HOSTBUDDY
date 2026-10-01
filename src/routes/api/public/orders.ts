@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/orders")({ server: { handlers:
   const ip = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown";
   const fingerprint = createHash("sha256").update(`${ip}|${request.headers.get("user-agent") ?? ""}|${parsed.data.slug}`).digest("hex");
   const client = createClient<Database>(process.env['SUPABASE_URL']!, process.env['SUPABASE_PUBLISHABLE_KEY']!, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { error } = await client.rpc("submit_guest_order", { _slug: parsed.data.slug, _service: parsed.data.serviceId, _name: parsed.data.name, _contact: parsed.data.contact, _quantity: parsed.data.quantity, _requested_for: parsed.data.requestedFor ?? null, _fingerprint: fingerprint, _website: parsed.data.website });
+  const { error } = await client.rpc("submit_guest_order", { _slug: parsed.data.slug, _service: parsed.data.serviceId, _name: parsed.data.name, _contact: parsed.data.contact, _quantity: parsed.data.quantity, _requested_for: parsed.data.requestedFor ?? new Date().toISOString(), _fingerprint: fingerprint, _website: parsed.data.website });
   if (error) return Response.json({ error: error.message.includes("rate limited") ? "Trop de demandes. Réessayez plus tard." : "La demande n’a pas pu être envoyée." }, { status: error.message.includes("rate limited") ? 429 : 400 });
   return Response.json({ ok: true });
 } } } });

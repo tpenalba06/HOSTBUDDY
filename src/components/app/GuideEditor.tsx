@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Eye, ImagePlus, Plus, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,18 @@ function SectionRow({ section, media, open, onToggle, onSave, onUpload, onMediaC
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const hydrated = useRef(false);
+  const saveRef = useRef(onSave);
+  useEffect(() => { saveRef.current = onSave; }, [onSave]);
+  useEffect(() => {
+    if (!hydrated.current) { hydrated.current = true; return; }
+    const timer = window.setTimeout(async () => {
+      if (!title.trim()) return;
+      setBusy(true);
+      try { await saveRef.current({ title, text, isVisible: visible, icon, ctaLabel }); } finally { setBusy(false); }
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [title, text, visible, icon, ctaLabel]);
   return <article className="rounded-lg border bg-card">
     <button onClick={onToggle} className="flex min-h-16 w-full items-center gap-3 px-4 text-left"><span className="text-xl" aria-hidden>{section.icon}</span><span className="min-w-0 flex-1"><span className="block truncate text-lg font-bold">{section.title}</span><span className={`text-sm ${section.is_visible?"text-muted-foreground":"font-semibold text-foreground"}`}>{section.is_visible ? "Visible dans le guide" : "Masquée"}{media.length ? ` · ${media.length} média${media.length > 1 ? "s" : ""}` : ""}</span></span>{open ? <ChevronUp/> : <ChevronDown/>}</button>
     {open && <div className="space-y-5 border-t p-4 sm:p-5">
@@ -65,7 +77,7 @@ function SectionRow({ section, media, open, onToggle, onSave, onUpload, onMediaC
       <div><p className="font-semibold">Photos et vidéos</p><p className="text-sm text-muted-foreground">Images jusqu’à 10 Mo. Vidéos MP4/WebM jusqu’à 50 Mo.</p><div className="mt-3 grid gap-3 sm:grid-cols-2">{media.sort((a,b) => a.sort_order-b.sort_order).map((item) => <MediaItem key={item.id} item={item} onChange={onMediaChange} onRemove={() => onMediaRemove(item)}/>)}</div><div className="mt-3 grid gap-2 sm:grid-cols-2"><UploadButton icon={<ImagePlus/>} label="Ajouter une photo" accept="image/jpeg,image/png,image/webp,image/avif" busy={uploading} onFile={async (file) => { setUploading(true); await onUpload(file); setUploading(false); }}/><UploadButton icon={<Video/>} label="Ajouter une vidéo" accept="video/mp4,video/webm" busy={uploading} onFile={async (file) => { setUploading(true); await onUpload(file); setUploading(false); }}/></div></div>
        <button onClick={()=>setMore(!more)} className="min-h-12 font-semibold text-primary">{more?"Moins d’options":"Plus d’options"}</button>
        {more&&<div className="space-y-4 rounded-xl bg-muted p-4"><label className="block"><span className="mb-1 block font-semibold">Texte du bouton <span className="font-normal text-muted-foreground">(facultatif)</span></span><input className="field" value={ctaLabel} maxLength={80} onChange={e=>setCtaLabel(e.target.value)} placeholder="En savoir plus"/></label><div className="flex flex-wrap gap-2"><Button variant="outline" className="min-h-12" disabled={!canUp} onClick={onMoveUp}><ChevronUp/>Monter</Button><Button variant="outline" className="min-h-12" disabled={!canDown} onClick={onMoveDown}><ChevronDown/>Descendre</Button><Button variant="ghost" className="min-h-12 text-destructive" onClick={onDelete}><Trash2/>Supprimer</Button></div></div>}
-       <Button className="min-h-12 w-full rounded-full" disabled={busy || !title.trim()} onClick={async () => { setBusy(true); await onSave({ title, text, isVisible: visible, icon, ctaLabel }); setBusy(false); }}>{busy ? "Enregistrement…" : "Enregistrer la section"}</Button>
+       <p aria-live="polite" className="flex min-h-12 items-center justify-center text-sm font-semibold text-muted-foreground">{busy ? "Enregistrement…" : "Les modifications sont enregistrées automatiquement"}</p>
     </div>}
   </article>;
 }

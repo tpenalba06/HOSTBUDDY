@@ -25,3 +25,5 @@
 - Integration claims and connection UX derive from the typed registry; provider adapters normalize into the Universal Import Engine model, and planned connectors must remain explicit non-operational stubs until real authorization exists.
 - Guide media lives in the private `guide-media` bucket under organization/property/section paths; managers use tenant RLS and published guides receive short-lived signed URLs through the public guide server function.
 - Guest messages enter only through the validated, rate-limited public endpoint; managers read and reply through tenant-isolated tables.
+- Guest orders and private feedback use validated rate-limited security-definer submissions; operational tables stay tenant-isolated, while owner-only team changes use authenticated RPCs.
+- Organization roles are authoritative in membership rows: owners manage team and financial summaries, admins edit content and settings, and members have read-only property plus operational access.

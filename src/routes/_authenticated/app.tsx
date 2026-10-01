@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { BarChart3, Cable, ClipboardList, Home, LogOut, Menu, MessageCircle, Plus, Settings, Star, Users, X } from "lucide-react";
+import { BarChart3, Cable, ClipboardList, Home, LogOut, Menu, MessageCircle, Plus, Star, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Logo } from "@/components/shared/Logo";
@@ -34,7 +34,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-30 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur"><div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-        <Link to="/app" aria-label="Accueil HostBuddy"><Logo /></Link>
+        <Logo to="/app" />
         <div className="flex items-center gap-2">
           <span className="hidden text-muted-foreground md:inline">{org.name}</span>
           <LanguageSelect compact />

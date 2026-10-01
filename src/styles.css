@@ -82,7 +82,7 @@
     -webkit-font-smoothing: antialiased;
     overflow-wrap: anywhere;
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0; text-wrap: balance; }
 }
 
 @utility btn {

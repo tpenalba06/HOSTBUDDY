@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
+import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
 import { Route as AuthenticatedAppImportTextRouteImport } from './routes/_authenticated/app.import-text'
 import { Route as AuthenticatedAppImportUrlRouteImport } from './routes/_authenticated/app.import-url'
 import { Route as AuthenticatedAppManualRouteImport } from './routes/_authenticated/app.manual'
@@ -35,6 +37,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -50,6 +57,12 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppConnectionsRoute =
+  AuthenticatedAppConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppImportTextRoute =
   AuthenticatedAppImportTextRouteImport.update({
     id: '/import-text',
@@ -81,8 +94,10 @@ const AuthenticatedAppPIdRoute = AuthenticatedAppPIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/integrations': typeof IntegrationsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
+  '/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
@@ -93,7 +108,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/integrations': typeof IntegrationsRoute
   '/l/$slug': typeof LSlugRoute
+  '/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
@@ -106,8 +123,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/integrations': typeof IntegrationsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
+  '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/_authenticated/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/_authenticated/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
@@ -120,8 +139,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/integrations'
     | '/app'
     | '/l/$slug'
+    | '/app/connections'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
@@ -132,7 +153,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/integrations'
     | '/l/$slug'
+    | '/app/connections'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
@@ -144,8 +167,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/integrations'
     | '/_authenticated/app'
     | '/l/$slug'
+    | '/_authenticated/app/connections'
     | '/_authenticated/app/import-text'
     | '/_authenticated/app/import-url'
     | '/_authenticated/app/manual'
@@ -158,6 +183,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  IntegrationsRoute: typeof IntegrationsRoute
   LSlugRoute: typeof LSlugRoute
 }
 
@@ -184,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -203,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/connections': {
+      id: '/_authenticated/app/connections'
+      path: '/connections'
+      fullPath: '/app/connections'
+      preLoaderRoute: typeof AuthenticatedAppConnectionsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/import-text': {
@@ -244,6 +284,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRoute
   AuthenticatedAppImportTextRoute: typeof AuthenticatedAppImportTextRoute
   AuthenticatedAppImportUrlRoute: typeof AuthenticatedAppImportUrlRoute
   AuthenticatedAppManualRoute: typeof AuthenticatedAppManualRoute
@@ -253,6 +294,7 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppConnectionsRoute: AuthenticatedAppConnectionsRoute,
   AuthenticatedAppImportTextRoute: AuthenticatedAppImportTextRoute,
   AuthenticatedAppImportUrlRoute: AuthenticatedAppImportUrlRoute,
   AuthenticatedAppManualRoute: AuthenticatedAppManualRoute,
@@ -279,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  IntegrationsRoute: IntegrationsRoute,
   LSlugRoute: LSlugRoute,
 }
 export const routeTree = rootRouteImport

@@ -21,6 +21,7 @@ import { Route as AuthenticatedAppImportTextRouteImport } from './routes/_authen
 import { Route as AuthenticatedAppImportUrlRouteImport } from './routes/_authenticated/app.import-url'
 import { Route as AuthenticatedAppManualRouteImport } from './routes/_authenticated/app.manual'
 import { Route as AuthenticatedAppNewRouteImport } from './routes/_authenticated/app.new'
+import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -85,6 +86,11 @@ const AuthenticatedAppNewRoute = AuthenticatedAppNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicMessagesRoute = ApiPublicMessagesRouteImport.update({
+  id: '/api/public/messages',
+  path: '/api/public/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppPIdRoute = AuthenticatedAppPIdRouteImport.update({
   id: '/p/$id',
   path: '/p/$id',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
   '/app/new': typeof AuthenticatedAppNewRoute
+  '/api/public/messages': typeof ApiPublicMessagesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
 }
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
   '/app/new': typeof AuthenticatedAppNewRoute
+  '/api/public/messages': typeof ApiPublicMessagesRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
 }
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
   '/_authenticated/app/new': typeof AuthenticatedAppNewRoute
+  '/api/public/messages': typeof ApiPublicMessagesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/p/$id': typeof AuthenticatedAppPIdRoute
 }
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/app/import-url'
     | '/app/manual'
     | '/app/new'
+    | '/api/public/messages'
     | '/app/'
     | '/app/p/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/app/import-url'
     | '/app/manual'
     | '/app/new'
+    | '/api/public/messages'
     | '/app'
     | '/app/p/$id'
   id:
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/import-url'
     | '/_authenticated/app/manual'
     | '/_authenticated/app/new'
+    | '/api/public/messages'
     | '/_authenticated/app/'
     | '/_authenticated/app/p/$id'
   fileRoutesById: FileRoutesById
@@ -185,6 +197,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   IntegrationsRoute: typeof IntegrationsRoute
   LSlugRoute: typeof LSlugRoute
+  ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/messages': {
+      id: '/api/public/messages'
+      path: '/api/public/messages'
+      fullPath: '/api/public/messages'
+      preLoaderRoute: typeof ApiPublicMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/p/$id': {
       id: '/_authenticated/app/p/$id'
       path: '/p/$id'
@@ -323,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   IntegrationsRoute: IntegrationsRoute,
   LSlugRoute: LSlugRoute,
+  ApiPublicMessagesRoute: ApiPublicMessagesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

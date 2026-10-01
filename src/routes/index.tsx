@@ -32,13 +32,13 @@ function Landing() {
     </header>
 
     <main>
-      <section className="relative mx-auto min-h-[760px] max-w-[1600px] px-5 pb-12 pt-3 sm:min-h-[780px] lg:px-8">
-        <img src={arrivalAsset.url} alt="Accueil lumineux d'une villa méditerranéenne" width={1536} height={1024} className="absolute inset-x-5 top-3 h-[710px] w-[calc(100%-2.5rem)] rounded-3xl object-cover lg:inset-x-8 lg:w-[calc(100%-4rem)]" />
-        <div className="absolute inset-x-5 top-3 h-[710px] rounded-3xl bg-gradient-to-r from-ink/90 via-ink/60 to-transparent lg:inset-x-8" />
-        <div className="relative z-10 mx-auto flex h-[710px] max-w-6xl items-center px-5 py-14 sm:px-10 lg:px-16">
+      <section className="relative mx-auto min-h-[950px] max-w-[1600px] px-5 pb-12 pt-3 sm:min-h-[780px] lg:px-8">
+        <img src={arrivalAsset.url} alt="Accueil lumineux d'une villa méditerranéenne" width={1536} height={1024} className="absolute inset-x-5 top-3 h-[900px] w-[calc(100%-2.5rem)] rounded-3xl object-cover sm:h-[710px] lg:inset-x-8 lg:w-[calc(100%-4rem)]" />
+        <div className="absolute inset-x-5 top-3 h-[900px] rounded-3xl bg-gradient-to-r from-ink/90 via-ink/60 to-transparent sm:h-[710px] lg:inset-x-8" />
+        <div className="relative z-10 mx-auto flex h-[900px] max-w-6xl items-start px-5 py-8 sm:h-[710px] sm:items-center sm:px-10 sm:py-14 lg:px-16">
           <div className="max-w-2xl text-ink-foreground">
             <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-card/95 px-4 py-2 text-sm font-bold text-foreground shadow-soft"><WandSparkles className="h-4 w-4 text-primary" />{t("marketing.badge")}</p>
-            <h1 className="text-balance text-5xl font-semibold leading-[1.02] sm:text-7xl">{t("marketing.title")}</h1>
+             <h1 className="text-balance text-5xl font-semibold leading-[1.05] sm:text-7xl">{t("marketing.title")}</h1>
             <p className="mt-6 max-w-xl text-lg font-medium leading-relaxed text-ink-foreground/90 sm:text-xl">{t("marketing.subtitle")}</p>
             <ul className="mt-6 grid gap-2 text-base font-semibold sm:grid-cols-2">
               {["marketing.benefit1","marketing.benefit2","marketing.benefit3","marketing.benefit4"].map((k) => <li key={k} className="flex items-center gap-2"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground"><Check className="h-4 w-4" /></span>{t(k)}</li>)}

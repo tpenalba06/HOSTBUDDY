@@ -23,7 +23,9 @@ import { Route as AuthenticatedAppImportUrlRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppManualRouteImport } from './routes/_authenticated/app.manual'
 import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/app.messages'
 import { Route as AuthenticatedAppNewRouteImport } from './routes/_authenticated/app.new'
+import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
+import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
 import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages.$id'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
 
@@ -100,9 +102,19 @@ const AuthenticatedAppNewRoute = AuthenticatedAppNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicFeedbackRoute = ApiPublicFeedbackRouteImport.update({
+  id: '/api/public/feedback',
+  path: '/api/public/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMessagesRoute = ApiPublicMessagesRouteImport.update({
   id: '/api/public/messages',
   path: '/api/public/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
+  id: '/api/public/orders',
+  path: '/api/public/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppMessagesIdRoute =
@@ -130,7 +142,9 @@ export interface FileRoutesByFullPath {
   '/app/manual': typeof AuthenticatedAppManualRoute
   '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/app/new': typeof AuthenticatedAppNewRoute
+  '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -147,7 +161,9 @@ export interface FileRoutesByTo {
   '/app/manual': typeof AuthenticatedAppManualRoute
   '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/app/new': typeof AuthenticatedAppNewRoute
+  '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -167,7 +183,9 @@ export interface FileRoutesById {
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
   '/_authenticated/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/_authenticated/app/new': typeof AuthenticatedAppNewRoute
+  '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/_authenticated/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -187,7 +205,9 @@ export interface FileRouteTypes {
     | '/app/manual'
     | '/app/messages'
     | '/app/new'
+    | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/orders'
     | '/app/'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -204,7 +224,9 @@ export interface FileRouteTypes {
     | '/app/manual'
     | '/app/messages'
     | '/app/new'
+    | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/orders'
     | '/app'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -223,7 +245,9 @@ export interface FileRouteTypes {
     | '/_authenticated/app/manual'
     | '/_authenticated/app/messages'
     | '/_authenticated/app/new'
+    | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/orders'
     | '/_authenticated/app/'
     | '/_authenticated/app/messages/$id'
     | '/_authenticated/app/p/$id'
@@ -236,7 +260,9 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   IntegrationsRoute: typeof IntegrationsRoute
   LSlugRoute: typeof LSlugRoute
+  ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
+  ApiPublicOrdersRoute: typeof ApiPublicOrdersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -339,11 +365,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/feedback': {
+      id: '/api/public/feedback'
+      path: '/api/public/feedback'
+      fullPath: '/api/public/feedback'
+      preLoaderRoute: typeof ApiPublicFeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/messages': {
       id: '/api/public/messages'
       path: '/api/public/messages'
       fullPath: '/api/public/messages'
       preLoaderRoute: typeof ApiPublicMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/orders': {
+      id: '/api/public/orders'
+      path: '/api/public/orders'
+      fullPath: '/api/public/orders'
+      preLoaderRoute: typeof ApiPublicOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/messages/$id': {
@@ -420,7 +460,9 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   IntegrationsRoute: IntegrationsRoute,
   LSlugRoute: LSlugRoute,
+  ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,
+  ApiPublicOrdersRoute: ApiPublicOrdersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

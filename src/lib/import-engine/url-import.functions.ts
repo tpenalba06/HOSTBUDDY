@@ -36,8 +36,9 @@ const meta = (html: string, name: string) =>
 
 const decode = (s: string) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").trim();
 
-function jsonLdNodes(html: string): Record<string, unknown>[] {
-  const out: Record<string, unknown>[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function jsonLdNodes(html: string): any[] {
+  const out: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
   for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
     try {
       const data = JSON.parse(m[1]!);
@@ -63,14 +64,14 @@ function fromStructured(html: string, url: string) {
     if (!LODGING.test(String(n["@type"] ?? ""))) continue;
     name ??= str(n.name);
     put("description", str(n.description), `JSON-LD description (${url})`, 0.85);
-    const a = n.address as Record<string, unknown> | string | undefined;
+    const a = n.address;
     const addr = typeof a === "string" ? a : a ? [a.streetAddress, a.postalCode, a.addressLocality, a.addressCountry].map(str).filter(Boolean).join(", ") : null;
     put("address", addr || null, `JSON-LD address: ${addr}`, 0.85);
-    const occ = (n.occupancy as Record<string, unknown>)?.maxValue ?? n.maximumAttendeeCapacity;
+    const occ = n.occupancy?.maxValue ?? n.maximumAttendeeCapacity;
     const rooms = n.numberOfRooms ?? n.numberOfBedrooms;
     const cap = [occ && `${str(occ)} voyageurs`, rooms && `${str(rooms)} chambres`].filter(Boolean).join(" · ");
     put("capacity", cap || null, `JSON-LD: ${cap}`, 0.85);
-    const am = Array.isArray(n.amenityFeature) ? (n.amenityFeature as Record<string, unknown>[]).map((x) => str(x.name)).filter(Boolean).join(", ") : null;
+    const am = Array.isArray(n.amenityFeature) ? (n.amenityFeature as any[]).map((x) => str(x.name)).filter(Boolean).join(", ") : null;
     put("equipment", am || null, `JSON-LD amenityFeature: ${am}`, 0.8);
     put("arrival", str(n.checkinTime), `JSON-LD checkinTime: ${str(n.checkinTime)}`, 0.85);
     put("departure", str(n.checkoutTime), `JSON-LD checkoutTime: ${str(n.checkoutTime)}`, 0.85);

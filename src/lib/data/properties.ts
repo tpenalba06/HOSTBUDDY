@@ -37,7 +37,7 @@ export async function getProperty(id: string) {
   if (error || e2) return fail(error ?? e2);
   if (!property) return null;
   const order = FIELD_DEFS.map((f) => f.key);
-  return { property, fields: (fields ?? []).sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key)) };
+  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)) };
 }
 
 const slugify = (s: string) =>

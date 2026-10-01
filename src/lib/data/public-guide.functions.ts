@@ -14,7 +14,7 @@ export interface PublicGuide { name: string; sections: PublicSection[] }
 export const getPublicGuide = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ slug: z.string().min(1).max(80) }).parse(d))
   .handler(async ({ data }): Promise<PublicGuide | null> => {
-    const sb = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    const sb = createClient<Database>(process.env['SUPABASE_URL']!, process.env['SUPABASE_PUBLISHABLE_KEY']!, {
       auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     });
     const { data: guide, error } = await sb.rpc("get_public_guide", { _slug: data.slug });

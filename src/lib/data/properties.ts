@@ -34,18 +34,19 @@ export async function listProperties(orgId: string) {
 }
 
 export async function getProperty(id: string) {
-  const [{ data: property, error }, { data: fields, error: e2 }, { data: review }, { data: destinations }, { data: sections }, { data: media }] = await Promise.all([
+  const [{ data: property, error }, { data: fields, error: e2 }, { data: review }, { data: destinations }, { data: sections }, { data: media }, { data: messaging }] = await Promise.all([
     supabase.from("properties").select("*").eq("id", id).maybeSingle(),
     supabase.from("property_fields").select("*").eq("property_id", id),
     supabase.from("property_review_settings").select("*").eq("property_id", id).maybeSingle(),
     supabase.from("property_review_destinations").select("*").eq("property_id", id).order("sort_order"),
     supabase.from("guide_sections").select("*").eq("property_id", id).order("sort_order"),
     supabase.from("section_media").select("*").eq("property_id", id).order("sort_order"),
+    supabase.from("property_messaging_settings").select("is_enabled").eq("property_id", id).maybeSingle(),
   ]);
   if (error || e2) return fail(error ?? e2);
   if (!property) return null;
   const order = FIELD_DEFS.map((f) => f.key);
-  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)), review: review ?? null, destinations: destinations ?? [], sections: sections ?? [], media: media ?? [] };
+  return { property, fields: (fields ?? []).sort((a: PropertyField, b: PropertyField) => order.indexOf(a.key) - order.indexOf(b.key)), review: review ?? null, destinations: destinations ?? [], sections: sections ?? [], media: media ?? [], messagingEnabled: messaging?.is_enabled ?? false };
 }
 
 const DEFAULT_SECTIONS = [
@@ -138,6 +139,12 @@ export async function saveOrganizationPreferences(orgId: string, values: { prefe
 
 export async function saveMessagingSetting(propertyId: string, isEnabled: boolean) {
   const { error } = await supabase.from("property_messaging_settings").upsert({ property_id: propertyId, is_enabled: isEnabled });
+  if (error) fail(error);
+}
+
+export async function reorderSectionMedia(items: SectionMedia[]) {
+  const results = await Promise.all(items.map((item, index) => supabase.from("section_media").update({ sort_order: index }).eq("id", item.id)));
+  const error = results.find((result) => result.error)?.error;
   if (error) fail(error);
 }
 

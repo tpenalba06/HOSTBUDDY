@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getProperty, publishProperty, renameProperty, saveFieldAnswer, saveReviewConfiguration, type PropertyField } from "@/lib/data/properties";
+import { getProperty, publishProperty, renameProperty, saveFieldAnswer, saveMessagingSetting, saveReviewConfiguration, type PropertyField } from "@/lib/data/properties";
 import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
 import { useI18n } from "@/lib/i18n";
@@ -43,7 +43,7 @@ function PropertyPage() {
   const nav = useNavigate({ from: Route.fullPath });
   const qc = useQueryClient();
   const { data } = useSuspenseQuery(propertyQuery(id));
-  const { property, fields, review, destinations, sections, media } = data!;
+  const { property, fields, review, destinations, sections, media, messagingEnabled } = data!;
   const step: Step = search.step ?? (property.status === "published" ? "ready" : "review");
   const setStep = (s: Step) => nav({ search: { step: s } });
   const [saved, flashSaved] = useSaved();
@@ -115,9 +115,14 @@ function PropertyPage() {
         ))}
       </ul>
       </>}
-      {mode === "reviews" && <ReviewEditor propertyId={property.id} initial={review} initialDestinations={destinations} onSaved={flashSaved} />}
+      {mode === "reviews" && <><MessagingEditor propertyId={property.id} initial={messagingEnabled} onSaved={() => { flashSaved(); qc.invalidateQueries({ queryKey: ["property", id] }); }}/><ReviewEditor propertyId={property.id} initial={review} initialDestinations={destinations} onSaved={flashSaved} /></>}
     </div>
   );
+}
+
+function MessagingEditor({ propertyId, initial, onSaved }: { propertyId: string; initial: boolean; onSaved: () => void }) {
+  const [enabled, setEnabled] = useState(initial); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  return <section className="mt-8 rounded-lg border bg-card p-4 sm:p-5"><div className="flex min-h-14 items-center justify-between gap-4"><span><span className="block text-xl font-semibold">Messages voyageurs</span><span className="text-sm text-muted-foreground">Ajoutez « Envoyer un message » dans ce guide.</span></span><input aria-label="Activer les messages voyageurs" type="checkbox" className="h-6 w-6 shrink-0 accent-primary" checked={enabled} disabled={busy} onChange={async(e)=>{const next=e.target.checked;setEnabled(next);setBusy(true);setError("");try{await saveMessagingSetting(propertyId,next);onSaved();}catch(err){setEnabled(!next);setError(friendlyMessage(err));}finally{setBusy(false);}}}/></div>{error&&<p role="alert" className="mt-3 rounded-lg bg-warning-soft p-3">{error}</p>}</section>;
 }
 
 function ReviewEditor({ propertyId, initial, initialDestinations, onSaved }: {

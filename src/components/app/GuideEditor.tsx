@@ -17,7 +17,7 @@ export function GuideEditor({ data, onChanged, onPreview }: { data: EditorData; 
   const [error, setError] = useState("");
   useEffect(() => { setSections(data.sections); setMedia(data.media); }, [data.sections, data.media]);
   useEffect(() => {
-    if (sections.length || !data.fields.length) return;
+    if (sections.length) return;
     ensureGuideSections(data.property.id, data.fields).then((created) => setSections(created)).catch((e) => setError(friendlyMessage(e)));
   }, [data.fields, data.property.id, sections.length]);
   const sorted = useMemo(() => [...sections].sort((a, b) => a.sort_order - b.sort_order), [sections]);
@@ -65,7 +65,7 @@ function UploadButton({ icon, label, accept, busy, onFile }: { icon: React.React
 }
 
 function MediaItem({ item, onChange, onRemove }: { item: SectionMedia; onChange: (item: SectionMedia) => void; onRemove: () => void }) {
-  const [url, setUrl] = useState(""); const [alt, setAlt] = useState(item.alt_text ?? "");
+  const [url, setUrl] = useState(""); const [alt, setAlt] = useState(item.alt_text ?? ""); const [caption, setCaption] = useState(item.caption ?? "");
   useEffect(() => { supabase.storage.from("guide-media").createSignedUrl(item.storage_path, 900).then(({ data }) => setUrl(data?.signedUrl ?? "")); }, [item.storage_path]);
-  return <div className="overflow-hidden rounded-lg border bg-background">{url && (item.media_type === "image" ? <img src={url} alt={alt} className="aspect-video w-full object-cover"/> : <video src={url} controls preload="metadata" className="aspect-video w-full bg-ink object-cover"/>)}<div className="space-y-2 p-3"><input className="field min-h-12" value={alt} maxLength={240} placeholder="Description (facultatif)" onChange={(e) => setAlt(e.target.value)} onBlur={() => updateSectionMedia(item, { altText: alt }).then(onChange)}/><Button variant="ghost" className="min-h-12 w-full text-destructive" onClick={onRemove}><Trash2/>Supprimer</Button></div></div>;
+  return <div className="overflow-hidden rounded-lg border bg-background">{url && (item.media_type === "image" ? <img src={url} alt={alt} className="aspect-video w-full object-cover"/> : <video src={url} controls preload="metadata" className="aspect-video w-full bg-ink object-cover"/>)}<div className="space-y-2 p-3"><input className="field min-h-12" value={alt} maxLength={240} placeholder="Description (facultatif)" onChange={(e) => setAlt(e.target.value)} onBlur={() => updateSectionMedia(item, { altText: alt }).then(onChange)}/><input className="field min-h-12" value={caption} maxLength={240} placeholder="Légende (facultatif)" onChange={(e) => setCaption(e.target.value)} onBlur={() => updateSectionMedia(item, { caption }).then(onChange)}/><Button variant="ghost" className="min-h-12 w-full text-destructive" onClick={onRemove}><Trash2/>Supprimer</Button></div></div>;
 }

@@ -6,6 +6,7 @@ import { getVillaMare } from "@/components/guest/villaMare";
 import { GuideEditor, type GuideEditorActions } from "@/components/app/GuideEditor";
 import { DemoManager } from "@/components/demo/DemoManager";
 import type { GuideSection, SectionMedia } from "@/lib/data/properties";
+import { buildGuideContent, type GuideContentItem } from "@/lib/data/guide-content";
 import { useI18n } from "@/lib/i18n";
 import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 
@@ -19,7 +20,10 @@ export function DemoExperience({compact=false}:{compact?:boolean}){
   const base=getVillaMare(locale);
   const stored=typeof window==="undefined"?null:window.sessionStorage.getItem(storageKey);
   const initial=stored?(()=>{try{return JSON.parse(stored) as {data:typeof base;sections:GuideSection[];media:SectionMedia[]}}catch{return null}})():null;
-  const initialSections=()=>SECTIONS.filter(section=>section.id!=="pool"||base.pool).map((section,index)=>asSection({id:`demo-${section.id}`,property_id:"demo",section_key:section.id,title:t(section.key),icon:section.icon,cta_label:null,sort_order:index,is_visible:true,content:{items:[{label:"",text:section.id==="arrival"?base.arrival:section.id==="house"?base.house:section.id==="departure"?base.departure:section.id==="pool"?base.pool:""}]},created_at:"",updated_at:""}));
+  const initialSections=()=>SECTIONS.filter(section=>section.id!=="pool"||base.pool).map((section,index)=>{
+    const items:GuideContentItem[]=section.id==="arrival"?[{fieldKey:"arrival",label:t("demo.arrivalTime"),text:base.arrival}]:section.id==="wifi"?[{fieldKey:"wifi",label:t("demo.wifiNetwork"),text:base.wifi.network},{label:t("demo.wifiPassword"),text:base.wifi.password}]:section.id==="house"?[{fieldKey:"equipment",label:t("section.house"),text:base.house}]:section.id==="departure"?[{fieldKey:"departure",label:t("section.departure"),text:base.departure}]:section.id==="pool"?[{fieldKey:"pool",label:t("section.pool"),text:base.pool}]:[];
+    return asSection({id:`demo-${section.id}`,property_id:"demo",section_key:section.id,title:t(section.key),icon:section.icon,cta_label:null,sort_order:index,is_visible:true,content:buildGuideContent(section.id,{},items),created_at:"",updated_at:""});
+  });
   const[data,setData]=useState(initial?.data??base);const[sections,setSections]=useState(initial?.sections??initialSections);const[media,setMedia]=useState(initial?.media??[]);const[mode,setMode]=useState<Mode>("guest");const[section,setSection]=useState<SectionId>("welcome");const[saved,setSaved]=useState(false);const[hero,setHero]=useState(arrivalAsset.url);
   useEffect(()=>{const next=typeof window==="undefined"?null:window.sessionStorage.getItem(storageKey);if(next){try{const parsed=JSON.parse(next) as typeof initial; if(parsed){setData(parsed.data);setSections(parsed.sections);setMedia(parsed.media)}}catch{/* keep localized defaults */}}else{setData(base);setSections(initialSections());setMedia([])}},[locale]);
   useEffect(()=>{try{window.sessionStorage.setItem(storageKey,JSON.stringify({data,sections,media}))}catch{/* local demo may exceed quota */}},[data,media,sections,storageKey]);
@@ -27,7 +31,7 @@ export function DemoExperience({compact=false}:{compact?:boolean}){
   const actions=useMemo<GuideEditorActions>(()=>({
     ensure:async()=>sections,
     add:async(_propertyId,order,template)=>{const created=asSection({id:`demo-${crypto.randomUUID()}`,property_id:"demo",section_key:template.key,title:template.title,icon:template.icon,cta_label:null,sort_order:order,is_visible:true,content:{items:[]},created_at:"",updated_at:""});setSections(current=>[...current,created]);return created},
-    save:async(current,values)=>{const updated={...current,title:values.title,icon:values.icon,cta_label:values.ctaLabel||null,is_visible:values.isVisible,content:{items:values.text?[{label:"",text:values.text}]:[]}} as GuideSection;setSections(items=>items.map(item=>item.id===updated.id?updated:item));const key=current.section_key as SectionId;if(key==="arrival"||key==="house"||key==="departure"||key==="pool")setData(value=>({...value,[key]:values.text}));return updated},
+    save:async(current,values)=>{const content=buildGuideContent(current.section_key,current.content,values.items);const updated={...current,title:values.title,icon:values.icon,cta_label:values.ctaLabel||null,is_visible:values.isVisible,content} as GuideSection;setSections(currentItems=>currentItems.map(item=>item.id===updated.id?updated:item));const key=current.section_key as SectionId;const text=values.items.map(item=>item.text).filter(Boolean).join("\n");if(key==="arrival"||key==="house"||key==="departure"||key==="pool")setData(value=>({...value,[key]:text}));if(key==="wifi")setData(value=>({...value,wifi:{network:values.items[0]?.text??value.wifi.network,password:values.items[1]?.text??value.wifi.password}}));return updated},
     reorder:async next=>setSections(next),remove:async id=>setSections(items=>items.filter(item=>item.id!==id)),
     upload:async(_org,_property,sectionId,file)=>{const url=URL.createObjectURL(file);const created=asMedia({id:`demo-media-${crypto.randomUUID()}`,organization_id:"demo",property_id:"demo",section_id:sectionId,media_type:file.type.startsWith("image/")?"image":"video",storage_path:url,mime_type:file.type,file_size:file.size,sort_order:media.length,caption:null,alt_text:null,created_at:""});setMedia(items=>[...items,created]);if(file.type.startsWith("image/"))setHero(url);return created},
     updateMedia:async(item,values)=>{const updated={...item,alt_text:values.altText??item.alt_text,caption:values.caption??item.caption};setMedia(items=>items.map(current=>current.id===item.id?updated:current));return updated},

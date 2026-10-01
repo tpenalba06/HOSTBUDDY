@@ -24,7 +24,7 @@ export interface ImportedField {
   value: string | null;
   status: FieldStatus;
   provenance: Provenance;
-  question?: string; // plain-French question for the completion flow
+  question?: string | undefined; // plain-French question for the completion flow
 }
 
 export interface ImportStage { id: string; label: string }

@@ -30,7 +30,7 @@ function Signup() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const r = schema.safeParse(form);
-    if (!r.success) return setError(r.error.issues[0].message);
+    if (!r.success) return setError(r.error.issues[0]?.message ?? "Vérifiez vos informations");
     setUser({ firstName: r.data.firstName, email: r.data.email });
     nav({ to: "/app" });
   };

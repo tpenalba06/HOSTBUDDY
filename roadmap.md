@@ -39,3 +39,8 @@
 - [x] Upgrade public guide home and section-specific inner layouts
 - [x] Remove mixed-language marketing and authenticated app copy
 - [x] Verify all requested responsive and language-switch scenarios
+
+## Selected homepage corrections
+- [x] Add Integrations to the top navigation
+- [x] Improve demo cover-image framing and align Piscine / Spa with guide sections
+- [x] Verify all six language switches and remove remaining mixed-language homepage copy

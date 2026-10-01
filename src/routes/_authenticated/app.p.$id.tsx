@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { GuideEditor } from "@/components/app/GuideEditor";
 import { Button } from "@/components/ui/button";
 import { useOrg } from "@/components/app/useOrg";
+import { ServicesEditor } from "@/components/app/ServicesEditor";
 
 type Step = "review" | "complete" | "ready";
 const propertyQuery = (id: string) => queryOptions({ queryKey: ["property", id], queryFn: () => getProperty(id) });
@@ -50,7 +51,7 @@ function PropertyPage() {
   const setStep = (s: Step) => nav({ search: { step: s } });
   const [saved, flashSaved] = useSaved();
   const [editing, setEditing] = useState<PropertyField | null>(null);
-  const [mode, setMode] = useState<"guide" | "details" | "reviews">("guide");
+  const [mode, setMode] = useState<"guide" | "details" | "services" | "reviews">("guide");
 
   const refresh = (f: PropertyField) => {
     qc.setQueryData(propertyQuery(id).queryKey, (old) => old && { ...old, fields: old.fields.map((x) => (x.id === f.id ? f : x)) });
@@ -93,7 +94,7 @@ function PropertyPage() {
       <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("app.myProperties")}</Link>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-bold text-primary">Éditeur</p><h1 className="text-3xl font-semibold">{property.name}</h1></div>{property.status === "published" && <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-secondary">Voir le guide</a>}</div>
       <NameEditor id={property.id} initial={property.name} onSaved={() => { flashSaved(); qc.invalidateQueries({ queryKey: ["properties"] }); }} />
-      <div className="mt-6 grid grid-cols-3 rounded-lg bg-muted p-1"><Button variant={mode === "guide" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("guide")}>Guide</Button><Button variant={mode === "details" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("details")}>Informations</Button><Button variant={mode === "reviews" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("reviews")}>Avis</Button></div>
+      <div className="mt-6 grid grid-cols-2 rounded-lg bg-muted p-1 sm:grid-cols-4"><Button variant={mode === "guide" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("guide")}>Guide</Button><Button variant={mode === "details" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("details")}>Informations</Button><Button variant={mode === "services" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("services")}>Services</Button><Button variant={mode === "reviews" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("reviews")}>Avis</Button></div>
       {mode === "guide" && <div className="mt-7"><GuideEditor data={{ property, fields, sections, media }} onChanged={() => qc.invalidateQueries({ queryKey: ["property", id] })} onPreview={() => property.status === "published" ? window.open(`/l/${property.slug}`, "_blank") : setStep("ready")}/></div>}
       {mode === "details" && <>
       <p className={`mt-4 rounded-xl p-3 text-lg font-medium ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}>
@@ -118,6 +119,7 @@ function PropertyPage() {
         ))}
       </ul>
       </>}
+      {mode === "services" && <div className="mt-7"><ServicesEditor organizationId={property.organization_id} propertyId={property.id}/></div>}
       {mode === "reviews" && <><MessagingEditor propertyId={property.id} initial={messagingEnabled} onSaved={() => { flashSaved(); qc.invalidateQueries({ queryKey: ["property", id] }); }}/><ReviewEditor propertyId={property.id} initial={review} initialDestinations={destinations} onSaved={flashSaved} /></>}
     </div>
   );

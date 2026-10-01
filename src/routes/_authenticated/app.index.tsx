@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { listProperties } from "@/lib/data/properties";
+import { listProperties, saveOrganizationPreferences } from "@/lib/data/properties";
 import { orgQuery, useOrg } from "@/components/app/useOrg";
 import { FriendlyError, Loading } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
@@ -20,11 +20,11 @@ export const Route = createFileRoute("/_authenticated/app/")({
 });
 
 function Home() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const org = useOrg();
   const { data: properties } = useSuspenseQuery(propertiesQuery(org.id));
   const [qr, setQr] = useState<string | null>(null);
-  if (!properties.length) return <Start firstName={org.firstName} />;
+  if (!properties.length) return <Start firstName={org.firstName} orgId={org.id} initialOperator={org.operator_type} locale={locale} />;
   return (
     <div className="mt-6">
       <h1 className="text-3xl font-semibold">{t("app.myProperties")}</h1>
@@ -57,12 +57,14 @@ function Home() {
   );
 }
 
-export function Start({ firstName }: { firstName?: string }) {
+export function Start({ firstName, orgId, initialOperator, locale }: { firstName?: string; orgId?: string; initialOperator?: string | null; locale?: string }) {
   const { t } = useI18n();
+  const [operator, setOperator] = useState(initialOperator ?? "");
   return (
     <div>
       <p className="mt-6 text-lg text-muted-foreground">{t("app.hello")}{firstName ? ` ${firstName}` : ""} 👋</p>
       <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">{t("app.first")}</h1>
+      {orgId && <label className="mt-6 block"><span className="mb-1 block font-medium">{t("app.operator")}</span><select className="field" value={operator} onChange={(e) => { const value = e.target.value; setOperator(value); if (value) void saveOrganizationPreferences(orgId, { operatorType: value, preferredLocale: locale ?? "fr" }); }}><option value="">—</option><option value="concierge">Conciergerie</option><option value="vacation_rental">Locations saisonnières</option><option value="independent_hotel">Hôtel indépendant</option><option value="aparthotel">Appart'hôtel</option><option value="tourist_residence">Résidence de tourisme</option></select><span className="mt-1 block text-sm text-muted-foreground">{t("app.operatorHint")}</span></label>}
       <StartOptions />
     </div>
   );

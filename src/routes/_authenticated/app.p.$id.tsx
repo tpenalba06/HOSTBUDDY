@@ -5,6 +5,8 @@ import { getProperty, publishProperty, renameProperty, saveFieldAnswer, saveRevi
 import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
 import { useI18n } from "@/lib/i18n";
+import { GuideEditor } from "@/components/app/GuideEditor";
+import { Button } from "@/components/ui/button";
 
 type Step = "review" | "complete" | "ready";
 const propertyQuery = (id: string) => queryOptions({ queryKey: ["property", id], queryFn: () => getProperty(id) });
@@ -41,11 +43,12 @@ function PropertyPage() {
   const nav = useNavigate({ from: Route.fullPath });
   const qc = useQueryClient();
   const { data } = useSuspenseQuery(propertyQuery(id));
-  const { property, fields, review, destinations } = data!;
+  const { property, fields, review, destinations, sections, media } = data!;
   const step: Step = search.step ?? (property.status === "published" ? "ready" : "review");
   const setStep = (s: Step) => nav({ search: { step: s } });
   const [saved, flashSaved] = useSaved();
   const [editing, setEditing] = useState<PropertyField | null>(null);
+  const [mode, setMode] = useState<"guide" | "details" | "reviews">("guide");
 
   const refresh = (f: PropertyField) => {
     qc.setQueryData(propertyQuery(id).queryKey, (old) => old && { ...old, fields: old.fields.map((x) => (x.id === f.id ? f : x)) });
@@ -85,8 +88,11 @@ function PropertyPage() {
     <div className="mt-6">
       {SavedBadge}
       <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("app.myProperties")}</Link>
-      <h1 className="text-3xl font-semibold">{t("property.prepared")}</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="font-bold text-primary">Éditeur</p><h1 className="text-3xl font-semibold">{property.name}</h1></div>{property.status === "published" && <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-secondary">Voir le guide</a>}</div>
       <NameEditor id={property.id} initial={property.name} onSaved={() => { flashSaved(); qc.invalidateQueries({ queryKey: ["properties"] }); }} />
+      <div className="mt-6 grid grid-cols-3 rounded-lg bg-muted p-1"><Button variant={mode === "guide" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("guide")}>Guide</Button><Button variant={mode === "details" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("details")}>Informations</Button><Button variant={mode === "reviews" ? "default" : "ghost"} className="min-h-12 px-2" onClick={() => setMode("reviews")}>Avis</Button></div>
+      {mode === "guide" && <div className="mt-7"><GuideEditor data={{ property, fields, sections, media }} onChanged={() => qc.invalidateQueries({ queryKey: ["property", id] })} onPreview={() => property.status === "published" ? window.open(`/l/${property.slug}`, "_blank") : setStep("ready")}/></div>}
+      {mode === "details" && <>
       <p className={`mt-4 rounded-xl p-3 text-lg font-medium ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}>
         {remaining ? `Il reste ${remaining} information${remaining > 1 ? "s" : ""} importante${remaining > 1 ? "s" : ""} à compléter` : "Les informations importantes sont complètes 👍"}
         {found.length > 0 && <span className="block text-base font-normal">{found.length} information{found.length > 1 ? "s" : ""} déjà trouvée{found.length > 1 ? "s" : ""}.</span>}
@@ -108,7 +114,8 @@ function PropertyPage() {
           </li>
         ))}
       </ul>
-      <ReviewEditor propertyId={property.id} initial={review} initialDestinations={destinations} onSaved={flashSaved} />
+      </>}
+      {mode === "reviews" && <ReviewEditor propertyId={property.id} initial={review} initialDestinations={destinations} onSaved={flashSaved} />}
     </div>
   );
 }

@@ -60,9 +60,9 @@ function Landing() {
         <div className="mt-6 flex flex-wrap items-center gap-2"><span className="mr-2 text-sm font-semibold text-muted-foreground">{t("marketing.sources")}:</span>{[...sourceLabels,t("marketing.sourceWebsite"),t("marketing.sourceText")].map((s) => <span key={s} className="rounded-full border bg-card px-3 py-1.5 text-sm font-semibold">{s}</span>)}</div>
       </section>
 
-      <section className="bg-ink py-24 text-ink-foreground"><div className="mx-auto grid max-w-6xl items-center gap-12 px-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div><p className="font-bold text-accent">HostBuddy</p><h2 className="mt-3 text-balance text-4xl font-semibold sm:text-5xl">{t("marketing.arrival")}</h2><p className="mt-5 max-w-lg text-lg text-ink-foreground/75">{t("marketing.arrivalD")}</p><div className="mt-8 flex items-center gap-3 text-sm font-semibold"><ShieldCheck className="h-5 w-5 text-accent"/>{t("marketing.qrLine")}</div></div>
-        <div id="demo" className="motion-float"><PhoneDemo /><Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">{t("marketing.openDemo")}</Link></div>
+      <section className="bg-ink py-20 text-ink-foreground"><div className="mx-auto max-w-7xl px-3 sm:px-5">
+        <div className="mx-auto max-w-3xl text-center"><p className="font-bold text-accent">HostBuddy</p><h2 className="mt-3 text-balance text-4xl font-semibold sm:text-5xl">{t("demo.homePreviewTitle")}</h2><p className="mx-auto mt-4 max-w-2xl text-lg text-ink-foreground/80">{t("demo.homePreviewDesc")}</p><div className="mt-5 flex items-center justify-center gap-3 text-sm font-semibold"><ShieldCheck className="h-5 w-5 text-accent"/>{t("marketing.qrLine")}</div></div>
+        <div id="demo" className="mt-9"><PhoneDemo /><Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">{t("marketing.openDemo")}</Link></div>
       </div></section>
 
       <section className="mx-auto max-w-6xl px-5 py-24"><div className="grid gap-12 lg:grid-cols-2">

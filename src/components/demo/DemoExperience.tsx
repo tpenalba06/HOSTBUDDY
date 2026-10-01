@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GuestGuide, SECTIONS, type SectionId } from "@/components/guest/GuestGuide";
 import { getVillaMare } from "@/components/guest/villaMare";
 import { GuideEditor, type GuideEditorActions } from "@/components/app/GuideEditor";
+import { DemoManager } from "@/components/demo/DemoManager";
 import type { GuideSection, SectionMedia } from "@/lib/data/properties";
 import { useI18n } from "@/lib/i18n";
 import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
@@ -34,9 +35,10 @@ export function DemoExperience({compact=false}:{compact?:boolean}){
   }),[media.length,sections]);
   const labels=Object.fromEntries(sections.map(item=>[item.section_key,item.title])) as Partial<Record<SectionId,string>>;
   const showGuest=(next:SectionId="welcome")=>{setSection(next);setMode("guest")};
-  return <div className={`${compact?"mx-auto w-full max-w-[390px]":"w-full"} demo-container`}>
+  const editor=<GuideEditor compact data={{property:{id:"demo",organization_id:"demo",status:"published"},fields:[],sections,media}} actions={actions} onChanged={flash} onPreview={()=>showGuest()}/>;
+  return <div className="demo-container w-full">
     <div className="mx-auto mb-4 grid max-w-md grid-cols-2 rounded-full border bg-card/95 p-1.5 py-2.5 shadow-soft" role="tablist"><Button className="min-h-12 whitespace-nowrap text-sm text-foreground hover:text-foreground" role="tab" aria-selected={mode==="guest"} variant={mode==="guest"?"default":"ghost"} onClick={()=>showGuest()}>{t("demo.guest")}</Button><Button className="min-h-12 whitespace-nowrap text-sm text-foreground hover:text-foreground" role="tab" aria-selected={mode==="manager"} variant={mode==="manager"?"default":"ghost"} onClick={()=>setMode("manager")}>{t("demo.manager")}</Button></div>
-    <div className={compact?"rounded-[2rem] bg-card/15 p-2 shadow-phone ring-1 ring-ink-foreground/20":"mx-auto max-w-5xl overflow-hidden rounded-xl border bg-background shadow-soft"}><div className={`${compact?"h-[min(650px,72dvh)] overflow-y-auto overflow-x-hidden rounded-[1.5rem] p-4":"min-h-[680px] p-4 sm:p-6"} bg-background text-foreground`}>{mode==="guest"?<GuestGuide data={data} section={section} onSection={setSection} heroImage={hero} labels={labels}/>:<GuideEditor compact={compact} data={{property:{id:"demo",organization_id:"demo",status:"published"},fields:[],sections,media}} actions={actions} onChanged={flash} onPreview={()=>showGuest()}/>}</div></div>
+    <div className={`demo-frame mx-auto w-full overflow-hidden border bg-background shadow-soft ${compact?"rounded-xl":"max-w-6xl rounded-xl"}`}><div className="demo-viewport overflow-y-auto overflow-x-hidden bg-background text-foreground">{mode==="guest"?<div className="mx-auto max-w-3xl p-3 @sm:p-6"><GuestGuide data={data} section={section} onSection={setSection} heroImage={hero} labels={labels}/></div>:<DemoManager editor={editor} onPreview={()=>showGuest()}/>}</div></div>
     <div aria-live="polite" className={`fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground transition ${saved?"opacity-100":"pointer-events-none opacity-0"}`}><Save className="mr-2 inline h-4 w-4"/>{t("demo.saved")}</div>
   </div>;
 }

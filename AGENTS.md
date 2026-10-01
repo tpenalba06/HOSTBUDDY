@@ -27,3 +27,4 @@
 - Guest messages enter only through the validated, rate-limited public endpoint; managers read and reply through tenant-isolated tables.
 - Guest orders and private feedback use validated rate-limited security-definer submissions; operational tables stay tenant-isolated, while owner-only team changes use authenticated RPCs.
 - Organization roles are authoritative in membership rows: owners manage team and financial summaries, admins edit content and settings, and members have read-only property plus operational access.
+- Authenticated and demo manager experiences share `ManagerShell`; demo navigation uses local adapters so its responsive structure cannot drift from production.

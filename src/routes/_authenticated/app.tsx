@@ -30,7 +30,7 @@ function AppLayout() {
     nav({ to: "/auth", search: { mode: "login" }, replace: true });
   };
   const operational = [{ to: "/app/messages", label: t("nav.messages"), icon: MessageCircle }, { to: "/app/orders", label: t("nav.orders"), icon: ClipboardList }, { to: "/app/feedback", label: t("nav.feedback"), icon: Star }];
-  const management = [{ to: "/app/connections", label: t("nav.connections"), icon: Cable }, ...(org.role === "owner" ? [{ to: "/app/dashboard", label: t("nav.dashboard"), icon: BarChart3 }, { to: "/app/team", label: t("nav.team"), icon: Users }] : [])];
+  const management = [...(org.role !== "member" ? [{ to: "/app/connections", label: t("nav.connections"), icon: Cable }] : []), ...(org.role === "owner" ? [{ to: "/app/dashboard", label: t("nav.dashboard"), icon: BarChart3 }, { to: "/app/team", label: t("nav.team"), icon: Users }] : [])];
   return (
     <div className="min-h-screen pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-30 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur"><div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">

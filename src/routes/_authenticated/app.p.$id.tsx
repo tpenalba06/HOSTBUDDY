@@ -1,12 +1,13 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getProperty, publishProperty, renameProperty, saveFieldAnswer, saveMessagingSetting, saveReviewConfiguration, type PropertyField } from "@/lib/data/properties";
+import { getProperty, publishProperty, renameProperty, saveFieldAnswer, saveMessagingSetting, saveReviewConfiguration, unpublishProperty, type PropertyField } from "@/lib/data/properties";
 import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
 import { useI18n } from "@/lib/i18n";
 import { GuideEditor } from "@/components/app/GuideEditor";
 import { Button } from "@/components/ui/button";
+import { useOrg } from "@/components/app/useOrg";
 
 type Step = "review" | "complete" | "ready";
 const propertyQuery = (id: string) => queryOptions({ queryKey: ["property", id], queryFn: () => getProperty(id) });
@@ -43,6 +44,7 @@ function PropertyPage() {
   const nav = useNavigate({ from: Route.fullPath });
   const qc = useQueryClient();
   const { data } = useSuspenseQuery(propertyQuery(id));
+  const org = useOrg();
   const { property, fields, review, destinations, sections, media, messagingEnabled } = data!;
   const step: Step = search.step ?? (property.status === "published" ? "ready" : "review");
   const setStep = (s: Step) => nav({ search: { step: s } });
@@ -57,6 +59,7 @@ function PropertyPage() {
 
   const todo = useMemo(() => fields.filter((f) => f.essential && f.status !== "found"), [fields]);
   const remaining = fields.filter((f) => f.status !== "found" && f.essential).length;
+  if (org.role === "member") return <div className="py-6"><Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("app.myProperties")}</Link><h1 className="mt-2 text-3xl font-semibold">{property.name}</h1><p className="mt-2 text-muted-foreground">Vous pouvez consulter ce guide. Un Responsable ou le Patron peut modifier son contenu.</p>{property.status === "published"&&<a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-primary mt-6">Voir le guide voyageur</a>}</div>;
 
   const SavedBadge = (
     <div aria-live="polite" className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground shadow-phone transition ${saved ? "opacity-100" : "pointer-events-none opacity-0"}`}>
@@ -78,7 +81,7 @@ function PropertyPage() {
 
   if (step === "ready") {
     return (<>{SavedBadge}
-      <ReadyScreen property={property} fields={fields} onEdit={() => setStep("review")}
+       <ReadyScreen property={property} fields={fields} onEdit={() => setStep("review")}
         onPublished={() => { qc.invalidateQueries({ queryKey: ["property", id] }); qc.invalidateQueries({ queryKey: ["properties"] }); }} />
     </>);
   }
@@ -245,7 +248,7 @@ function ReadyScreen({ property, fields, onEdit, onPublished }: {
         <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-primary text-lg">{t("property.viewGuide")}</a>
         <button className="btn btn-secondary" onClick={onEdit}>{t("property.customize")}</button>
         {error && <p role="alert" className="rounded-xl bg-warning-soft p-3">{error}</p>}
-        <button className="min-h-12 font-medium text-muted-foreground underline" disabled={busy} onClick={publish}>{busy ? "Mise à jour…" : "Mettre à jour le livret avec mes dernières modifications"}</button>
+        <button className="min-h-12 font-medium text-destructive underline" disabled={busy} onClick={async()=>{if(!window.confirm("Mettre ce guide hors ligne ?"))return;setBusy(true);try{await unpublishProperty(property.id);onPublished();onEdit();}catch(e){setError(friendlyMessage(e));}finally{setBusy(false)}}}>{busy ? "Mise hors ligne…" : "Mettre le guide hors ligne"}</button>
         <Link to="/app" className="min-h-12 py-3 font-medium text-muted-foreground">Retour à mes logements</Link>
       </div>
     </div>

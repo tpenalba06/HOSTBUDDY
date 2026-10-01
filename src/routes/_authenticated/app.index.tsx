@@ -28,7 +28,7 @@ function Home() {
   return (
     <div className="mt-6">
       <h1 className="text-3xl font-semibold">{t("app.myProperties")}</h1>
-      <Link to="/app/new" className="btn btn-primary mt-6 w-full text-lg">+ {t("app.add")}</Link>
+       {org.role !== "member" && <Link to="/app/new" className="btn btn-primary mt-6 w-full text-lg">+ {t("app.add")}</Link>}
       <ul className="mt-6 space-y-4">
         {properties.map((p) => (
           <li key={p.id} className="surface p-5">
@@ -39,7 +39,7 @@ function Home() {
               </span>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2">
-              <Link to="/app/p/$id" params={{ id: p.id }} className="btn btn-secondary px-2">{t("common.edit")}</Link>
+               <Link to="/app/p/$id" params={{ id: p.id }} className="btn btn-secondary px-2">{org.role === "member" ? t("common.view") : t("common.edit")}</Link>
               {p.status === "published" ? (
                 <>
                    <a href={`/l/${p.slug}`} target="_blank" rel="noreferrer" className="btn btn-secondary px-2">{t("common.view")}</a>

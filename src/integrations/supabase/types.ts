@@ -867,11 +867,40 @@ export type Database = {
     }
     Functions: {
       can_access_property: { Args: { _property: string }; Returns: boolean }
+      change_organization_member_role: {
+        Args: {
+          _org: string
+          _role: Database["public"]["Enums"]["org_role"]
+          _user: string
+        }
+        Returns: undefined
+      }
       ensure_my_organization: { Args: { _first_name: string }; Returns: string }
+      get_organization_team: {
+        Args: { _org: string }
+        Returns: {
+          email: string
+          joined_at: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }[]
+      }
       get_public_guide: { Args: { _slug: string }; Returns: Json }
+      invite_organization_member: {
+        Args: {
+          _email: string
+          _org: string
+          _role: Database["public"]["Enums"]["org_role"]
+        }
+        Returns: undefined
+      }
       is_org_admin: { Args: { _org: string }; Returns: boolean }
       is_org_member: { Args: { _org: string }; Returns: boolean }
       is_org_owner: { Args: { _org: string }; Returns: boolean }
+      remove_organization_member: {
+        Args: { _org: string; _user: string }
+        Returns: undefined
+      }
       submit_guest_feedback: {
         Args: {
           _comment: string

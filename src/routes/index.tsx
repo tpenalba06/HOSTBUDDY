@@ -21,7 +21,7 @@ function Landing() {
     <div>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Logo />
-        <Link to="/signup" className="btn btn-secondary">Se connecter</Link>
+        <Link to="/auth" search={{ mode: "login" }} className="btn btn-secondary">Se connecter</Link>
       </header>
 
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-8 lg:grid-cols-[1.1fr_1fr]">
@@ -39,7 +39,7 @@ function Landing() {
             <span className="font-display text-4xl font-semibold">9,99 €</span><span className="text-muted-foreground">/ mois · jusqu'à 3 logements</span>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link to="/signup" className="btn btn-primary text-lg">Essayer gratuitement</Link>
+            <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">Essayer gratuitement</Link>
             <a href="#demo" className="btn btn-secondary">Voir la démo</a>
           </div>
           <p className="mt-4 text-muted-foreground">30 jours gratuits • Aucune installation pour vos voyageurs</p>
@@ -69,11 +69,11 @@ function Landing() {
           <p className="font-display text-5xl font-semibold">9,99 €<span className="text-xl text-muted-foreground"> / mois</span></p>
           <p className="mt-2 text-lg">Jusqu'à 3 logements inclus</p>
           <p className="text-muted-foreground">+ 2,99 € / mois par logement supplémentaire</p>
-          <Link to="/signup" className="btn btn-primary mt-6 w-full text-lg">Essayer gratuitement</Link>
+          <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary mt-6 w-full text-lg">Essayer gratuitement</Link>
           <p className="mt-3 text-muted-foreground">30 jours gratuits, sans carte bancaire</p>
         </div>
       </section>
-      <footer className="border-t py-8 text-center text-muted-foreground">© 2026 HostBuddy · <Link to="/l/$slug" params={{ slug: "villa-mare" }} className="underline">Exemple de livret</Link></footer>
+      <footer className="border-t py-8 text-center text-muted-foreground">© 2026 HostBuddy</footer>
     </div>
   );
 }

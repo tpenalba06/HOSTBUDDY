@@ -1,48 +1,35 @@
 // Universal Import Engine — shared types.
-// Every field keeps provenance so human corrections can win over future syncs.
+// Every field keeps provenance so human corrections win over future syncs.
 
 export type ImportSource = "airbnb" | "booking" | "sunver" | "website" | "text" | "document" | "pms" | "manual";
-
 export type FieldStatus = "found" | "to_verify" | "missing";
 
-export type Category =
-  | "general" | "arrival" | "parking" | "wifi" | "pool" | "house" | "departure" | "trash" | "contact" | "rules";
-
-export interface Provenance {
-  source: ImportSource;
-  raw: string | null;
-  importedAt: string;
-  confidence: number; // 0..1
-  manuallyVerified: boolean;
-  manuallyOverridden: boolean;
-}
-
-export interface ImportedField {
+export interface ExtractedField {
   key: string;
-  label: string;
-  category: Category;
   value: string | null;
   status: FieldStatus;
-  provenance: Provenance;
-  question?: string | undefined; // plain-French question for the completion flow
+  rawValue: string | null; // exact source snippet(s)
+  confidence: number; // 0..1
 }
 
-export interface ImportStage { id: string; label: string }
-
-export interface ImportResult {
-  source: ImportSource;
+export interface ExtractionResult {
   propertyName: string | null;
-  fields: ImportedField[];
+  fields: ExtractedField[];
 }
 
-export interface ImportAdapter<I = string> {
+/** Any extractor (deterministic rules today, structured AI tomorrow) implements this. */
+export interface Extractor {
   id: string;
-  source: ImportSource;
-  canHandle(input: I): boolean;
-  run(input: I, onStage: (stageId: string) => void): Promise<ImportResult>;
+  extract(text: string): Promise<ExtractionResult>;
 }
 
-export const CATEGORY_LABELS: Record<Category, string> = {
-  general: "Le logement", arrival: "Arrivée", parking: "Parking", wifi: "Wi-Fi", pool: "Piscine",
-  house: "La maison", departure: "Départ", trash: "Déchets", contact: "Contact", rules: "Règles",
-};
+export type UrlImportOutcome =
+  | { ok: true; source: ImportSource; result: ExtractionResult }
+  | { ok: false; source: ImportSource; reason: "blocked" | "insufficient" | "unreachable" | "invalid" };
+
+/** One adapter per source; official APIs/OAuth can replace an implementation without UI changes. */
+export interface UrlSourceAdapter {
+  source: ImportSource;
+  matches(host: string): boolean;
+  run(url: string): Promise<UrlImportOutcome>;
+}

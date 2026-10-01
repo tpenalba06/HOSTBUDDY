@@ -10,54 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppCompleteRouteImport } from './routes/app.complete'
-import { Route as AppImportTextRouteImport } from './routes/app.import-text'
-import { Route as AppImportUrlRouteImport } from './routes/app.import-url'
-import { Route as AppManualRouteImport } from './routes/app.manual'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCompleteRoute = AppCompleteRouteImport.update({
-  id: '/complete',
-  path: '/complete',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppImportTextRoute = AppImportTextRouteImport.update({
-  id: '/import-text',
-  path: '/import-text',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppImportUrlRoute = AppImportUrlRouteImport.update({
-  id: '/import-url',
-  path: '/import-url',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppManualRoute = AppManualRouteImport.update({
-  id: '/manual',
-  path: '/manual',
-  getParentRoute: () => AppRoute,
 } as any)
 const LSlugRoute = LSlugRouteImport.update({
   id: '/l/$slug',
@@ -67,76 +25,27 @@ const LSlugRoute = LSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/signup': typeof SignupRoute
-  '/app/complete': typeof AppCompleteRoute
-  '/app/import-text': typeof AppImportTextRoute
-  '/app/import-url': typeof AppImportUrlRoute
-  '/app/manual': typeof AppManualRoute
   '/l/$slug': typeof LSlugRoute
-  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/signup': typeof SignupRoute
-  '/app/complete': typeof AppCompleteRoute
-  '/app/import-text': typeof AppImportTextRoute
-  '/app/import-url': typeof AppImportUrlRoute
-  '/app/manual': typeof AppManualRoute
   '/l/$slug': typeof LSlugRoute
-  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/signup': typeof SignupRoute
-  '/app/complete': typeof AppCompleteRoute
-  '/app/import-text': typeof AppImportTextRoute
-  '/app/import-url': typeof AppImportUrlRoute
-  '/app/manual': typeof AppManualRoute
   '/l/$slug': typeof LSlugRoute
-  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/app'
-    | '/signup'
-    | '/app/complete'
-    | '/app/import-text'
-    | '/app/import-url'
-    | '/app/manual'
-    | '/l/$slug'
-    | '/app/'
+  fullPaths: '/' | '/l/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/signup'
-    | '/app/complete'
-    | '/app/import-text'
-    | '/app/import-url'
-    | '/app/manual'
-    | '/l/$slug'
-    | '/app'
-  id:
-    | '__root__'
-    | '/'
-    | '/app'
-    | '/signup'
-    | '/app/complete'
-    | '/app/import-text'
-    | '/app/import-url'
-    | '/app/manual'
-    | '/l/$slug'
-    | '/app/'
+  to: '/' | '/l/$slug'
+  id: '__root__' | '/' | '/l/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
-  SignupRoute: typeof SignupRoute
   LSlugRoute: typeof LSlugRoute
 }
 
@@ -149,55 +58,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/': {
-      id: '/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/complete': {
-      id: '/app/complete'
-      path: '/complete'
-      fullPath: '/app/complete'
-      preLoaderRoute: typeof AppCompleteRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/import-text': {
-      id: '/app/import-text'
-      path: '/import-text'
-      fullPath: '/app/import-text'
-      preLoaderRoute: typeof AppImportTextRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/import-url': {
-      id: '/app/import-url'
-      path: '/import-url'
-      fullPath: '/app/import-url'
-      preLoaderRoute: typeof AppImportUrlRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/manual': {
-      id: '/app/manual'
-      path: '/manual'
-      fullPath: '/app/manual'
-      preLoaderRoute: typeof AppManualRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/l/$slug': {
       id: '/l/$slug'
       path: '/l/$slug'
@@ -208,28 +68,8 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AppRouteChildren {
-  AppCompleteRoute: typeof AppCompleteRoute
-  AppImportTextRoute: typeof AppImportTextRoute
-  AppImportUrlRoute: typeof AppImportUrlRoute
-  AppManualRoute: typeof AppManualRoute
-  AppIndexRoute: typeof AppIndexRoute
-}
-
-const AppRouteChildren: AppRouteChildren = {
-  AppCompleteRoute: AppCompleteRoute,
-  AppImportTextRoute: AppImportTextRoute,
-  AppImportUrlRoute: AppImportUrlRoute,
-  AppManualRoute: AppManualRoute,
-  AppIndexRoute: AppIndexRoute,
-}
-
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
-  SignupRoute: SignupRoute,
   LSlugRoute: LSlugRoute,
 }
 export const routeTree = rootRouteImport

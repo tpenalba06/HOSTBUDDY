@@ -7,3 +7,9 @@
 - [x] Rework marketing conversion flow and honest future-feature framing
 - [x] Redesign demo and public guest guide with imagery and services foundation
 - [x] Verify auth, persistence, publishing, QR, public guide, languages, and isolation; Phase 2 import paths remain build-verified
+
+## Integration ecosystem
+- [x] Add typed registry and provider interfaces
+- [x] Add public integrations catalog and suggestion flow
+- [x] Add calm signed-in Connections entry
+- [x] Verify existing Phase 2 and Phase 3 flows remain healthy

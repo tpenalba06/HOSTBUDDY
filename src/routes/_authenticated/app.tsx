@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Logo } from "@/components/shared/Logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +35,7 @@ function AppLayout() {
           <button className="min-h-12 whitespace-nowrap px-1 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline" onClick={signOut}>{t("app.signOut")}</button>
         </div>
       </header>
-      <main className="mx-auto max-w-2xl px-5 pb-16"><Outlet /></main>
+      <main className="mx-auto max-w-2xl px-5 pb-16"><Outlet /><footer className="mt-12 border-t pt-6 text-center"><Link to="/app/connections" className="inline-flex min-h-12 items-center font-semibold text-muted-foreground hover:text-primary">Connexions</Link></footer></main>
     </div>
   );
 }

@@ -18,12 +18,18 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as LSlugRouteImport } from './routes/l.$slug'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
+import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
+import { Route as AuthenticatedAppFeedbackRouteImport } from './routes/_authenticated/app.feedback'
 import { Route as AuthenticatedAppImportTextRouteImport } from './routes/_authenticated/app.import-text'
 import { Route as AuthenticatedAppImportUrlRouteImport } from './routes/_authenticated/app.import-url'
 import { Route as AuthenticatedAppManualRouteImport } from './routes/_authenticated/app.manual'
 import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/app.messages'
 import { Route as AuthenticatedAppNewRouteImport } from './routes/_authenticated/app.new'
+import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/app.orders'
+import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
+import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
+import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
 import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages.$id'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
 
@@ -72,6 +78,18 @@ const AuthenticatedAppConnectionsRoute =
     path: '/connections',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppDashboardRoute =
+  AuthenticatedAppDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppFeedbackRoute =
+  AuthenticatedAppFeedbackRouteImport.update({
+    id: '/feedback',
+    path: '/feedback',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppImportTextRoute =
   AuthenticatedAppImportTextRouteImport.update({
     id: '/import-text',
@@ -100,9 +118,29 @@ const AuthenticatedAppNewRoute = AuthenticatedAppNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppOrdersRoute = AuthenticatedAppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const ApiPublicFeedbackRoute = ApiPublicFeedbackRouteImport.update({
+  id: '/api/public/feedback',
+  path: '/api/public/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMessagesRoute = ApiPublicMessagesRouteImport.update({
   id: '/api/public/messages',
   path: '/api/public/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
+  id: '/api/public/orders',
+  path: '/api/public/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppMessagesIdRoute =
@@ -125,12 +163,18 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
+  '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/feedback': typeof AuthenticatedAppFeedbackRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
   '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/app/new': typeof AuthenticatedAppNewRoute
+  '/app/orders': typeof AuthenticatedAppOrdersRoute
+  '/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -142,12 +186,18 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/l/$slug': typeof LSlugRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
+  '/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/app/feedback': typeof AuthenticatedAppFeedbackRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
   '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/app/new': typeof AuthenticatedAppNewRoute
+  '/app/orders': typeof AuthenticatedAppOrdersRoute
+  '/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -162,12 +212,18 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
   '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRoute
+  '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/_authenticated/app/feedback': typeof AuthenticatedAppFeedbackRoute
   '/_authenticated/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/_authenticated/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
   '/_authenticated/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
   '/_authenticated/app/new': typeof AuthenticatedAppNewRoute
+  '/_authenticated/app/orders': typeof AuthenticatedAppOrdersRoute
+  '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/_authenticated/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -182,12 +238,18 @@ export interface FileRouteTypes {
     | '/app'
     | '/l/$slug'
     | '/app/connections'
+    | '/app/dashboard'
+    | '/app/feedback'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
     | '/app/messages'
     | '/app/new'
+    | '/app/orders'
+    | '/app/team'
+    | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/orders'
     | '/app/'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -199,12 +261,18 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/l/$slug'
     | '/app/connections'
+    | '/app/dashboard'
+    | '/app/feedback'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
     | '/app/messages'
     | '/app/new'
+    | '/app/orders'
+    | '/app/team'
+    | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/orders'
     | '/app'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -218,12 +286,18 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/l/$slug'
     | '/_authenticated/app/connections'
+    | '/_authenticated/app/dashboard'
+    | '/_authenticated/app/feedback'
     | '/_authenticated/app/import-text'
     | '/_authenticated/app/import-url'
     | '/_authenticated/app/manual'
     | '/_authenticated/app/messages'
     | '/_authenticated/app/new'
+    | '/_authenticated/app/orders'
+    | '/_authenticated/app/team'
+    | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/orders'
     | '/_authenticated/app/'
     | '/_authenticated/app/messages/$id'
     | '/_authenticated/app/p/$id'
@@ -236,7 +310,9 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   IntegrationsRoute: typeof IntegrationsRoute
   LSlugRoute: typeof LSlugRoute
+  ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
+  ApiPublicOrdersRoute: typeof ApiPublicOrdersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -304,6 +380,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppConnectionsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/dashboard': {
+      id: '/_authenticated/app/dashboard'
+      path: '/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AuthenticatedAppDashboardRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/feedback': {
+      id: '/_authenticated/app/feedback'
+      path: '/feedback'
+      fullPath: '/app/feedback'
+      preLoaderRoute: typeof AuthenticatedAppFeedbackRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/import-text': {
       id: '/_authenticated/app/import-text'
       path: '/import-text'
@@ -339,11 +429,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/orders': {
+      id: '/_authenticated/app/orders'
+      path: '/orders'
+      fullPath: '/app/orders'
+      preLoaderRoute: typeof AuthenticatedAppOrdersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/team': {
+      id: '/_authenticated/app/team'
+      path: '/team'
+      fullPath: '/app/team'
+      preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/feedback': {
+      id: '/api/public/feedback'
+      path: '/api/public/feedback'
+      fullPath: '/api/public/feedback'
+      preLoaderRoute: typeof ApiPublicFeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/messages': {
       id: '/api/public/messages'
       path: '/api/public/messages'
       fullPath: '/api/public/messages'
       preLoaderRoute: typeof ApiPublicMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/orders': {
+      id: '/api/public/orders'
+      path: '/api/public/orders'
+      fullPath: '/api/public/orders'
+      preLoaderRoute: typeof ApiPublicOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/messages/$id': {
@@ -379,22 +497,30 @@ const AuthenticatedAppMessagesRouteWithChildren =
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRoute
+  AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+  AuthenticatedAppFeedbackRoute: typeof AuthenticatedAppFeedbackRoute
   AuthenticatedAppImportTextRoute: typeof AuthenticatedAppImportTextRoute
   AuthenticatedAppImportUrlRoute: typeof AuthenticatedAppImportUrlRoute
   AuthenticatedAppManualRoute: typeof AuthenticatedAppManualRoute
   AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRouteWithChildren
   AuthenticatedAppNewRoute: typeof AuthenticatedAppNewRoute
+  AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
+  AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppPIdRoute: typeof AuthenticatedAppPIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppConnectionsRoute: AuthenticatedAppConnectionsRoute,
+  AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+  AuthenticatedAppFeedbackRoute: AuthenticatedAppFeedbackRoute,
   AuthenticatedAppImportTextRoute: AuthenticatedAppImportTextRoute,
   AuthenticatedAppImportUrlRoute: AuthenticatedAppImportUrlRoute,
   AuthenticatedAppManualRoute: AuthenticatedAppManualRoute,
   AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRouteWithChildren,
   AuthenticatedAppNewRoute: AuthenticatedAppNewRoute,
+  AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
+  AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppPIdRoute: AuthenticatedAppPIdRoute,
 }
@@ -420,7 +546,9 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   IntegrationsRoute: IntegrationsRoute,
   LSlugRoute: LSlugRoute,
+  ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,
+  ApiPublicOrdersRoute: ApiPublicOrdersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,5 +1,20 @@
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, House, KeyRound, Mail, MapPin, MessageCircle, Phone, Sparkles, Star, Waves, Wifi, BriefcaseBusiness } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  House,
+  KeyRound,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Sparkles,
+  Star,
+  Waves,
+  Wifi,
+  BriefcaseBusiness,
+} from "lucide-react";
 import type { GuideData } from "./villaMare";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { Button } from "@/components/ui/button";
@@ -49,7 +64,16 @@ export function GuestGuide({
     (s.id !== "pool" || !!data.pool?.trim()) &&
     (s.id !== "places" || data.places.length > 0) &&
     (s.id !== "services" || data.services.length > 0);
-  const sectionIcons = { arrival: KeyRound, wifi: Wifi, house: House, places: MapPin, services: Sparkles, departure: BriefcaseBusiness, pool: Waves, contact: MessageCircle };
+  const sectionIcons = {
+    arrival: KeyRound,
+    wifi: Wifi,
+    house: House,
+    places: MapPin,
+    services: Sparkles,
+    departure: BriefcaseBusiness,
+    pool: Waves,
+    contact: MessageCircle,
+  };
   const entry = (s: (typeof SECTIONS)[number]) => (
     <Button
       variant="outline"
@@ -58,7 +82,10 @@ export function GuestGuide({
       className="flex min-h-16 w-full min-w-0 items-center justify-start gap-4 rounded-lg border bg-card px-4 text-left text-base font-semibold text-foreground shadow-sm hover:border-primary hover:bg-card"
     >
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
-        {(() => { const Icon = sectionIcons[s.id]; return <Icon className="h-5 w-5" aria-hidden />; })()}
+        {(() => {
+          const Icon = sectionIcons[s.id];
+          return <Icon className="h-5 w-5" aria-hidden />;
+        })()}
       </span>
       <span className="min-w-0 flex-1 whitespace-normal leading-snug">{title(s)}</span>
       <span aria-hidden className="text-primary">

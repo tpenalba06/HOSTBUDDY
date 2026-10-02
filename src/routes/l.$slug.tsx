@@ -187,12 +187,8 @@ function GuestPage() {
           <ContactButtons section={contact} />
         </div>
       )}
-      {messageOpen && (
-        <MessageDrawer slug={slug} onClose={() => setMessageOpen(false)} />
-      )}{" "}
-      {feedbackOpen && (
-        <FeedbackDrawer slug={slug} onClose={() => setFeedbackOpen(false)} />
-      )}{" "}
+      {messageOpen && <MessageDrawer slug={slug} onClose={() => setMessageOpen(false)} />}{" "}
+      {feedbackOpen && <FeedbackDrawer slug={slug} onClose={() => setFeedbackOpen(false)} />}{" "}
       {serviceId && (
         <OrderDrawer
           slug={slug}

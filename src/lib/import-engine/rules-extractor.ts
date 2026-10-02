@@ -5,7 +5,7 @@ import { FIELD_DEFS } from "./fields";
 
 const RULES: Record<string, RegExp> = {
   address:
-    /\b(adresse|address|dirección|adresse|indirizzo|morada|situ[ée]e?|located|ubicad[oa]|gelegen|situat[oa]|\d{1,4},?\s+(rue|avenue|road|street|calle|straße|strasse|via|rua|boulevard|chemin|route|place)|\b\d{5}\b)/i,
+    /\b(adresse\s*[:\-]|address\s*[:\-]|direcci[oó]n\s*[:\-]|anschrift\s*[:\-]|indirizzo\s*[:\-]|morada\s*[:\-]|\d{1,4},?\s+(rue|avenue|av\.|boulevard|bd|chemin|impasse|route|allée|place|road|street|lane|drive|calle|avenida|straße|strasse|weg|platz|via|viale|piazza|rua|avenida)\b)/i,
   arrival:
     /(arriv[ée]e?|check.?in|arrival|llegada|ankunft|arrivo|chegada|à partir de \d{1,2}\s?h|from \d{1,2}(:\d{2})?|ab \d{1,2}(:\d{2})?)/i,
   access:
@@ -27,13 +27,13 @@ const RULES: Record<string, RegExp> = {
   rules:
     /(interdit|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
   trash:
-    /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif)/i,
+    /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/i,
   departure:
     /(d[ée]part|check.?out|departure|salida|abreise|partenza|partida|quitter le logement|avant \d{1,2}\s?h|before \d{1,2}|antes de \d{1,2}|bis \d{1,2}|entro le \d{1,2}|até às? \d{1,2})/i,
   contact:
     /(t[ée]l[ée]?phone|phone|telefono|telefon|telefone|whatsapp|contact|e.?mail|correo|email|@[w.-]+\.[a-z]{2,}|(\+\d{1,3}|0)\s?[1-9](?:[\s.-]?\d{2}){4})/i,
   emergency:
-    /(urgence|emergency|emergencia|notfall|emergenza|emergência|pompiers|fire brigade|samu|112\b|hospital|h[oô]pital|krankenhaus|ospedale)/i,
+    /(urgence|emergency|emergencia|notfall|emergenza|emergência|pompiers|fire brigade|samu|\b112\b|h[oô]pital|hospital\s+(de|near|proche)|krankenhaus|ospedale)/i,
   recommendations:
     /(restaurant|boulangerie|bakery|panadería|bäckerei|panificio|padaria|march[ée]|market|mercado|markt|plage|beach|playa|strand|spiaggia|praia|recommand|recommend|empfehl|consigli|recomenda|caf[ée]|bar\b|balade|hike|randonn)/i,
   services:
@@ -43,7 +43,21 @@ const RULES: Record<string, RegExp> = {
 };
 
 const AMBIGUOUS =
-  /(\?|peut.?[êe]tre|environ|à confirmer|je crois|normalement|sauf si|à v[ée]rifier|maybe|approximately|about|to confirm|I think|probably|quizá|aprox|confirmar|vielleicht|ungefähr|forse|circa|talvez|aproximadamente|xx+)/i;
+  /(\?|peut.?[êe]tre|à confirmer|je crois|sauf si|à v[ée]rifier|maybe|to confirm|I think|possibly|quizá|confirmar|vielleicht|forse|talvez|xx+)/i;
+
+const TIME_FIELDS = new Set(["arrival", "departure"]);
+
+function normalizedTimes(text: string) {
+  return [...text.matchAll(/\b([01]?\d|2[0-3])(?:\s*[h:]\s*([0-5]\d))?\b/gi)]
+    .map((match) => `${match[1]}:${match[2] ?? "00"}`)
+    .filter((value, index, all) => all.indexOf(value) === index);
+}
+
+function hasConflictingEvidence(key: string, hits: string[]) {
+  if (!TIME_FIELDS.has(key)) return false;
+  const times = normalizedTimes(hits.join("\n"));
+  return times.length > 1;
+}
 
 export function splitSnippets(text: string): string[] {
   return text
@@ -83,13 +97,18 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
 
     const unique = [...new Set(hits)].slice(0, 8);
     const joined = unique.join("\n");
-    const ambiguous = unique.some((hit) => AMBIGUOUS.test(hit)) || joined.length < 8;
-    const confidence = ambiguous ? Math.min(0.5, baseConfidence) : baseConfidence;
+    const ambiguous = unique.some((hit) => AMBIGUOUS.test(hit));
+    const conflicting = hasConflictingEvidence(def.key, unique);
+
+    // "À vérifier" is reserved for real uncertainty: explicit hedging or contradictory
+    // evidence. A clean, explicit match is considered found even on imported web text.
+    const needsReview = ambiguous || conflicting;
+    const confidence = needsReview ? Math.min(0.58, baseConfidence) : Math.max(0.78, baseConfidence);
 
     return {
       key: def.key,
       value: joined,
-      status: confidence >= 0.7 ? "found" : "to_verify",
+      status: needsReview ? "to_verify" : "found",
       rawValue: joined,
       confidence,
     };

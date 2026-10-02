@@ -13,7 +13,8 @@ export interface ConnectorContext {
   userId: string;
 }
 
-export type ConnectionHealth = { ok: true } | { ok: false; reason: "not_connected" | "expired" | "unavailable" };
+export type ConnectionHealth =
+  { ok: true } | { ok: false; reason: "not_connected" | "expired" | "unavailable" };
 
 /**
  * Provider boundary for future official PMS/OTA connections. Imported data must
@@ -32,17 +33,29 @@ export interface PropertyConnector {
 }
 
 export class ConnectorNotAvailableError extends Error {
-  constructor() { super("Cette connexion n'est pas encore disponible."); }
+  constructor() {
+    super("Cette connexion n'est pas encore disponible.");
+  }
 }
 
 /** Explicit stub: no provider can appear connected until its real adapter exists. */
 export const createPlannedConnector = (definition: IntegrationDefinition): PropertyConnector => ({
   id: definition.id as IntegrationId,
   definition,
-  authorize: async () => { throw new ConnectorNotAvailableError(); },
+  authorize: async () => {
+    throw new ConnectorNotAvailableError();
+  },
   testConnection: async () => ({ ok: false, reason: "unavailable" }),
-  listProperties: async () => { throw new ConnectorNotAvailableError(); },
-  importProperty: async () => { throw new ConnectorNotAvailableError(); },
-  importProperties: async () => { throw new ConnectorNotAvailableError(); },
-  disconnect: async () => { throw new ConnectorNotAvailableError(); },
+  listProperties: async () => {
+    throw new ConnectorNotAvailableError();
+  },
+  importProperty: async () => {
+    throw new ConnectorNotAvailableError();
+  },
+  importProperties: async () => {
+    throw new ConnectorNotAvailableError();
+  },
+  disconnect: async () => {
+    throw new ConnectorNotAvailableError();
+  },
 });

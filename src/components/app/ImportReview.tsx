@@ -108,14 +108,19 @@ export function ImportReview({
                   <p className="font-semibold">
                     {def.label}
                     {def.essential && (
-                      <span className="text-sm text-muted-foreground"> · {t("property.important")}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {" "}
+                        · {t("property.important")}
+                      </span>
                     )}
                   </p>
                   {field.rawValue && field.rawValue !== field.value && (
                     <p className="mt-1 text-xs text-muted-foreground">Source conservée</p>
                   )}
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${BADGE_CLASS[field.status]}`}>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-bold ${BADGE_CLASS[field.status]}`}
+                >
                   {t(`property.${field.status === "to_verify" ? "verify" : field.status}`)}
                 </span>
               </div>
@@ -129,7 +134,9 @@ export function ImportReview({
 
               {field.rawValue && (
                 <details className="mt-2 text-sm text-muted-foreground">
-                  <summary className="cursor-pointer py-2 font-medium">Voir le texte source</summary>
+                  <summary className="cursor-pointer py-2 font-medium">
+                    Voir le texte source
+                  </summary>
                   <p className="whitespace-pre-line rounded-lg bg-muted p-3">{field.rawValue}</p>
                 </details>
               )}

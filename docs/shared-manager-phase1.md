@@ -58,4 +58,22 @@ Aucun compte de test authentifié n’a été fourni. Connexion réelle, maintie
 
 Le workflow existant utilise `npm ci` alors que le dépôt contient `bun.lock` et aucun `package-lock.json` : cet écart de CI est préexistant et reste à traiter séparément.
 
+## Reprise après interruption — 3 octobre 2026
+
+Les quatre lots sont publiés sur `refactor/shared-manager-phase1` jusqu’à `5a4ae40b082d2dd0d15cadce68dec65f5888a0dc`, dans la PR brouillon #3 vers `feature/universal-import-v1`. Les arbres des quatre commits locaux originaux et de leurs équivalents GitHub sont identiques. Les originaux restent conservés sur `verification/shared-manager-local`. Aucun lot n’a été refait et aucun historique publié n’a été réécrit.
+
+Le run GitHub Actions `37068344516` échouait pendant `actions/setup-node`, avant installation, lint, tests, typecheck et build : le cache npm ne trouvait aucun lockfile compatible. Le workflow utilise désormais Bun 1.4.2 et `bun install --frozen-lockfile` pour respecter `bun.lock`, puis les scripts npm existants sous Node 22. Le job est limité à 15 minutes.
+
+Les erreurs de lint global ont été corrigées sans désactiver de règles : formatage Prettier dans onze fichiers et suppression de six échappements inutiles du tiret en fin de classe de caractères dans la règle d’adresse. La comparaison au résultat de Prettier appliqué au commit précédent confirme que les autres modifications TypeScript sont uniquement du formatage, y compris les types Supabase générés.
+
+Vérifications relancées sur les corrections :
+
+- `npm run check` passe intégralement : lint **0 erreur / 16 avertissements**, **22 tests** dans cinq fichiers, typecheck et build.
+- Chromium/Playwright : onglets de l’éditeur, création manuelle, isolation des brouillons, correction Wi-Fi, renommage, aperçu du bon logement, conservation après passage voyageur/gestionnaire, import texte avec review, réponse et résolution des conversations.
+- Responsive à 360/430/768/1280 px, QR et navigation dans une frame étroite : passent, sans débordement.
+- Page de connexion et redirection anonyme de `/app` : passent.
+- Aucune écriture Supabase ni erreur JavaScript pendant les parcours démo.
+
+La validation authentifiée reste à effectuer avec des comptes de test autorisés : session après rechargement, déconnexion/reconnexion, écritures en base, publication et lien public, rôles et isolation entre organisations. Aucun compte ni secret serveur n’est disponible dans ce checkout ; le build a été effectué sans `.env`. L’import URL réel et les uploads restent également non validés. Ces limites ne sont pas remplacées par des simulations.
+
 La séparation « En ligne / Brouillons », les compteurs et l’épuration des textes restent la phase 2. La simplification éditoriale complète de l’éditeur reste la phase 3. Les autres écrans et l’amélioration du pipeline import restent les phases 4 et 5. Attendre la validation de cette phase avant de poursuivre.

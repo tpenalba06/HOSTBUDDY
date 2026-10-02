@@ -8,7 +8,7 @@ describe("Airbnb URL normalization", () => {
 
     expect(getImportUrlIssue(input)).toBeNull();
     expect(normalizeUrl(input)).toBe("https://www.airbnb.fr/rooms/1766783017368548898");
-    expect(pickAdapter(normalizeUrl(input)! ).source).toBe("airbnb");
+    expect(pickAdapter(normalizeUrl(input)!).source).toBe("airbnb");
   });
 
   it("also accepts markdown-escaped ampersands from copied links", () => {

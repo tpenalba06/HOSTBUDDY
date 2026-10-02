@@ -87,7 +87,8 @@ function ImportUrl() {
       setCleanUrl(clean);
       setCandidate(outcome.result);
     } catch (e) {
-      if (currentRunId) await finishImportRun(currentRunId, "failed", { error: "client" }).catch(() => {});
+      if (currentRunId)
+        await finishImportRun(currentRunId, "failed", { error: "client" }).catch(() => {});
       stop();
       setStage(null);
       setRunId(null);
@@ -105,14 +106,16 @@ function ImportUrl() {
       qc.invalidateQueries({ queryKey: ["properties"] });
       nav({ to: "/app/p/$id", params: { id: property.id } });
     } catch (e) {
-      if (runId) await finishImportRun(runId, "failed", { error: "create_property" }).catch(() => {});
+      if (runId)
+        await finishImportRun(runId, "failed", { error: "create_property" }).catch(() => {});
       setError(friendlyMessage(e));
       setBusy(false);
     }
   };
 
   const backFromReview = async () => {
-    if (runId) await finishImportRun(runId, "insufficient", { error: "review_cancelled" }).catch(() => {});
+    if (runId)
+      await finishImportRun(runId, "insufficient", { error: "review_cancelled" }).catch(() => {});
     setRunId(null);
     setCandidate(null);
     setCleanUrl(null);
@@ -121,7 +124,11 @@ function ImportUrl() {
   if (candidate) {
     return (
       <>
-        {error && <p role="alert" className="mt-4 rounded-xl bg-warning-soft p-3">{error}</p>}
+        {error && (
+          <p role="alert" className="mt-4 rounded-xl bg-warning-soft p-3">
+            {error}
+          </p>
+        )}
         <ImportReview
           value={candidate}
           onChange={setCandidate}

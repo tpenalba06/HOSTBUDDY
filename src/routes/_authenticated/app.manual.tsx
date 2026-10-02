@@ -17,20 +17,47 @@ function Manual() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const go = async () => {
-    setBusy(true); setError("");
+    setBusy(true);
+    setError("");
     try {
-      const p = await createPropertyFromExtraction(org.id, "manual", { propertyName: name, fields: [] }, null);
+      const p = await createPropertyFromExtraction(
+        org.id,
+        "manual",
+        { propertyName: name, fields: [] },
+        null,
+      );
       qc.invalidateQueries({ queryKey: ["properties"] });
       nav({ to: "/app/p/$id", params: { id: p.id }, search: { step: "complete" } });
-    } catch (e) { setError(friendlyMessage(e)); setBusy(false); }
+    } catch (e) {
+      setError(friendlyMessage(e));
+      setBusy(false);
+    }
   };
   return (
     <div className="mt-6">
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("common.back")}</Link>
+      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">
+        ← {t("common.back")}
+      </Link>
       <h1 className="text-3xl font-semibold">{t("import.manualTitle")}</h1>
-      <input className="field mt-6 text-lg" placeholder="Ex. : Villa des Oliviers" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-      {error && <p role="alert" className="mt-4 rounded-xl bg-warning-soft p-3">{error}</p>}
-      <button className="btn btn-primary mt-4 w-full text-lg" disabled={!name.trim() || busy} onClick={go}>{t("common.continue")}</button>
+      <input
+        className="field mt-6 text-lg"
+        placeholder="Ex. : Villa des Oliviers"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        autoFocus
+      />
+      {error && (
+        <p role="alert" className="mt-4 rounded-xl bg-warning-soft p-3">
+          {error}
+        </p>
+      )}
+      <button
+        className="btn btn-primary mt-4 w-full text-lg"
+        disabled={!name.trim() || busy}
+        onClick={go}
+      >
+        {t("common.continue")}
+      </button>
     </div>
   );
 }

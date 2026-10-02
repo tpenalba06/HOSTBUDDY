@@ -19,27 +19,33 @@ const cleanString = (value: unknown, max: number) =>
 export function readGuideContent(value: unknown): GuideContent {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const source = value as Record<string, unknown>;
-  const items = Array.isArray(source.items)
-    ? source.items.flatMap((entry) => {
+  const items = Array.isArray(source["items"])
+    ? source["items"].flatMap((entry) => {
         if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
         const item = entry as Record<string, unknown>;
-        const label = cleanString(item.label, 120);
-        const text = cleanString(item.text, 10_000);
-        const fieldKey = cleanString(item.fieldKey, 80);
+        const label = cleanString(item["label"], 120);
+        const text = cleanString(item["text"], 10_000);
+        const fieldKey = cleanString(item["fieldKey"], 80);
         return [{ label, text, ...(fieldKey ? { fieldKey } : {}) }];
       })
     : [];
-  const phones = Array.isArray(source.phones) ? source.phones.filter((v): v is string => typeof v === "string") : undefined;
-  const emails = Array.isArray(source.emails) ? source.emails.filter((v): v is string => typeof v === "string") : undefined;
+  const phones = Array.isArray(source["phones"])
+    ? source["phones"].filter((v): v is string => typeof v === "string")
+    : undefined;
+  const emails = Array.isArray(source["emails"])
+    ? source["emails"].filter((v): v is string => typeof v === "string")
+    : undefined;
   return { ...source, items, ...(phones ? { phones } : {}), ...(emails ? { emails } : {}) };
 }
 
 function inferredFieldKey(sectionKey: string, item: GuideContentItem) {
-  if (item.fieldKey && FIELD_BY_KEY[item.fieldKey]?.section.key === sectionKey) return item.fieldKey;
+  if (item.fieldKey && FIELD_BY_KEY[item.fieldKey]?.section.key === sectionKey)
+    return item.fieldKey;
   const normalized = item.label.trim().toLocaleLowerCase("fr");
   if (!normalized) return undefined;
-  return FIELD_DEFS.find((field) =>
-    field.section.key === sectionKey && field.label.trim().toLocaleLowerCase("fr") === normalized,
+  return FIELD_DEFS.find(
+    (field) =>
+      field.section.key === sectionKey && field.label.trim().toLocaleLowerCase("fr") === normalized,
   )?.key;
 }
 
@@ -50,7 +56,10 @@ export function getGuideItems(sectionKey: string, value: unknown): GuideContentI
   });
 }
 
-export function sanitizeGuideItems(sectionKey: string, items: GuideContentItem[]): GuideContentItem[] {
+export function sanitizeGuideItems(
+  sectionKey: string,
+  items: GuideContentItem[],
+): GuideContentItem[] {
   const seenFieldKeys = new Set<string>();
   return items.flatMap((item) => {
     const label = item.label.trim().slice(0, 120);
@@ -74,7 +83,11 @@ export function contactContent(text: string) {
   return { phones: [...new Set(phones)].slice(0, 3), emails: [...new Set(emails)].slice(0, 2) };
 }
 
-export function buildGuideContent(sectionKey: string, previous: unknown, items: GuideContentItem[]): GuideContent {
+export function buildGuideContent(
+  sectionKey: string,
+  previous: unknown,
+  items: GuideContentItem[],
+): GuideContent {
   const base = readGuideContent(previous);
   const visibleItems = sanitizeGuideItems(sectionKey, items).filter((item) => item.text.length > 0);
   const next: GuideContent = { ...base, items: visibleItems };
@@ -91,7 +104,11 @@ export function mergeFieldIntoGuideContent(
 ): GuideContent {
   const items = getGuideItems(sectionKey, previous);
   const index = items.findIndex((item) => item.fieldKey === field.key);
-  const nextItem: GuideContentItem = { fieldKey: field.key, label: field.label, text: field.value?.trim() ?? "" };
+  const nextItem: GuideContentItem = {
+    fieldKey: field.key,
+    label: field.label,
+    text: field.value?.trim() ?? "",
+  };
   const nextItems = [...items];
   if (index >= 0) {
     if (nextItem.text) nextItems[index] = nextItem;
@@ -102,7 +119,11 @@ export function mergeFieldIntoGuideContent(
   return buildGuideContent(sectionKey, previous, nextItems);
 }
 
-export function fieldUpdatesForGuideSection(sectionKey: string, previous: unknown, items: GuideContentItem[]) {
+export function fieldUpdatesForGuideSection(
+  sectionKey: string,
+  previous: unknown,
+  items: GuideContentItem[],
+) {
   const before = getGuideItems(sectionKey, previous);
   const after = sanitizeGuideItems(sectionKey, items);
   const keys = new Set<string>();
@@ -110,5 +131,8 @@ export function fieldUpdatesForGuideSection(sectionKey: string, previous: unknow
   after.forEach((item) => item.fieldKey && keys.add(item.fieldKey));
   return [...keys]
     .filter((key) => FIELD_BY_KEY[key]?.section.key === sectionKey)
-    .map((key) => ({ key, value: after.find((item) => item.fieldKey === key)?.text.trim() || null }));
+    .map((key) => ({
+      key,
+      value: after.find((item) => item.fieldKey === key)?.text.trim() || null,
+    }));
 }

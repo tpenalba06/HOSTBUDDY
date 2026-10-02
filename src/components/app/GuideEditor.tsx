@@ -1,61 +1,622 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Eye, ImagePlus, Languages, Plus, Trash2, Video } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  ImagePlus,
+  Languages,
+  Plus,
+  Trash2,
+  Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { addGuideSection, deleteGuideSection, ensureGuideSections, removeSectionMedia, reorderGuideSections, saveGuideSection, updateSectionMedia, uploadSectionMedia, type GuideSection, type PropertyField, type SectionMedia } from "@/lib/data/properties";
+import {
+  addGuideSection,
+  deleteGuideSection,
+  ensureGuideSections,
+  removeSectionMedia,
+  reorderGuideSections,
+  saveGuideSection,
+  updateSectionMedia,
+  uploadSectionMedia,
+  type GuideSection,
+  type PropertyField,
+  type SectionMedia,
+} from "@/lib/data/properties";
 import { friendlyMessage } from "./Friendly";
 import { useI18n } from "@/lib/i18n";
 import { translationAvailability } from "@/lib/translation/service";
 import { getGuideItems, type GuideContentItem } from "@/lib/data/guide-content";
 
 export type EditorProperty = { id: string; organization_id: string; status: string };
-export type EditorData = { property: EditorProperty; fields: PropertyField[]; sections: GuideSection[]; media: SectionMedia[] };
+export type EditorData = {
+  property: EditorProperty;
+  fields: PropertyField[];
+  sections: GuideSection[];
+  media: SectionMedia[];
+};
 export type GuideEditorActions = {
   ensure: (propertyId: string, fields: PropertyField[]) => Promise<GuideSection[]>;
-  add: (propertyId: string, order: number, template: { key: string; title: string; icon: string }) => Promise<GuideSection>;
-  save: (section: GuideSection, values: { title: string; items: GuideContentItem[]; isVisible: boolean; icon: string; ctaLabel: string }) => Promise<GuideSection>;
+  add: (
+    propertyId: string,
+    order: number,
+    template: { key: string; title: string; icon: string },
+  ) => Promise<GuideSection>;
+  save: (
+    section: GuideSection,
+    values: {
+      title: string;
+      items: GuideContentItem[];
+      isVisible: boolean;
+      icon: string;
+      ctaLabel: string;
+    },
+  ) => Promise<GuideSection>;
   reorder: (sections: GuideSection[]) => Promise<void>;
   remove: (sectionId: string) => Promise<void>;
-  upload: (orgId: string, propertyId: string, sectionId: string, file: File) => Promise<SectionMedia>;
-  updateMedia: (media: SectionMedia, values: { caption?: string; altText?: string }) => Promise<SectionMedia>;
+  upload: (
+    orgId: string,
+    propertyId: string,
+    sectionId: string,
+    file: File,
+  ) => Promise<SectionMedia>;
+  updateMedia: (
+    media: SectionMedia,
+    values: { caption?: string; altText?: string },
+  ) => Promise<SectionMedia>;
   removeMedia: (media: SectionMedia) => Promise<void>;
   resolveMediaUrl: (media: SectionMedia) => Promise<string>;
 };
 const realActions: GuideEditorActions = {
-  ensure: ensureGuideSections, add: addGuideSection, save: saveGuideSection, reorder: reorderGuideSections, remove: deleteGuideSection,
-  upload: uploadSectionMedia, updateMedia: updateSectionMedia, removeMedia: removeSectionMedia,
-  resolveMediaUrl: async (item) => (await supabase.storage.from("guide-media").createSignedUrl(item.storage_path, 900)).data?.signedUrl ?? "",
+  ensure: ensureGuideSections,
+  add: addGuideSection,
+  save: saveGuideSection,
+  reorder: reorderGuideSections,
+  remove: deleteGuideSection,
+  upload: uploadSectionMedia,
+  updateMedia: updateSectionMedia,
+  removeMedia: removeSectionMedia,
+  resolveMediaUrl: async (item) =>
+    (await supabase.storage.from("guide-media").createSignedUrl(item.storage_path, 900)).data
+      ?.signedUrl ?? "",
 };
 const itemsOf = (section: GuideSection) => getGuideItems(section.section_key, section.content);
 const blankItem = (): GuideContentItem => ({ label: "", text: "" });
-const ICONS = ["🔑","📶","🏡","📍","✨","🧳","💬","🅿️","🏊","📋","🛏️","🍽️","🚲","📌"];
-const TEMPLATE_KEYS = ["arrival","wifi","house","parking","pool","rules","amenities","places","services","departure","contact","custom"] as const;
+const ICONS = ["🔑", "📶", "🏡", "📍", "✨", "🧳", "💬", "🅿️", "🏊", "📋", "🛏️", "🍽️", "🚲", "📌"];
+const TEMPLATE_KEYS = [
+  "arrival",
+  "wifi",
+  "house",
+  "parking",
+  "pool",
+  "rules",
+  "amenities",
+  "places",
+  "services",
+  "departure",
+  "contact",
+  "custom",
+] as const;
 
-export function GuideEditor({ data, onChanged, onPreview, actions = realActions, compact = false }: { data: EditorData; onChanged: () => void; onPreview: () => void; actions?: GuideEditorActions; compact?: boolean }) {
+export function GuideEditor({
+  data,
+  onChanged,
+  onPreview,
+  actions = realActions,
+  compact = false,
+}: {
+  data: EditorData;
+  onChanged: () => void;
+  onPreview: () => void;
+  actions?: GuideEditorActions;
+  compact?: boolean;
+}) {
   const { t } = useI18n();
-  const [sections, setSections] = useState(data.sections); const [media, setMedia] = useState(data.media);
-  const [open, setOpen] = useState<string | null>(null); const [saved, setSaved] = useState(false); const [saving, setSaving] = useState(false); const [templates, setTemplates] = useState(false); const [error, setError] = useState("");
-  useEffect(() => { setSections(data.sections); setMedia(data.media); }, [data.sections, data.media]);
-  useEffect(() => { if (sections.length) return; actions.ensure(data.property.id, data.fields).then(setSections).catch((e) => setError(friendlyMessage(e))); }, [actions, data.fields, data.property.id, sections.length]);
-  const sorted = useMemo(() => [...sections].sort((a, b) => a.sort_order - b.sort_order), [sections]);
-  const flash = () => { setSaving(false); setSaved(true); window.setTimeout(() => setSaved(false), 2200); onChanged(); };
-  const move = async (id: string, direction: -1 | 1) => { const index = sorted.findIndex((item) => item.id === id); const target = index + direction; if (target < 0 || target >= sorted.length) return; const next = [...sorted]; const current = next[index]; const replacement = next[target]; if (!current || !replacement) return; next[index] = replacement; next[target] = current; const ordered = next.map((item, i) => ({ ...item, sort_order: i })); setSections(ordered); try { await actions.reorder(ordered); flash(); } catch (e) { setError(friendlyMessage(e)); } };
-  const add = async (key: typeof TEMPLATE_KEYS[number]) => { const template={key,title:t(`section.${key}`),icon:ICONS[TEMPLATE_KEYS.indexOf(key)]??"📌"}; setSaving(true); try { const created = await actions.add(data.property.id, sorted.length, template); setSections([...sorted, created]); setOpen(created.id); setTemplates(false); flash(); } catch (e) { setSaving(false); setError(friendlyMessage(e)); } };
-  return <div className={`space-y-4 ${compact ? "guide-editor-compact" : ""}`}>
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3"><div className="min-w-0"><p className="font-bold text-primary">{t("manager.guide")}</p><h2 className="mt-1 text-3xl font-semibold">{t("manager.editEverything")}</h2><p className="mt-1 text-muted-foreground">{t("manager.editHint")}</p></div><Button onClick={onPreview} variant="outline" className="min-h-12 shrink-0 rounded-full px-3"><Eye/><span className={compact ? "sr-only" : "hidden sm:inline"}>{t("manager.preview")}</span></Button></div>
-    <Button onClick={()=>setTemplates(!templates)} className="min-h-14 w-full rounded-full text-base"><Plus/>{t("manager.addSection")}</Button>
-    {templates&&<div className="surface grid gap-2 p-4 @sm:grid-cols-2"><p className="col-span-full font-bold">{t("manager.chooseTemplate")}</p>{TEMPLATE_KEYS.map(key=><button key={key} onClick={()=>add(key)} className="flex min-h-14 min-w-0 items-center gap-3 rounded-lg border bg-card px-4 text-left font-semibold hover:border-primary"><span className="shrink-0 text-xl">{ICONS[TEMPLATE_KEYS.indexOf(key)]}</span><span className="min-w-0">{t(`section.${key}`)}</span></button>)}</div>}
-    {!translationAvailability.enabled&&<div className="flex gap-3 rounded-lg bg-muted p-4"><Languages className="h-5 w-5 shrink-0 text-success"/><div><p className="font-semibold">{t("manager.autoTranslation")}</p><p className="text-sm text-muted-foreground">{t("manager.translationUnavailable")}</p></div></div>}
-    {error && <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">{error}</p>}
-    <div className="space-y-3">{sorted.map((section,index)=><SectionRow key={section.id} section={section} media={media.filter(item=>item.section_id===section.id)} open={open===section.id} onToggle={()=>setOpen(open===section.id?null:section.id)} actions={actions} onSave={async(values)=>{const updated=await actions.save(section,values);setSections(sections.map(item=>item.id===updated.id?updated:item));flash();}} onUpload={async(file)=>{const created=await actions.upload(data.property.organization_id,data.property.id,section.id,file);setMedia([...media,created]);flash();}} onMediaChange={(updated)=>setMedia(media.map(item=>item.id===updated.id?updated:item))} onMediaRemove={async(item)=>{await actions.removeMedia(item);setMedia(media.filter(current=>current.id!==item.id));flash();}} onMoveUp={()=>move(section.id,-1)} onMoveDown={()=>move(section.id,1)} canUp={index>0} canDown={index<sorted.length-1} onDelete={async()=>{if(!window.confirm(`${t("common.delete")} ?`))return;await actions.remove(section.id);setSections(sections.filter(item=>item.id!==section.id));flash();}} />)}</div>
-    <div aria-live="polite" className={`fixed bottom-20 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground shadow-phone transition ${(saved||saving)?"opacity-100":"pointer-events-none opacity-0"}`}>{saving?t("common.saving"):data.property.status==="published"?`✓ ${t("manager.guideUpdated")}`:`✓ ${t("common.saved")}`}</div>
-  </div>;
+  const [sections, setSections] = useState(data.sections);
+  const [media, setMedia] = useState(data.media);
+  const [open, setOpen] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [templates, setTemplates] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    setSections(data.sections);
+    setMedia(data.media);
+  }, [data.sections, data.media]);
+  useEffect(() => {
+    if (sections.length) return;
+    actions
+      .ensure(data.property.id, data.fields)
+      .then(setSections)
+      .catch((e) => setError(friendlyMessage(e)));
+  }, [actions, data.fields, data.property.id, sections.length]);
+  const sorted = useMemo(
+    () => [...sections].sort((a, b) => a.sort_order - b.sort_order),
+    [sections],
+  );
+  const flash = () => {
+    setSaving(false);
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 2200);
+    onChanged();
+  };
+  const move = async (id: string, direction: -1 | 1) => {
+    const index = sorted.findIndex((item) => item.id === id);
+    const target = index + direction;
+    if (target < 0 || target >= sorted.length) return;
+    const next = [...sorted];
+    const current = next[index];
+    const replacement = next[target];
+    if (!current || !replacement) return;
+    next[index] = replacement;
+    next[target] = current;
+    const ordered = next.map((item, i) => ({ ...item, sort_order: i }));
+    setSections(ordered);
+    try {
+      await actions.reorder(ordered);
+      flash();
+    } catch (e) {
+      setError(friendlyMessage(e));
+    }
+  };
+  const add = async (key: (typeof TEMPLATE_KEYS)[number]) => {
+    const template = {
+      key,
+      title: t(`section.${key}`),
+      icon: ICONS[TEMPLATE_KEYS.indexOf(key)] ?? "📌",
+    };
+    setSaving(true);
+    try {
+      const created = await actions.add(data.property.id, sorted.length, template);
+      setSections([...sorted, created]);
+      setOpen(created.id);
+      setTemplates(false);
+      flash();
+    } catch (e) {
+      setSaving(false);
+      setError(friendlyMessage(e));
+    }
+  };
+  return (
+    <div className={`space-y-4 ${compact ? "guide-editor-compact" : ""}`}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+        <div className="min-w-0">
+          <p className="font-bold text-primary">{t("manager.guide")}</p>
+          <h2 className="mt-1 text-3xl font-semibold">{t("manager.editEverything")}</h2>
+          <p className="mt-1 text-muted-foreground">{t("manager.editHint")}</p>
+        </div>
+        <Button
+          onClick={onPreview}
+          variant="outline"
+          className="min-h-12 shrink-0 rounded-full px-3"
+        >
+          <Eye />
+          <span className={compact ? "sr-only" : "hidden sm:inline"}>{t("manager.preview")}</span>
+        </Button>
+      </div>
+      <Button
+        onClick={() => setTemplates(!templates)}
+        className="min-h-14 w-full rounded-full text-base"
+      >
+        <Plus />
+        {t("manager.addSection")}
+      </Button>
+      {templates && (
+        <div className="surface grid gap-2 p-4 @sm:grid-cols-2">
+          <p className="col-span-full font-bold">{t("manager.chooseTemplate")}</p>
+          {TEMPLATE_KEYS.map((key) => (
+            <button
+              key={key}
+              onClick={() => add(key)}
+              className="flex min-h-14 min-w-0 items-center gap-3 rounded-lg border bg-card px-4 text-left font-semibold hover:border-primary"
+            >
+              <span className="shrink-0 text-xl">{ICONS[TEMPLATE_KEYS.indexOf(key)]}</span>
+              <span className="min-w-0">{t(`section.${key}`)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {!translationAvailability.enabled && (
+        <div className="flex gap-3 rounded-lg bg-muted p-4">
+          <Languages className="h-5 w-5 shrink-0 text-success" />
+          <div>
+            <p className="font-semibold">{t("manager.autoTranslation")}</p>
+            <p className="text-sm text-muted-foreground">{t("manager.translationUnavailable")}</p>
+          </div>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">
+          {error}
+        </p>
+      )}
+      <div className="space-y-3">
+        {sorted.map((section, index) => (
+          <SectionRow
+            key={section.id}
+            section={section}
+            media={media.filter((item) => item.section_id === section.id)}
+            open={open === section.id}
+            onToggle={() => setOpen(open === section.id ? null : section.id)}
+            actions={actions}
+            onSave={async (values) => {
+              const updated = await actions.save(section, values);
+              setSections(sections.map((item) => (item.id === updated.id ? updated : item)));
+              flash();
+            }}
+            onUpload={async (file) => {
+              const created = await actions.upload(
+                data.property.organization_id,
+                data.property.id,
+                section.id,
+                file,
+              );
+              setMedia([...media, created]);
+              flash();
+            }}
+            onMediaChange={(updated) =>
+              setMedia(media.map((item) => (item.id === updated.id ? updated : item)))
+            }
+            onMediaRemove={async (item) => {
+              await actions.removeMedia(item);
+              setMedia(media.filter((current) => current.id !== item.id));
+              flash();
+            }}
+            onMoveUp={() => move(section.id, -1)}
+            onMoveDown={() => move(section.id, 1)}
+            canUp={index > 0}
+            canDown={index < sorted.length - 1}
+            onDelete={async () => {
+              if (!window.confirm(`${t("common.delete")} ?`)) return;
+              await actions.remove(section.id);
+              setSections(sections.filter((item) => item.id !== section.id));
+              flash();
+            }}
+          />
+        ))}
+      </div>
+      <div
+        aria-live="polite"
+        className={`fixed bottom-20 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground shadow-phone transition ${saved || saving ? "opacity-100" : "pointer-events-none opacity-0"}`}
+      >
+        {saving
+          ? t("common.saving")
+          : data.property.status === "published"
+            ? `✓ ${t("manager.guideUpdated")}`
+            : `✓ ${t("common.saved")}`}
+      </div>
+    </div>
+  );
 }
 
-function SectionRow({section,media,open,onToggle,onSave,onUpload,onMediaChange,onMediaRemove,onMoveUp,onMoveDown,canUp,canDown,onDelete,actions}:{section:GuideSection;media:SectionMedia[];open:boolean;onToggle:()=>void;onSave:(v:{title:string;items:GuideContentItem[];isVisible:boolean;icon:string;ctaLabel:string})=>Promise<void>;onUpload:(f:File)=>Promise<void>;onMediaChange:(m:SectionMedia)=>void;onMediaRemove:(m:SectionMedia)=>Promise<void>;onMoveUp:()=>void;onMoveDown:()=>void;canUp:boolean;canDown:boolean;onDelete:()=>void;actions:GuideEditorActions}){
-  const {t}=useI18n(); const[title,setTitle]=useState(section.title);const[items,setItems]=useState<GuideContentItem[]>(()=>{const current=itemsOf(section);return current.length?current:[blankItem()]});const[visible,setVisible]=useState(section.is_visible);const[icon,setIcon]=useState(section.icon??"📌");const[ctaLabel,setCtaLabel]=useState(section.cta_label??"");const[more,setMore]=useState(false);const[busy,setBusy]=useState(false);const[uploading,setUploading]=useState(false);const hydrated=useRef(false);const saveRef=useRef(onSave);useEffect(()=>{saveRef.current=onSave},[onSave]);useEffect(()=>{if(!hydrated.current){hydrated.current=true;return}const timer=window.setTimeout(async()=>{if(!title.trim())return;setBusy(true);try{await saveRef.current({title,items,isVisible:visible,icon,ctaLabel})}finally{setBusy(false)}},800);return()=>window.clearTimeout(timer)},[title,items,visible,icon,ctaLabel]);
-  const updateItem=(index:number,patch:Partial<GuideContentItem>)=>setItems(current=>current.map((item,i)=>i===index?{...item,...patch}:item));
-  return <article className="rounded-lg border bg-card"><button onClick={onToggle} className="grid min-h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 text-left"><span className="text-xl">{icon}</span><span className="min-w-0"><span className="block truncate text-lg font-bold">{title}</span><span className="text-sm text-muted-foreground">{visible?t("manager.visible"):t("manager.hidden")}{media.length?` · ${media.length}`:""}</span></span>{open?<ChevronUp/>:<ChevronDown/>}</button>{open&&<div className="space-y-5 border-t p-4"><div><p className="mb-2 font-semibold">{t("manager.icon")}</p><div className="flex flex-wrap gap-2">{ICONS.map(item=><button key={item} onClick={()=>setIcon(item)} className={`h-12 w-12 rounded-lg border text-xl ${icon===item?"border-primary bg-secondary":"bg-card"}`}>{item}</button>)}</div></div><label className="block"><span className="mb-1 block font-semibold">{t("manager.sectionTitle")}</span><input className="field" value={title} onChange={e=>setTitle(e.target.value)}/></label><div><p className="mb-2 font-semibold">{t("manager.sectionContent")}</p><div className="space-y-3">{items.map((item,index)=><div key={`${item.fieldKey??"custom"}-${index}`} className="rounded-xl border bg-background p-3"><div className="grid gap-2 @sm:grid-cols-[minmax(0,.7fr)_minmax(0,1.3fr)_auto]"><input className="field" aria-label={t("manager.itemLabel")} placeholder={t("manager.itemLabel")} value={item.label} onChange={e=>updateItem(index,{label:e.target.value})}/><textarea className="field min-h-24" aria-label={t("manager.itemText")} placeholder={t("manager.contentPlaceholder")} value={item.text} onChange={e=>updateItem(index,{text:e.target.value})}/><Button variant="ghost" size="icon" className="h-12 w-12 text-destructive" aria-label={t("common.delete")} onClick={()=>setItems(current=>current.filter((_,i)=>i!==index))}><Trash2/></Button></div></div>)}</div><Button variant="outline" className="mt-3 w-full" onClick={()=>setItems(current=>[...current,blankItem()])}><Plus/>{t("manager.addInformation")}</Button></div><label className="flex min-h-14 items-center justify-between gap-3 rounded-lg bg-muted px-4"><span className="font-semibold">{visible?t("manager.showSection"):t("manager.hideSection")}</span><input type="checkbox" className="h-6 w-6 accent-primary" checked={visible} onChange={e=>setVisible(e.target.checked)}/></label><div><p className="font-semibold">{t("manager.media")}</p><p className="text-sm text-muted-foreground">{t("manager.mediaHelp")}</p><div className="mt-3 grid gap-3 @sm:grid-cols-2">{[...media].sort((a,b)=>a.sort_order-b.sort_order).map(item=><MediaItem key={item.id} item={item} actions={actions} onChange={onMediaChange} onRemove={()=>onMediaRemove(item)}/>)}</div><div className="mt-3 grid gap-2 @sm:grid-cols-2"><UploadButton icon={<ImagePlus/>} label={t("manager.addPhoto")} accept="image/jpeg,image/png,image/webp,image/avif" busy={uploading} onFile={async file=>{setUploading(true);await onUpload(file);setUploading(false)}}/><UploadButton icon={<Video/>} label={t("manager.addVideo")} accept="video/mp4,video/webm" busy={uploading} onFile={async file=>{setUploading(true);await onUpload(file);setUploading(false)}}/></div></div><button onClick={()=>setMore(!more)} className="min-h-12 font-semibold text-primary">{more?t("manager.lessOptions"):t("manager.moreOptions")}</button>{more&&<div className="space-y-4 rounded-xl bg-muted p-4"><label className="block"><span className="mb-1 block font-semibold">{t("manager.buttonText")}</span><input className="field" value={ctaLabel} onChange={e=>setCtaLabel(e.target.value)}/></label><div className="grid gap-2 @sm:grid-cols-3"><Button variant="outline" disabled={!canUp} onClick={onMoveUp}><ChevronUp/>{t("manager.moveUp")}</Button><Button variant="outline" disabled={!canDown} onClick={onMoveDown}><ChevronDown/>{t("manager.moveDown")}</Button><Button variant="ghost" className="text-destructive" onClick={onDelete}><Trash2/>{t("common.delete")}</Button></div></div>}<p aria-live="polite" className="flex min-h-12 items-center justify-center text-center text-sm font-semibold text-muted-foreground">{busy?t("common.saving"):t("manager.autoSaved")}</p></div>}</article>;
+function SectionRow({
+  section,
+  media,
+  open,
+  onToggle,
+  onSave,
+  onUpload,
+  onMediaChange,
+  onMediaRemove,
+  onMoveUp,
+  onMoveDown,
+  canUp,
+  canDown,
+  onDelete,
+  actions,
+}: {
+  section: GuideSection;
+  media: SectionMedia[];
+  open: boolean;
+  onToggle: () => void;
+  onSave: (v: {
+    title: string;
+    items: GuideContentItem[];
+    isVisible: boolean;
+    icon: string;
+    ctaLabel: string;
+  }) => Promise<void>;
+  onUpload: (f: File) => Promise<void>;
+  onMediaChange: (m: SectionMedia) => void;
+  onMediaRemove: (m: SectionMedia) => Promise<void>;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canUp: boolean;
+  canDown: boolean;
+  onDelete: () => void;
+  actions: GuideEditorActions;
+}) {
+  const { t } = useI18n();
+  const [title, setTitle] = useState(section.title);
+  const [items, setItems] = useState<GuideContentItem[]>(() => {
+    const current = itemsOf(section);
+    return current.length ? current : [blankItem()];
+  });
+  const [visible, setVisible] = useState(section.is_visible);
+  const [icon, setIcon] = useState(section.icon ?? "📌");
+  const [ctaLabel, setCtaLabel] = useState(section.cta_label ?? "");
+  const [more, setMore] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const hydrated = useRef(false);
+  const saveRef = useRef(onSave);
+  useEffect(() => {
+    saveRef.current = onSave;
+  }, [onSave]);
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    const timer = window.setTimeout(async () => {
+      if (!title.trim()) return;
+      setBusy(true);
+      try {
+        await saveRef.current({ title, items, isVisible: visible, icon, ctaLabel });
+      } finally {
+        setBusy(false);
+      }
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [title, items, visible, icon, ctaLabel]);
+  const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
+    setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  return (
+    <article className="rounded-lg border bg-card">
+      <button
+        onClick={onToggle}
+        className="grid min-h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 text-left"
+      >
+        <span className="text-xl">{icon}</span>
+        <span className="min-w-0">
+          <span className="block truncate text-lg font-bold">{title}</span>
+          <span className="text-sm text-muted-foreground">
+            {visible ? t("manager.visible") : t("manager.hidden")}
+            {media.length ? ` · ${media.length}` : ""}
+          </span>
+        </span>
+        {open ? <ChevronUp /> : <ChevronDown />}
+      </button>
+      {open && (
+        <div className="space-y-5 border-t p-4">
+          <div>
+            <p className="mb-2 font-semibold">{t("manager.icon")}</p>
+            <div className="flex flex-wrap gap-2">
+              {ICONS.map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setIcon(item)}
+                  className={`h-12 w-12 rounded-lg border text-xl ${icon === item ? "border-primary bg-secondary" : "bg-card"}`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          <label className="block">
+            <span className="mb-1 block font-semibold">{t("manager.sectionTitle")}</span>
+            <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </label>
+          <div>
+            <p className="mb-2 font-semibold">{t("manager.sectionContent")}</p>
+            <div className="space-y-3">
+              {items.map((item, index) => (
+                <div
+                  key={`${item.fieldKey ?? "custom"}-${index}`}
+                  className="rounded-xl border bg-background p-3"
+                >
+                  <div className="grid gap-2 @sm:grid-cols-[minmax(0,.7fr)_minmax(0,1.3fr)_auto]">
+                    <input
+                      className="field"
+                      aria-label={t("manager.itemLabel")}
+                      placeholder={t("manager.itemLabel")}
+                      value={item.label}
+                      onChange={(e) => updateItem(index, { label: e.target.value })}
+                    />
+                    <textarea
+                      className="field min-h-24"
+                      aria-label={t("manager.itemText")}
+                      placeholder={t("manager.contentPlaceholder")}
+                      value={item.text}
+                      onChange={(e) => updateItem(index, { text: e.target.value })}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-12 w-12 text-destructive"
+                      aria-label={t("common.delete")}
+                      onClick={() => setItems((current) => current.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              className="mt-3 w-full"
+              onClick={() => setItems((current) => [...current, blankItem()])}
+            >
+              <Plus />
+              {t("manager.addInformation")}
+            </Button>
+          </div>
+          <label className="flex min-h-14 items-center justify-between gap-3 rounded-lg bg-muted px-4">
+            <span className="font-semibold">
+              {visible ? t("manager.showSection") : t("manager.hideSection")}
+            </span>
+            <input
+              type="checkbox"
+              className="h-6 w-6 accent-primary"
+              checked={visible}
+              onChange={(e) => setVisible(e.target.checked)}
+            />
+          </label>
+          <div>
+            <p className="font-semibold">{t("manager.media")}</p>
+            <p className="text-sm text-muted-foreground">{t("manager.mediaHelp")}</p>
+            <div className="mt-3 grid gap-3 @sm:grid-cols-2">
+              {[...media]
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map((item) => (
+                  <MediaItem
+                    key={item.id}
+                    item={item}
+                    actions={actions}
+                    onChange={onMediaChange}
+                    onRemove={() => onMediaRemove(item)}
+                  />
+                ))}
+            </div>
+            <div className="mt-3 grid gap-2 @sm:grid-cols-2">
+              <UploadButton
+                icon={<ImagePlus />}
+                label={t("manager.addPhoto")}
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                busy={uploading}
+                onFile={async (file) => {
+                  setUploading(true);
+                  await onUpload(file);
+                  setUploading(false);
+                }}
+              />
+              <UploadButton
+                icon={<Video />}
+                label={t("manager.addVideo")}
+                accept="video/mp4,video/webm"
+                busy={uploading}
+                onFile={async (file) => {
+                  setUploading(true);
+                  await onUpload(file);
+                  setUploading(false);
+                }}
+              />
+            </div>
+          </div>
+          <button onClick={() => setMore(!more)} className="min-h-12 font-semibold text-primary">
+            {more ? t("manager.lessOptions") : t("manager.moreOptions")}
+          </button>
+          {more && (
+            <div className="space-y-4 rounded-xl bg-muted p-4">
+              <label className="block">
+                <span className="mb-1 block font-semibold">{t("manager.buttonText")}</span>
+                <input
+                  className="field"
+                  value={ctaLabel}
+                  onChange={(e) => setCtaLabel(e.target.value)}
+                />
+              </label>
+              <div className="grid gap-2 @sm:grid-cols-3">
+                <Button variant="outline" disabled={!canUp} onClick={onMoveUp}>
+                  <ChevronUp />
+                  {t("manager.moveUp")}
+                </Button>
+                <Button variant="outline" disabled={!canDown} onClick={onMoveDown}>
+                  <ChevronDown />
+                  {t("manager.moveDown")}
+                </Button>
+                <Button variant="ghost" className="text-destructive" onClick={onDelete}>
+                  <Trash2 />
+                  {t("common.delete")}
+                </Button>
+              </div>
+            </div>
+          )}
+          <p
+            aria-live="polite"
+            className="flex min-h-12 items-center justify-center text-center text-sm font-semibold text-muted-foreground"
+          >
+            {busy ? t("common.saving") : t("manager.autoSaved")}
+          </p>
+        </div>
+      )}
+    </article>
+  );
 }
-function UploadButton({icon,label,accept,busy,onFile}:{icon:React.ReactNode;label:string;accept:string;busy:boolean;onFile:(f:File)=>void}){return <label className="btn btn-secondary cursor-pointer"><input className="sr-only" type="file" accept={accept} disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)onFile(file);e.target.value=""}}/>{icon}{busy?"…":label}</label>}
-function MediaItem({item,actions,onChange,onRemove}:{item:SectionMedia;actions:GuideEditorActions;onChange:(m:SectionMedia)=>void;onRemove:()=>void}){const{t}=useI18n();const[url,setUrl]=useState("");const[alt,setAlt]=useState(item.alt_text??"");const[caption,setCaption]=useState(item.caption??"");useEffect(()=>{actions.resolveMediaUrl(item).then(setUrl)},[actions,item]);return <div className="overflow-hidden rounded-lg border bg-background">{url&&(item.media_type==="image"?<img src={url} alt={alt} className="aspect-video w-full object-cover"/>:<video src={url} controls preload="metadata" className="aspect-video w-full bg-ink object-cover"/>)}<div className="space-y-2 p-3"><input className="field" value={alt} placeholder={t("common.optional")} onChange={e=>setAlt(e.target.value)} onBlur={()=>actions.updateMedia(item,{altText:alt}).then(onChange)}/><input className="field" value={caption} placeholder={t("common.optional")} onChange={e=>setCaption(e.target.value)} onBlur={()=>actions.updateMedia(item,{caption}).then(onChange)}/><Button variant="ghost" className="w-full text-destructive" onClick={onRemove}><Trash2/>{t("common.delete")}</Button></div></div>}
+function UploadButton({
+  icon,
+  label,
+  accept,
+  busy,
+  onFile,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  accept: string;
+  busy: boolean;
+  onFile: (f: File) => void;
+}) {
+  return (
+    <label className="btn btn-secondary cursor-pointer">
+      <input
+        className="sr-only"
+        type="file"
+        accept={accept}
+        disabled={busy}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+      />
+      {icon}
+      {busy ? "…" : label}
+    </label>
+  );
+}
+function MediaItem({
+  item,
+  actions,
+  onChange,
+  onRemove,
+}: {
+  item: SectionMedia;
+  actions: GuideEditorActions;
+  onChange: (m: SectionMedia) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useI18n();
+  const [url, setUrl] = useState("");
+  const [alt, setAlt] = useState(item.alt_text ?? "");
+  const [caption, setCaption] = useState(item.caption ?? "");
+  useEffect(() => {
+    actions.resolveMediaUrl(item).then(setUrl);
+  }, [actions, item]);
+  return (
+    <div className="overflow-hidden rounded-lg border bg-background">
+      {url &&
+        (item.media_type === "image" ? (
+          <img src={url} alt={alt} className="aspect-video w-full object-cover" />
+        ) : (
+          <video
+            src={url}
+            controls
+            preload="metadata"
+            className="aspect-video w-full bg-ink object-cover"
+          />
+        ))}
+      <div className="space-y-2 p-3">
+        <input
+          className="field"
+          value={alt}
+          placeholder={t("common.optional")}
+          onChange={(e) => setAlt(e.target.value)}
+          onBlur={() => actions.updateMedia(item, { altText: alt }).then(onChange)}
+        />
+        <input
+          className="field"
+          value={caption}
+          placeholder={t("common.optional")}
+          onChange={(e) => setCaption(e.target.value)}
+          onBlur={() => actions.updateMedia(item, { caption }).then(onChange)}
+        />
+        <Button variant="ghost" className="w-full text-destructive" onClick={onRemove}>
+          <Trash2 />
+          {t("common.delete")}
+        </Button>
+      </div>
+    </div>
+  );
+}

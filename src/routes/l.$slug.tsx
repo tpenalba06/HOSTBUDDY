@@ -82,6 +82,7 @@ function GuestPage() {
   const [messageOpen, setMessageOpen] = useState(false);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [wifiCopied, setWifiCopied] = useState(false);
   const open = sections.find((section) => section.key === openKey) ?? null;
   const contact = sections.find((section) => baseKey(section.key) === "contact");
   if (open)
@@ -92,6 +93,9 @@ function GuestPage() {
         onBack={() => setOpenKey(null)}
         onRequest={setServiceId}
         onFeedback={() => setFeedbackOpen(true)}
+        t={t}
+        wifiCopied={wifiCopied}
+        onWifiCopy={() => setWifiCopied(true)}
       />
     );
   const hero =
@@ -184,7 +188,7 @@ function GuestPage() {
       </div>
       {contact && (
         <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-4xl border-t bg-background/95 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-          <ContactButtons section={contact} />
+          <ContactButtons section={contact} t={t} />
         </div>
       )}
       {messageOpen && <MessageDrawer slug={slug} onClose={() => setMessageOpen(false)} />}{" "}
@@ -234,16 +238,21 @@ function GuideInner({
   onBack,
   onRequest,
   onFeedback,
+  t,
+  wifiCopied,
+  onWifiCopy,
 }: {
   section: PublicSection;
   guide: ReturnType<typeof Route.useLoaderData>;
   onBack: () => void;
   onRequest: (id: string) => void;
   onFeedback: () => void;
+  t: (key: string) => string;
+  wifiCopied: boolean;
+  onWifiCopy: () => void;
 }) {
-  const { t } = useI18n();
   const kind = baseKey(section.key);
-  const items = section.content.items ?? [];
+  const items = Array.isArray(section.content?.items) ? section.content.items : [];
   const hero = section.media?.find((item) => item.type === "image" && item.url);
   return (
     <main className="mx-auto min-h-screen max-w-4xl bg-background pb-12">
@@ -272,22 +281,23 @@ function GuideInner({
         </div>
         <div className="mt-7">
           {kind === "wifi" ? (
-            <WifiTemplate items={items} />
+            <WifiTemplate items={items} t={t} copied={wifiCopied} onCopy={onWifiCopy} />
           ) : kind === "arrival" ? (
             <ArrivalTemplate
               items={items}
               contact={guide.sections.find((s: PublicSection) => baseKey(s.key) === "contact")}
+              t={t}
             />
           ) : kind === "house" || kind === "rules" || kind === "amenities" ? (
             <HouseTemplate items={items} />
           ) : kind === "places" ? (
-            <PlacesTemplate items={items} />
+            <PlacesTemplate items={items} t={t} />
           ) : kind === "services" ? (
-            <ServiceList services={guide.services ?? []} onRequest={onRequest} />
+            <ServiceList services={guide.services ?? []} onRequest={onRequest} t={t} />
           ) : kind === "departure" ? (
-            <DepartureTemplate items={items} onFeedback={onFeedback} />
+            <DepartureTemplate items={items} onFeedback={onFeedback} t={t} />
           ) : kind === "contact" ? (
-            <ContactButtons section={section} />
+            <ContactButtons section={section} t={t} />
           ) : (
             <GenericTemplate items={items} />
           )}
@@ -316,11 +326,12 @@ const GenericTemplate = ({ items }: { items: { label: string; text: string }[] }
 function ArrivalTemplate({
   items,
   contact,
+  t,
 }: {
   items: { label: string; text: string }[];
   contact?: PublicSection;
+  t: (key: string) => string;
 }) {
-  const { t } = useI18n();
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_280px]">
       <div className="space-y-3">
@@ -341,18 +352,26 @@ function ArrivalTemplate({
         <h2 className="mt-3 text-xl font-semibold">{t("guest.needHelp")}</h2>
         {contact && (
           <div className="mt-4">
-            <ContactButtons section={contact} />
+            <ContactButtons section={contact} t={t} />
           </div>
         )}
       </aside>
     </div>
   );
 }
-function WifiTemplate({ items }: { items: { label: string; text: string }[] }) {
-  const { t } = useI18n();
+function WifiTemplate({
+  items,
+  t,
+  copied,
+  onCopy,
+}: {
+  items: { label: string; text: string }[];
+  t: (key: string) => string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
   const network = items[0]?.text ?? "—";
   const password = items[1]?.text ?? items[0]?.text ?? "—";
-  const [copied, setCopied] = useState(false);
   return (
     <div className="mx-auto max-w-xl rounded-2xl bg-ink p-6 text-ink-foreground shadow-phone">
       <Wifi className="h-8 w-8 text-accent" />
@@ -364,7 +383,7 @@ function WifiTemplate({ items }: { items: { label: string; text: string }[] }) {
         className="mt-6 w-full"
         onClick={() => {
           navigator.clipboard?.writeText(password);
-          setCopied(true);
+          onCopy();
         }}
       >
         <Copy />
@@ -386,8 +405,13 @@ function HouseTemplate({ items }: { items: { label: string; text: string }[] }) 
     </div>
   );
 }
-function PlacesTemplate({ items }: { items: { label: string; text: string }[] }) {
-  const { t } = useI18n();
+function PlacesTemplate({
+  items,
+  t,
+}: {
+  items: { label: string; text: string }[];
+  t: (key: string) => string;
+}) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {items.map((item, index) => (
@@ -409,11 +433,12 @@ function PlacesTemplate({ items }: { items: { label: string; text: string }[] })
 function DepartureTemplate({
   items,
   onFeedback,
+  t,
 }: {
   items: { label: string; text: string }[];
   onFeedback: () => void;
+  t: (key: string) => string;
 }) {
-  const { t } = useI18n();
   return (
     <>
       <div className="space-y-3">
@@ -478,11 +503,12 @@ type PublicService = {
 function ServiceList({
   services,
   onRequest,
+  t,
 }: {
   services: PublicService[];
   onRequest: (id: string) => void;
+  t: (key: string) => string;
 }) {
-  const { t } = useI18n();
   if (!services.length) return <p className="rounded-xl bg-muted p-4">{t("guest.noServices")}</p>;
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -515,8 +541,13 @@ function ServiceList({
     </div>
   );
 }
-function ContactButtons({ section }: { section: PublicSection }) {
-  const { t } = useI18n();
+function ContactButtons({
+  section,
+  t,
+}: {
+  section: PublicSection;
+  t: (key: string) => string;
+}) {
   const phone = section.content.phones?.[0];
   const email = section.content.emails?.[0];
   if (!phone && !email) return null;

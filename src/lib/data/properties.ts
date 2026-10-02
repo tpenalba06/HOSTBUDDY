@@ -1,6 +1,6 @@
 // Concierge data layer (browser client, protected by RLS).
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import { FIELD_DEFS, FIELD_BY_KEY } from "@/lib/import-engine/fields";
 import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
 import {
@@ -82,7 +82,7 @@ function sectionsFromFields(propertyId: string, fields: PropertyField[]) {
       icon,
       sort_order: index,
       is_visible: true,
-      content: buildGuideContent(key, {}, items),
+      content: buildGuideContent(key, {}, items) as Json,
     };
   });
 }
@@ -101,7 +101,7 @@ export async function saveGuideSection(section: GuideSection, values: { title: s
   const fieldUpdates = fieldUpdatesForGuideSection(section.section_key, section.content, values.items);
   const { data, error } = await supabase.from("guide_sections").update({
     title: values.title.trim().slice(0, 120) || "Sans titre",
-    content,
+    content: content as Json,
     is_visible: values.isVisible,
     icon: values.icon?.slice(0, 8) ?? section.icon,
     cta_label: values.ctaLabel?.trim().slice(0, 80) || null,
@@ -260,7 +260,7 @@ async function syncFieldToGuide(field: PropertyField) {
     label: field.label,
     value: field.value,
   });
-  const { error: updateError } = await supabase.from("guide_sections").update({ content }).eq("id", section.id);
+  const { error: updateError } = await supabase.from("guide_sections").update({ content: content as Json }).eq("id", section.id);
   if (updateError) return fail(updateError);
 }
 

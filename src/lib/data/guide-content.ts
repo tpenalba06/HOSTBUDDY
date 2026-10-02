@@ -19,18 +19,18 @@ const cleanString = (value: unknown, max: number) =>
 export function readGuideContent(value: unknown): GuideContent {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const source = value as Record<string, unknown>;
-  const items = Array.isArray(source.items)
-    ? source.items.flatMap((entry) => {
+  const items = Array.isArray(source['items'])
+    ? source['items'].flatMap((entry) => {
         if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
         const item = entry as Record<string, unknown>;
-        const label = cleanString(item.label, 120);
-        const text = cleanString(item.text, 10_000);
-        const fieldKey = cleanString(item.fieldKey, 80);
+        const label = cleanString(item['label'], 120);
+        const text = cleanString(item['text'], 10_000);
+        const fieldKey = cleanString(item['fieldKey'], 80);
         return [{ label, text, ...(fieldKey ? { fieldKey } : {}) }];
       })
     : [];
-  const phones = Array.isArray(source.phones) ? source.phones.filter((v): v is string => typeof v === "string") : undefined;
-  const emails = Array.isArray(source.emails) ? source.emails.filter((v): v is string => typeof v === "string") : undefined;
+  const phones = Array.isArray(source['phones']) ? source['phones'].filter((v): v is string => typeof v === "string") : undefined;
+  const emails = Array.isArray(source['emails']) ? source['emails'].filter((v): v is string => typeof v === "string") : undefined;
   return { ...source, items, ...(phones ? { phones } : {}), ...(emails ? { emails } : {}) };
 }
 

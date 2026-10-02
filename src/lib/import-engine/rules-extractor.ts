@@ -114,6 +114,34 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
     };
   });
 
+  const reviewCandidates = fields
+    .map((field, index) => ({ field, index }))
+    .filter(({ field }) => field.status === "to_verify");
+
+  const detectedCount = fields.filter((field) => field.status !== "missing").length;
+  const reviewBudget = Math.floor(detectedCount * 0.1);
+
+  if (reviewCandidates.length > reviewBudget) {
+    const keep = new Set(
+      reviewCandidates
+        .sort((a, b) => {
+          const aEssential = FIELD_DEFS[a.index]?.essential ? 1 : 0;
+          const bEssential = FIELD_DEFS[b.index]?.essential ? 1 : 0;
+          return bEssential - aEssential || b.field.confidence - a.field.confidence;
+        })
+        .slice(0, reviewBudget)
+        .map(({ field }) => field.key),
+    );
+
+    for (const field of fields) {
+      if (field.status === "to_verify" && !keep.has(field.key)) {
+        field.status = "missing";
+        field.value = null;
+        field.confidence = 0;
+      }
+    }
+  }
+
   return { propertyName: name, fields };
 }
 

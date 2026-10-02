@@ -42,9 +42,31 @@ function AuthPage() {
   const [checkEmail, setCheckEmail] = useState(false);
   const isSignup = mode !== "login";
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: "/app", replace: true });
-    });
+    let cancelled = false;
+
+    const restore = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (cancelled) return;
+
+      if (data.user) {
+        nav({ to: "/app", replace: true });
+        return;
+      }
+
+      // Branch previews can occasionally retain an expired brokered session.
+      // getSession() would still see it and create an /auth <-> /app redirect loop.
+      if (
+        error &&
+        /session|jwt|token|expired|invalid|missing/i.test(error.message)
+      ) {
+        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+      }
+    };
+
+    void restore();
+    return () => {
+      cancelled = true;
+    };
   }, [nav]);
 
   const submit = async (e: React.FormEvent) => {
@@ -75,7 +97,7 @@ function AuthPage() {
         });
         if (error) throw error;
       }
-      nav({ to: "/app" });
+      nav({ to: "/app", replace: true });
     } catch (err) {
       const msg = (err as { message?: string }).message ?? "";
       setError(

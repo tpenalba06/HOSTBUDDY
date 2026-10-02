@@ -20,6 +20,8 @@ import { ManagerShell, type ManagerArea } from "@/components/app/ManagerShell";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
 import { useI18n } from "@/lib/i18n";
 import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
+import { getImportUrlIssue, normalizeUrl } from "@/lib/import-engine/url-adapters";
+import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.functions";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { ImportReview } from "@/components/app/ImportReview";
 
@@ -356,8 +358,10 @@ function Team({ t }: { t: T }) {
 function NewProperty({ t }: { t: T }) {
   const [mode, setMode] = useState<"options" | "text" | "url">("options");
   const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
   const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   if (candidate) {
     return (
@@ -372,6 +376,8 @@ function NewProperty({ t }: { t: T }) {
             setBusy(false);
             setCandidate(null);
             setText("");
+            setUrl("");
+            setError("");
             setMode("options");
           }, 500);
         }}
@@ -397,8 +403,11 @@ function NewProperty({ t }: { t: T }) {
           disabled={!text.trim() || busy}
           onClick={async () => {
             setBusy(true);
+            setError("");
             try {
               setCandidate(await rulesExtractor.extract(text));
+            } catch {
+              setError("Le texte n’a pas pu être analysé.");
             } finally {
               setBusy(false);
             }
@@ -406,14 +415,63 @@ function NewProperty({ t }: { t: T }) {
         >
           {busy ? "…" : t("import.textAction")}
         </Button>
+        {error && <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">{error}</p>}
         <p className="mt-3 text-center text-xs text-muted-foreground">
-          Démo réelle du parseur local HostBuddy — aucune information absente n’est inventée.
+          Démo réelle du parseur HostBuddy — aucune information absente n’est inventée.
         </p>
       </div>
     );
   }
 
   if (mode === "url") {
+    const runUrlImport = async () => {
+      setError("");
+      const issue = getImportUrlIssue(url);
+      if (issue === "airbnb_search_without_single_listing") {
+        setError("Cette page Airbnb ne permet pas d’identifier un logement unique. Ouvrez l’annonce souhaitée puis recopiez son lien.");
+        return;
+      }
+
+      const clean = normalizeUrl(url);
+      if (!clean) {
+        setError("Ce lien ne semble pas valide.");
+        return;
+      }
+
+      let host = "";
+      try {
+        host = new URL(clean).hostname.toLowerCase();
+      } catch {
+        setError("Ce lien ne semble pas valide.");
+        return;
+      }
+
+      if (!/(^|\.)airbnb\./i.test(host)) {
+        setError("Pour la démo publique, l’import URL réel est actuellement limité à Airbnb. L’import texte fonctionne pour toutes les sources.");
+        return;
+      }
+
+      setBusy(true);
+      try {
+        const outcome = await demoImportFromAirbnbUrl({ data: { url: clean } });
+        if (!outcome.ok) {
+          setError(
+            outcome.reason === "blocked"
+              ? "Airbnb bloque temporairement la lecture automatique de cette annonce. Collez le texte de l’annonce pour continuer."
+              : outcome.reason === "insufficient"
+                ? "HostBuddy n’a pas récupéré assez d’informations depuis cette annonce. Collez son texte pour continuer."
+                : "Cette annonce n’a pas pu être importée.",
+          );
+          return;
+        }
+        setCandidate(outcome.result);
+      } catch {
+        setError("L’import n’a pas abouti. Vous pouvez essayer avec le texte de l’annonce.");
+      } finally {
+        setBusy(false);
+      }
+    };
+
     return (
       <div>
         <Button variant="ghost" className="mb-3 px-0 text-primary" onClick={() => setMode("options")}>
@@ -422,11 +480,29 @@ function NewProperty({ t }: { t: T }) {
         <Heading
           eyebrow="HostBuddy"
           title={t("import.urlTitle")}
-          description="Dans la démo publique, l’import réseau est désactivé pour éviter des requêtes anonymes vers des sites tiers. Le vrai parcours est disponible après connexion."
+          description="Collez un lien Airbnb : la démo utilise le vrai moteur d’import HostBuddy et vous montre les informations détectées."
         />
-        <Button className="w-full" onClick={() => setMode("text")}>
+        <input
+          className="field text-base"
+          inputMode="url"
+          autoComplete="url"
+          placeholder="https://www.airbnb.fr/rooms/..."
+          value={url}
+          onChange={(event) => setUrl(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void runUrlImport();
+          }}
+        />
+        {error && <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">{error}</p>}
+        <Button className="mt-4 w-full" disabled={!url.trim() || busy} onClick={runUrlImport}>
+          {busy ? "Analyse…" : t("import.action")}
+        </Button>
+        <Button variant="ghost" className="mt-2 w-full" onClick={() => setMode("text")}>
           {t("import.fallbackPrimary")}
         </Button>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Les liens Airbnb de recherche avec un logement épinglé sont automatiquement convertis vers l’annonce correspondante.
+        </p>
       </div>
     );
   }

@@ -341,16 +341,57 @@ export async function saveOrganizationContact(
     throw new FriendlyError("Indiquez un numéro de téléphone complet, avec indicatif si nécessaire.");
 
   const normalizedPhone = /^0[1-9]\d{8}$/.test(phone) ? `+33${phone.slice(1)}` : phone;
+  const contactName = values.name?.trim().slice(0, 120) || null;
   const { error } = await supabase
     .from("organizations")
     .update({
-      contact_name: values.name?.trim().slice(0, 120) || null,
+      contact_name: contactName,
       contact_email: email,
       contact_phone: normalizedPhone,
       contact_setup_completed_at: new Date().toISOString(),
     })
     .eq("id", orgId);
   if (error) fail(error);
+
+  // Organization contact is inherited by every property unless that property's
+  // contact field has been explicitly customized by a human.
+  const contactText = [
+    contactName,
+    `Téléphone / WhatsApp : ${normalizedPhone}`,
+    `E-mail : ${email}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const properties = await listProperties(orgId);
+  const ids = properties.map((property) => property.id);
+  if (!ids.length) return;
+
+  const { data: inheritedFields, error: inheritedError } = await supabase
+    .from("property_fields")
+    .select("*")
+    .in("property_id", ids)
+    .eq("key", "contact")
+    .eq("manually_overridden", false);
+  if (inheritedError) return fail(inheritedError);
+
+  for (const field of inheritedFields ?? []) {
+    const { data: updated, error: fieldError } = await supabase
+      .from("property_fields")
+      .update({
+        value: contactText,
+        status: "found",
+        source_type: "manual",
+        source_url: null,
+        confidence: 1,
+        manually_verified: true,
+        manually_overridden: false,
+      })
+      .eq("id", field.id)
+      .select("*")
+      .single();
+    if (fieldError) return fail(fieldError);
+    await syncFieldToGuide(updated);
+  }
 }
 
 export async function saveOrganizationPreferences(
@@ -513,7 +554,7 @@ export async function createPropertyFromExtraction(
       source_url: isDefaultContact ? null : imported?.value ? sourceUrl : null,
       imported_at: isDefaultContact ? null : imported?.value ? now : null,
       manually_verified: isDefaultContact ? true : (imported?.manuallyVerified ?? false),
-      manually_overridden: isDefaultContact ? true : (imported?.manuallyOverridden ?? false),
+      manually_overridden: isDefaultContact ? false : (imported?.manuallyOverridden ?? false),
     };
   });
   const { error: e2 } = await supabase.from("property_fields").insert(rows);

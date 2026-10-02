@@ -36,7 +36,7 @@ export async function ensureOrganization() {
   const [{ data: org, error: e2 }, { data: membership, error: e3 }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("id,name,trial_ends_at,preferred_locale,operator_type")
+      .select("id,name,trial_ends_at,preferred_locale,operator_type,contact_name,contact_email,contact_phone,contact_setup_completed_at")
       .eq("id", orgId)
       .single(),
     supabase
@@ -47,7 +47,12 @@ export async function ensureOrganization() {
       .single(),
   ]);
   if (e2 || e3) return fail(e2 ?? e3);
-  return { ...org, role: membership.role, firstName: first };
+  return {
+    ...org,
+    role: membership.role,
+    firstName: first,
+    accountEmail: u.user?.email ?? "",
+  };
 }
 
 export async function listProperties(orgId: string) {
@@ -324,6 +329,30 @@ export async function removeSectionMedia(media: SectionMedia) {
   if (error) fail(error);
 }
 
+export async function saveOrganizationContact(
+  orgId: string,
+  values: { name?: string; email: string; phone: string },
+) {
+  const email = values.email.trim().toLowerCase();
+  const phone = values.phone.trim().replace(/[()\s.-]/g, "");
+  if (!/^\S+@\S+\.\S+$/.test(email))
+    throw new FriendlyError("Cette adresse e-mail ne semble pas correcte.");
+  if (!/^\+?\d{9,15}$/.test(phone))
+    throw new FriendlyError("Indiquez un numéro de téléphone complet, avec indicatif si nécessaire.");
+
+  const normalizedPhone = /^0[1-9]\d{8}$/.test(phone) ? `+33${phone.slice(1)}` : phone;
+  const { error } = await supabase
+    .from("organizations")
+    .update({
+      contact_name: values.name?.trim().slice(0, 120) || null,
+      contact_email: email,
+      contact_phone: normalizedPhone,
+      contact_setup_completed_at: new Date().toISOString(),
+    })
+    .eq("id", orgId);
+  if (error) fail(error);
+}
+
 export async function saveOrganizationPreferences(
   orgId: string,
   values: { preferredLocale?: string; operatorType?: string },
@@ -449,9 +478,26 @@ export async function createPropertyFromExtraction(
     .single();
   if (error) return fail(error);
   const byKey = new Map(result?.fields.map((f) => [f.key, f]) ?? []);
+  const { data: orgContact, error: contactError } = await supabase
+    .from("organizations")
+    .select("contact_name,contact_email,contact_phone")
+    .eq("id", orgId)
+    .single();
+  if (contactError) return fail(contactError);
+
+  const defaultContact = [
+    orgContact?.contact_name?.trim() || null,
+    orgContact?.contact_phone ? `Téléphone / WhatsApp : ${orgContact.contact_phone}` : null,
+    orgContact?.contact_email ? `E-mail : ${orgContact.contact_email}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const now = new Date().toISOString();
   const rows = FIELD_DEFS.map((def) => {
-    const f = byKey.get(def.key);
+    const imported = byKey.get(def.key);
+    const isDefaultContact = def.key === "contact" && Boolean(defaultContact);
+    const value = isDefaultContact ? defaultContact : (imported?.value ?? null);
     return {
       property_id: property.id,
       key: def.key,
@@ -459,13 +505,15 @@ export async function createPropertyFromExtraction(
       label: def.label,
       essential: def.essential,
       question: def.question,
-      value: f?.value ?? null,
-      status: f?.status ?? "missing",
-      raw_value: f?.rawValue ?? null,
-      confidence: f?.confidence ?? 0,
-      source_type: f?.value ? source : null,
-      source_url: f?.value ? sourceUrl : null,
-      imported_at: f?.value ? now : null,
+      value,
+      status: isDefaultContact ? "found" : (imported?.status ?? "missing"),
+      raw_value: isDefaultContact ? imported?.rawValue ?? null : imported?.rawValue ?? null,
+      confidence: isDefaultContact ? 1 : (imported?.confidence ?? 0),
+      source_type: isDefaultContact ? "manual" : imported?.value ? source : null,
+      source_url: isDefaultContact ? null : imported?.value ? sourceUrl : null,
+      imported_at: isDefaultContact ? null : imported?.value ? now : null,
+      manually_verified: isDefaultContact ? true : (imported?.manuallyVerified ?? false),
+      manually_overridden: isDefaultContact ? true : (imported?.manuallyOverridden ?? false),
     };
   });
   const { error: e2 } = await supabase.from("property_fields").insert(rows);

@@ -119,7 +119,7 @@ function fromStructured(html: string, url: string) {
     put("capacity", cap || null, `JSON-LD: ${cap}`, 0.85);
     const am = Array.isArray(n.amenityFeature)
       ? (n.amenityFeature as Record<string, unknown>[])
-          .map((x) => str(x.name))
+          .map((x) => str(x["name"]))
           .filter(Boolean)
           .join(", ")
       : null;

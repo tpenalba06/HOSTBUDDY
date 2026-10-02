@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -130,12 +130,18 @@ export function ManagerPropertiesScreen({
   onAdd,
   onEdit,
   onView,
+  renderEdit,
+  renderView,
+  renderQr,
 }: {
   properties: ManagerPropertySummary[];
   role?: "owner" | "admin" | "member";
   onAdd?: () => void;
   onEdit: (id: string) => void;
   onView: (slug: string) => void;
+  renderEdit?: (property: ManagerPropertySummary, className: string, label: string) => ReactNode;
+  renderView?: (property: ManagerPropertySummary, className: string, label: string) => ReactNode;
+  renderQr: (property: ManagerPropertySummary) => ReactNode;
 }) {
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
@@ -185,20 +191,32 @@ export function ManagerPropertiesScreen({
               </div>
 
               <div className="grid gap-2 p-4 @sm:grid-cols-3">
-                <Button className="min-h-12" onClick={() => onEdit(property.id)}>
-                  <Pencil />
-                  {role === "member" ? t("common.view") : t("common.edit")}
-                </Button>
+                {renderEdit ? (
+                  renderEdit(
+                    property,
+                    "btn btn-primary min-h-12",
+                    role === "member" ? t("common.view") : t("common.edit"),
+                  )
+                ) : (
+                  <Button className="min-h-12" onClick={() => onEdit(property.id)}>
+                    <Pencil />
+                    {role === "member" ? t("common.view") : t("common.edit")}
+                  </Button>
+                )}
                 {property.status === "published" ? (
                   <>
-                    <Button
-                      variant="outline"
-                      className="min-h-12"
-                      onClick={() => onView(property.slug)}
-                    >
-                      <Eye />
-                      {t("common.view")}
-                    </Button>
+                    {renderView ? (
+                      renderView(property, "btn btn-secondary min-h-12", t("common.view"))
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="min-h-12"
+                        onClick={() => onView(property.slug)}
+                      >
+                        <Eye />
+                        {t("common.view")}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       className="min-h-12"
@@ -217,10 +235,7 @@ export function ManagerPropertiesScreen({
 
               {qr === property.id && (
                 <div className="mx-4 mb-4 rounded-xl border bg-muted p-4 text-center">
-                  <QrCode className="mx-auto h-10 w-10 text-primary" />
-                  <p className="mt-2 break-all text-sm font-semibold">
-                    hostbuddy.app/l/{property.slug}
-                  </p>
+                  {renderQr(property)}
                 </div>
               )}
             </article>
@@ -336,10 +351,7 @@ export function ManagerOrdersScreen({
 }: {
   orders: ManagerOrder[];
   onBack?: () => void;
-  onStatusChange: (
-    id: string,
-    status: "pending" | "confirmed" | "completed" | "cancelled",
-  ) => void;
+  onStatusChange: (id: string, status: "pending" | "confirmed" | "completed" | "cancelled") => void;
 }) {
   const { t, locale } = useI18n();
   const today = new Date();
@@ -373,7 +385,11 @@ export function ManagerOrdersScreen({
   return (
     <div className="py-4 @sm:py-6">
       <BackButton label={t("ops.back")} onBack={onBack} />
-      <PageHeading eyebrow={t("ops.operations")} title={t("orders.title")} description={t("orders.desc")} />
+      <PageHeading
+        eyebrow={t("ops.operations")}
+        title={t("orders.title")}
+        description={t("orders.desc")}
+      />
       {groups.map((group) => (
         <section key={group.title} className="mt-7">
           <h2 className="text-xl font-semibold @sm:text-2xl">
@@ -388,7 +404,9 @@ export function ManagerOrdersScreen({
                 <article key={order.id} className="surface min-w-0 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-bold">{order.services?.name ?? t("orders.service")}</p>
+                      <p className="truncate font-bold">
+                        {order.services?.name ?? t("orders.service")}
+                      </p>
                       <p className="truncate text-sm text-muted-foreground">
                         {order.properties?.name} · {order.guest_name || t("orders.guest")}
                       </p>
@@ -456,7 +474,9 @@ export function ManagerOrdersScreen({
               ))}
             </div>
           ) : (
-            <p className="mt-3 rounded-xl bg-muted p-4 text-muted-foreground">{t("orders.empty")}</p>
+            <p className="mt-3 rounded-xl bg-muted p-4 text-muted-foreground">
+              {t("orders.empty")}
+            </p>
           )}
         </section>
       ))}
@@ -527,7 +547,9 @@ export function ManagerMessagesScreen({
                     {latest?.body}
                   </span>
                 </span>
-                {conversation.status === "resolved" && <CheckCircle2 className="h-5 w-5 text-success" />}
+                {conversation.status === "resolved" && (
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                )}
               </button>
             );
           })}
@@ -677,7 +699,9 @@ export function ManagerTeamScreen({
           try {
             await onInvite(email.trim(), role);
             setEmail("");
-            setNotice("Invitation enregistrée. Le membre rejoindra l’équipe avec son compte HostBuddy.");
+            setNotice(
+              "Invitation enregistrée. Le membre rejoindra l’équipe avec son compte HostBuddy.",
+            );
           } finally {
             setBusy(false);
           }

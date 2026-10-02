@@ -8,12 +8,20 @@ export function guideUrl(slug: string) {
   return new URL(`/l/${slug}`, window.location.origin).toString();
 }
 
-export function QrCard({ slug, name }: { slug: string; name: string }) {
+export function QrCard({
+  slug,
+  name,
+  path = `/l/${slug}`,
+}: {
+  slug: string;
+  name: string;
+  path?: string;
+}) {
   const { t } = useI18n();
-  const [url, setUrl] = useState(`/l/${slug}`);
+  const [url, setUrl] = useState(path);
   const [png, setPng] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
-  useEffect(() => setUrl(guideUrl(slug)), [slug]);
+  useEffect(() => setUrl(new URL(path, window.location.origin).toString()), [path]);
   useEffect(() => {
     QRCode.toDataURL(url, { width: 1024, margin: 2, errorCorrectionLevel: "M" })
       .then(setPng)

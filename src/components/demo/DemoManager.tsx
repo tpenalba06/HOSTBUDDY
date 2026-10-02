@@ -1,5 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagerShell, type ManagerArea } from "@/components/app/ManagerShell";
 import {
@@ -18,6 +17,8 @@ import {
   type ManagerTeamMember,
 } from "@/components/app/ManagerScreens";
 import { ImportReview } from "@/components/app/ImportReview";
+import { ManagerConversationScreen } from "@/components/app/ManagerConversationScreen";
+import { QrCard } from "@/components/app/QrCard";
 import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
 import { getImportUrlIssue, normalizeUrl } from "@/lib/import-engine/url-adapters";
 import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.functions";
@@ -81,7 +82,7 @@ const INITIAL_CONVERSATIONS: ManagerConversation[] = [
       },
       {
         id: "demo-message-2",
-        sender_type: "host",
+        sender_type: "manager",
         read_at: isoAt(-0.8),
         created_at: isoAt(-0.8),
         body: "Bonjour Sophie ! Le parking privé est juste devant la villa.",
@@ -130,13 +131,16 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
       properties: properties.length,
       published: properties.filter((property) => property.status === "published").length,
       unread: conversations.filter((conversation) =>
-        conversation.messages.some((message) => message.sender_type === "guest" && !message.read_at),
+        conversation.messages.some(
+          (message) => message.sender_type === "guest" && !message.read_at,
+        ),
       ).length,
       todayOrders: orders.filter(
         (order) =>
           order.status !== "completed" &&
           order.status !== "cancelled" &&
-          new Date(order.requested_for ?? order.created_at).toDateString() === new Date().toDateString(),
+          new Date(order.requested_for ?? order.created_at).toDateString() ===
+            new Date().toDateString(),
       ).length,
       requestTotal: orders
         .filter((order) => order.status !== "cancelled")
@@ -173,13 +177,14 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
       {
         id,
         name,
-        slug: name
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "")
-          .slice(0, 40) || "logement",
+        slug:
+          name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 40) || "logement",
         status: "draft",
       },
       ...items,
@@ -214,6 +219,7 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
           else setArea("editor");
         }}
         onView={() => onPreview()}
+        renderQr={(property) => <QrCard slug={property.slug} name={property.name} path="/demo" />}
       />
     );
   } else if (area === "dashboard") {
@@ -238,9 +244,15 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
   } else if (area === "messages") {
     const conversation = conversations.find((item) => item.id === openConversation);
     screen = conversation ? (
-      <DemoConversation
+      <ManagerConversationScreen
+        key={conversation.id}
         conversation={conversation}
         onBack={() => setOpenConversation(null)}
+        onStatusChange={(status) =>
+          setConversations((items) =>
+            items.map((item) => (item.id === conversation.id ? { ...item, status } : item)),
+          )
+        }
         onSend={(body) => {
           setConversations((items) =>
             items.map((item) =>
@@ -252,7 +264,7 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
                       ...item.messages,
                       {
                         id: `demo-message-${Date.now()}`,
-                        sender_type: "host",
+                        sender_type: "manager",
                         read_at: new Date().toISOString(),
                         created_at: new Date().toISOString(),
                         body,
@@ -307,19 +319,14 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
         members={team}
         onBack={() => setArea("properties")}
         onInvite={(email, role) =>
-          setTeam((items) => [
-            ...items,
-            { user_id: `demo-team-${Date.now()}`, email, role },
-          ])
+          setTeam((items) => [...items, { user_id: `demo-team-${Date.now()}`, email, role }])
         }
         onRoleChange={(userId, role) =>
           setTeam((items) =>
             items.map((item) => (item.user_id === userId ? { ...item, role } : item)),
           )
         }
-        onRemove={(userId) =>
-          setTeam((items) => items.filter((item) => item.user_id !== userId))
-        }
+        onRemove={(userId) => setTeam((items) => items.filter((item) => item.user_id !== userId))}
       />
     );
   } else {
@@ -489,66 +496,6 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
   );
 }
 
-function DemoConversation({
-  conversation,
-  onBack,
-  onSend,
-}: {
-  conversation: ManagerConversation;
-  onBack: () => void;
-  onSend: (body: string) => void;
-}) {
-  const { t } = useI18n();
-  const [reply, setReply] = useState("");
-  return (
-    <div className="py-4 @sm:py-6">
-      <Button
-        variant="ghost"
-        className="mb-3 min-h-12 px-0 text-primary"
-        onClick={onBack}
-      >
-        ← {t("nav.messages")}
-      </Button>
-      <p className="font-bold text-primary">{conversation.properties?.name}</p>
-      <h1 className="mt-1 text-3xl font-semibold">{conversation.guest_display_name}</h1>
-      <div className="mt-6 space-y-3">
-        {conversation.messages.map((message) => (
-          <div
-            key={message.id}
-            className={`max-w-[88%] rounded-2xl p-3 @sm:max-w-[70%] ${
-              message.sender_type === "host"
-                ? "ml-auto bg-success-soft"
-                : "bg-muted"
-            }`}
-          >
-            {message.body}
-          </div>
-        ))}
-      </div>
-      <form
-        className="mt-6 grid grid-cols-[minmax(0,1fr)_auto] gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const body = reply.trim();
-          if (!body) return;
-          onSend(body);
-          setReply("");
-        }}
-      >
-        <input
-          className="field min-w-0"
-          value={reply}
-          onChange={(event) => setReply(event.target.value)}
-          placeholder={t("demo.replyPlaceholder")}
-        />
-        <Button className="min-h-12" aria-label={t("common.send")}>
-          <Mail />
-        </Button>
-      </form>
-    </div>
-  );
-}
-
 function DemoImportFrame({
   title,
   description,
@@ -573,7 +520,11 @@ function DemoImportFrame({
       <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
       <div className="mt-6">
         {children}
-        {error && <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">{error}</p>}
+        {error && (
+          <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -58,7 +58,7 @@ export function QrCard({ slug, name }: { slug: string; name: string }) {
             const popup = window.open("", "_blank", "noopener,noreferrer");
             if (!popup || !png) return;
             popup.document.write(
-              `<title>QR ${name.replace(/[<>]/g, "")}</title><style>body{font-family:system-ui;text-align:center;padding:48px;color:#29231f}img{width:min(70vw,520px)}h1{font-size:28px}</style><h1>${name.replace(/[<>]/g, "")}</h1><img src="${png}" alt="QR"><p>${url}</p><script>onload=()=>print()<\/script>`,
+              `<title>QR ${name.replace(/[<>]/g, "")}</title><style>body{font-family:system-ui;text-align:center;padding:48px;color:#29231f}img{width:min(70vw,520px)}h1{font-size:28px}</style><h1>${name.replace(/[<>]/g, "")}</h1><img src="${png}" alt="QR"><p>${url}</p><script>onload=()=>print()</script>`,
             );
             popup.document.close();
           }}

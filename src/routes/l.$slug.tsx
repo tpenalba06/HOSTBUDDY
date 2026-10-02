@@ -72,6 +72,7 @@ function localizedSection(section: PublicSection, locale: string) {
 const displayTitle = (title: string) => title.replace(/^[^\p{L}\p{N}]+/u, "");
 function GuestPage() {
   const guide = Route.useLoaderData();
+  const { slug } = Route.useParams();
   const { locale, t } = useI18n();
   const sections = useMemo(
     () => guide.sections.map((section) => localizedSection(section, locale)),
@@ -187,14 +188,14 @@ function GuestPage() {
         </div>
       )}
       {messageOpen && (
-        <MessageDrawer slug={Route.useParams().slug} onClose={() => setMessageOpen(false)} />
+        <MessageDrawer slug={slug} onClose={() => setMessageOpen(false)} />
       )}{" "}
       {feedbackOpen && (
-        <FeedbackDrawer slug={Route.useParams().slug} onClose={() => setFeedbackOpen(false)} />
+        <FeedbackDrawer slug={slug} onClose={() => setFeedbackOpen(false)} />
       )}{" "}
       {serviceId && (
         <OrderDrawer
-          slug={Route.useParams().slug}
+          slug={slug}
           service={(guide.services ?? []).find((item) => item.id === serviceId)}
           onClose={() => setServiceId(null)}
         />

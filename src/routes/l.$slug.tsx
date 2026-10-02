@@ -541,13 +541,7 @@ function ServiceList({
     </div>
   );
 }
-function ContactButtons({
-  section,
-  t,
-}: {
-  section: PublicSection;
-  t: (key: string) => string;
-}) {
+function ContactButtons({ section, t }: { section: PublicSection; t: (key: string) => string }) {
   const phone = section.content.phones?.[0];
   const email = section.content.emails?.[0];
   if (!phone && !email) return null;

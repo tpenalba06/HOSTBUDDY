@@ -5,15 +5,14 @@ import { FIELD_DEFS } from "./fields";
 
 const RULES: Record<string, RegExp> = {
   address:
-    /\b(adresse\s*[:\-]|address\s*[:\-]|direcci[oó]n\s*[:\-]|anschrift\s*[:\-]|indirizzo\s*[:\-]|morada\s*[:\-]|\d{1,4},?\s+(rue|avenue|av\.|boulevard|bd|chemin|impasse|route|allée|place|road|street|lane|drive|calle|avenida|straße|strasse|weg|platz|via|viale|piazza|rua|avenida)\b)/i,
+    /\b(adresse\s*[:-]|address\s*[:-]|direcci[oó]n\s*[:-]|anschrift\s*[:-]|indirizzo\s*[:-]|morada\s*[:-]|\d{1,4},?\s+(rue|avenue|av\.|boulevard|bd|chemin|impasse|route|allée|place|road|street|lane|drive|calle|avenida|straße|strasse|weg|platz|via|viale|piazza|rua|avenida)\b)/i,
   arrival:
     /(arriv[ée]e?|check.?in|arrival|llegada|ankunft|arrivo|chegada|à partir de \d{1,2}\s?h|from \d{1,2}(:\d{2})?|ab \d{1,2}(:\d{2})?)/i,
   access:
     /(cl[ée]s?|keys?|llaves?|schl[üu]ssel|chiav[ei]|chaves?|bo[iî]te [àa] cl|lockbox|key box|caja de llaves|schl[üu]sselkasten|cassetta.*chiav|caixa.*chav|access code|code d'acc[eè]s|digicode|portail|gate|portal|t[üu]r|porta|serrure|lock|badge|keynest|cadenas)/i,
   parking:
     /(parking|se garer|stationn|garage|car park|parkplatz|aparcamiento|estacionamiento|parcheggio|estacionamento)/i,
-  wifi:
-    /(wi.?fi|mot de passe|mdp|password|contraseña|passwort|senha|password|r[ée]seau|network|red wi.?fi|netzwerk|rete wi.?fi|ssid|livebox|freebox)/i,
+  wifi: /(wi.?fi|mot de passe|mdp|password|contraseña|passwort|senha|password|r[ée]seau|network|red wi.?fi|netzwerk|rete wi.?fi|ssid|livebox|freebox)/i,
   capacity:
     /(\d+\s*(personnes|voyageurs|guests?|people|personas|gäste|ospiti|hóspedes|couchages|chambres?|bedrooms?|habitaciones?|schlafzimmer|camere|quartos|lits?|beds?))/i,
   equipment:
@@ -22,8 +21,7 @@ const RULES: Record<string, RegExp> = {
     /(cuisine|kitchen|cocina|küche|cucina|cozinha|four|oven|horno|ofen|forno|micro.?ondes|microwave|lave.?vaisselle|dishwasher|lavavajillas|spülmaschine|lavastoviglie|cafeti[èe]re|coffee machine|nespresso|frigo|refrigerator|frigorífico|kühlschrank|frigorifero)/i,
   climate:
     /(clim|climatisation|air conditioning|air conditioner|aire acondicionado|klimaanlage|aria condizionata|ar condicionado|chauffage|heating|calefacción|heizung|riscaldamento|aquecimento|thermostat)/i,
-  pool:
-    /(piscine|pool\b|swimming pool|piscina|schwimmbad|spa\b|jacuzzi|baignade)/i,
+  pool: /(piscine|pool\b|swimming pool|piscina|schwimmbad|spa\b|jacuzzi|baignade)/i,
   rules:
     /(interdit|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
   trash:
@@ -72,7 +70,9 @@ function guessName(snippets: string[]): string | null {
   if (!first || first.length > 80 || /[.:!?]$/.test(first)) return null;
   const looksLikeField = Object.values(RULES).some((rule) => rule.test(first));
   const looksLikePropertyName =
-    /(villa|maison|house|appartement|apartment|apartamento|wohnung|chalet|studio|g[iî]te|loft|casa|ferienwohnung)/i.test(first);
+    /(villa|maison|house|appartement|apartment|apartamento|wohnung|chalet|studio|g[iî]te|loft|casa|ferienwohnung)/i.test(
+      first,
+    );
   return looksLikeField && !looksLikePropertyName ? null : first;
 }
 
@@ -103,7 +103,9 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
     // "À vérifier" is reserved for real uncertainty: explicit hedging or contradictory
     // evidence. A clean, explicit match is considered found even on imported web text.
     const needsReview = ambiguous || conflicting;
-    const confidence = needsReview ? Math.min(0.58, baseConfidence) : Math.max(0.78, baseConfidence);
+    const confidence = needsReview
+      ? Math.min(0.58, baseConfidence)
+      : Math.max(0.78, baseConfidence);
 
     return {
       key: def.key,

@@ -124,7 +124,21 @@ const localized = {
     ],
   },
 } as const;
-export function getVillaMare(locale: Locale) {
+export type GuideData = {
+  name: string;
+  host: string;
+  phone: string;
+  email: string;
+  wifi: { network: string; password: string };
+  arrival: string;
+  house: string;
+  pool: string;
+  departure: string;
+  places: { name: string; note: string }[];
+  services: { id: string; name: string; price: number; desc: string }[];
+};
+
+export function getVillaMare(locale: Locale): GuideData {
   const d = localized[locale];
   return {
     name: "Villa Mare",
@@ -146,4 +160,3 @@ export function getVillaMare(locale: Locale) {
   };
 }
 export const villaMare = getVillaMare("fr");
-export type GuideData = ReturnType<typeof getVillaMare>;

@@ -147,52 +147,55 @@ function visibleText(html: string) {
   ).slice(0, 20000);
 }
 
-async function runUrlImport(data: { url: string; source: ImportSource }): Promise<UrlImportOutcome> {
-    const source = data.source as ImportSource;
-    let url: URL;
-    try {
-      url = new URL(data.url);
-    } catch {
-      return { ok: false, source, reason: "invalid" };
-    }
-    if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
-      return { ok: false, source, reason: "invalid" };
-    if (!(await robotsAllows(url))) return { ok: false, source, reason: "blocked" };
+async function runUrlImport(data: {
+  url: string;
+  source: ImportSource;
+}): Promise<UrlImportOutcome> {
+  const source = data.source as ImportSource;
+  let url: URL;
+  try {
+    url = new URL(data.url);
+  } catch {
+    return { ok: false, source, reason: "invalid" };
+  }
+  if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
+    return { ok: false, source, reason: "invalid" };
+  if (!(await robotsAllows(url))) return { ok: false, source, reason: "blocked" };
 
-    let html: string;
-    try {
-      const res = await fetch(url.toString(), {
-        headers: { "user-agent": UA, accept: "text/html", "accept-language": "fr-FR,fr;q=0.9" },
-        redirect: "follow",
-        signal: AbortSignal.timeout(12000),
-      });
-      if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))
-        return { ok: false, source, reason: "blocked" };
-      if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html"))
-        return { ok: false, source, reason: "unreachable" };
-      html = (await res.text()).slice(0, 1_500_000);
-    } catch (e) {
-      console.error("url import fetch failed", e);
-      return { ok: false, source, reason: "unreachable" };
-    }
-    if (
-      /(captcha|cf-challenge|are you a robot|access denied|enable javascript to continue)/i.test(
-        html.slice(0, 20000),
-      )
-    ) {
+  let html: string;
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { "user-agent": UA, accept: "text/html", "accept-language": "fr-FR,fr;q=0.9" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(12000),
+    });
+    if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))
       return { ok: false, source, reason: "blocked" };
-    }
+    if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html"))
+      return { ok: false, source, reason: "unreachable" };
+    html = (await res.text()).slice(0, 1_500_000);
+  } catch (e) {
+    console.error("url import fetch failed", e);
+    return { ok: false, source, reason: "unreachable" };
+  }
+  if (
+    /(captcha|cf-challenge|are you a robot|access denied|enable javascript to continue)/i.test(
+      html.slice(0, 20000),
+    )
+  ) {
+    return { ok: false, source, reason: "blocked" };
+  }
 
-    const structured = fromStructured(html, url.toString());
-    const textual = extractFromText(visibleText(html), 0.6); // page text is never trusted blindly
-    const fields = textual.fields.map((f) => structured.fields[f.key] ?? f);
-    const useful = fields.filter((f) => f.status !== "missing").length;
-    if (useful < 2) return { ok: false, source, reason: "insufficient" };
-    return {
-      ok: true,
-      source,
-      result: { propertyName: structured.name?.slice(0, 120) ?? null, fields },
-    };
+  const structured = fromStructured(html, url.toString());
+  const textual = extractFromText(visibleText(html), 0.6); // page text is never trusted blindly
+  const fields = textual.fields.map((f) => structured.fields[f.key] ?? f);
+  const useful = fields.filter((f) => f.status !== "missing").length;
+  if (useful < 2) return { ok: false, source, reason: "insufficient" };
+  return {
+    ok: true,
+    source,
+    result: { propertyName: structured.name?.slice(0, 120) ?? null, fields },
+  };
 }
 
 export const importFromUrl = createServerFn({ method: "POST" })

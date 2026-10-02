@@ -12,7 +12,8 @@ const PUBLIC_SUPABASE_URL =
   process.env["VITE_SUPABASE_URL"] || "https://jzbjpaucgckggumhowns.supabase.co";
 const PUBLIC_SUPABASE_KEY =
   process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || "sb_publishable_sZbK5zbP8dzTY5oot34arQ_b2bhpQk6";
-const PUBLIC_SUPABASE_PROJECT_ID = process.env["VITE_SUPABASE_PROJECT_ID"] || "jzbjpaucgckggumhowns";
+const PUBLIC_SUPABASE_PROJECT_ID =
+  process.env["VITE_SUPABASE_PROJECT_ID"] || "jzbjpaucgckggumhowns";
 
 export default defineConfig({
   vite: {

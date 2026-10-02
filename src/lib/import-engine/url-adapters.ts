@@ -46,9 +46,7 @@ export function getImportUrlIssue(input: string): ImportUrlIssue | null {
   try {
     const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
     if (!isAirbnbHost(url.hostname) || !AIRBNB_SEARCH_PATH.test(url.pathname)) return null;
-    return airbnbPinnedListingIds(url).length === 1
-      ? null
-      : "airbnb_search_without_single_listing";
+    return airbnbPinnedListingIds(url).length === 1 ? null : "airbnb_search_without_single_listing";
   } catch {
     return null;
   }

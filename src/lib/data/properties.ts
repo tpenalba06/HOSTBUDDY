@@ -333,7 +333,9 @@ export async function saveOrganizationContact(
   if (!/^\S+@\S+\.\S+$/.test(email))
     throw new FriendlyError("Cette adresse e-mail ne semble pas correcte.");
   if (!/^\+?\d{9,15}$/.test(phone))
-    throw new FriendlyError("Indiquez un numéro de téléphone complet, avec indicatif si nécessaire.");
+    throw new FriendlyError(
+      "Indiquez un numéro de téléphone complet, avec indicatif si nécessaire.",
+    );
 
   const normalizedPhone = /^0[1-9]\d{8}$/.test(phone) ? `+33${phone.slice(1)}` : phone;
   const contactName = values.name?.trim().slice(0, 120) || null;
@@ -543,7 +545,7 @@ export async function createPropertyFromExtraction(
       question: def.question,
       value,
       status: isDefaultContact ? "found" : (imported?.status ?? "missing"),
-      raw_value: isDefaultContact ? imported?.rawValue ?? null : imported?.rawValue ?? null,
+      raw_value: isDefaultContact ? (imported?.rawValue ?? null) : (imported?.rawValue ?? null),
       confidence: isDefaultContact ? 1 : (imported?.confidence ?? 0),
       source_type: isDefaultContact ? "manual" : imported?.value ? source : null,
       source_url: isDefaultContact ? null : imported?.value ? sourceUrl : null,

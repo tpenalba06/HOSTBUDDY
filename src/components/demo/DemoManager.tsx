@@ -1,538 +1,579 @@
-import { useState, type ReactNode } from "react";
-import {
-  BarChart3,
-  Cable,
-  Check,
-  ClipboardList,
-  Eye,
-  Home,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Pencil,
-  Plus,
-  QrCode,
-  Star,
-  Users,
-} from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagerShell, type ManagerArea } from "@/components/app/ManagerShell";
-import { INTEGRATIONS } from "@/lib/integrations/registry";
-import { useI18n } from "@/lib/i18n";
+import {
+  ManagerConnectionsScreen,
+  ManagerDashboardScreen,
+  ManagerFeedbackScreen,
+  ManagerMessagesScreen,
+  ManagerNewPropertyScreen,
+  ManagerOrdersScreen,
+  ManagerPropertiesScreen,
+  ManagerTeamScreen,
+  type ManagerConversation,
+  type ManagerFeedback,
+  type ManagerOrder,
+  type ManagerPropertySummary,
+  type ManagerTeamMember,
+} from "@/components/app/ManagerScreens";
+import { ImportReview } from "@/components/app/ImportReview";
 import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
 import { getImportUrlIssue, normalizeUrl } from "@/lib/import-engine/url-adapters";
 import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.functions";
 import type { ExtractionResult } from "@/lib/import-engine/types";
-import { ImportReview } from "@/components/app/ImportReview";
+import { useI18n } from "@/lib/i18n";
+
+type DemoArea = ManagerArea | "editor";
+type NewMode = "options" | "text" | "url" | "manual";
+
+const now = new Date();
+const isoAt = (hoursFromNow: number) =>
+  new Date(now.getTime() + hoursFromNow * 60 * 60 * 1000).toISOString();
+
+const INITIAL_PROPERTIES: ManagerPropertySummary[] = [
+  {
+    id: "demo-villa-mare",
+    name: "Villa Mare",
+    slug: "villa-mare",
+    status: "published",
+    location: "Antibes",
+  },
+];
+
+const INITIAL_ORDERS: ManagerOrder[] = [
+  {
+    id: "demo-order-breakfast",
+    status: "pending",
+    requested_for: isoAt(2),
+    created_at: isoAt(-2),
+    total_amount: 25,
+    guest_name: "Sophie",
+    services: { name: "Petit-déjeuner" },
+    properties: { name: "Villa Mare" },
+  },
+  {
+    id: "demo-order-transfer",
+    status: "confirmed",
+    requested_for: isoAt(28),
+    created_at: isoAt(-5),
+    total_amount: 55,
+    guest_name: "Lucas",
+    services: { name: "Transfert gare" },
+    properties: { name: "Villa Mare" },
+  },
+];
+
+const INITIAL_CONVERSATIONS: ManagerConversation[] = [
+  {
+    id: "demo-conversation-sophie",
+    guest_display_name: "Sophie",
+    last_message_at: isoAt(-0.5),
+    status: "open",
+    properties: { name: "Villa Mare" },
+    messages: [
+      {
+        id: "demo-message-1",
+        sender_type: "guest",
+        read_at: null,
+        created_at: isoAt(-1),
+        body: "Bonjour, où peut-on se garer en arrivant ?",
+      },
+      {
+        id: "demo-message-2",
+        sender_type: "host",
+        read_at: isoAt(-0.8),
+        created_at: isoAt(-0.8),
+        body: "Bonjour Sophie ! Le parking privé est juste devant la villa.",
+      },
+    ],
+  },
+];
+
+const INITIAL_FEEDBACK: ManagerFeedback[] = [
+  {
+    id: "demo-feedback-1",
+    rating: 5,
+    comment: "Super séjour, le livret était vraiment pratique. Merci !",
+    guest_name: "Camille",
+    created_at: isoAt(-24),
+    is_read: false,
+    properties: { name: "Villa Mare" },
+  },
+];
+
+const INITIAL_TEAM: ManagerTeamMember[] = [
+  { user_id: "demo-owner", email: "tristan@conciergerie-azur.fr", role: "owner" },
+  { user_id: "demo-admin", email: "claire@conciergerie-azur.fr", role: "admin" },
+  { user_id: "demo-member", email: "julien@conciergerie-azur.fr", role: "member" },
+];
 
 export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPreview: () => void }) {
   const { t } = useI18n();
-  const [area, setArea] = useState<ManagerArea | "editor">("properties");
-  const [thread, setThread] = useState(false);
+  const [area, setArea] = useState<DemoArea>("properties");
+  const [properties, setProperties] = useState(INITIAL_PROPERTIES);
+  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
+  const [feedback, setFeedback] = useState(INITIAL_FEEDBACK);
+  const [team, setTeam] = useState(INITIAL_TEAM);
+  const [openConversation, setOpenConversation] = useState<string | null>(null);
+  const [newMode, setNewMode] = useState<NewMode>("options");
+  const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
+  const [manualName, setManualName] = useState("");
+  const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const metrics = useMemo(
+    () => ({
+      properties: properties.length,
+      published: properties.filter((property) => property.status === "published").length,
+      unread: conversations.filter((conversation) =>
+        conversation.messages.some((message) => message.sender_type === "guest" && !message.read_at),
+      ).length,
+      todayOrders: orders.filter(
+        (order) =>
+          order.status !== "completed" &&
+          order.status !== "cancelled" &&
+          new Date(order.requested_for ?? order.created_at).toDateString() === new Date().toDateString(),
+      ).length,
+      requestTotal: orders
+        .filter((order) => order.status !== "cancelled")
+        .reduce((sum, order) => sum + Number(order.total_amount), 0),
+      recentFeedback: feedback.map((item) => ({
+        id: item.id,
+        rating: item.rating,
+        created_at: item.created_at,
+      })),
+    }),
+    [conversations, feedback, orders, properties],
+  );
+
+  const navigate = (next: ManagerArea) => {
+    setArea(next);
+    setOpenConversation(null);
+    if (next !== "new") resetNewFlow();
+  };
+
+  const resetNewFlow = () => {
+    setNewMode("options");
+    setCandidate(null);
+    setBusy(false);
+    setError("");
+    setText("");
+    setUrl("");
+    setManualName("");
+  };
+
+  const completeDemoImport = (result: ExtractionResult) => {
+    const name = result.propertyName?.trim() || "Nouveau logement";
+    const id = `demo-${Date.now()}`;
+    setProperties((items) => [
+      {
+        id,
+        name,
+        slug: name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+          .slice(0, 40) || "logement",
+        status: "draft",
+      },
+      ...items,
+    ]);
+    setCandidate(null);
+    setNewMode("options");
+    setArea("properties");
+  };
+
+  let screen: ReactNode;
+
+  if (area === "editor") {
+    screen = (
+      <div>
+        <Button
+          variant="ghost"
+          className="mb-3 min-h-12 px-0 text-primary"
+          onClick={() => setArea("properties")}
+        >
+          ← {t("app.myProperties")}
+        </Button>
+        {editor}
+      </div>
+    );
+  } else if (area === "properties") {
+    screen = (
+      <ManagerPropertiesScreen
+        properties={properties}
+        onAdd={() => setArea("new")}
+        onEdit={(id) => {
+          if (id === "demo-villa-mare") setArea("editor");
+          else setArea("editor");
+        }}
+        onView={() => onPreview()}
+      />
+    );
+  } else if (area === "dashboard") {
+    screen = (
+      <ManagerDashboardScreen
+        orgName="Conciergerie Azur"
+        data={metrics}
+        onAdd={() => setArea("new")}
+        onOrders={() => setArea("orders")}
+      />
+    );
+  } else if (area === "orders") {
+    screen = (
+      <ManagerOrdersScreen
+        orders={orders}
+        onBack={() => setArea("properties")}
+        onStatusChange={(id, status) =>
+          setOrders((items) => items.map((item) => (item.id === id ? { ...item, status } : item)))
+        }
+      />
+    );
+  } else if (area === "messages") {
+    const conversation = conversations.find((item) => item.id === openConversation);
+    screen = conversation ? (
+      <DemoConversation
+        conversation={conversation}
+        onBack={() => setOpenConversation(null)}
+        onSend={(body) => {
+          setConversations((items) =>
+            items.map((item) =>
+              item.id === conversation.id
+                ? {
+                    ...item,
+                    last_message_at: new Date().toISOString(),
+                    messages: [
+                      ...item.messages,
+                      {
+                        id: `demo-message-${Date.now()}`,
+                        sender_type: "host",
+                        read_at: new Date().toISOString(),
+                        created_at: new Date().toISOString(),
+                        body,
+                      },
+                    ],
+                  }
+                : item,
+            ),
+          );
+        }}
+      />
+    ) : (
+      <ManagerMessagesScreen
+        conversations={conversations}
+        onBack={() => setArea("properties")}
+        onOpen={(id) => {
+          setOpenConversation(id);
+          setConversations((items) =>
+            items.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    messages: item.messages.map((message) =>
+                      message.sender_type === "guest"
+                        ? { ...message, read_at: message.read_at ?? new Date().toISOString() }
+                        : message,
+                    ),
+                  }
+                : item,
+            ),
+          );
+        }}
+      />
+    );
+  } else if (area === "feedback") {
+    screen = (
+      <ManagerFeedbackScreen
+        feedback={feedback}
+        onBack={() => setArea("properties")}
+        onMarkRead={(id) =>
+          setFeedback((items) =>
+            items.map((item) => (item.id === id ? { ...item, is_read: true } : item)),
+          )
+        }
+      />
+    );
+  } else if (area === "connections") {
+    screen = <ManagerConnectionsScreen onBack={() => setArea("properties")} />;
+  } else if (area === "team") {
+    screen = (
+      <ManagerTeamScreen
+        members={team}
+        onBack={() => setArea("properties")}
+        onInvite={(email, role) =>
+          setTeam((items) => [
+            ...items,
+            { user_id: `demo-team-${Date.now()}`, email, role },
+          ])
+        }
+        onRoleChange={(userId, role) =>
+          setTeam((items) =>
+            items.map((item) => (item.user_id === userId ? { ...item, role } : item)),
+          )
+        }
+        onRemove={(userId) =>
+          setTeam((items) => items.filter((item) => item.user_id !== userId))
+        }
+      />
+    );
+  } else {
+    screen = renderNewProperty();
+  }
+
+  function renderNewProperty() {
+    if (candidate) {
+      return (
+        <ImportReview
+          value={candidate}
+          onChange={setCandidate}
+          busy={busy}
+          onBack={() => setCandidate(null)}
+          onConfirm={() => completeDemoImport(candidate)}
+        />
+      );
+    }
+
+    if (newMode === "options") {
+      return (
+        <ManagerNewPropertyScreen
+          onBack={() => setArea("properties")}
+          onImportUrl={() => setNewMode("url")}
+          onPasteText={() => setNewMode("text")}
+          onManual={() => setNewMode("manual")}
+        />
+      );
+    }
+
+    if (newMode === "text") {
+      return (
+        <DemoImportFrame
+          title={t("import.textTitle")}
+          description={t("import.textHelp")}
+          onBack={() => resetNewFlow()}
+          error={error}
+        >
+          <textarea
+            className="field min-h-64 text-base"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Arrivée à 16h, Wi-Fi, parking, départ, contact…"
+          />
+          <Button
+            className="mt-4 min-h-12 w-full"
+            disabled={!text.trim() || busy}
+            onClick={async () => {
+              setBusy(true);
+              setError("");
+              try {
+                setCandidate(await rulesExtractor.extract(text));
+              } catch {
+                setError("Le texte n’a pas pu être analysé.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "Analyse…" : t("import.textAction")}
+          </Button>
+        </DemoImportFrame>
+      );
+    }
+
+    if (newMode === "url") {
+      return (
+        <DemoImportFrame
+          title={t("import.urlTitle")}
+          description="Collez un lien Airbnb : la démo utilise le même moteur d’import que l’application."
+          onBack={() => resetNewFlow()}
+          error={error}
+        >
+          <input
+            className="field text-base"
+            inputMode="url"
+            autoComplete="url"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            placeholder="https://www.airbnb.fr/rooms/..."
+          />
+          <Button
+            className="mt-4 min-h-12 w-full"
+            disabled={!url.trim() || busy}
+            onClick={async () => {
+              setError("");
+              const issue = getImportUrlIssue(url);
+              if (issue === "airbnb_search_without_single_listing") {
+                setError("Cette page Airbnb ne permet pas d’identifier un logement unique.");
+                return;
+              }
+              const clean = normalizeUrl(url);
+              if (!clean) {
+                setError("Ce lien ne semble pas valide.");
+                return;
+              }
+              let host = "";
+              try {
+                host = new URL(clean).hostname.toLowerCase();
+              } catch {
+                setError("Ce lien ne semble pas valide.");
+                return;
+              }
+              if (!/(^|\.)airbnb\./i.test(host)) {
+                setError("La démo URL est actuellement limitée à Airbnb.");
+                return;
+              }
+              setBusy(true);
+              try {
+                const outcome = await demoImportFromAirbnbUrl({ data: { url: clean } });
+                if (!outcome.ok) {
+                  setError(
+                    outcome.reason === "blocked"
+                      ? "Airbnb bloque temporairement la lecture automatique de cette annonce."
+                      : "HostBuddy n’a pas pu récupérer assez d’informations depuis cette annonce.",
+                  );
+                  return;
+                }
+                setCandidate(outcome.result);
+              } catch {
+                setError("L’import n’a pas abouti. Essayez avec le texte de l’annonce.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "Analyse…" : t("import.action")}
+          </Button>
+        </DemoImportFrame>
+      );
+    }
+
+    return (
+      <DemoImportFrame
+        title={t("import.manualTitle")}
+        description="Créez un logement manuellement comme dans le vrai espace gestionnaire."
+        onBack={() => resetNewFlow()}
+        error={error}
+      >
+        <input
+          className="field text-lg"
+          value={manualName}
+          onChange={(event) => setManualName(event.target.value)}
+          placeholder="Ex. : Villa des Oliviers"
+        />
+        <Button
+          className="mt-4 min-h-12 w-full"
+          disabled={!manualName.trim()}
+          onClick={() => completeDemoImport({ propertyName: manualName.trim(), fields: [] })}
+        >
+          {t("common.continue")}
+        </Button>
+      </DemoImportFrame>
+    );
+  }
+
   return (
     <ManagerShell
       embedded
       orgName="Conciergerie Azur"
       role="owner"
       active={area === "editor" ? "properties" : area}
-      onNavigate={(next) => {
-        setArea(next);
-        setThread(false);
-      }}
+      onNavigate={navigate}
     >
-      {area === "editor" ? (
-        <div>
-          <Button
-            variant="ghost"
-            className="mb-3 min-h-12 px-0 text-primary"
-            onClick={() => setArea("properties")}
-          >
-            ← {t("nav.properties")}
-          </Button>
-          {editor}
-        </div>
-      ) : area === "properties" ? (
-        <Properties
-          t={t}
-          onEdit={() => setArea("editor")}
-          onAdd={() => setArea("new")}
-          onPreview={onPreview}
-        />
-      ) : area === "messages" ? (
-        <Messages t={t} thread={thread} setThread={setThread} />
-      ) : area === "orders" ? (
-        <Orders t={t} />
-      ) : area === "feedback" ? (
-        <Feedback t={t} />
-      ) : area === "connections" ? (
-        <Connections t={t} />
-      ) : area === "dashboard" ? (
-        <Dashboard t={t} />
-      ) : area === "team" ? (
-        <Team t={t} />
-      ) : (
-        <NewProperty t={t} />
-      )}
+      {screen}
     </ManagerShell>
   );
 }
 
-type T = (key: string) => string;
-function Heading({
-  eyebrow,
+function DemoConversation({
+  conversation,
+  onBack,
+  onSend,
+}: {
+  conversation: ManagerConversation;
+  onBack: () => void;
+  onSend: (body: string) => void;
+}) {
+  const { t } = useI18n();
+  const [reply, setReply] = useState("");
+  return (
+    <div className="py-4 @sm:py-6">
+      <Button
+        variant="ghost"
+        className="mb-3 min-h-12 px-0 text-primary"
+        onClick={onBack}
+      >
+        ← {t("nav.messages")}
+      </Button>
+      <p className="font-bold text-primary">{conversation.properties?.name}</p>
+      <h1 className="mt-1 text-3xl font-semibold">{conversation.guest_display_name}</h1>
+      <div className="mt-6 space-y-3">
+        {conversation.messages.map((message) => (
+          <div
+            key={message.id}
+            className={`max-w-[88%] rounded-2xl p-3 @sm:max-w-[70%] ${
+              message.sender_type === "host"
+                ? "ml-auto bg-success-soft"
+                : "bg-muted"
+            }`}
+          >
+            {message.body}
+          </div>
+        ))}
+      </div>
+      <form
+        className="mt-6 grid grid-cols-[minmax(0,1fr)_auto] gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const body = reply.trim();
+          if (!body) return;
+          onSend(body);
+          setReply("");
+        }}
+      >
+        <input
+          className="field min-w-0"
+          value={reply}
+          onChange={(event) => setReply(event.target.value)}
+          placeholder={t("demo.replyPlaceholder")}
+        />
+        <Button className="min-h-12" aria-label={t("common.send")}>
+          <Mail />
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function DemoImportFrame({
   title,
   description,
+  onBack,
+  error,
+  children,
 }: {
-  eyebrow: string;
   title: string;
-  description?: string;
+  description: string;
+  onBack: () => void;
+  error: string;
+  children: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
-    <div className="mb-6">
-      <p className="font-bold text-primary">{eyebrow}</p>
-      <h2 className="mt-1 text-3xl font-semibold @sm:text-4xl">{title}</h2>
-      {description && <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>}
-    </div>
-  );
-}
-function Properties({
-  t,
-  onEdit,
-  onAdd,
-  onPreview,
-}: {
-  t: T;
-  onEdit: () => void;
-  onAdd: () => void;
-  onPreview: () => void;
-}) {
-  const [qr, setQr] = useState(false);
-  return (
-    <div>
-      <Heading
-        eyebrow={t("demo.ownerSpace")}
-        title={t("app.myProperties")}
-        description={t("demo.propertiesHint")}
-      />
-      <Button className="mb-5 min-h-12 w-full @sm:w-auto" onClick={onAdd}>
-        <Plus />
-        {t("app.add")}
+    <div className="py-4 @sm:py-6">
+      <Button variant="ghost" className="mb-3 min-h-12 px-0 text-primary" onClick={onBack}>
+        ← {t("common.back")}
       </Button>
-      <article className="surface overflow-hidden">
-        <div className="h-28 bg-warm p-5">
-          <p className="text-sm font-bold text-success">{t("app.published")}</p>
-          <h3 className="mt-1 text-2xl font-semibold">Villa Mare</h3>
-          <p className="mt-1 flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4" />
-            Antibes
-          </p>
-        </div>
-        <div className="grid gap-2 p-4 @sm:grid-cols-3">
-          <Button onClick={onEdit}>
-            <Pencil />
-            {t("common.edit")}
-          </Button>
-          <Button variant="outline" onClick={onPreview}>
-            <Eye />
-            {t("common.view")}
-          </Button>
-          <Button variant="outline" onClick={() => setQr(!qr)}>
-            <QrCode />
-            QR
-          </Button>
-        </div>
-        {qr && (
-          <div className="mx-4 mb-4 rounded-lg bg-muted p-4 text-center font-semibold">
-            ▦ &nbsp; hostbuddy.app/l/villa-mare
-          </div>
-        )}
-      </article>
-    </div>
-  );
-}
-function Messages({
-  t,
-  thread,
-  setThread,
-}: {
-  t: T;
-  thread: boolean;
-  setThread: (v: boolean) => void;
-}) {
-  return (
-    <div>
-      <Heading
-        eyebrow={t("messages.eyebrow")}
-        title={t("nav.messages")}
-        description={t("messages.emptyDesc")}
-      />
-      {thread ? (
-        <article className="surface p-5">
-          <Button
-            variant="ghost"
-            className="mb-3 px-0 text-primary"
-            onClick={() => setThread(false)}
-          >
-            ← {t("common.back")}
-          </Button>
-          <p className="font-bold">Sophie · Villa Mare</p>
-          <div className="mt-5 space-y-3">
-            <p className="max-w-md rounded-xl bg-muted p-3">{t("demo.messageGuest")}</p>
-            <p className="ml-auto max-w-md rounded-xl bg-success-soft p-3 text-foreground">
-              {t("demo.messageReply")}
-            </p>
-          </div>
-          <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <input
-              className="field min-w-0"
-              aria-label={t("common.send")}
-              placeholder={t("demo.replyPlaceholder")}
-            />
-            <Button>
-              <Mail />
-              <span className="sr-only">{t("common.send")}</span>
-            </Button>
-          </div>
-        </article>
-      ) : (
-        <button
-          onClick={() => setThread(true)}
-          className="surface grid min-h-24 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 text-left"
-        >
-          <span className="h-3 w-3 rounded-full bg-primary" />
-          <span className="min-w-0">
-            <strong className="block truncate">Sophie · Villa Mare</strong>
-            <span className="mt-1 block truncate text-sm text-muted-foreground">
-              {t("demo.messageGuest")}
-            </span>
-          </span>
-          <MessageCircle className="text-success" />
-        </button>
-      )}
-    </div>
-  );
-}
-function Orders({ t }: { t: T }) {
-  const [confirmed, setConfirmed] = useState(false);
-  return (
-    <div>
-      <Heading
-        eyebrow={t("ops.operations")}
-        title={t("orders.title")}
-        description={t("orders.desc")}
-      />
-      <article className="surface p-5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
-          <div>
-            <h3 className="text-xl font-semibold">{t("guest.breakfast")}</h3>
-            <p className="text-sm text-muted-foreground">Villa Mare · Sophie</p>
-          </div>
-          <span
-            className={`h-fit rounded-full px-3 py-1 text-xs font-bold ${confirmed ? "bg-success-soft text-success" : "bg-warning-soft"}`}
-          >
-            {confirmed ? t("orders.confirmed") : t("orders.pending")}
-          </span>
-        </div>
-        <p className="mt-4 font-bold">25,00 €</p>
-        <Button
-          className="mt-4 w-full @sm:w-auto"
-          disabled={confirmed}
-          onClick={() => setConfirmed(true)}
-        >
-          <Check />
-          {confirmed ? t("orders.confirmed") : t("orders.confirm")}
-        </Button>
-      </article>
-    </div>
-  );
-}
-function Feedback({ t }: { t: T }) {
-  const [read, setRead] = useState(false);
-  return (
-    <div>
-      <Heading
-        eyebrow={t("feedback.eyebrow")}
-        title={t("feedback.managerTitle")}
-        description={t("feedback.managerDesc")}
-      />
-      <article className={`surface p-5 ${read ? "" : "border-l-4 border-l-primary"}`}>
-        <div className="flex justify-between gap-3">
-          <strong>Villa Mare · Sophie</strong>
-          <span className="flex text-primary">★★★★★</span>
-        </div>
-        <p className="mt-4">{t("demo.feedbackText")}</p>
-        {!read && (
-          <Button variant="outline" className="mt-4" onClick={() => setRead(true)}>
-            <Check />
-            {t("feedback.markRead")}
-          </Button>
-        )}
-      </article>
-    </div>
-  );
-}
-function Connections({ t }: { t: T }) {
-  const cards = INTEGRATIONS.filter((x) => x.category === "pms").slice(0, 4);
-  return (
-    <div>
-      <Heading
-        eyebrow="HostBuddy"
-        title={t("connections.title")}
-        description={t("connections.desc")}
-      />
-      <div className="grid gap-3 @sm:grid-cols-2">
-        {cards.map((item) => (
-          <article key={item.id} className="surface p-4">
-            <div className="flex items-center justify-between gap-2">
-              <strong>{item.name}</strong>
-              <Cable className="h-5 w-5 text-primary" />
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">{t("connections.bulkHint")}</p>
-            <span className="mt-3 inline-block rounded-full bg-muted px-2 py-1 text-xs font-bold">
-              {t("connections.planned")}
-            </span>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-}
-function Dashboard({ t }: { t: T }) {
-  const cards = [
-    [Home, t("dashboard.properties"), "1"],
-    [MessageCircle, t("dashboard.unread"), "1"],
-    [ClipboardList, t("dashboard.activeOrders"), "1"],
-    [Star, t("dashboard.requestTotal"), "115 €"],
-  ] as const;
-  return (
-    <div>
-      <Heading
-        eyebrow={t("dashboard.owner")}
-        title={t("dashboard.title")}
-        description={t("dashboard.desc")}
-      />
-      <div className="grid gap-3 @sm:grid-cols-2">
-        {cards.map(([Icon, label, value]) => (
-          <article key={label} className="surface p-5">
-            <Icon className="text-primary" />
-            <p className="mt-3 text-sm font-bold text-muted-foreground">{label}</p>
-            <p className="text-3xl font-semibold">{value}</p>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-}
-function Team({ t }: { t: T }) {
-  const people = [
-    ["TP", "Tristan Penalba", t("demo.roleOwner")],
-    ["CM", "Claire Martin", t("demo.roleManager")],
-    ["JL", "Julien Lopez", t("demo.roleEmployee")],
-  ];
-  return (
-    <div>
-      <Heading
-        eyebrow={t("demo.administration")}
-        title={t("nav.team")}
-        description={t("demo.teamHint")}
-      />
-      <div className="space-y-3">
-        {people.map(([initials, name, role]) => (
-          <article
-            key={name}
-            className="surface grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 p-4"
-          >
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-accent font-bold text-accent-foreground">
-              {initials}
-            </span>
-            <span className="min-w-0">
-              <strong className="block truncate">{name}</strong>
-              <span className="text-sm text-muted-foreground">{role}</span>
-            </span>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-}
-function NewProperty({ t }: { t: T }) {
-  const [mode, setMode] = useState<"options" | "text" | "url">("options");
-  const [text, setText] = useState("");
-  const [url, setUrl] = useState("");
-  const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  if (candidate) {
-    return (
-      <ImportReview
-        value={candidate}
-        onChange={setCandidate}
-        busy={busy}
-        onBack={() => setCandidate(null)}
-        onConfirm={() => {
-          setBusy(true);
-          window.setTimeout(() => {
-            setBusy(false);
-            setCandidate(null);
-            setText("");
-            setUrl("");
-            setError("");
-            setMode("options");
-          }, 500);
-        }}
-      />
-    );
-  }
-
-  if (mode === "text") {
-    return (
-      <div>
-        <Button variant="ghost" className="mb-3 px-0 text-primary" onClick={() => setMode("options")}>
-          ← {t("common.back")}
-        </Button>
-        <Heading eyebrow="HostBuddy" title={t("import.textTitle")} description={t("import.textHelp")} />
-        <textarea
-          className="field min-h-64 text-base"
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder="Arrivée à 16h, Wi-Fi, parking, départ, contact…"
-        />
-        <Button
-          className="mt-4 w-full"
-          disabled={!text.trim() || busy}
-          onClick={async () => {
-            setBusy(true);
-            setError("");
-            try {
-              setCandidate(await rulesExtractor.extract(text));
-            } catch {
-              setError("Le texte n’a pas pu être analysé.");
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          {busy ? "…" : t("import.textAction")}
-        </Button>
+      <p className="font-bold text-primary">HostBuddy</p>
+      <h1 className="mt-1 text-3xl font-semibold @sm:text-4xl">{title}</h1>
+      <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
+      <div className="mt-6">
+        {children}
         {error && <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">{error}</p>}
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Démo réelle du parseur HostBuddy — aucune information absente n’est inventée.
-        </p>
-      </div>
-    );
-  }
-
-  if (mode === "url") {
-    const runUrlImport = async () => {
-      setError("");
-      const issue = getImportUrlIssue(url);
-      if (issue === "airbnb_search_without_single_listing") {
-        setError("Cette page Airbnb ne permet pas d’identifier un logement unique. Ouvrez l’annonce souhaitée puis recopiez son lien.");
-        return;
-      }
-
-      const clean = normalizeUrl(url);
-      if (!clean) {
-        setError("Ce lien ne semble pas valide.");
-        return;
-      }
-
-      let host = "";
-      try {
-        host = new URL(clean).hostname.toLowerCase();
-      } catch {
-        setError("Ce lien ne semble pas valide.");
-        return;
-      }
-
-      if (!/(^|\.)airbnb\./i.test(host)) {
-        setError("Pour la démo publique, l’import URL réel est actuellement limité à Airbnb. L’import texte fonctionne pour toutes les sources.");
-        return;
-      }
-
-      setBusy(true);
-      try {
-        const outcome = await demoImportFromAirbnbUrl({ data: { url: clean } });
-        if (!outcome.ok) {
-          setError(
-            outcome.reason === "blocked"
-              ? "Airbnb bloque temporairement la lecture automatique de cette annonce. Collez le texte de l’annonce pour continuer."
-              : outcome.reason === "insufficient"
-                ? "HostBuddy n’a pas récupéré assez d’informations depuis cette annonce. Collez son texte pour continuer."
-                : "Cette annonce n’a pas pu être importée.",
-          );
-          return;
-        }
-        setCandidate(outcome.result);
-      } catch {
-        setError("L’import n’a pas abouti. Vous pouvez essayer avec le texte de l’annonce.");
-      } finally {
-        setBusy(false);
-      }
-    };
-
-    return (
-      <div>
-        <Button variant="ghost" className="mb-3 px-0 text-primary" onClick={() => setMode("options")}>
-          ← {t("common.back")}
-        </Button>
-        <Heading
-          eyebrow="HostBuddy"
-          title={t("import.urlTitle")}
-          description="Collez un lien Airbnb : la démo utilise le vrai moteur d’import HostBuddy et vous montre les informations détectées."
-        />
-        <input
-          className="field text-base"
-          inputMode="url"
-          autoComplete="url"
-          placeholder="https://www.airbnb.fr/rooms/..."
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") void runUrlImport();
-          }}
-        />
-        {error && <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">{error}</p>}
-        <Button className="mt-4 w-full" disabled={!url.trim() || busy} onClick={runUrlImport}>
-          {busy ? "Analyse…" : t("import.action")}
-        </Button>
-        <Button variant="ghost" className="mt-2 w-full" onClick={() => setMode("text")}>
-          {t("import.fallbackPrimary")}
-        </Button>
-        <p className="mt-3 text-center text-xs text-muted-foreground">
-          Les liens Airbnb de recherche avec un logement épinglé sont automatiquement convertis vers l’annonce correspondante.
-        </p>
-      </div>
-    );
-  }
-
-  const options = [
-    ["🔗", t("app.importUrl"), t("app.importUrlD"), () => setMode("url" as const)],
-    ["📝", t("app.paste"), t("app.pasteD"), () => setMode("text" as const)],
-  ] as const;
-
-  return (
-    <div>
-      <Heading eyebrow={t("nav.properties")} title={t("app.addTitle")} />
-      <div className="grid gap-3">
-        {options.map(([icon, title, desc, action], index) => (
-          <button
-            key={title}
-            type="button"
-            onClick={action}
-            className={`surface p-5 text-left transition hover:-translate-y-0.5 ${index === 0 ? "border-2 border-primary" : ""}`}
-          >
-            <span className="text-2xl">{icon}</span>
-            <h3 className="mt-2 text-xl font-semibold">{title}</h3>
-            <p className="mt-1 text-muted-foreground">{desc}</p>
-          </button>
-        ))}
-        <article className="surface p-5">
-          <span className="text-2xl">✏️</span>
-          <h3 className="mt-2 text-xl font-semibold">{t("app.manual")}</h3>
-          <p className="mt-1 text-muted-foreground">{t("app.manualD")}</p>
-        </article>
       </div>
     </div>
   );

@@ -139,183 +139,100 @@ export function ManagerPropertiesScreen({
 }) {
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
-  const live = properties.filter((property) => property.status === "published");
-  const drafts = properties.filter((property) => property.status === "draft");
 
   return (
     <div className="py-4 @sm:py-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold leading-tight @sm:text-4xl">{t("app.myProperties")}</h1>
-          <p className="mt-1 text-sm font-semibold text-muted-foreground">
-            {properties.length} {t("nav.properties").toLowerCase()}
-          </p>
-        </div>
+      <div className="grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
+        <PageHeading
+          eyebrow={t("demo.ownerSpace")}
+          title={t("app.myProperties")}
+          description={t("demo.propertiesHint")}
+        />
+        {role !== "member" && onAdd && (
+          <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
+            <Plus />
+            {t("app.add")}
+          </Button>
+        )}
       </div>
 
-      {role !== "member" && onAdd && (
-        <Button
-          className="mt-5 min-h-14 w-full rounded-2xl text-base @sm:text-lg"
-          onClick={onAdd}
-        >
-          <Plus className="h-5 w-5" />
-          {t("app.add")}
-        </Button>
-      )}
-
       {properties.length ? (
-        <div className="mt-7 grid gap-5 @xl:grid-cols-2">
-          <PropertyGroup
-            title={t("app.published")}
-            count={live.length}
-            tone="live"
-            emptyLabel="Aucun hébergement en ligne"
-          >
-            {live.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                role={role}
-                qrOpen={qr === property.id}
-                onEdit={() => onEdit(property.id)}
-                onView={() => onView(property.slug)}
-                onQr={() => setQr(qr === property.id ? null : property.id)}
-              />
-            ))}
-          </PropertyGroup>
+        <div className="mt-6 grid gap-4 @lg:grid-cols-2">
+          {properties.map((property) => (
+            <article key={property.id} className="surface min-w-0 overflow-hidden">
+              <div className="bg-warm p-4 @sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p
+                      className={`text-sm font-bold ${
+                        property.status === "published" ? "text-success" : "text-warning"
+                      }`}
+                    >
+                      {property.status === "published" ? t("app.published") : t("app.draft")}
+                    </p>
+                    <h2 className="mt-1 truncate text-xl font-semibold @sm:text-2xl">
+                      {property.name}
+                    </h2>
+                    {property.location && (
+                      <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{property.location}</span>
+                      </p>
+                    )}
+                  </div>
+                  <Home className="h-6 w-6 shrink-0 text-primary" />
+                </div>
+              </div>
 
-          <PropertyGroup
-            title={t("app.draft")}
-            count={drafts.length}
-            tone="draft"
-            emptyLabel="Aucun brouillon"
-          >
-            {drafts.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                role={role}
-                qrOpen={false}
-                onEdit={() => onEdit(property.id)}
-                onView={() => onView(property.slug)}
-                onQr={() => undefined}
-              />
-            ))}
-          </PropertyGroup>
+              <div className="grid gap-2 p-4 @sm:grid-cols-3">
+                <Button className="min-h-12" onClick={() => onEdit(property.id)}>
+                  <Pencil />
+                  {role === "member" ? t("common.view") : t("common.edit")}
+                </Button>
+                {property.status === "published" ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="min-h-12"
+                      onClick={() => onView(property.slug)}
+                    >
+                      <Eye />
+                      {t("common.view")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="min-h-12"
+                      onClick={() => setQr(qr === property.id ? null : property.id)}
+                    >
+                      <QrCode />
+                      QR
+                    </Button>
+                  </>
+                ) : (
+                  <p className="self-center text-sm text-muted-foreground @sm:col-span-2">
+                    {t("app.publishHint")}
+                  </p>
+                )}
+              </div>
+
+              {qr === property.id && (
+                <div className="mx-4 mb-4 rounded-xl border bg-muted p-4 text-center">
+                  <QrCode className="mx-auto h-10 w-10 text-primary" />
+                  <p className="mt-2 break-all text-sm font-semibold">
+                    hostbuddy.app/l/{property.slug}
+                  </p>
+                </div>
+              )}
+            </article>
+          ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-2xl border border-dashed bg-card p-8 text-center">
+        <div className="mt-8 rounded-xl border border-dashed bg-card p-6 text-center">
           <Home className="mx-auto h-9 w-9 text-primary" />
-          <p className="mt-3 text-lg font-semibold">{t("app.first")}</p>
+          <p className="mt-3 font-semibold">{t("app.first")}</p>
         </div>
       )}
     </div>
-  );
-}
-
-function PropertyGroup({
-  title,
-  count,
-  tone,
-  emptyLabel,
-  children,
-}: {
-  title: string;
-  count: number;
-  tone: "live" | "draft";
-  emptyLabel: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="min-w-0 rounded-2xl bg-muted/45 p-3 @sm:p-4">
-      <div className="mb-3 flex items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
-          <span
-            className={`h-3 w-3 rounded-full ${tone === "live" ? "bg-success" : "bg-warning"}`}
-            aria-hidden
-          />
-          <h2 className="text-xl font-semibold @sm:text-2xl">{title}</h2>
-        </div>
-        <span className="grid h-8 min-w-8 place-items-center rounded-full bg-background px-2 text-sm font-bold">
-          {count}
-        </span>
-      </div>
-      <div className="space-y-3">
-        {count ? children : (
-          <div className="rounded-xl border border-dashed bg-background/80 p-5 text-center text-sm font-medium text-muted-foreground">
-            {emptyLabel}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function PropertyCard({
-  property,
-  role,
-  qrOpen,
-  onEdit,
-  onView,
-  onQr,
-}: {
-  property: ManagerPropertySummary;
-  role: "owner" | "admin" | "member";
-  qrOpen: boolean;
-  onEdit: () => void;
-  onView: () => void;
-  onQr: () => void;
-}) {
-  const { t } = useI18n();
-  const published = property.status === "published";
-
-  return (
-    <article className="surface min-w-0 overflow-hidden">
-      <div className="flex items-start justify-between gap-3 p-4 @sm:p-5">
-        <div className="min-w-0">
-          <h3 className="truncate text-xl font-semibold @sm:text-2xl">{property.name}</h3>
-          {property.location && (
-            <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span className="truncate">{property.location}</span>
-            </p>
-          )}
-        </div>
-        <span
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-            published ? "bg-success-soft text-success" : "bg-warning-soft text-warning"
-          }`}
-        >
-          {published ? t("app.published") : t("app.draft")}
-        </span>
-      </div>
-
-      <div className={`grid gap-2 border-t p-3 @sm:p-4 ${published ? "@sm:grid-cols-3" : ""}`}>
-        <Button className="min-h-12 rounded-xl" onClick={onEdit}>
-          <Pencil />
-          {role === "member" ? t("common.view") : t("common.edit")}
-        </Button>
-        {published && (
-          <>
-            <Button variant="outline" className="min-h-12 rounded-xl" onClick={onView}>
-              <Eye />
-              {t("common.view")}
-            </Button>
-            <Button variant="outline" className="min-h-12 rounded-xl" onClick={onQr}>
-              <QrCode />
-              QR
-            </Button>
-          </>
-        )}
-      </div>
-
-      {qrOpen && (
-        <div className="mx-4 mb-4 rounded-xl border bg-muted p-4 text-center">
-          <QrCode className="mx-auto h-10 w-10 text-primary" />
-          <p className="mt-2 break-all text-sm font-semibold">hostbuddy.app/l/{property.slug}</p>
-        </div>
-      )}
-    </article>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -41,6 +41,7 @@ export function ManagerShell({
   onNavigate,
   onSignOut,
   embedded = false,
+  viewKey,
 }: {
   children: ReactNode;
   orgName: string;
@@ -49,9 +50,11 @@ export function ManagerShell({
   onNavigate?: (area: ManagerArea) => void;
   onSignOut?: () => void;
   embedded?: boolean;
+  viewKey?: string;
 }) {
   const { t } = useI18n();
   const [more, setMore] = useState(false);
+  const contentRef = useRef<HTMLElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const operational: NavItem[] = [
     { id: "messages", to: "/app/messages", label: t("nav.messages"), icon: MessageCircle },
@@ -103,13 +106,16 @@ export function ManagerShell({
                 ? "new"
                 : "properties";
   const current = onNavigate ? active : routeArea;
+  useEffect(() => {
+    if (embedded) contentRef.current?.scrollTo({ top: 0 });
+  }, [current, embedded, viewKey, pathname]);
   const navigate = (area: ManagerArea) => {
     setMore(false);
     onNavigate?.(area);
   };
   return (
     <div
-      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded" : "min-h-screen"}`}
+      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-hidden" : "min-h-screen"}`}
     >
       <header
         className={`${embedded ? "absolute" : "sticky"} inset-x-0 top-0 z-30 border-b bg-background/95 backdrop-blur`}
@@ -143,8 +149,10 @@ export function ManagerShell({
           </div>
         </div>
       </header>
-      <div className={`manager-shell-grid ${embedded ? "pt-[61px]" : "mx-auto w-full max-w-7xl"}`}>
-        <aside className="manager-shell-sidebar border-r bg-card/60 p-4">
+      <div
+        className={`manager-shell-grid ${embedded ? "h-full pt-[69px]" : "mx-auto w-full max-w-7xl"}`}
+      >
+        <aside className="manager-shell-sidebar min-h-0 overflow-y-auto border-r bg-card/60 p-4">
           <nav className="space-y-1" aria-label={t("demo.manager")}>
             <ShellItem
               item={properties}
@@ -177,7 +185,10 @@ export function ManagerShell({
             )}
           </nav>
         </aside>
-        <main className="manager-shell-content min-w-0 overflow-x-hidden px-4 pb-24 pt-5 @sm:px-6">
+        <main
+          ref={contentRef}
+          className={`manager-shell-content min-h-0 min-w-0 overflow-x-hidden px-4 pb-24 pt-5 @sm:px-6 ${embedded ? "overflow-y-auto" : ""}`}
+        >
           {children}
         </main>
       </div>

@@ -32,7 +32,7 @@ export function QrCard({
   }, [url]);
   return (
     <div className="text-center">
-      <div className="mx-auto w-60 rounded-3xl bg-card p-4 shadow-phone">
+      <div className="mx-auto w-60 max-w-full rounded-3xl bg-card p-4 shadow-phone">
         {png ? (
           <img src={png} alt={`QR code du livret ${name}`} className="w-full" />
         ) : (

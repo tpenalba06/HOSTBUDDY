@@ -13,7 +13,6 @@ import {
   type ManagerConversation,
   type ManagerFeedback,
   type ManagerOrder,
-  type ManagerPropertySummary,
   type ManagerTeamMember,
 } from "@/components/app/ManagerScreens";
 import { ImportReview } from "@/components/app/ImportReview";
@@ -22,6 +21,10 @@ import { QrCard } from "@/components/app/QrCard";
 import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
 import { getImportUrlIssue, normalizeUrl } from "@/lib/import-engine/url-adapters";
 import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.functions";
+import { DemoPropertyEditor } from "./DemoPropertyEditor";
+import { createDemoProperty, fieldsFromDemoSections, type DemoProperty } from "./demo-property";
+import type { GuideSection, PropertyField } from "@/lib/data/properties";
+import { getVillaMare } from "@/components/guest/villaMare";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
 
@@ -31,16 +34,6 @@ type NewMode = "options" | "text" | "url" | "manual";
 const now = new Date();
 const isoAt = (hoursFromNow: number) =>
   new Date(now.getTime() + hoursFromNow * 60 * 60 * 1000).toISOString();
-
-const INITIAL_PROPERTIES: ManagerPropertySummary[] = [
-  {
-    id: "demo-villa-mare",
-    name: "Villa Mare",
-    slug: "villa-mare",
-    status: "published",
-    location: "Antibes",
-  },
-];
 
 const INITIAL_ORDERS: ManagerOrder[] = [
   {
@@ -109,10 +102,62 @@ const INITIAL_TEAM: ManagerTeamMember[] = [
   { user_id: "demo-member", email: "julien@conciergerie-azur.fr", role: "member" },
 ];
 
-export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPreview: () => void }) {
-  const { t } = useI18n();
+export function DemoManager({
+  editor,
+  onPreview,
+  villaName,
+  villaSections,
+  onVillaFieldSave,
+  onVillaRename,
+  onVillaServicesChange,
+}: {
+  editor: ReactNode;
+  onPreview: () => void;
+  villaName: string;
+  villaSections: GuideSection[];
+  onVillaFieldSave: (field: PropertyField, value: string) => Promise<void>;
+  onVillaRename: (name: string) => void;
+  onVillaServicesChange: (services: DemoProperty["services"]) => void;
+}) {
+  const { t, locale } = useI18n();
   const [area, setArea] = useState<DemoArea>("properties");
-  const [properties, setProperties] = useState(INITIAL_PROPERTIES);
+  const [previewProperty, setPreviewProperty] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState("demo-villa-mare");
+  const [properties, setProperties] = useState<DemoProperty[]>(() => {
+    const base = getVillaMare(locale);
+    const property = createDemoProperty("demo-villa-mare", { propertyName: base.name, fields: [] });
+    return [
+      {
+        ...property,
+        slug: "villa-mare",
+        status: "published",
+        location: "Antibes",
+        services: base.services.map((service) => ({
+          id: service.id,
+          name: service.name,
+          description: service.desc,
+          price: service.price,
+          pricing_type: "fixed",
+          is_active: true,
+          image_path: null,
+          organization_id: "demo",
+          property_id: property.id,
+          created_at: "",
+          updated_at: "",
+        })),
+      },
+    ];
+  });
+  const activeProperty = properties.find((property) => property.id === selectedProperty);
+  const propertyForEditor =
+    activeProperty?.id === "demo-villa-mare"
+      ? {
+          ...activeProperty,
+          name: villaName,
+          sections: villaSections,
+          fields: fieldsFromDemoSections(activeProperty.fields, villaSections),
+        }
+      : activeProperty;
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
   const [feedback, setFeedback] = useState(INITIAL_FEEDBACK);
@@ -171,24 +216,12 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
   };
 
   const completeDemoImport = (result: ExtractionResult) => {
-    const name = result.propertyName?.trim() || "Nouveau logement";
-    const id = `demo-${Date.now()}`;
-    setProperties((items) => [
-      {
-        id,
-        name,
-        slug:
-          name
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "")
-            .slice(0, 40) || "logement",
-        status: "draft",
-      },
-      ...items,
-    ]);
+    const property = createDemoProperty(
+      `demo-${crypto.randomUUID()}`,
+      result,
+      newMode === "text" ? "text" : newMode === "url" ? "airbnb" : "manual",
+    );
+    setProperties((items) => [property, ...items]);
     setCandidate(null);
     setNewMode("options");
     setArea("properties");
@@ -196,29 +229,63 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
 
   let screen: ReactNode;
 
-  if (area === "editor") {
+  if (area === "editor" && propertyForEditor) {
     screen = (
-      <div>
-        <Button
-          variant="ghost"
-          className="mb-3 min-h-12 px-0 text-primary"
-          onClick={() => setArea("properties")}
-        >
-          ← {t("app.myProperties")}
-        </Button>
-        {editor}
-      </div>
+      <DemoPropertyEditor
+        key={propertyForEditor.id}
+        property={propertyForEditor}
+        initialPreview={previewProperty}
+        onChange={(update) =>
+          setProperties((items) =>
+            items.map((item) =>
+              item.id === selectedProperty
+                ? update(
+                    item.id === "demo-villa-mare"
+                      ? {
+                          ...item,
+                          name: villaName,
+                          sections: villaSections,
+                          fields: fieldsFromDemoSections(item.fields, villaSections),
+                        }
+                      : item,
+                  )
+                : item,
+            ),
+          )
+        }
+        onBack={() => setArea("properties")}
+        onPreview={onPreview}
+        {...(propertyForEditor.id === "demo-villa-mare"
+          ? {
+              guide: editor,
+              onFieldSave: onVillaFieldSave,
+              onRename: onVillaRename,
+              onServicesChange: onVillaServicesChange,
+            }
+          : {})}
+      />
     );
   } else if (area === "properties") {
     screen = (
       <ManagerPropertiesScreen
-        properties={properties}
+        properties={properties.map((property) =>
+          property.id === "demo-villa-mare" ? { ...property, name: villaName } : property,
+        )}
         onAdd={() => setArea("new")}
         onEdit={(id) => {
-          if (id === "demo-villa-mare") setArea("editor");
-          else setArea("editor");
+          setPreviewProperty(false);
+          setSelectedProperty(id);
+          setArea("editor");
         }}
-        onView={() => onPreview()}
+        onView={(slug) => {
+          const property = properties.find((item) => item.slug === slug);
+          if (property?.id === "demo-villa-mare") onPreview();
+          else if (property) {
+            setPreviewProperty(true);
+            setSelectedProperty(property.id);
+            setArea("editor");
+          }
+        }}
         renderQr={(property) => <QrCard slug={property.slug} name={property.name} path="/demo" />}
       />
     );
@@ -489,6 +556,7 @@ export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPrevie
       orgName="Conciergerie Azur"
       role="owner"
       active={area === "editor" ? "properties" : area}
+      viewKey={`${area}:${selectedProperty}:${openConversation ?? ""}:${newMode}`}
       onNavigate={navigate}
     >
       {screen}

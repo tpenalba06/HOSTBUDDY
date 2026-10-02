@@ -6,7 +6,13 @@ import { getVillaMare } from "@/components/guest/villaMare";
 import { GuideEditor, type GuideEditorActions } from "@/components/app/GuideEditor";
 import { DemoManager } from "@/components/demo/DemoManager";
 import type { GuideSection, SectionMedia } from "@/lib/data/properties";
-import { buildGuideContent, type GuideContentItem } from "@/lib/data/guide-content";
+import {
+  buildGuideContent,
+  mergeFieldIntoGuideContent,
+  type GuideContentItem,
+} from "@/lib/data/guide-content";
+import { FIELD_BY_KEY } from "@/lib/import-engine/fields";
+import type { Json } from "@/integrations/supabase/types";
 import { useI18n } from "@/lib/i18n";
 import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 
@@ -92,7 +98,15 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
                 ? [{ fieldKey: "departure", label: t("section.departure"), text: base.departure }]
                 : section.id === "pool"
                   ? [{ fieldKey: "pool", label: t("section.pool"), text: base.pool }]
-                  : [];
+                  : section.id === "contact"
+                    ? [
+                        {
+                          fieldKey: "contact",
+                          label: t("section.contact"),
+                          text: [base.host, base.phone, base.email].join("\n"),
+                        },
+                      ]
+                    : [];
       return asSection({
         id: `demo-${section.id}`,
         property_id: "demo",
@@ -249,7 +263,6 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
   };
   const editor = (
     <GuideEditor
-      compact
       data={{
         property: { id: "demo", organization_id: "demo", status: "published" },
         fields: [],
@@ -290,7 +303,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
         className={`demo-frame mx-auto w-full overflow-hidden border bg-background shadow-soft ${compact ? "rounded-xl" : "max-w-6xl rounded-xl"}`}
       >
         <div className="demo-viewport overflow-y-auto overflow-x-hidden bg-background text-foreground">
-          {mode === "guest" ? (
+          <div hidden={mode !== "guest"}>
             <div className="mx-auto max-w-4xl p-3 @sm:p-6">
               <GuestGuide
                 data={data}
@@ -301,9 +314,47 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
                 visibleSections={visibleSections}
               />
             </div>
-          ) : (
-            <DemoManager editor={editor} onPreview={() => showGuest()} />
-          )}
+          </div>
+          <div hidden={mode !== "manager"} className="h-full">
+            <DemoManager
+              key={locale}
+              editor={editor}
+              onPreview={() => showGuest()}
+              villaName={data.name}
+              villaSections={sections}
+              onVillaRename={(name) => setData((value) => ({ ...value, name }))}
+              onVillaServicesChange={(services) =>
+                setData((value) => ({
+                  ...value,
+                  services: services
+                    .filter((service) => service.is_active)
+                    .map((service) => ({
+                      id: service.id,
+                      name: service.name,
+                      desc: service.description,
+                      price: service.price,
+                    })),
+                }))
+              }
+              onVillaFieldSave={async (field, value) => {
+                const sectionKey = FIELD_BY_KEY[field.key]?.section.key;
+                const current = sections.find((section) => section.section_key === sectionKey);
+                if (!current) return;
+                const content = mergeFieldIntoGuideContent(current.section_key, current.content, {
+                  ...field,
+                  value,
+                }) as Json;
+                const items = (content as { items: GuideContentItem[] }).items;
+                await actions.save(current, {
+                  title: current.title,
+                  items,
+                  isVisible: current.is_visible,
+                  icon: current.icon ?? "📌",
+                  ctaLabel: current.cta_label ?? "",
+                });
+              }}
+            />
+          </div>
         </div>
       </div>
       <div

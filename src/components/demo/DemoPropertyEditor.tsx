@@ -1,0 +1,287 @@
+import { useState, type ReactNode } from "react";
+import {
+  PropertyEditorScreen,
+  PropertyInformationScreen,
+  type PropertyEditorMode,
+} from "@/components/app/PropertyEditorScreen";
+import { MessagingEditor, ReviewEditor } from "@/components/app/PropertySettingsEditors";
+import { QuestionScreen } from "@/components/app/PropertyQuestionScreen";
+import { ServicesScreen } from "@/components/app/ServicesScreen";
+import { GuideEditor, type GuideEditorActions } from "@/components/app/GuideEditor";
+import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
+import type { PropertyField } from "@/lib/data/properties";
+import type { Json } from "@/integrations/supabase/types";
+import {
+  buildGuideContent,
+  fieldUpdatesForGuideSection,
+  getGuideItems,
+} from "@/lib/data/guide-content";
+import { answerDemoField, type DemoProperty } from "./demo-property";
+
+export function DemoPropertyEditor({
+  property,
+  onChange,
+  onBack,
+  onPreview,
+  guide,
+  onFieldSave,
+  onRename,
+  onServicesChange,
+  initialPreview = false,
+}: {
+  property: DemoProperty;
+  onChange: (update: (current: DemoProperty) => DemoProperty) => void;
+  onBack: () => void;
+  onPreview: () => void;
+  guide?: ReactNode;
+  initialPreview?: boolean;
+  onFieldSave?: (field: PropertyField, value: string) => Promise<void>;
+  onRename?: (name: string) => void;
+  onServicesChange?: (services: DemoProperty["services"]) => void;
+}) {
+  const { t } = useI18n();
+  const [mode, setMode] = useState<PropertyEditorMode>("guide");
+  const [editing, setEditing] = useState<PropertyField | null>(null);
+  const [preview, setPreview] = useState(initialPreview);
+  const [saved, setSaved] = useState(false);
+  const flash = () => setSaved(true);
+  const actions: GuideEditorActions = {
+    ensure: async () => property.sections,
+    add: async (_, order, template) => {
+      const section = {
+        id: `demo-section-${crypto.randomUUID()}`,
+        property_id: property.id,
+        section_key: `${template.key}-${crypto.randomUUID().slice(0, 4)}`,
+        title: template.title,
+        icon: template.icon,
+        cta_label: null,
+        sort_order: order,
+        is_visible: true,
+        content: { items: [] },
+        created_at: "",
+        updated_at: "",
+      };
+      onChange((current) => ({ ...current, sections: [...current.sections, section] }));
+      return section;
+    },
+    save: async (section, values) => {
+      const updated = {
+        ...section,
+        title: values.title,
+        icon: values.icon,
+        cta_label: values.ctaLabel || null,
+        is_visible: values.isVisible,
+        content: buildGuideContent(section.section_key, section.content, values.items) as Json,
+      };
+      const updates = fieldUpdatesForGuideSection(
+        section.section_key,
+        section.content,
+        values.items,
+      );
+      onChange((current) => ({
+        ...current,
+        sections: current.sections.map((item) => (item.id === section.id ? updated : item)),
+        fields: current.fields.map((field) => {
+          const update = updates.find((item) => item.key === field.key);
+          return update
+            ? {
+                ...field,
+                value: update.value,
+                status: update.value ? "found" : "missing",
+                manually_verified: !!update.value,
+                manually_overridden: true,
+              }
+            : field;
+        }),
+      }));
+      return updated;
+    },
+    reorder: async (sections) => onChange((current) => ({ ...current, sections })),
+    remove: async (id) =>
+      onChange((current) => ({
+        ...current,
+        sections: current.sections.filter((item) => item.id !== id),
+      })),
+    upload: async (_, __, sectionId, file) => {
+      const media = {
+        id: `demo-media-${crypto.randomUUID()}`,
+        organization_id: "demo",
+        property_id: property.id,
+        section_id: sectionId,
+        media_type: file.type.startsWith("image/") ? ("image" as const) : ("video" as const),
+        storage_path: URL.createObjectURL(file),
+        mime_type: file.type,
+        file_size: file.size,
+        sort_order: property.media.length,
+        caption: null,
+        alt_text: null,
+        created_at: "",
+        updated_at: "",
+      };
+      onChange((current) => ({ ...current, media: [...current.media, media] }));
+      return media;
+    },
+    updateMedia: async (item, values) => {
+      const updated = {
+        ...item,
+        caption: values.caption ?? item.caption,
+        alt_text: values.altText ?? item.alt_text,
+      };
+      onChange((current) => ({
+        ...current,
+        media: current.media.map((media) => (media.id === item.id ? updated : media)),
+      }));
+      return updated;
+    },
+    removeMedia: async (item) =>
+      onChange((current) => ({
+        ...current,
+        media: current.media.filter((media) => media.id !== item.id),
+      })),
+    resolveMediaUrl: async (item) => item.storage_path,
+  };
+  if (editing)
+    return (
+      <QuestionScreen
+        field={editing}
+        onBack={() => setEditing(null)}
+        onSave={async (field, value) => {
+          await onFieldSave?.(field, value);
+          const next = answerDemoField(property, field, value);
+          onChange((current) => answerDemoField(current, field, value));
+          return next.fields.find((item) => item.id === field.id)!;
+        }}
+        onSaved={() => {
+          setEditing(null);
+          flash();
+        }}
+      />
+    );
+  if (preview)
+    return (
+      <div className="py-4">
+        <Button variant="outline" onClick={() => setPreview(false)}>
+          ← {t("common.back")}
+        </Button>
+        <h1 className="mt-4 text-3xl font-semibold">{property.name}</h1>
+        {property.sections
+          .filter((section) => section.is_visible)
+          .map((section) => (
+            <section key={section.id} className="surface mt-4 p-4">
+              <h2 className="text-xl font-semibold">{section.title}</h2>
+              {getGuideItems(section.section_key, section.content).map((item, index) => (
+                <p key={index} className="mt-2 whitespace-pre-line">
+                  {item.text}
+                </p>
+              ))}
+            </section>
+          ))}
+      </div>
+    );
+  return (
+    <PropertyEditorScreen
+      property={property}
+      mode={mode}
+      onModeChange={setMode}
+      onBack={onBack}
+      onPreview={() => (guide ? onPreview() : setPreview(true))}
+      onRename={async (name) => {
+        onChange((current) => ({ ...current, name }));
+        onRename?.(name);
+      }}
+      onSaved={flash}
+    >
+      {saved && (
+        <p role="status" className="mt-3 text-success">
+          ✓ {t("common.saved")}
+        </p>
+      )}
+      {mode === "guide" && (
+        <div className="mt-7">
+          {guide ?? (
+            <GuideEditor
+              data={{
+                property: { ...property, organization_id: "demo" },
+                fields: property.fields,
+                sections: property.sections,
+                media: property.media,
+              }}
+              actions={actions}
+              onChanged={flash}
+              onPreview={() => setPreview(true)}
+            />
+          )}
+        </div>
+      )}
+      {mode === "details" && (
+        <PropertyInformationScreen
+          fields={property.fields}
+          onEdit={setEditing}
+          onComplete={() => {
+            const next = property.fields.find(
+              (field) => field.essential && field.status !== "found",
+            );
+            if (next) setEditing(next);
+            else {
+              onChange((current) => ({ ...current, status: "published" }));
+              flash();
+            }
+          }}
+        />
+      )}
+      {mode === "services" && (
+        <div className="mt-7">
+          <ServicesScreen
+            services={property.services}
+            onSave={async (values) => {
+              const service = {
+                id: values.id ?? `demo-service-${crypto.randomUUID()}`,
+                organization_id: "demo",
+                property_id: property.id,
+                name: values.name,
+                description: values.description,
+                price: values.price,
+                pricing_type: values.pricingType,
+                is_active: values.isActive,
+                image_path: null,
+                created_at: "",
+                updated_at: "",
+              };
+              const services = property.services.some((item) => item.id === service.id)
+                ? property.services.map((item) => (item.id === service.id ? service : item))
+                : [...property.services, service];
+              onChange((current) => ({ ...current, services }));
+              onServicesChange?.(services);
+            }}
+          />
+        </div>
+      )}
+      {mode === "reviews" && (
+        <>
+          <MessagingEditor
+            initial={property.messagingEnabled}
+            onSave={(messagingEnabled) => onChange((current) => ({ ...current, messagingEnabled }))}
+            onSaved={flash}
+          />
+          <ReviewEditor
+            initial={property.review}
+            initialDestinations={property.destinations}
+            onSave={(settings, destinations) =>
+              onChange((current) => ({
+                ...current,
+                review: {
+                  title: settings.title,
+                  message: settings.message,
+                  is_enabled: settings.isEnabled,
+                },
+                destinations,
+              }))
+            }
+            onSaved={flash}
+          />
+        </>
+      )}
+    </PropertyEditorScreen>
+  );
+}

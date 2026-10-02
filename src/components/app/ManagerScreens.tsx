@@ -798,6 +798,29 @@ export function ManagerNewPropertyScreen({
   onManual: () => void;
 }) {
   const { t } = useI18n();
+  return (
+    <div className="py-4 @sm:py-6">
+      <BackButton label={t("app.myProperties")} onBack={onBack} />
+      <PageHeading title={t("app.addTitle")} />
+      <ManagerNewPropertyOptions
+        onImportUrl={onImportUrl}
+        onPasteText={onPasteText}
+        onManual={onManual}
+      />
+    </div>
+  );
+}
+
+export function ManagerNewPropertyOptions({
+  onImportUrl,
+  onPasteText,
+  onManual,
+}: {
+  onImportUrl: () => void;
+  onPasteText: () => void;
+  onManual: () => void;
+}) {
+  const { t } = useI18n();
   const options = [
     {
       icon: "🔗",
@@ -821,30 +844,26 @@ export function ManagerNewPropertyScreen({
   ];
 
   return (
-    <div className="py-4 @sm:py-6">
-      <BackButton label={t("app.myProperties")} onBack={onBack} />
-      <PageHeading title={t("app.addTitle")} />
-      <div className="mt-6 grid gap-3 @lg:grid-cols-3">
-        {options.map((option) => (
-          <button
-            key={option.title}
-            type="button"
-            onClick={option.onClick}
-            className={`surface relative min-h-40 p-5 text-left transition hover:-translate-y-0.5 hover:shadow-soft ${
-              option.recommended ? "border-2 border-primary" : ""
-            }`}
-          >
-            {option.recommended && (
-              <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                {t("app.recommended")}
-              </span>
-            )}
-            <span className="text-3xl">{option.icon}</span>
-            <h2 className="mt-3 text-xl font-semibold">{option.title}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
-          </button>
-        ))}
-      </div>
+    <div className="mt-6 grid gap-3 @lg:grid-cols-3">
+      {options.map((option) => (
+        <button
+          key={option.title}
+          type="button"
+          onClick={option.onClick}
+          className={`surface relative min-h-40 p-5 text-left transition hover:-translate-y-0.5 hover:shadow-soft ${
+            option.recommended ? "border-2 border-primary" : ""
+          }`}
+        >
+          {option.recommended && (
+            <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+              {t("app.recommended")}
+            </span>
+          )}
+          <span className="text-3xl">{option.icon}</span>
+          <h2 className="mt-3 text-xl font-semibold">{option.title}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+        </button>
+      ))}
     </div>
   );
 }

@@ -6,7 +6,10 @@ import { orgQuery, useOrg } from "@/components/app/useOrg";
 import { FriendlyError, Loading } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
 import { useI18n } from "@/lib/i18n";
-import { ManagerPropertiesScreen } from "@/components/app/ManagerScreens";
+import {
+  ManagerPropertiesScreen,
+  ManagerNewPropertyOptions,
+} from "@/components/app/ManagerScreens";
 
 export const propertiesQuery = (orgId: string) =>
   queryOptions({ queryKey: ["properties", orgId], queryFn: () => listProperties(orgId) });
@@ -109,27 +112,12 @@ export function Start({
 }
 
 export function StartOptions() {
-  const { t } = useI18n();
+  const nav = useNavigate();
   return (
-    <div className="mt-8 space-y-4">
-      <Link
-        to="/app/import-url"
-        className="surface relative block border-2 border-primary p-6 transition hover:-translate-y-0.5"
-      >
-        <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground">
-          {t("app.recommended")}
-        </span>
-        <p className="text-xl font-semibold">🔗 {t("app.importUrl")}</p>
-        <p className="mt-1 text-muted-foreground">{t("app.importUrlD")}</p>
-      </Link>
-      <Link to="/app/import-text" className="surface block p-6 transition hover:-translate-y-0.5">
-        <p className="text-xl font-semibold">📝 {t("app.paste")}</p>
-        <p className="mt-1 text-muted-foreground">{t("app.pasteD")}</p>
-      </Link>
-      <Link to="/app/manual" className="surface block p-6 transition hover:-translate-y-0.5">
-        <p className="text-xl font-semibold">✏️ {t("app.manual")}</p>
-        <p className="mt-1 text-muted-foreground">{t("app.manualD")}</p>
-      </Link>
-    </div>
+    <ManagerNewPropertyOptions
+      onImportUrl={() => nav({ to: "/app/import-url" })}
+      onPasteText={() => nav({ to: "/app/import-text" })}
+      onManual={() => nav({ to: "/app/manual" })}
+    />
   );
 }

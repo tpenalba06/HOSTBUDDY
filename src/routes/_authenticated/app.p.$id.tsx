@@ -1,7 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, CircleHelp, Home, MessageSquareQuote } from "lucide-react";
 import {
   getProperty,
   publishProperty,
@@ -16,8 +15,13 @@ import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friend
 import { QrCard } from "@/components/app/QrCard";
 import { useI18n } from "@/lib/i18n";
 import { GuideEditor } from "@/components/app/GuideEditor";
-import { Button } from "@/components/ui/button";
 import { useOrg } from "@/components/app/useOrg";
+import { MessagingEditor, ReviewEditor } from "@/components/app/PropertySettingsEditors";
+import { QuestionScreen } from "@/components/app/PropertyQuestionScreen";
+import {
+  PropertyEditorScreen,
+  PropertyInformationScreen,
+} from "@/components/app/PropertyEditorScreen";
 import { ServicesEditor } from "@/components/app/ServicesEditor";
 
 type Step = "review" | "complete" | "ready";
@@ -133,6 +137,7 @@ function PropertyPage() {
       <>
         {SavedBadge}
         <QuestionScreen
+          onSave={saveFieldAnswer}
           field={editing}
           onBack={() => setEditing(null)}
           onSaved={(f) => {
@@ -170,49 +175,30 @@ function PropertyPage() {
     );
   }
 
-  const found = fields.filter((f) => f.status === "found");
-  const tabs = [
-    { id: "guide" as const, label: t("app.guide"), icon: BookOpen },
-    { id: "details" as const, label: t("app.information"), icon: CircleHelp },
-    { id: "services" as const, label: t("app.services"), icon: Home },
-    { id: "reviews" as const, label: t("app.reviews"), icon: MessageSquareQuote },
-  ];
-
   return (
-    <div className="py-4 @sm:py-6">
+    <>
       {SavedBadge}
-      <Link
-        to="/app"
-        className="inline-flex min-h-12 items-center rounded-xl border bg-card px-4 font-semibold text-primary shadow-sm transition hover:border-primary"
-      >
-        ← {t("app.myProperties")}
-      </Link>
-
-      <div className="mt-4 grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-start">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-3xl font-semibold @sm:text-4xl">{property.name}</h1>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                property.status === "published"
-                  ? "bg-success-soft text-success"
-                  : "bg-warning-soft text-warning"
-              }`}
-            >
-              {property.status === "published" ? t("app.published") : t("app.draft")}
-            </span>
-          </div>
-          <NameEditor
-            id={property.id}
-            initial={property.name}
-            onSaved={() => {
-              flashSaved();
-              qc.invalidateQueries({ queryKey: ["properties"] });
-            }}
-          />
-        </div>
-
-        {property.status === "published" && (
+      <PropertyEditorScreen
+        property={property}
+        mode={mode}
+        onModeChange={setMode}
+        onBack={() => nav({ to: "/app" })}
+        onPreview={() => window.open(`/l/${property.slug}`, "_blank", "noopener,noreferrer")}
+        onRename={(name) => renameProperty(id, name)}
+        onSaved={() => {
+          flashSaved();
+          void qc.invalidateQueries({ queryKey: ["property", id] });
+          void qc.invalidateQueries({ queryKey: ["properties"] });
+        }}
+        backAction={
+          <Link
+            to="/app"
+            className="inline-flex min-h-12 items-center rounded-xl border bg-card px-4 font-semibold text-primary shadow-sm transition hover:border-primary"
+          >
+            ← {t("app.myProperties")}
+          </Link>
+        }
+        previewAction={
           <a
             href={`/l/${property.slug}`}
             target="_blank"
@@ -221,450 +207,55 @@ function PropertyPage() {
           >
             {t("app.viewGuide")}
           </a>
+        }
+      >
+        {mode === "guide" && (
+          <div className="mt-7">
+            <GuideEditor
+              data={{ property, fields, sections, media }}
+              onChanged={() => qc.invalidateQueries({ queryKey: ["property", id] })}
+              onPreview={() =>
+                property.status === "published"
+                  ? window.open(`/l/${property.slug}`, "_blank")
+                  : setStep("ready")
+              }
+            />
+          </div>
         )}
-      </div>
-
-      <div className="mt-6 grid gap-2 @sm:grid-cols-2 @lg:grid-cols-4">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const active = mode === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setMode(tab.id)}
-              className={`flex min-h-16 items-center gap-3 rounded-2xl border px-4 text-left font-semibold transition ${
-                active
-                  ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                  : "bg-card hover:border-primary"
-              }`}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              <span className="truncate">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      {mode === "guide" && (
-        <div className="mt-7">
-          <GuideEditor
-            data={{ property, fields, sections, media }}
-            onChanged={() => qc.invalidateQueries({ queryKey: ["property", id] })}
-            onPreview={() =>
-              property.status === "published"
-                ? window.open(`/l/${property.slug}`, "_blank")
-                : setStep("ready")
-            }
-          />
-        </div>
-      )}
-      {mode === "details" && (
-        <>
-          <div
-            className={`mt-5 rounded-2xl p-4 ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <strong className="text-lg">
-                {remaining
-                  ? `${remaining} info${remaining > 1 ? "s" : ""} à compléter`
-                  : "Tout est prêt"}
-              </strong>
-              <span className="text-sm font-semibold text-muted-foreground">
-                {found.length}/{fields.length}
-              </span>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background/80">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${Math.round((found.length / Math.max(fields.length, 1)) * 100)}%` }}
-              />
-            </div>
+        {mode === "details" && (
+          <>
+            <PropertyInformationScreen
+              fields={fields}
+              onEdit={setEditing}
+              onComplete={() => setStep(remaining ? "complete" : "ready")}
+            />
+          </>
+        )}
+        {mode === "services" && (
+          <div className="mt-7">
+            <ServicesEditor organizationId={property.organization_id} propertyId={property.id} />
           </div>
-          <button
-            className="btn btn-primary mt-4 w-full text-lg"
-            onClick={() => setStep(remaining ? "complete" : "ready")}
-          >
-            {remaining ? `${t("property.complete")} (${remaining})` : t("property.publishNext")}
-          </button>
-          <ul className="mt-8 space-y-3">
-            {fields.map((f) => (
-              <li key={f.id} className="surface p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">
-                    {f.label}
-                    {f.essential && (
-                      <span className="text-muted-foreground"> · {t("property.important")}</span>
-                    )}
-                  </span>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${BADGE_CLASS[f.status]}`}
-                  >
-                    {t(`property.${f.status === "to_verify" ? "verify" : f.status}`)}
-                  </span>
-                </div>
-                <p className="mt-2 whitespace-pre-line">
-                  {f.value ?? <span className="text-muted-foreground">{t("property.none")}</span>}
-                </p>
-                <button
-                  className="mt-2 min-h-12 font-semibold text-primary underline"
-                  onClick={() => setEditing(f)}
-                >
-                  {f.value
-                    ? f.status === "to_verify"
-                      ? t("property.verify")
-                      : t("common.edit")
-                    : t("property.add")}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {mode === "services" && (
-        <div className="mt-7">
-          <ServicesEditor organizationId={property.organization_id} propertyId={property.id} />
-        </div>
-      )}
-      {mode === "reviews" && (
-        <>
-          <MessagingEditor
-            propertyId={property.id}
-            initial={messagingEnabled}
-            onSaved={() => {
-              flashSaved();
-              qc.invalidateQueries({ queryKey: ["property", id] });
-            }}
-          />
-          <ReviewEditor
-            propertyId={property.id}
-            initial={review}
-            initialDestinations={destinations}
-            onSaved={flashSaved}
-          />
-        </>
-      )}
-    </div>
-  );
-}
-
-function MessagingEditor({
-  propertyId,
-  initial,
-  onSaved,
-}: {
-  propertyId: string;
-  initial: boolean;
-  onSaved: () => void;
-}) {
-  const [enabled, setEnabled] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  return (
-    <section className="mt-8 rounded-lg border bg-card p-4 sm:p-5">
-      <div className="flex min-h-14 items-center justify-between gap-4">
-        <span>
-          <span className="block text-xl font-semibold">Messages voyageurs</span>
-          <span className="text-sm text-muted-foreground">
-            Ajoutez « Envoyer un message » dans ce guide.
-          </span>
-        </span>
-        <input
-          aria-label="Activer les messages voyageurs"
-          type="checkbox"
-          className="h-6 w-6 shrink-0 accent-primary"
-          checked={enabled}
-          disabled={busy}
-          onChange={async (e) => {
-            const next = e.target.checked;
-            setEnabled(next);
-            setBusy(true);
-            setError("");
-            try {
-              await saveMessagingSetting(propertyId, next);
-              onSaved();
-            } catch (err) {
-              setEnabled(!next);
-              setError(friendlyMessage(err));
-            } finally {
-              setBusy(false);
-            }
-          }}
-        />
-      </div>
-      {error && (
-        <p role="alert" className="mt-3 rounded-lg bg-warning-soft p-3">
-          {error}
-        </p>
-      )}
-    </section>
-  );
-}
-
-function ReviewEditor({
-  propertyId,
-  initial,
-  initialDestinations,
-  onSaved,
-}: {
-  propertyId: string;
-  initial: { title: string; message: string; is_enabled: boolean } | null;
-  initialDestinations: { label: string; url: string }[];
-  onSaved: () => void;
-}) {
-  const { t } = useI18n();
-  const [expanded, setExpanded] = useState(false);
-  const [enabled, setEnabled] = useState(initial?.is_enabled ?? false);
-  const [title, setTitle] = useState(initial?.title ?? "Votre séjour vous a plu ?");
-  const [message, setMessage] = useState(
-    initial?.message ?? "Partagez votre expérience sur la plateforme de votre choix.",
-  );
-  const [destinations, setDestinations] = useState(
-    initialDestinations.length ? initialDestinations : [{ label: "Google", url: "" }],
-  );
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const save = async () => {
-    if (enabled && destinations.some((d) => d.url && !/^https:\/\//i.test(d.url)))
-      return setError(t("review.invalid"));
-    setBusy(true);
-    setError("");
-    try {
-      await saveReviewConfiguration(
-        propertyId,
-        { title, message, isEnabled: enabled },
-        destinations,
-      );
-      onSaved();
-      setExpanded(false);
-    } catch (e) {
-      setError(friendlyMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <section className="mt-8 border-t pt-8">
-      <button
-        className="flex min-h-14 w-full items-center justify-between text-left"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <span>
-          <span className="block text-xl font-semibold">{t("review.title")}</span>
-          <span className="text-sm text-muted-foreground">{t("review.description")}</span>
-        </span>
-        <span aria-hidden>{expanded ? "−" : "+"}</span>
-      </button>
-      {expanded && (
-        <div className="mt-5 space-y-4">
-          <label className="flex min-h-12 items-center justify-between gap-4 rounded-lg bg-muted px-4">
-            <span className="font-medium">{t("review.enable")}</span>
-            <input
-              type="checkbox"
-              className="h-5 w-5 accent-primary"
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
+        )}
+        {mode === "reviews" && (
+          <>
+            <MessagingEditor
+              onSave={(enabled) => saveMessagingSetting(property.id, enabled)}
+              initial={messagingEnabled}
+              onSaved={() => {
+                flashSaved();
+                qc.invalidateQueries({ queryKey: ["property", id] });
+              }}
             />
-          </label>
-          <label className="block">
-            <span className="mb-1 block font-medium">{t("review.heading")}</span>
-            <input
-              className="field"
-              maxLength={120}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+            <ReviewEditor
+              onSave={(settings, links) => saveReviewConfiguration(property.id, settings, links)}
+              initial={review}
+              initialDestinations={destinations}
+              onSaved={flashSaved}
             />
-          </label>
-          <label className="block">
-            <span className="mb-1 block font-medium">{t("review.message")}</span>
-            <textarea
-              className="field min-h-28"
-              maxLength={500}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </label>
-          {destinations.map((destination, index) => (
-            <div
-              key={index}
-              className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[0.7fr_1.3fr]"
-            >
-              <input
-                className="field"
-                aria-label={t("review.label")}
-                placeholder={t("review.label")}
-                maxLength={80}
-                value={destination.label}
-                onChange={(e) =>
-                  setDestinations(
-                    destinations.map((item, i) =>
-                      i === index ? { ...item, label: e.target.value } : item,
-                    ),
-                  )
-                }
-              />
-              <input
-                className="field"
-                aria-label={t("review.url")}
-                placeholder="https://…"
-                inputMode="url"
-                maxLength={1000}
-                value={destination.url}
-                onChange={(e) =>
-                  setDestinations(
-                    destinations.map((item, i) =>
-                      i === index ? { ...item, url: e.target.value } : item,
-                    ),
-                  )
-                }
-              />
-            </div>
-          ))}
-          {destinations.length < 5 && (
-            <button
-              className="min-h-12 font-semibold text-primary"
-              onClick={() => setDestinations([...destinations, { label: "", url: "" }])}
-            >
-              + {t("review.add")}
-            </button>
-          )}
-          {error && (
-            <p role="alert" className="rounded-lg bg-warning-soft p-3">
-              {error}
-            </p>
-          )}
-          <button className="btn btn-primary w-full" onClick={save} disabled={busy}>
-            {busy ? "…" : t("common.save")}
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function NameEditor({
-  id,
-  initial,
-  onSaved,
-}: {
-  id: string;
-  initial: string;
-  onSaved: () => void;
-}) {
-  const [name, setName] = useState(initial);
-  const t = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(t.current), []);
-  return (
-    <label className="mt-2 block max-w-xl">
-      <span className="sr-only">Nom de l’hébergement</span>
-      <input
-        className="w-full border-0 bg-transparent p-0 text-sm font-medium text-muted-foreground outline-none transition focus:text-foreground @sm:text-base"
-        value={name}
-        onChange={(e) => {
-          const v = e.target.value;
-          setName(v);
-          clearTimeout(t.current);
-          t.current = setTimeout(
-            () =>
-              renameProperty(id, v)
-                .then(onSaved)
-                .catch(() => {}),
-            700,
-          );
-        }}
-        aria-label="Nom de l’hébergement"
-      />
-    </label>
-  );
-}
-
-function QuestionScreen({
-  field,
-  onSaved,
-  onBack,
-  onSkip,
-  progress,
-}: {
-  field: PropertyField;
-  onSaved: (f: PropertyField) => void;
-  onBack?: () => void;
-  onSkip?: () => void;
-  progress?: { i: number; n: number };
-}) {
-  const [value, setValue] = useState(field.value ?? "");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    setValue(field.value ?? "");
-    setError("");
-  }, [field.id, field.value]);
-  const save = async () => {
-    setBusy(true);
-    setError("");
-    try {
-      onSaved(await saveFieldAnswer(field, value));
-    } catch (e) {
-      setError(friendlyMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="mt-6">
-      {onBack && (
-        <button className="min-h-12 font-semibold text-primary" onClick={onBack}>
-          ← Retour
-        </button>
-      )}
-      {progress && (
-        <>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${(progress.i / progress.n) * 100}%` }}
-            />
-          </div>
-          <p className="mt-3 text-muted-foreground">
-            Question {progress.i + 1} sur {progress.n}
-          </p>
-        </>
-      )}
-      <h1 className="mt-4 text-3xl font-semibold">{field.question ?? field.label}</h1>
-      {field.status === "to_verify" && (
-        <p className="mt-3 rounded-xl bg-warning-soft p-3">
-          Nous avons trouvé ceci, mais ce n'est pas certain. Corrigez si besoin puis validez.
-        </p>
-      )}
-      <textarea
-        className="field mt-6 min-h-40 text-lg"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Écrivez ici…"
-        autoFocus
-      />
-      {field.raw_value && field.raw_value !== value && (
-        <details className="mt-2 text-muted-foreground">
-          <summary className="min-h-12 cursor-pointer py-3">Voir le texte d'origine</summary>
-          <p className="whitespace-pre-line">{field.raw_value}</p>
-        </details>
-      )}
-      {error && (
-        <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">
-          {error}
-        </p>
-      )}
-      <button
-        className="btn btn-primary mt-4 w-full text-lg"
-        disabled={!value.trim() || busy}
-        onClick={save}
-      >
-        {busy ? "Enregistrement…" : "Valider"}
-      </button>
-      {onSkip && (
-        <button className="mt-2 min-h-12 w-full font-medium text-muted-foreground" onClick={onSkip}>
-          Je compléterai plus tard
-        </button>
-      )}
-    </div>
+          </>
+        )}
+      </PropertyEditorScreen>
+    </>
   );
 }
 
@@ -686,6 +277,7 @@ function CompletionFlow({
   if (!field) return null;
   return (
     <QuestionScreen
+      onSave={saveFieldAnswer}
       field={field}
       progress={{ i, n: queue.length }}
       onSaved={(f) => {

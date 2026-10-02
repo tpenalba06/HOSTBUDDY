@@ -463,6 +463,10 @@ export type Database = {
       organizations: {
         Row: {
           branding: Json
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_setup_completed_at: string | null
           created_at: string
           id: string
           name: string
@@ -473,6 +477,10 @@ export type Database = {
         }
         Insert: {
           branding?: Json
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_setup_completed_at?: string | null
           created_at?: string
           id?: string
           name: string
@@ -483,6 +491,10 @@ export type Database = {
         }
         Update: {
           branding?: Json
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_setup_completed_at?: string | null
           created_at?: string
           id?: string
           name?: string

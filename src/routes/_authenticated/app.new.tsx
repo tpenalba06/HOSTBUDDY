@@ -1,18 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { StartOptions } from "./app.index";
-import { useI18n } from "@/lib/i18n";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ManagerNewPropertyScreen } from "@/components/app/ManagerScreens";
 
 export const Route = createFileRoute("/_authenticated/app/new")({ component: NewProperty });
 
 function NewProperty() {
-  const { t } = useI18n();
+  const nav = useNavigate();
   return (
-    <div className="mt-6">
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">
-        ← {t("app.myProperties")}
-      </Link>
-      <h1 className="text-3xl font-semibold">{t("app.addTitle")}</h1>
-      <StartOptions />
-    </div>
+    <ManagerNewPropertyScreen
+      onBack={() => nav({ to: "/app" })}
+      onImportUrl={() => nav({ to: "/app/import-url" })}
+      onPasteText={() => nav({ to: "/app/import-text" })}
+      onManual={() => nav({ to: "/app/manual" })}
+    />
   );
 }

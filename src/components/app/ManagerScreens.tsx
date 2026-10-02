@@ -90,7 +90,7 @@ export type ManagerTeamMember = {
   joined_at?: string;
 };
 
-function BackButton({ label, onBack }: { label: string; onBack?: () => void }) {
+function BackButton({ label, onBack }: { label: string; onBack?: (() => void) | undefined }) {
   if (!onBack) return null;
   return (
     <Button

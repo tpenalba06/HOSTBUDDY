@@ -15,7 +15,7 @@ const fail = (error: unknown): never => {
 export async function listConversations(orgId: string) {
   const { data, error } = await supabase
     .from("conversations")
-    .select("*,properties(name),messages(body,created_at,sender_type,read_at)")
+    .select("*,properties(name),messages(id,body,created_at,sender_type,read_at)")
     .eq("organization_id", orgId)
     .order("last_message_at", { ascending: false });
   if (error) return fail(error);

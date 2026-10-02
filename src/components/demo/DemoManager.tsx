@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 import { ManagerShell, type ManagerArea } from "@/components/app/ManagerShell";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
 import { useI18n } from "@/lib/i18n";
+import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
+import type { ExtractionResult } from "@/lib/import-engine/types";
+import { ImportReview } from "@/components/app/ImportReview";
 
 export function DemoManager({ editor, onPreview }: { editor: ReactNode; onPreview: () => void }) {
   const { t } = useI18n();
@@ -351,25 +354,109 @@ function Team({ t }: { t: T }) {
   );
 }
 function NewProperty({ t }: { t: T }) {
+  const [mode, setMode] = useState<"options" | "text" | "url">("options");
+  const [text, setText] = useState("");
+  const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  if (candidate) {
+    return (
+      <ImportReview
+        value={candidate}
+        onChange={setCandidate}
+        busy={busy}
+        onBack={() => setCandidate(null)}
+        onConfirm={() => {
+          setBusy(true);
+          window.setTimeout(() => {
+            setBusy(false);
+            setCandidate(null);
+            setText("");
+            setMode("options");
+          }, 500);
+        }}
+      />
+    );
+  }
+
+  if (mode === "text") {
+    return (
+      <div>
+        <Button variant="ghost" className="mb-3 px-0 text-primary" onClick={() => setMode("options")}>
+          ← {t("common.back")}
+        </Button>
+        <Heading eyebrow="HostBuddy" title={t("import.textTitle")} description={t("import.textHelp")} />
+        <textarea
+          className="field min-h-64 text-base"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder="Arrivée à 16h, Wi-Fi, parking, départ, contact…"
+        />
+        <Button
+          className="mt-4 w-full"
+          disabled={!text.trim() || busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              setCandidate(await rulesExtractor.extract(text));
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {busy ? "…" : t("import.textAction")}
+        </Button>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Démo réelle du parseur local HostBuddy — aucune information absente n’est inventée.
+        </p>
+      </div>
+    );
+  }
+
+  if (mode === "url") {
+    return (
+      <div>
+        <Button variant="ghost" className="mb-3 px-0 text-primary" onClick={() => setMode("options")}>
+          ← {t("common.back")}
+        </Button>
+        <Heading
+          eyebrow="HostBuddy"
+          title={t("import.urlTitle")}
+          description="Dans la démo publique, l’import réseau est désactivé pour éviter des requêtes anonymes vers des sites tiers. Le vrai parcours est disponible après connexion."
+        />
+        <Button className="w-full" onClick={() => setMode("text")}>
+          {t("import.fallbackPrimary")}
+        </Button>
+      </div>
+    );
+  }
+
   const options = [
-    ["🔗", t("app.importUrl"), t("app.importUrlD")],
-    ["📝", t("app.paste"), t("app.pasteD")],
-    ["✏️", t("app.manual"), t("app.manualD")],
-  ];
+    ["🔗", t("app.importUrl"), t("app.importUrlD"), () => setMode("url" as const)],
+    ["📝", t("app.paste"), t("app.pasteD"), () => setMode("text" as const)],
+  ] as const;
+
   return (
     <div>
       <Heading eyebrow={t("nav.properties")} title={t("app.addTitle")} />
       <div className="grid gap-3">
-        {options.map(([icon, title, desc], index) => (
-          <article
+        {options.map(([icon, title, desc, action], index) => (
+          <button
             key={title}
-            className={`surface p-5 ${index === 0 ? "border-2 border-primary" : ""}`}
+            type="button"
+            onClick={action}
+            className={`surface p-5 text-left transition hover:-translate-y-0.5 ${index === 0 ? "border-2 border-primary" : ""}`}
           >
             <span className="text-2xl">{icon}</span>
             <h3 className="mt-2 text-xl font-semibold">{title}</h3>
             <p className="mt-1 text-muted-foreground">{desc}</p>
-          </article>
+          </button>
         ))}
+        <article className="surface p-5">
+          <span className="text-2xl">✏️</span>
+          <h3 className="mt-2 text-xl font-semibold">{t("app.manual")}</h3>
+          <p className="mt-1 text-muted-foreground">{t("app.manualD")}</p>
+        </article>
       </div>
     </div>
   );

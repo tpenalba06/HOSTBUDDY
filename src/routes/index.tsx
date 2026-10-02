@@ -43,12 +43,12 @@ function Landing() {
   const { t } = useI18n();
   return (
     <div className="overflow-hidden">
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-5">
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
         <Logo />
-        <nav className="flex items-center gap-2">
+        <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
           <Link
             to="/integrations"
-            className="inline-flex min-h-12 items-center px-2 font-semibold text-foreground hover:text-primary"
+            className="inline-flex min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:px-2 sm:text-base"
           >
             {t("marketing.integrations")}
           </Link>

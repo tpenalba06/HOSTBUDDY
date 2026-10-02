@@ -147,12 +147,7 @@ function visibleText(html: string) {
   ).slice(0, 20000);
 }
 
-export const importFromUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
-    z.object({ url: z.string().url().max(2000), source: z.string().max(20) }).parse(d),
-  )
-  .handler(async ({ data }): Promise<UrlImportOutcome> => {
+async function runUrlImport(data: { url: string; source: ImportSource }): Promise<UrlImportOutcome> {
     const source = data.source as ImportSource;
     let url: URL;
     try {
@@ -198,4 +193,25 @@ export const importFromUrl = createServerFn({ method: "POST" })
       source,
       result: { propertyName: structured.name?.slice(0, 120) ?? null, fields },
     };
+}
+
+export const importFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ url: z.string().url().max(2000), source: z.string().max(20) }).parse(d),
+  )
+  .handler(async ({ data }): Promise<UrlImportOutcome> =>
+    runUrlImport({ url: data.url, source: data.source as ImportSource }),
+  );
+
+export const demoImportFromAirbnbUrl = createServerFn({ method: "POST" })
+  .inputValidator((d) => z.object({ url: z.string().url().max(2000) }).parse(d))
+  .handler(async ({ data }): Promise<UrlImportOutcome> => {
+    const url = new URL(data.url);
+    const isAirbnb = /(^|\.)airbnb\./i.test(url.hostname);
+    const isRoom = /^\/rooms\/\d+(?:\/|$)/i.test(url.pathname);
+    if (!isAirbnb || !isRoom) {
+      return { ok: false, source: "airbnb", reason: "invalid" };
+    }
+    return runUrlImport({ url: url.toString(), source: "airbnb" });
   });

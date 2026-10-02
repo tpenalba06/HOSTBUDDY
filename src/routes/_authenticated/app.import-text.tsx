@@ -2,12 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
+import type { ExtractionResult } from "@/lib/import-engine/types";
 import {
   createPropertyFromExtraction,
   finishImportRun,
   startImportRun,
 } from "@/lib/data/properties";
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
+import { ImportReview } from "@/components/app/ImportReview";
 import { useOrg } from "@/components/app/useOrg";
 import { friendlyMessage } from "@/components/app/Friendly";
 import { useI18n } from "@/lib/i18n";
@@ -17,7 +19,8 @@ export const Route = createFileRoute("/_authenticated/app/import-text")({ compon
 const STAGES = [
   { id: "read", label: "Lecture de votre texte" },
   { id: "sort", label: "Tri par thème" },
-  { id: "save", label: "Enregistrement" },
+  { id: "verify", label: "Détection des informations incertaines" },
+  { id: "review", label: "Préparation de la vérification" },
 ];
 
 const EXAMPLE = `Villa des Oliviers
@@ -45,26 +48,78 @@ function ImportText() {
   const [text, setText] = useState("");
   const [stage, setStage] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
+  const [runId, setRunId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const go = async () => {
     setError("");
-    const stop = tick(setStage, STAGES.length, 600);
-    let runId: string | null = null;
+    setCandidate(null);
+    const stop = tick(setStage, STAGES.length, 500);
+    let currentRunId: string | null = null;
+
     try {
-      runId = await startImportRun(org.id, "text", { rawText: text.slice(0, 100_000) });
+      currentRunId = await startImportRun(org.id, "text", { rawText: text.slice(0, 100_000) });
+      setRunId(currentRunId);
       const result = await rulesExtractor.extract(text);
-      const property = await createPropertyFromExtraction(org.id, "text", result, null);
-      await finishImportRun(runId, "succeeded", { propertyId: property.id });
-      stop();
-      qc.invalidateQueries({ queryKey: ["properties"] });
-      nav({ to: "/app/p/$id", params: { id: property.id } });
-    } catch (e) {
-      if (runId) await finishImportRun(runId, "failed", { error: "client" }).catch(() => {});
+      const useful = result.fields.filter((field) => field.status !== "missing").length;
+
       stop();
       setStage(null);
+
+      if (!result.propertyName && useful === 0) {
+        await finishImportRun(currentRunId, "insufficient", { error: "no_fields_detected" });
+        setRunId(null);
+        setError("Nous n’avons pas trouvé assez d’informations. Ajoutez davantage de texte ou créez le logement manuellement.");
+        return;
+      }
+
+      setCandidate(result);
+    } catch (e) {
+      if (currentRunId) await finishImportRun(currentRunId, "failed", { error: "client" }).catch(() => {});
+      stop();
+      setStage(null);
+      setRunId(null);
       setError(friendlyMessage(e));
     }
   };
+
+  const confirm = async () => {
+    if (!candidate) return;
+    setBusy(true);
+    setError("");
+    try {
+      const property = await createPropertyFromExtraction(org.id, "text", candidate, null);
+      if (runId) await finishImportRun(runId, "succeeded", { propertyId: property.id });
+      qc.invalidateQueries({ queryKey: ["properties"] });
+      nav({ to: "/app/p/$id", params: { id: property.id } });
+    } catch (e) {
+      if (runId) await finishImportRun(runId, "failed", { error: "create_property" }).catch(() => {});
+      setError(friendlyMessage(e));
+      setBusy(false);
+    }
+  };
+
+  const backFromReview = async () => {
+    if (runId) await finishImportRun(runId, "insufficient", { error: "review_cancelled" }).catch(() => {});
+    setRunId(null);
+    setCandidate(null);
+  };
+
+  if (candidate) {
+    return (
+      <>
+        {error && <p role="alert" className="mt-4 rounded-xl bg-warning-soft p-3">{error}</p>}
+        <ImportReview
+          value={candidate}
+          onChange={setCandidate}
+          onConfirm={confirm}
+          onBack={backFromReview}
+          busy={busy}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="mt-6">
@@ -97,6 +152,9 @@ function ImportText() {
           <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>
             {t("import.textAction")}
           </button>
+          <p className="text-center text-sm text-muted-foreground">
+            Français, anglais, espagnol, allemand, italien et portugais sont reconnus.
+          </p>
         </div>
       )}
     </div>

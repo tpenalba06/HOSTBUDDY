@@ -11,6 +11,8 @@ export interface ExtractedField {
   status: FieldStatus;
   rawValue: string | null; // exact source snippet(s)
   confidence: number; // 0..1
+  manuallyVerified?: boolean;
+  manuallyOverridden?: boolean;
 }
 
 export interface ExtractionResult {

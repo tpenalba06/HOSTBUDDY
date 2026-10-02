@@ -76,10 +76,19 @@ export function sanitizeGuideItems(
 }
 
 export function contactContent(text: string) {
-  const phones = [...text.matchAll(/(\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}/g)].map((match) =>
-    match[0].replace(/[\s.-]/g, "").replace(/^0/, "+33"),
-  );
-  const emails = [...text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]+/g)].map((match) => match[0]);
+  const phoneCandidates = [
+    ...text.matchAll(/(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{1,4}\)?[\s.-]?){2,5}\d{2,4}/g),
+  ]
+    .map((match) => match[0].trim())
+    .filter((value) => value.replace(/\D/g, "").length >= 9);
+
+  const phones = phoneCandidates.map((value) => {
+    const compact = value.replace(/[\s().-]/g, "");
+    if (/^0[1-9]\d{8}$/.test(compact)) return `+33${compact.slice(1)}`;
+    return compact.startsWith("+") ? compact : value;
+  });
+
+  const emails = [...text.matchAll(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g)].map((match) => match[0]);
   return { phones: [...new Set(phones)].slice(0, 3), emails: [...new Set(emails)].slice(0, 2) };
 }
 

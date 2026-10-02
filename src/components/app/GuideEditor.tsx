@@ -180,19 +180,15 @@ export function GuideEditor({
   };
   return (
     <div className={`space-y-4 ${compact ? "guide-editor-compact" : ""}`}>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
-        <div className="min-w-0">
-          <p className="font-bold text-primary">{t("manager.guide")}</p>
-          <h2 className="mt-1 text-3xl font-semibold">{t("manager.editEverything")}</h2>
-          <p className="mt-1 text-muted-foreground">{t("manager.editHint")}</p>
-        </div>
+      <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
+        <h2 className="text-2xl font-semibold @sm:text-3xl">{t("manager.guide")}</h2>
         <Button
           onClick={onPreview}
           variant="outline"
-          className="min-h-12 shrink-0 rounded-full px-3"
+          className="min-h-12 w-full rounded-xl @sm:w-auto"
         >
           <Eye />
-          <span className={compact ? "sr-only" : "hidden sm:inline"}>{t("manager.preview")}</span>
+          <span>{t("manager.preview")}</span>
         </Button>
       </div>
       <Button
@@ -218,13 +214,12 @@ export function GuideEditor({
         </div>
       )}
       {!translationAvailability.enabled && (
-        <div className="flex gap-3 rounded-lg bg-muted p-4">
-          <Languages className="h-5 w-5 shrink-0 text-success" />
-          <div>
-            <p className="font-semibold">{t("manager.autoTranslation")}</p>
-            <p className="text-sm text-muted-foreground">{t("manager.translationUnavailable")}</p>
-          </div>
-        </div>
+        <details className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">
+          <summary className="cursor-pointer font-semibold text-foreground">
+            {t("manager.autoTranslation")}
+          </summary>
+          <p className="mt-2">{t("manager.translationUnavailable")}</p>
+        </details>
       )}
       {error && (
         <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">

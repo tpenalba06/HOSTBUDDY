@@ -4,7 +4,7 @@ import { FriendlyError } from "./properties";
 
 export type Conversation = Tables<"conversations"> & {
   properties: { name: string } | null;
-  messages: Pick<Tables<"messages">, "body" | "created_at" | "sender_type" | "read_at">[];
+  messages: Pick<Tables<"messages">, "id" | "body" | "created_at" | "sender_type" | "read_at">[];
 };
 
 const fail = (error: unknown): never => {

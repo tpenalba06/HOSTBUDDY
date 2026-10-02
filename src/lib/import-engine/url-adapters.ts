@@ -18,12 +18,20 @@ const ADAPTERS = [airbnbAdapter, bookingAdapter, sunverAdapter, genericWebAdapte
 
 export function pickAdapter(url: string): UrlSourceAdapter {
   let host = "";
-  try { host = new URL(url).hostname.toLowerCase(); } catch { /* invalid */ }
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    /* invalid */
+  }
   return ADAPTERS.find((a) => a.matches(host)) ?? genericWebAdapter;
 }
 
 export function normalizeUrl(input: string): string | null {
   const v = input.trim();
   if (!v) return null;
-  try { return new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`).toString(); } catch { return null; }
+  try {
+    return new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`).toString();
+  } catch {
+    return null;
+  }
 }

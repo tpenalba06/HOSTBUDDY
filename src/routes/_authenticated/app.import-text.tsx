@@ -2,7 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
-import { createPropertyFromExtraction, finishImportRun, startImportRun } from "@/lib/data/properties";
+import {
+  createPropertyFromExtraction,
+  finishImportRun,
+  startImportRun,
+} from "@/lib/data/properties";
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
 import { useOrg } from "@/components/app/useOrg";
 import { friendlyMessage } from "@/components/app/Friendly";
@@ -56,21 +60,43 @@ function ImportText() {
       nav({ to: "/app/p/$id", params: { id: property.id } });
     } catch (e) {
       if (runId) await finishImportRun(runId, "failed", { error: "client" }).catch(() => {});
-      stop(); setStage(null); setError(friendlyMessage(e));
+      stop();
+      setStage(null);
+      setError(friendlyMessage(e));
     }
   };
 
   return (
     <div className="mt-6">
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">← {t("common.back")}</Link>
+      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">
+        ← {t("common.back")}
+      </Link>
       <h1 className="text-3xl font-semibold">{t("import.textTitle")}</h1>
       <p className="mt-2 text-lg text-muted-foreground">{t("import.textHelp")}</p>
-      {stage !== null ? <ImportProgress stages={STAGES} current={stage} /> : (
+      {stage !== null ? (
+        <ImportProgress stages={STAGES} current={stage} />
+      ) : (
         <div className="mt-6 space-y-4">
-          <textarea className="field min-h-72 text-lg" placeholder="Vos notes, un message WhatsApp, un e-mail, le texte de votre annonce…" value={text} onChange={(e) => setText(e.target.value)} />
-          <button className="min-h-12 font-semibold text-primary underline" onClick={() => setText(EXAMPLE)}>Essayer avec un exemple</button>
-          {error && <p role="alert" className="rounded-xl bg-warning-soft p-3">{error}</p>}
-          <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>{t("import.textAction")}</button>
+          <textarea
+            className="field min-h-72 text-lg"
+            placeholder="Vos notes, un message WhatsApp, un e-mail, le texte de votre annonce…"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <button
+            className="min-h-12 font-semibold text-primary underline"
+            onClick={() => setText(EXAMPLE)}
+          >
+            Essayer avec un exemple
+          </button>
+          {error && (
+            <p role="alert" className="rounded-xl bg-warning-soft p-3">
+              {error}
+            </p>
+          )}
+          <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>
+            {t("import.textAction")}
+          </button>
         </div>
       )}
     </div>

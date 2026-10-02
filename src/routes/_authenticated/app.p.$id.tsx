@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BookOpen, CircleHelp, Home, MessageSquareQuote } from "lucide-react";
 import {
   getProperty,
   publishProperty,
@@ -170,65 +171,79 @@ function PropertyPage() {
   }
 
   const found = fields.filter((f) => f.status === "found");
+  const tabs = [
+    { id: "guide" as const, label: t("app.guide"), icon: BookOpen },
+    { id: "details" as const, label: t("app.information"), icon: CircleHelp },
+    { id: "services" as const, label: t("app.services"), icon: Home },
+    { id: "reviews" as const, label: t("app.reviews"), icon: MessageSquareQuote },
+  ];
+
   return (
-    <div className="mt-6">
+    <div className="py-4 @sm:py-6">
       {SavedBadge}
-      <Link to="/app" className="inline-block min-h-12 py-3 font-semibold text-primary">
+      <Link
+        to="/app"
+        className="inline-flex min-h-12 items-center rounded-xl border bg-card px-4 font-semibold text-primary shadow-sm transition hover:border-primary"
+      >
         ← {t("app.myProperties")}
       </Link>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-bold text-primary">{t("app.editor")}</p>
-          <h1 className="text-3xl font-semibold">{property.name}</h1>
+
+      <div className="mt-4 grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="truncate text-3xl font-semibold @sm:text-4xl">{property.name}</h1>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                property.status === "published"
+                  ? "bg-success-soft text-success"
+                  : "bg-warning-soft text-warning"
+              }`}
+            >
+              {property.status === "published" ? t("app.published") : t("app.draft")}
+            </span>
+          </div>
+          <NameEditor
+            id={property.id}
+            initial={property.name}
+            onSaved={() => {
+              flashSaved();
+              qc.invalidateQueries({ queryKey: ["properties"] });
+            }}
+          />
         </div>
+
         {property.status === "published" && (
           <a
             href={`/l/${property.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="btn btn-secondary"
+            className="btn btn-secondary min-h-12 w-full @sm:w-auto"
           >
             {t("app.viewGuide")}
           </a>
         )}
       </div>
-      <NameEditor
-        id={property.id}
-        initial={property.name}
-        onSaved={() => {
-          flashSaved();
-          qc.invalidateQueries({ queryKey: ["properties"] });
-        }}
-      />
-      <div className="mt-6 grid grid-cols-2 rounded-lg bg-muted p-1 sm:grid-cols-4">
-        <Button
-          variant={mode === "guide" ? "default" : "ghost"}
-          className="min-h-12 px-2"
-          onClick={() => setMode("guide")}
-        >
-          {t("app.guide")}
-        </Button>
-        <Button
-          variant={mode === "details" ? "default" : "ghost"}
-          className="min-h-12 px-2"
-          onClick={() => setMode("details")}
-        >
-          {t("app.information")}
-        </Button>
-        <Button
-          variant={mode === "services" ? "default" : "ghost"}
-          className="min-h-12 px-2"
-          onClick={() => setMode("services")}
-        >
-          {t("app.services")}
-        </Button>
-        <Button
-          variant={mode === "reviews" ? "default" : "ghost"}
-          className="min-h-12 px-2"
-          onClick={() => setMode("reviews")}
-        >
-          {t("app.reviews")}
-        </Button>
+
+      <div className="mt-6 grid gap-2 @sm:grid-cols-2 @lg:grid-cols-4">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = mode === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setMode(tab.id)}
+              className={`flex min-h-16 items-center gap-3 rounded-2xl border px-4 text-left font-semibold transition ${
+                active
+                  ? "border-primary bg-primary text-primary-foreground shadow-soft"
+                  : "bg-card hover:border-primary"
+              }`}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
       {mode === "guide" && (
         <div className="mt-7">
@@ -245,19 +260,26 @@ function PropertyPage() {
       )}
       {mode === "details" && (
         <>
-          <p
-            className={`mt-4 rounded-xl p-3 text-lg font-medium ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}
+          <div
+            className={`mt-5 rounded-2xl p-4 ${remaining ? "bg-warning-soft" : "bg-success-soft"}`}
           >
-            {remaining
-              ? `Il reste ${remaining} information${remaining > 1 ? "s" : ""} importante${remaining > 1 ? "s" : ""} à compléter`
-              : "Les informations importantes sont complètes 👍"}
-            {found.length > 0 && (
-              <span className="block text-base font-normal">
-                {found.length} information{found.length > 1 ? "s" : ""} déjà trouvée
-                {found.length > 1 ? "s" : ""}.
+            <div className="flex items-center justify-between gap-3">
+              <strong className="text-lg">
+                {remaining
+                  ? `${remaining} info${remaining > 1 ? "s" : ""} à compléter`
+                  : "Tout est prêt"}
+              </strong>
+              <span className="text-sm font-semibold text-muted-foreground">
+                {found.length}/{fields.length}
               </span>
-            )}
-          </p>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background/80">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.round((found.length / Math.max(fields.length, 1)) * 100)}%` }}
+              />
+            </div>
+          </div>
           <button
             className="btn btn-primary mt-4 w-full text-lg"
             onClick={() => setStep(remaining ? "complete" : "ready")}

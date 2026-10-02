@@ -52,6 +52,6 @@
 - [x] Verify all requested preview widths and production app health
 
 ## Demo stability and presentation rescue
-- [ ] Prevent broken or older local demo data from crashing homepage and /demo
-- [ ] Polish shared traveler preview and responsive manager presentation
-- [ ] Verify language selection, interactions, lint, tests, types and build
+- [x] Prevent broken or older local demo data from crashing homepage and /demo
+- [x] Polish shared traveler preview and responsive manager presentation
+- [x] Verify language selection, interactions, lint, tests, types and preview build

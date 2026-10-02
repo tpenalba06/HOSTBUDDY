@@ -34,22 +34,41 @@ const validStored = (
     typeof data["phone"] === "string" &&
     typeof data["email"] === "string" &&
     Array.isArray(data["places"]) &&
-    data["places"].every((place: unknown) => !!place && typeof place === "object" && typeof (place as { name?: unknown }).name === "string") &&
+    data["places"].every(
+      (place: unknown) =>
+        !!place &&
+        typeof place === "object" &&
+        typeof (place as { name?: unknown }).name === "string",
+    ) &&
     Array.isArray(data["services"]) &&
-    data["services"].every((service: unknown) => !!service && typeof service === "object" && typeof (service as { id?: unknown }).id === "string") &&
-    !!data["wifi"] && typeof data["wifi"] === "object" &&
+    data["services"].every(
+      (service: unknown) =>
+        !!service &&
+        typeof service === "object" &&
+        typeof (service as { id?: unknown }).id === "string",
+    ) &&
+    !!data["wifi"] &&
+    typeof data["wifi"] === "object" &&
     typeof (data["wifi"] as Record<string, unknown>)["network"] === "string" &&
     typeof (data["wifi"] as Record<string, unknown>)["password"] === "string" &&
     Array.isArray(state["sections"]) &&
     state["sections"].every(
       (s: unknown) =>
-        !!s && typeof s === "object" && typeof (s as GuideSection).section_key === "string" &&
+        !!s &&
+        typeof s === "object" &&
+        typeof (s as GuideSection).section_key === "string" &&
         typeof (s as GuideSection).title === "string" &&
         typeof (s as GuideSection).is_visible === "boolean" &&
-        !!(s as GuideSection).content && typeof (s as GuideSection).content === "object",
+        !!(s as GuideSection).content &&
+        typeof (s as GuideSection).content === "object",
     ) &&
     Array.isArray(state["media"]) &&
-    state["media"].every((item: unknown) => !!item && typeof item === "object" && typeof (item as SectionMedia).storage_path === "string")
+    state["media"].every(
+      (item: unknown) =>
+        !!item &&
+        typeof item === "object" &&
+        typeof (item as SectionMedia).storage_path === "string",
+    )
   );
 };
 

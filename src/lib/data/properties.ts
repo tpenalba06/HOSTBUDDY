@@ -36,7 +36,7 @@ export async function ensureOrganization() {
   const [{ data: org, error: e2 }, { data: membership, error: e3 }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("id,name,trial_ends_at,preferred_locale,operator_type,contact_name,contact_email,contact_phone,contact_setup_completed_at")
+      .select("id,name,trial_ends_at,preferred_locale,operator_type")
       .eq("id", orgId)
       .single(),
     supabase
@@ -47,12 +47,7 @@ export async function ensureOrganization() {
       .single(),
   ]);
   if (e2 || e3) return fail(e2 ?? e3);
-  return {
-    ...org,
-    role: membership.role,
-    firstName: first,
-    accountEmail: u.user?.email ?? "",
-  };
+  return { ...org, role: membership.role, firstName: first };
 }
 
 export async function listProperties(orgId: string) {

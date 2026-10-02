@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { normalizeUrl, pickAdapter } from "@/lib/import-engine/url-adapters";
+import { getImportUrlIssue, normalizeUrl, pickAdapter } from "@/lib/import-engine/url-adapters";
 import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
 import {
   createPropertyFromExtraction,
@@ -41,6 +41,14 @@ function ImportUrl() {
   const [busy, setBusy] = useState(false);
 
   const go = async () => {
+    const issue = getImportUrlIssue(url);
+    if (issue === "airbnb_search_without_single_listing") {
+      setFallback(false);
+      return setError(
+        "Ce lien Airbnb correspond à une page de recherche sans logement unique identifiable. Ouvrez le logement voulu puis copiez son lien.",
+      );
+    }
+
     const clean = normalizeUrl(url);
     if (!clean)
       return setError("Ce lien ne semble pas complet. Copiez-le depuis la barre d'adresse.");

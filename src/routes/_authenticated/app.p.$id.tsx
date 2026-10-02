@@ -550,15 +550,14 @@ function NameEditor({
   initial: string;
   onSaved: () => void;
 }) {
-  const { t: translate } = useI18n();
   const [name, setName] = useState(initial);
   const t = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(t.current), []);
   return (
-    <label className="mt-4 block">
-      <span className="mb-1 block font-medium">{translate("property.name")}</span>
+    <label className="mt-2 block max-w-xl">
+      <span className="sr-only">Nom de l’hébergement</span>
       <input
-        className="field text-lg"
+        className="w-full border-0 bg-transparent p-0 text-sm font-medium text-muted-foreground outline-none transition focus:text-foreground @sm:text-base"
         value={name}
         onChange={(e) => {
           const v = e.target.value;
@@ -572,6 +571,7 @@ function NameEditor({
             700,
           );
         }}
+        aria-label="Nom de l’hébergement"
       />
     </label>
   );

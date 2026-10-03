@@ -62,6 +62,9 @@ describe("guest-only offline routing", () => {
   });
   it("does not pretend an unsaved guide is available", async () =>
     expect((await worker().request("/l/not-saved"))?.status).toBe(503));
+  it("lets a shell refresh fetch new HTML instead of reusing navigation cache", async () => {
+    expect(await worker().request("/offline", "cors")).toBeUndefined();
+  });
   it("never intercepts manager pages, private API responses or POST requests", async () => {
     const { request } = worker();
     expect(await request("/app")).toBeUndefined();

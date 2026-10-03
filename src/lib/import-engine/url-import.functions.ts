@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { propertyPhotoCandidates } from "./photo-candidates";
+import { safePublicFetch } from "./safe-public-fetch";
 import { extractFromText } from "./rules-extractor";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 
@@ -18,12 +20,18 @@ function isPrivateHost(host: string) {
 
 async function robotsAllows(url: URL): Promise<boolean> {
   try {
-    const r = await fetch(`${url.origin}/robots.txt`, {
-      headers: { "user-agent": UA },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!r.ok) return true;
-    const lines = (await r.text()).split(/\r?\n/);
+    const fetched = await safePublicFetch(
+      `${url.origin}/robots.txt`,
+      {
+        headers: { "user-agent": UA },
+        signal: AbortSignal.timeout(5000),
+      },
+      256_000,
+    );
+    const r = fetched.response;
+    if (r.status === 404) return true;
+    if (!r.ok) return false;
+    const lines = new TextDecoder().decode(fetched.buffer).split(/\r?\n/);
     let applies = false;
     const disallow: string[] = [];
     for (const raw of lines) {
@@ -35,7 +43,7 @@ async function robotsAllows(url: URL): Promise<boolean> {
     }
     return !disallow.some((p) => url.pathname.startsWith(p));
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -164,16 +172,21 @@ async function runUrlImport(data: {
 
   let html: string;
   try {
-    const res = await fetch(url.toString(), {
-      headers: { "user-agent": UA, accept: "text/html", "accept-language": "fr-FR,fr;q=0.9" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(12000),
-    });
+    const fetched = await safePublicFetch(
+      url.toString(),
+      {
+        headers: { "user-agent": UA, accept: "text/html", "accept-language": "fr-FR,fr;q=0.9" },
+
+        signal: AbortSignal.timeout(12000),
+      },
+      1_500_000,
+    );
+    const res = fetched.response;
     if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))
       return { ok: false, source, reason: "blocked" };
     if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html"))
       return { ok: false, source, reason: "unreachable" };
-    html = (await res.text()).slice(0, 1_500_000);
+    html = new TextDecoder().decode(fetched.buffer);
   } catch (e) {
     console.error("url import fetch failed", e);
     return { ok: false, source, reason: "unreachable" };
@@ -194,7 +207,11 @@ async function runUrlImport(data: {
   return {
     ok: true,
     source,
-    result: { propertyName: structured.name?.slice(0, 120) ?? null, fields },
+    result: {
+      propertyName: structured.name?.slice(0, 120) ?? null,
+      fields,
+      photos: propertyPhotoCandidates(html, url.href),
+    },
   };
 }
 
@@ -217,4 +234,90 @@ export const demoImportFromAirbnbUrl = createServerFn({ method: "POST" })
       return { ok: false, source: "airbnb", reason: "invalid" };
     }
     return runUrlImport({ url: url.toString(), source: "airbnb" });
+  });
+
+/** Authenticated, tenant protected copy of host-authorized photos into private media storage. */
+export const importPropertyPhotos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        propertyId: z.string().uuid(),
+        sourceUrl: z.string().url().max(2000),
+        urls: z.array(z.string().url().max(2000)).max(8),
+        rightsConfirmed: z.literal(true),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const { data: property, error } = await sb
+      .from("properties")
+      .select("id,organization_id,source_url")
+      .eq("id", data.propertyId)
+      .single();
+    if (error || !property || property.source_url !== data.sourceUrl)
+      throw new Error("Logement introuvable.");
+    const source = new URL(data.sourceUrl);
+    if (!(await robotsAllows(source)))
+      throw new Error("Import des photos non autorisé par la source.");
+    const page = await safePublicFetch(source.href, { headers: { "user-agent": UA } }, 1_500_000);
+    const allowed = propertyPhotoCandidates(new TextDecoder().decode(page.buffer), source.href);
+    const { data: sections, error: sectionError } = await sb
+      .from("guide_sections")
+      .select("id")
+      .eq("property_id", property.id)
+      .like("section_key", "welcome%")
+      .order("sort_order")
+      .limit(1);
+    if (sectionError || !sections?.[0]) throw new Error("Créez d’abord la rubrique Bienvenue.");
+    let imported = 0;
+    let failed = 0;
+    for (const url of data.urls) {
+      if (!allowed.includes(url)) {
+        failed++;
+        continue;
+      }
+      try {
+        if (!(await robotsAllows(new URL(url)))) throw new Error("blocked");
+        const file = await safePublicFetch(
+          url,
+          { headers: { "user-agent": UA, accept: "image/*" } },
+          5 * 1024 * 1024,
+        );
+        const mime = file.response.headers.get("content-type")?.split(";")[0];
+        const ext = (
+          {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/avif": "avif",
+          } as Record<string, string>
+        )[mime ?? ""];
+        if (!file.response.ok || !ext) throw new Error("image");
+        const path = `${property.organization_id}/${property.id}/${sections[0].id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await sb.storage
+          .from("guide-media")
+          .upload(path, file.buffer, { contentType: mime!, upsert: false });
+        if (uploadError) throw uploadError;
+        const { error: insertError } = await sb.from("section_media").insert({
+          organization_id: property.organization_id,
+          property_id: property.id,
+          section_id: sections[0].id,
+          media_type: "image",
+          storage_path: path,
+          mime_type: mime!,
+          file_size: file.buffer.length,
+          sort_order: imported,
+        });
+        if (insertError) {
+          await sb.storage.from("guide-media").remove([path]);
+          throw insertError;
+        }
+        imported++;
+      } catch {
+        failed++;
+      }
+    }
+    return { imported, failed };
   });

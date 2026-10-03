@@ -1,3 +1,5 @@
+import { addTeamCopy, addMessageCopy } from "./team-copy";
+import { addV1Copy } from "./v1-copy";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LOCALES = ["fr", "en", "es", "de", "it", "pt"] as const;
@@ -14,6 +16,10 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 type Copy = Record<string, string>;
 export const translations: Record<Locale, Copy> = {
   fr: {
+    "media.ambience": "Image d’ambiance HostBuddy",
+    "guide.servicesEyebrow": "Pour profiter du séjour",
+    "guide.servicesExplore": "Découvrir les services",
+    "guide.allInfo": "Toutes les infos",
     "common.back": "Retour",
     "common.backSite": "Retour au site",
     "common.home": "Accueil",
@@ -266,6 +272,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Seules les informations confirmées seront visibles par vos voyageurs.",
   },
   en: {
+    "media.ambience": "HostBuddy ambience image",
+    "guide.servicesEyebrow": "Make the most of your stay",
+    "guide.servicesExplore": "Explore services",
+    "guide.allInfo": "All information",
     "common.back": "Back",
     "common.backSite": "Back to site",
     "common.home": "Home",
@@ -513,6 +523,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Only confirmed information is visible to guests.",
   },
   es: {
+    "media.ambience": "Imagen de ambiente HostBuddy",
+    "guide.servicesEyebrow": "Disfruta de tu estancia",
+    "guide.servicesExplore": "Descubrir servicios",
+    "guide.allInfo": "Toda la información",
     "common.back": "Volver",
     "common.backSite": "Volver al sitio",
     "common.home": "Inicio",
@@ -760,6 +774,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo la información confirmada será visible.",
   },
   de: {
+    "media.ambience": "HostBuddy Stimmungsbild",
+    "guide.servicesEyebrow": "Den Aufenthalt genießen",
+    "guide.servicesExplore": "Services entdecken",
+    "guide.allInfo": "Alle Informationen",
     "common.back": "Zurück",
     "common.backSite": "Zurück zur Website",
     "common.home": "Startseite",
@@ -1008,6 +1026,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Nur bestätigte Informationen sind sichtbar.",
   },
   it: {
+    "media.ambience": "Immagine d’atmosfera HostBuddy",
+    "guide.servicesEyebrow": "Vivi il tuo soggiorno",
+    "guide.servicesExplore": "Scopri i servizi",
+    "guide.allInfo": "Tutte le informazioni",
     "common.back": "Indietro",
     "common.backSite": "Torna al sito",
     "common.home": "Home",
@@ -1252,6 +1274,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo le informazioni confermate saranno visibili.",
   },
   pt: {
+    "media.ambience": "Imagem de ambiente HostBuddy",
+    "guide.servicesEyebrow": "Aproveite a estadia",
+    "guide.servicesExplore": "Descobrir serviços",
+    "guide.allInfo": "Todas as informações",
     "common.back": "Voltar",
     "common.backSite": "Voltar ao site",
     "common.home": "Início",
@@ -2495,6 +2521,157 @@ const managerDemoCopy: Record<Locale, Copy> = {
   },
 };
 for (const locale of LOCALES) Object.assign(translations[locale], managerDemoCopy[locale]);
+const guideCopy: Record<Locale, string[]> = {
+  fr: [
+    "Explorer le guide",
+    "Rechercher dans le guide",
+    "Votre guide de séjour",
+    "L’essentiel",
+    "Tous",
+    "Garder cette adresse",
+    "Démo : demande enregistrée localement",
+    "Impossible de copier. Sélectionnez le texte ci-dessus.",
+  ],
+  en: [
+    "Explore the guide",
+    "Search the guide",
+    "Your stay guide",
+    "Essentials",
+    "All",
+    "Save this place",
+    "Demo: request saved locally",
+    "Unable to copy. Select the text above.",
+  ],
+  es: [
+    "Explorar la guía",
+    "Buscar en la guía",
+    "Tu guía de estancia",
+    "Lo esencial",
+    "Todos",
+    "Guardar este lugar",
+    "Demo: solicitud guardada localmente",
+    "No se pudo copiar. Seleccione el texto de arriba.",
+  ],
+  de: [
+    "Guide entdecken",
+    "Im Guide suchen",
+    "Ihr Aufenthaltsguide",
+    "Das Wichtigste",
+    "Alle",
+    "Diesen Ort merken",
+    "Demo: Anfrage lokal gespeichert",
+    "Kopieren nicht möglich. Wählen Sie den Text oben aus.",
+  ],
+  it: [
+    "Esplora la guida",
+    "Cerca nella guida",
+    "La guida del soggiorno",
+    "L’essenziale",
+    "Tutti",
+    "Salva questo luogo",
+    "Demo: richiesta salvata localmente",
+    "Impossibile copiare. Seleziona il testo sopra.",
+  ],
+  pt: [
+    "Explorar o guia",
+    "Pesquisar no guia",
+    "O seu guia de estadia",
+    "O essencial",
+    "Todos",
+    "Guardar este local",
+    "Demo: pedido guardado localmente",
+    "Não foi possível copiar. Selecione o texto acima.",
+  ],
+};
+const guidePreviewCopy: Record<Locale, string> = {
+  fr: "Aperçu visuel · Logement de démonstration",
+  en: "Visual preview · Demonstration property",
+  es: "Vista previa · Alojamiento de demostración",
+  de: "Vorschau · Demo-Unterkunft",
+  it: "Anteprima · Alloggio dimostrativo",
+  pt: "Pré-visualização · Alojamento de demonstração",
+};
+for (const locale of LOCALES)
+  translations[locale]["guide.previewNotice"] = guidePreviewCopy[locale];
+const mediaCopy: Record<Locale, string[]> = {
+  fr: [
+    "Médias du logement",
+    "Photos du logement",
+    "Voir la photo",
+    "Présentation du logement",
+    "Découvrez le logement en vidéo",
+    "Photo du logement",
+  ],
+  en: [
+    "Property media",
+    "Property photos",
+    "View photo",
+    "Property introduction",
+    "Discover the property on video",
+    "Property photo",
+  ],
+  es: [
+    "Medios del alojamiento",
+    "Fotos del alojamiento",
+    "Ver foto",
+    "Presentación del alojamiento",
+    "Descubre el alojamiento en vídeo",
+    "Foto del alojamiento",
+  ],
+  de: [
+    "Medien der Unterkunft",
+    "Fotos der Unterkunft",
+    "Foto ansehen",
+    "Vorstellung der Unterkunft",
+    "Entdecken Sie die Unterkunft im Video",
+    "Foto der Unterkunft",
+  ],
+  it: [
+    "Media dell’alloggio",
+    "Foto dell’alloggio",
+    "Vedi foto",
+    "Presentazione dell’alloggio",
+    "Scopri l’alloggio in video",
+    "Foto dell’alloggio",
+  ],
+  pt: [
+    "Média do alojamento",
+    "Fotos do alojamento",
+    "Ver foto",
+    "Apresentação do alojamento",
+    "Descubra o alojamento em vídeo",
+    "Foto do alojamento",
+  ],
+};
+const mediaKeys = [
+  "media.heading",
+  "media.photos",
+  "media.viewPhoto",
+  "media.presentation",
+  "media.discover",
+  "media.photo",
+];
+for (const locale of LOCALES)
+  mediaKeys.forEach((key, index) => {
+    translations[locale][key] = mediaCopy[locale][index]!;
+  });
+const guideKeys = [
+  "guide.menu",
+  "guide.search",
+  "guide.discover",
+  "guide.essentials",
+  "guide.all",
+  "guide.save",
+  "guide.demoRequest",
+  "guide.copyFailed",
+];
+for (const locale of LOCALES)
+  guideKeys.forEach((key, index) => {
+    translations[locale][key] = guideCopy[locale][index] ?? "";
+  });
+addV1Copy(translations);
+addTeamCopy(translations);
+addMessageCopy(translations);
 export const I18N_KEYS = Object.keys(translations.fr);
 export function missingTranslationKeys(locale: Locale) {
   return I18N_KEYS.filter((key) => !translations[locale][key]);

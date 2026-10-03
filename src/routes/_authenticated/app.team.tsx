@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { orgQuery, useOrg } from "@/components/app/useOrg";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/team")({
 });
 
 function TeamPage() {
+  const { t } = useI18n();
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -44,7 +46,7 @@ function TeamPage() {
         await refresh();
       }}
       onRemove={async (userId) => {
-        if (!window.confirm("Retirer ce membre de l’équipe ?")) return;
+        if (!window.confirm(t("team.removeConfirm"))) return;
         await removeTeamMember({ data: { organizationId: org.id, userId } });
         await refresh();
       }}

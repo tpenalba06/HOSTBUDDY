@@ -20,6 +20,8 @@ export function QrCard({
   const { t } = useI18n();
   const [url, setUrl] = useState(path);
   const [png, setPng] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [svg, setSvg] = useState<string | null>(null);
   useEffect(() => setUrl(new URL(path, window.location.origin).toString()), [path]);
   useEffect(() => {
@@ -55,18 +57,36 @@ export function QrCard({
         )}
         <button
           className="btn btn-secondary px-3"
-          onClick={() => navigator.clipboard?.writeText(url)}
+          onClick={async () => {
+            setCopyError(false);
+            try {
+              if (!navigator.clipboard) throw new Error("unavailable");
+              await navigator.clipboard.writeText(url);
+              setCopied(true);
+            } catch {
+              setCopyError(true);
+            }
+          }}
         >
           <Copy />
-          {t("qr.copy")}
+          {copied ? t("common.saved") : t("qr.copy")}
         </button>
         <button
           className="btn btn-secondary px-3"
           onClick={() => {
-            const popup = window.open("", "_blank", "noopener,noreferrer");
+            const popup = window.open("", "_blank");
             if (!popup || !png) return;
+            popup.opener = null;
+            const escape = (value: string) =>
+              value.replace(
+                /[&<>"']/g,
+                (character) =>
+                  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+                    character
+                  ]!,
+              );
             popup.document.write(
-              `<title>QR ${name.replace(/[<>]/g, "")}</title><style>body{font-family:system-ui;text-align:center;padding:48px;color:#29231f}img{width:min(70vw,520px)}h1{font-size:28px}</style><h1>${name.replace(/[<>]/g, "")}</h1><img src="${png}" alt="QR"><p>${url}</p><script>onload=()=>print()</script>`,
+              `<title>QR ${escape(name)}</title><style>body{font-family:system-ui;text-align:center;padding:48px;color:#29231f}img{width:min(70vw,520px)}h1{font-size:28px}</style><h1>${escape(name)}</h1><img src="${png}" alt="QR"><p>${escape(url)}</p><script>onload=()=>print()</script>`,
             );
             popup.document.close();
           }}
@@ -75,6 +95,11 @@ export function QrCard({
           {t("qr.print")}
         </button>
       </div>
+      {copyError && (
+        <p role="alert" className="mt-2 text-sm">
+          {t("guide.copyFailed")}
+        </p>
+      )}
     </div>
   );
 }

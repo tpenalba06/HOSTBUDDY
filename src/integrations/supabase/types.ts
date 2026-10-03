@@ -872,6 +872,32 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      open_guest_thread: {
+        Args: {
+          _slug: string;
+          _name: string;
+          _contact: string;
+          _body: string;
+          _fingerprint: string;
+          _token_hash: string;
+        };
+        Returns: string;
+      };
+      read_guest_thread: {
+        Args: { _slug: string; _conversation: string; _token_hash: string };
+        Returns: Json;
+      };
+      continue_guest_thread: {
+        Args: {
+          _slug: string;
+          _conversation: string;
+          _token_hash: string;
+          _body: string;
+          _fingerprint: string;
+        };
+        Returns: undefined;
+      };
+
       can_access_property: { Args: { _property: string }; Returns: boolean };
       change_organization_member_role: {
         Args: {

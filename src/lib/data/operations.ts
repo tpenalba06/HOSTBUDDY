@@ -90,6 +90,27 @@ export async function saveService(
     ? await supabase.from("services").update(payload).eq("id", values.id).select("*").single()
     : await supabase.from("services").insert(payload).select("*").single();
   if (response.error) return fail(response.error);
+  if (values.isActive) {
+    const { data: sections, error } = await supabase
+      .from("guide_sections")
+      .select("id")
+      .eq("property_id", propertyId)
+      .like("section_key", "services%")
+      .limit(1);
+    if (error) return fail(error);
+    if (!sections?.length) {
+      const { error: insertError } = await supabase.from("guide_sections").insert({
+        property_id: propertyId,
+        section_key: "services",
+        title: "Services additionnels",
+        icon: "✨",
+        sort_order: 6,
+        is_visible: true,
+        content: { items: [], explicitlyEnabled: true },
+      });
+      if (insertError) return fail(insertError);
+    }
+  }
   return response.data;
 }
 

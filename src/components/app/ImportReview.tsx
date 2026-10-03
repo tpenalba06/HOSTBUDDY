@@ -97,6 +97,31 @@ export function ImportReview({
         />
       </label>
 
+      {!!value.photos?.length && (
+        <section className="surface mt-6 p-4">
+          <h2 className="text-xl">Photos détectées</h2>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {value.photos.map((url) => (
+              <img
+                key={url}
+                src={url}
+                alt="Photo issue de la source"
+                referrerPolicy="no-referrer"
+                className="aspect-square w-full rounded-xl object-cover"
+              />
+            ))}
+          </div>
+          <label className="mt-4 flex items-center gap-3">
+            <input
+              type="checkbox"
+              className="h-6 w-6"
+              checked={value.photoRightsConfirmed ?? false}
+              onChange={(e) => onChange({ ...value, photoRightsConfirmed: e.target.checked })}
+            />
+            <span>Importer ces photos : je dispose des droits pour les utiliser.</span>
+          </label>
+        </section>
+      )}
       <div className="mt-6 space-y-3">
         {FIELD_DEFS.map((def) => {
           const field = value.fields.find((item) => item.key === def.key);

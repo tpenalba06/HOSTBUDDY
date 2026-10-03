@@ -11,9 +11,9 @@ import {
   Plus,
   Star,
   Users,
-  X,
   type LucideIcon,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/Logo";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
@@ -218,53 +218,39 @@ export function ManagerShell({
           <span className="truncate">{t("nav.more")}</span>
         </Button>
       </nav>
-      {more && (
-        <div
-          className={`${embedded ? "absolute" : "fixed"} inset-0 z-50 flex items-end bg-ink/55`}
-          role="dialog"
-          aria-modal="true"
+      <Dialog open={more} onOpenChange={setMore}>
+        <DialogContent
+          className="top-auto bottom-0 translate-y-0 rounded-t-2xl p-5"
+          aria-describedby={undefined}
         >
-          <div className="w-full rounded-t-2xl bg-background p-5">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center">
-              <h2 className="text-2xl font-semibold">{t("nav.more")}</h2>
+          <DialogTitle className="font-display text-2xl">{t("nav.more")}</DialogTitle>
+          <div className="mt-4 grid gap-2" onClick={() => setMore(false)}>
+            {role !== "member" && (
+              <DrawerItem
+                item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
+                onNavigate={onNavigate ? navigate : undefined}
+              />
+            )}{" "}
+            {management.map((item) => (
+              <DrawerItem
+                key={item.id}
+                item={item}
+                onNavigate={onNavigate ? navigate : undefined}
+              />
+            ))}
+            {onSignOut && (
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-12 w-12"
-                onClick={() => setMore(false)}
-                aria-label={t("common.close")}
+                className="min-h-14 justify-start gap-3 px-4"
+                onClick={onSignOut}
               >
-                <X />
+                <LogOut />
+                {t("app.signOut")}
               </Button>
-            </div>
-            <div className="mt-4 grid gap-2">
-              {role !== "member" && (
-                <DrawerItem
-                  item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
-                  onNavigate={onNavigate ? navigate : undefined}
-                />
-              )}{" "}
-              {management.map((item) => (
-                <DrawerItem
-                  key={item.id}
-                  item={item}
-                  onNavigate={onNavigate ? navigate : undefined}
-                />
-              ))}
-              {onSignOut && (
-                <Button
-                  variant="ghost"
-                  className="min-h-14 justify-start gap-3 px-4"
-                  onClick={onSignOut}
-                >
-                  <LogOut />
-                  {t("app.signOut")}
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

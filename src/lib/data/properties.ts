@@ -1,6 +1,12 @@
+import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
+import type { UploadPreparation } from "@/lib/media/video-policy";
+import type { PropertyMediaConfig } from "@/components/guest/property-media";
 // Concierge data layer (browser client, protected by RLS).
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
+import { validateMediaUpload } from "./media-validation";
+import { importPropertyPhotos } from "@/lib/import-engine/url-import.functions";
+import { initialGuideSections } from "./section-policy";
 import { FIELD_DEFS, FIELD_BY_KEY } from "@/lib/import-engine/fields";
 import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
 import {
@@ -53,12 +59,36 @@ export async function ensureOrganization() {
 export async function listProperties(orgId: string) {
   const { data, error } = await supabase
     .from("properties")
-    .select("*")
+    .select(
+      "*, property_fields(key,value), guide_sections(id,section_key,content), section_media(id,section_id,media_type,storage_path,sort_order)",
+    )
     .eq("organization_id", orgId)
     .neq("status", "archived")
     .order("created_at", { ascending: false });
   if (error) return fail(error);
-  return data;
+  const covers = data.map((property) => {
+    const welcome = property.guide_sections.find(
+      (section) => section.section_key.split("-")[0] === "welcome",
+    );
+    const coverId = (welcome?.content as { propertyMedia?: PropertyMediaConfig } | null)
+      ?.propertyMedia?.coverId;
+    const photos = property.section_media.filter((media) => media.media_type === "image");
+    return (
+      photos.find((media) => media.id === coverId) ??
+      photos.find((media) => media.section_id === welcome?.id) ??
+      photos[0]
+    );
+  });
+  const paths = covers.flatMap((cover) => (cover ? [cover.storage_path] : []));
+  const signed = paths.length
+    ? await supabase.storage.from("guide-media").createSignedUrls(paths, 900)
+    : null;
+  const urls = new Map(signed?.data?.map((item) => [item.path, item.signedUrl]) ?? []);
+  return data.map((property, index) => ({
+    ...property,
+    location: property.property_fields.find((field) => field.key === "address")?.value ?? null,
+    coverUrl: covers[index] ? (urls.get(covers[index]!.storage_path) ?? null) : null,
+  }));
 }
 
 export async function getProperty(id: string) {
@@ -103,38 +133,6 @@ export async function getProperty(id: string) {
   };
 }
 
-const DEFAULT_SECTIONS = [
-  ["welcome", "Bienvenue", "👋"],
-  ["arrival", "Mon arrivée", "🔑"],
-  ["wifi", "Wi-Fi", "📶"],
-  ["house", "La maison", "🏡"],
-  ["pool", "Piscine", "🏊"],
-  ["places", "Bonnes adresses", "📍"],
-  ["services", "Services", "✨"],
-  ["departure", "Mon départ", "🧳"],
-  ["contact", "Contact", "💬"],
-] as const;
-
-function sectionsFromFields(propertyId: string, fields: PropertyField[]) {
-  return DEFAULT_SECTIONS.map(([key, title, icon], index) => {
-    const items: GuideContentItem[] = fields
-      .filter(
-        (field) =>
-          FIELD_BY_KEY[field.key]?.section.key === key && field.value && field.status === "found",
-      )
-      .map((field) => ({ fieldKey: field.key, label: field.label, text: field.value as string }));
-    return {
-      property_id: propertyId,
-      section_key: key,
-      title,
-      icon,
-      sort_order: index,
-      is_visible: true,
-      content: buildGuideContent(key, {}, items) as Json,
-    };
-  });
-}
-
 export async function ensureGuideSections(propertyId: string, fields: PropertyField[]) {
   const { data: current, error } = await supabase
     .from("guide_sections")
@@ -145,7 +143,12 @@ export async function ensureGuideSections(propertyId: string, fields: PropertyFi
   if (current.length) return current;
   const { data, error: insertError } = await supabase
     .from("guide_sections")
-    .insert(sectionsFromFields(propertyId, fields))
+    .insert(
+      initialGuideSections(propertyId, fields).map((section) => ({
+        ...section,
+        content: section.content as Json,
+      })),
+    )
     .select("*");
   if (insertError) return fail(insertError);
   return data.sort((a, b) => a.sort_order - b.sort_order);
@@ -159,9 +162,35 @@ export async function saveGuideSection(
     isVisible: boolean;
     icon?: string;
     ctaLabel?: string;
+    propertyMedia?: PropertyMediaConfig;
   },
 ) {
-  const content = buildGuideContent(section.section_key, section.content, values.items);
+  const { data: latest, error: readError } = await supabase
+    .from("guide_sections")
+    .select("content")
+    .eq("id", section.id)
+    .single();
+  if (readError) return fail(readError);
+  if (values.propertyMedia) {
+    const { data, error } = await supabase
+      .from("guide_sections")
+      .update({
+        content: {
+          ...(latest.content as object),
+          propertyMedia: values.propertyMedia,
+        } as unknown as Json,
+      })
+      .eq("id", section.id)
+      .select("*")
+      .single();
+    if (error) return fail(error);
+    return data;
+  }
+  const base = latest.content;
+  const content = {
+    ...buildGuideContent(section.section_key, base, values.items),
+    explicitlyEnabled: values.isVisible,
+  };
   const fieldUpdates = fieldUpdatesForGuideSection(
     section.section_key,
     section.content,
@@ -214,7 +243,7 @@ export async function addGuideSection(
       section_key: key,
       title: template?.title ?? "Nouvelle section",
       icon: template?.icon ?? "📌",
-      content: { items: [] },
+      content: { items: [], explicitlyEnabled: true },
       sort_order: order,
     })
     .select("*")
@@ -254,18 +283,12 @@ export async function uploadSectionMedia(
   propertyId: string,
   sectionId: string,
   file: File,
+  options: UploadPreparation = {},
 ) {
+  file = await prepareMediaUpload(file, options);
+  await validateMediaUpload(file);
+  options.onProgress?.({ phase: "uploading", percent: 100 });
   const isImage = file.type.startsWith("image/");
-  const allowed = isImage
-    ? ["image/jpeg", "image/png", "image/webp", "image/avif"]
-    : ["video/mp4", "video/webm"];
-  const max = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
-  if (!allowed.includes(file.type) || file.size > max)
-    throw new FriendlyError(
-      isImage
-        ? "Choisissez une image JPG, PNG, WebP ou AVIF de moins de 10 Mo."
-        : "Choisissez une vidéo MP4 ou WebM de moins de 50 Mo.",
-    );
   const ext =
     file.name
       .split(".")
@@ -293,6 +316,34 @@ export async function uploadSectionMedia(
   if (error) {
     await supabase.storage.from("guide-media").remove([path]);
     return fail(error);
+  }
+  const video = preparedVideoMetadata(file);
+  if (video) {
+    const { data: latest, error: readError } = await supabase
+      .from("guide_sections")
+      .select("content")
+      .eq("id", sectionId)
+      .single();
+    const content = (latest?.content ?? {}) as Record<string, Json>;
+    const { error: metadataError } = readError
+      ? { error: readError }
+      : await supabase
+          .from("guide_sections")
+          .update({
+            content: {
+              ...content,
+              mediaMetadata: { ...((content["mediaMetadata"] as object) ?? {}), [data.id]: video },
+            } as unknown as Json,
+          })
+          .eq("id", sectionId);
+    if (metadataError) {
+      await supabase.from("section_media").delete().eq("id", data.id);
+      await supabase.storage.from("guide-media").remove([path]);
+      return fail(
+        metadataError,
+        "La vidéo n’a pas pu être enregistrée. Votre vidéo précédente est conservée.",
+      );
+    }
   }
   return data;
 }
@@ -516,46 +567,59 @@ export async function createPropertyFromExtraction(
     .single();
   if (error) return fail(error);
   const byKey = new Map(result?.fields.map((f) => [f.key, f]) ?? []);
-  const { data: orgContact, error: contactError } = await supabase
-    .from("organizations")
-    .select("contact_name,contact_email,contact_phone")
-    .eq("id", orgId)
-    .single();
-  if (contactError) return fail(contactError);
-
-  const defaultContact = [
-    orgContact?.contact_name?.trim() || null,
-    orgContact?.contact_phone ? `Téléphone / WhatsApp : ${orgContact.contact_phone}` : null,
-    orgContact?.contact_email ? `E-mail : ${orgContact.contact_email}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
   const now = new Date().toISOString();
   const rows = FIELD_DEFS.map((def) => {
     const imported = byKey.get(def.key);
-    const isDefaultContact = def.key === "contact" && Boolean(defaultContact);
-    const value = isDefaultContact ? defaultContact : (imported?.value ?? null);
+    const value = imported?.value ?? null;
     return {
       property_id: property.id,
       key: def.key,
       category: def.category,
       label: def.label,
-      essential: def.essential,
+      essential: def.essential && !["parking", "contact"].includes(def.key),
       question: def.question,
       value,
-      status: isDefaultContact ? "found" : (imported?.status ?? "missing"),
-      raw_value: isDefaultContact ? (imported?.rawValue ?? null) : (imported?.rawValue ?? null),
-      confidence: isDefaultContact ? 1 : (imported?.confidence ?? 0),
-      source_type: isDefaultContact ? "manual" : imported?.value ? source : null,
-      source_url: isDefaultContact ? null : imported?.value ? sourceUrl : null,
-      imported_at: isDefaultContact ? null : imported?.value ? now : null,
-      manually_verified: isDefaultContact ? true : (imported?.manuallyVerified ?? false),
-      manually_overridden: isDefaultContact ? false : (imported?.manuallyOverridden ?? false),
+      status: imported?.status ?? "missing",
+      raw_value: imported?.rawValue ?? null,
+      confidence: imported?.confidence ?? 0,
+      source_type: imported?.value ? source : null,
+      source_url: imported?.value ? sourceUrl : null,
+      imported_at: imported?.value ? now : null,
+      manually_verified: imported?.manuallyVerified ?? false,
+      manually_overridden: imported?.manuallyOverridden ?? false,
     };
   });
   const { error: e2 } = await supabase.from("property_fields").insert(rows);
   if (e2) return fail(e2);
+  const { data: createdFields, error: fieldLoadError } = await supabase
+    .from("property_fields")
+    .select("*")
+    .eq("property_id", property.id);
+  if (fieldLoadError) return fail(fieldLoadError);
+  await ensureGuideSections(property.id, createdFields ?? []);
+  if (sourceUrl && result?.photos?.length && result.photoRightsConfirmed) {
+    const outcome = await importPropertyPhotos({
+      data: { propertyId: property.id, sourceUrl, urls: result.photos, rightsConfirmed: true },
+    }).catch(() => ({ imported: 0, failed: result.photos!.length }));
+    if (outcome.failed) {
+      const { data: welcome } = await supabase
+        .from("guide_sections")
+        .select("id,content")
+        .eq("property_id", property.id)
+        .eq("section_key", "welcome")
+        .maybeSingle();
+      if (welcome)
+        await supabase
+          .from("guide_sections")
+          .update({
+            content: {
+              ...(welcome.content as object),
+              mediaImportWarning: `${outcome.failed} photo(s) n’ont pas pu être importées. Vous pouvez les ajouter ici.`,
+            } as Json,
+          })
+          .eq("id", welcome.id);
+    }
+  }
   return property;
 }
 
@@ -569,7 +633,22 @@ async function syncFieldToGuide(field: PropertyField) {
     .eq("section_key", definition.section.key)
     .maybeSingle();
   if (error) return fail(error);
-  if (!section) return;
+  if (!section) {
+    if (field.status !== "found" || !field.value) return;
+    const { error: insertError } = await supabase.from("guide_sections").insert({
+      property_id: field.property_id,
+      section_key: definition.section.key,
+      title: definition.section.title,
+      icon: definition.section.icon,
+      sort_order: definition.section.order,
+      is_visible: true,
+      content: buildGuideContent(definition.section.key, {}, [
+        { fieldKey: field.key, label: field.label, text: field.value },
+      ]) as Json,
+    });
+    if (insertError) return fail(insertError);
+    return;
+  }
   const content = mergeFieldIntoGuideContent(definition.section.key, section.content, {
     key: field.key,
     label: field.label,
@@ -611,14 +690,25 @@ export async function renameProperty(id: string, name: string) {
   if (error) fail(error);
 }
 
-/** Publishing rebuilds visible guide sections from confirmed fields only. */
-export async function publishProperty(property: Property, fields: PropertyField[]) {
-  await ensureGuideSections(property.id, fields);
-  const { error: e3 } = await supabase
-    .from("properties")
-    .update({ status: "published", published_at: new Date().toISOString() })
-    .eq("id", property.id);
-  if (e3) return fail(e3);
+/** Preserve edited sections and media; publish only after all editor writes have completed. */
+const publishing = new Map<string, Promise<void>>();
+export function publishProperty(property: Property, fields: PropertyField[]): Promise<void> {
+  const current = publishing.get(property.id);
+  if (current) return current;
+  const task = (async () => {
+    await ensureGuideSections(property.id, fields);
+    const { data, error } = await supabase
+      .from("properties")
+      .update({ status: "published", published_at: new Date().toISOString() })
+      .eq("id", property.id)
+      .select("id,status")
+      .single();
+    if (error || data?.status !== "published")
+      return fail(error, "La publication a échoué. Vos modifications sont conservées. Réessayez.");
+  })();
+  publishing.set(property.id, task);
+  void task.finally(() => publishing.delete(property.id)).catch(() => {});
+  return task;
 }
 
 export async function unpublishProperty(propertyId: string) {

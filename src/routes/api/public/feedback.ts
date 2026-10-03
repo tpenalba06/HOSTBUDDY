@@ -1,8 +1,7 @@
+import { readPublicJson } from "@/lib/public-json";
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
 import { z } from "zod";
-import type { Database } from "@/integrations/supabase/types";
 
 const schema = z.object({
   slug: z.string().min(1).max(80),
@@ -15,7 +14,7 @@ export const Route = createFileRoute("/api/public/feedback")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const parsed = schema.safeParse(await request.json().catch(() => null));
+        const parsed = schema.safeParse(await readPublicJson(request));
         if (!parsed.success)
           return Response.json({ error: "Vérifiez votre retour." }, { status: 400 });
         const ip =
@@ -25,11 +24,7 @@ export const Route = createFileRoute("/api/public/feedback")({
         const fingerprint = createHash("sha256")
           .update(`${ip}|${request.headers.get("user-agent") ?? ""}|${parsed.data.slug}`)
           .digest("hex");
-        const client = createClient<Database>(
-          process.env["SUPABASE_URL"]!,
-          process.env["SUPABASE_PUBLISHABLE_KEY"]!,
-          { auth: { persistSession: false, autoRefreshToken: false } },
-        );
+        const { supabaseAdmin: client } = await import("@/integrations/supabase/client.server");
         const { error } = await client.rpc("submit_guest_feedback", {
           _slug: parsed.data.slug,
           _name: parsed.data.name,

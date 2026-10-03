@@ -1,6 +1,8 @@
+import type { VideoMetadata } from "@/lib/media/video-policy";
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import type { Database } from "@/integrations/supabase/types";
 
 export interface PublicSection {
@@ -9,7 +11,24 @@ export interface PublicSection {
   icon?: string;
   title: string;
   ctaLabel?: string | null;
-  content: { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
+  content: {
+    propertyMedia?: PropertyMediaConfig;
+    mediaMetadata?: Record<string, VideoMetadata>;
+    explicitlyEnabled?: boolean;
+    items?: { label: string; text: string }[];
+    entries?: {
+      id?: string;
+      title: string;
+      text?: string;
+      category?: string;
+      address?: string;
+      phone?: string;
+      mapUrl?: string;
+      mediaIds?: string[];
+    }[];
+    phones?: string[];
+    emails?: string[];
+  };
   translations?: {
     locale: string;
     title: string;
@@ -26,6 +45,11 @@ export interface PublicSection {
     caption?: string | null;
     altText?: string | null;
     sortOrder: number;
+    sizeBytes?: number;
+    durationSeconds?: number;
+    processingStatus?: "uploaded" | "processing" | "ready" | "failed";
+    posterUrl?: string;
+    revision?: string;
   }[];
 }
 export interface PublicGuide {
@@ -81,7 +105,11 @@ export const getPublicGuide = createServerFn({ method: "GET" })
         section.media
           ? {
               ...section,
-              media: section.media.map((item) => ({ ...item, url: urls.get(item.path) ?? null })),
+              media: section.media.map((item) => ({
+                ...item,
+                ...(section.content.mediaMetadata?.[item.id] ?? {}),
+                url: urls.get(item.path) ?? null,
+              })),
             }
           : section,
       );

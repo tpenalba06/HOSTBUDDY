@@ -19,6 +19,7 @@ export async function transcodeVideo(file: File, options: UploadPreparation = {}
   const deadline = setTimeout(abort, VIDEO_POLICY.timeoutMs);
   options.signal?.addEventListener("abort", abort, { once: true });
   let wasmURL = "";
+  let stage = "loading";
   try {
     options.signal?.throwIfAborted();
     options.onProgress?.({ phase: "loading", percent: 0 });
@@ -27,7 +28,7 @@ export async function transcodeVideo(file: File, options: UploadPreparation = {}
       [0, 1].map(async (index) => {
         const response = await fetch(`/video-codec/0.12.10/core-${index}.wasm-part`, {
           signal: controller.signal,
-          credentials: "omit",
+          credentials: "same-origin",
         });
         if (!response.ok) throw new Error("Le moteur vidéo n’a pas pu être chargé. Réessayez.");
         return response.arrayBuffer();
@@ -40,6 +41,7 @@ export async function transcodeVideo(file: File, options: UploadPreparation = {}
       wasmURL,
       classWorkerURL: workerURL,
     });
+    stage = "encoding";
     await encoder.writeFile("input", new Uint8Array(await file.arrayBuffer()));
     const probe = async (input: string, output: string) => {
       const code = await encoder.ffprobe(
@@ -94,9 +96,13 @@ export async function transcodeVideo(file: File, options: UploadPreparation = {}
       throw new Error("Préparation annulée. Votre vidéo précédente est conservée.");
     if (controller.signal.aborted)
       throw new Error("La préparation a pris trop de temps. Essayez une vidéo plus courte.");
-    throw error instanceof Error
-      ? error
-      : new Error("La préparation vidéo a échoué. Réessayez avec une vidéo plus courte.");
+    if (error instanceof TypeError || !(error instanceof Error))
+      throw new Error(
+        stage === "loading"
+          ? "Le moteur vidéo n’a pas pu être chargé. Vérifiez votre connexion puis réessayez."
+          : "La préparation vidéo a échoué. Essayez une vidéo plus courte.",
+      );
+    throw error;
   } finally {
     clearTimeout(deadline);
     options.signal?.removeEventListener("abort", abort);

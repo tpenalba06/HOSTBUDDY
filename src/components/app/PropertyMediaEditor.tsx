@@ -70,7 +70,7 @@ export function PropertyMediaEditor({
     try {
       await task();
     } catch (e) {
-      setError(friendlyMessage(e));
+      setError(e instanceof Error ? e.message : friendlyMessage(e));
     } finally {
       setBusy(false);
       setVideoProgress("");

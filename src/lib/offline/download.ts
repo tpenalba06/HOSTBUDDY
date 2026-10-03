@@ -85,7 +85,7 @@ async function prepareShell(signal?: AbortSignal) {
     });
   const response = await fetch("/offline-assets.json", {
     signal: signal ?? null,
-    credentials: "omit",
+    credentials: "same-origin",
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Le téléchargement du guide est indisponible. Réessayez.");
@@ -114,7 +114,7 @@ async function prepareShell(signal?: AbortSignal) {
     }
     const result = await fetch(path, {
       signal: signal ?? null,
-      credentials: "omit",
+      credentials: "same-origin",
       cache: "reload",
     });
     if (path === "/offline" && !result.headers.get("content-type")?.includes("text/html"))
@@ -173,7 +173,7 @@ async function performSaveGuideOffline(
       throw new Error("Un média n’est pas disponible. Rechargez le guide avant de l’enregistrer.");
     onProgress(`Enregistrement des médias · ${index + 1}/${unique.length}`);
     const response = await fetch(safeMediaURL(item.url), {
-      credentials: "omit",
+      credentials: "same-origin",
       signal: signal ?? null,
     });
     const limit = Math.min(

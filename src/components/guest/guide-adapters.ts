@@ -18,6 +18,10 @@ export function toPublicSections(sections: GuideSection[], media: SectionMedia[]
         .filter((item) => item.section_id === section.id)
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((item) => ({
+          ...((
+            readGuideContent(section.content)["mediaMetadata"] as Record<string, object> | undefined
+          )?.[item.id] ?? {}),
+          sizeBytes: item.file_size,
           id: item.id,
           type: item.media_type as "image" | "video",
           path: item.storage_path,

@@ -1,3 +1,4 @@
+import { OfflineSaveButton } from "@/components/guest/OfflineSaveButton";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { getPublicGuide } from "@/lib/data/public-guide.functions";
@@ -52,6 +53,7 @@ function GuestPage() {
     <div className="hb-guide">
       <GuideView
         guide={guide}
+        offlineAction={<OfflineSaveButton guide={guide} slug={slug} />}
         onRequest={setServiceId}
         onMessage={() => setMessageOpen(true)}
         onFeedback={() => setFeedbackOpen(true)}

@@ -953,3 +953,73 @@
 .hb-preview-workspace > main {
   position: relative;
 }
+
+.hb-offline-save {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--hb-line);
+  border-radius: 20px;
+  text-align: center;
+}
+.hb-offline-save p {
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.hb-offline-save button {
+  justify-content: center;
+  min-height: 48px;
+}
+.hb-offline-link {
+  display: inline-block;
+  padding: 10px;
+  text-decoration: underline;
+}
+.hb-offline-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: #e7eae2;
+  font-size: 13px;
+}
+.hb-offline-banner a {
+  text-decoration: underline;
+  padding: 8px;
+}
+.hb-offline-notice {
+  margin: 16px auto;
+  max-width: 760px;
+  padding: 16px;
+  background: #eee6d9;
+  border-radius: 16px;
+}
+.hb-offline-list {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 24px;
+}
+.hb-offline-list h1 {
+  font:
+    40px "HB Newsreader",
+    serif;
+}
+.hb-offline-list article {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid #d6d0c6;
+}
+.hb-offline-list article a {
+  font-size: 20px;
+  flex: 1;
+  min-width: 180px;
+}
+.hb-offline-list article button {
+  min-height: 48px;
+  text-decoration: underline;
+}

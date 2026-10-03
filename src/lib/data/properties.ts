@@ -1,3 +1,5 @@
+import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
+import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 // Concierge data layer (browser client, protected by RLS).
 import { supabase } from "@/integrations/supabase/client";
@@ -257,8 +259,11 @@ export async function uploadSectionMedia(
   propertyId: string,
   sectionId: string,
   file: File,
+  options: UploadPreparation = {},
 ) {
+  file = await prepareMediaUpload(file, options);
   await validateMediaUpload(file);
+  options.onProgress?.({ phase: "uploading", percent: 100 });
   const isImage = file.type.startsWith("image/");
   const ext =
     file.name
@@ -287,6 +292,34 @@ export async function uploadSectionMedia(
   if (error) {
     await supabase.storage.from("guide-media").remove([path]);
     return fail(error);
+  }
+  const video = preparedVideoMetadata(file);
+  if (video) {
+    const { data: latest, error: readError } = await supabase
+      .from("guide_sections")
+      .select("content")
+      .eq("id", sectionId)
+      .single();
+    const content = (latest?.content ?? {}) as Record<string, Json>;
+    const { error: metadataError } = readError
+      ? { error: readError }
+      : await supabase
+          .from("guide_sections")
+          .update({
+            content: {
+              ...content,
+              mediaMetadata: { ...((content["mediaMetadata"] as object) ?? {}), [data.id]: video },
+            } as unknown as Json,
+          })
+          .eq("id", sectionId);
+    if (metadataError) {
+      await supabase.from("section_media").delete().eq("id", data.id);
+      await supabase.storage.from("guide-media").remove([path]);
+      return fail(
+        metadataError,
+        "La vidéo n’a pas pu être enregistrée. Votre vidéo précédente est conservée.",
+      );
+    }
   }
   return data;
 }

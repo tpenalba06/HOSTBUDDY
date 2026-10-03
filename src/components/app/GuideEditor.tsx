@@ -1,3 +1,4 @@
+import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -64,6 +65,7 @@ export type GuideEditorActions = {
     propertyId: string,
     sectionId: string,
     file: File,
+    options?: UploadPreparation,
   ) => Promise<SectionMedia>;
   updateMedia: (
     media: SectionMedia,

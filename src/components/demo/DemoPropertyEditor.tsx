@@ -1,3 +1,4 @@
+import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
 import { validateMediaUpload } from "@/lib/data/media-validation";
 import { GuideView } from "@/components/guest/GuideView";
 import { toPublicSections } from "@/components/guest/guide-adapters";
@@ -132,7 +133,8 @@ export function DemoPropertyEditor({
         ...current,
         sections: current.sections.filter((item) => item.id !== id),
       })),
-    upload: async (_, __, sectionId, file) => {
+    upload: async (_, __, sectionId, file, options) => {
+      file = await prepareMediaUpload(file, options);
       await validateMediaUpload(file);
       const media = {
         id: `demo-media-${crypto.randomUUID()}`,
@@ -149,7 +151,24 @@ export function DemoPropertyEditor({
         created_at: "",
         updated_at: "",
       };
-      onChange((current) => ({ ...current, media: [...current.media, media] }));
+      const video = preparedVideoMetadata(file);
+      onChange((current) => ({
+        ...current,
+        media: [...current.media, media],
+        sections: video
+          ? current.sections.map((s) =>
+              s.id === sectionId
+                ? {
+                    ...s,
+                    content: {
+                      ...(s.content as object),
+                      mediaMetadata: { [media.id]: video },
+                    } as unknown as Json,
+                  }
+                : s,
+            )
+          : current.sections,
+      }));
       return media;
     },
     updateMedia: async (item, values) => {

@@ -1,3 +1,4 @@
+import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
 import { validateMediaUpload } from "@/lib/data/media-validation";
 import { useEffect, useMemo, useState } from "react";
 import { Save } from "lucide-react";
@@ -246,7 +247,8 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
       },
       reorder: async (next) => setSections(next),
       remove: async (id) => setSections((items) => items.filter((item) => item.id !== id)),
-      upload: async (_org, _property, sectionId, file) => {
+      upload: async (_org, _property, sectionId, file, options) => {
+        file = await prepareMediaUpload(file, options);
         await validateMediaUpload(file);
         const url = URL.createObjectURL(file);
         const created = asMedia({
@@ -263,6 +265,21 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
           alt_text: null,
           created_at: "",
         });
+        const video = preparedVideoMetadata(file);
+        if (video)
+          setSections((items) =>
+            items.map((s) =>
+              s.id === sectionId
+                ? {
+                    ...s,
+                    content: {
+                      ...(s.content as object),
+                      mediaMetadata: { [created.id]: video },
+                    } as unknown as Json,
+                  }
+                : s,
+            ),
+          );
         setMedia((items) => [...items, created]);
         if (
           file.type.startsWith("image/") &&

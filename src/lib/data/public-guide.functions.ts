@@ -1,3 +1,4 @@
+import type { VideoMetadata } from "@/lib/media/video-policy";
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -12,6 +13,7 @@ export interface PublicSection {
   ctaLabel?: string | null;
   content: {
     propertyMedia?: PropertyMediaConfig;
+    mediaMetadata?: Record<string, VideoMetadata>;
     explicitlyEnabled?: boolean;
     items?: { label: string; text: string }[];
     entries?: {
@@ -103,7 +105,11 @@ export const getPublicGuide = createServerFn({ method: "GET" })
         section.media
           ? {
               ...section,
-              media: section.media.map((item) => ({ ...item, url: urls.get(item.path) ?? null })),
+              media: section.media.map((item) => ({
+                ...item,
+                ...(section.content.mediaMetadata?.[item.id] ?? {}),
+                url: urls.get(item.path) ?? null,
+              })),
             }
           : section,
       );

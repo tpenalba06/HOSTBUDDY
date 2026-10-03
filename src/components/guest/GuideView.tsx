@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -59,6 +59,7 @@ export function GuideView({
   onRequest,
   onMessage,
   onFeedback,
+  offlineAction,
 }: {
   guide: GuideViewData;
   sectionKey?: string | null;
@@ -66,6 +67,7 @@ export function GuideView({
   onRequest?: (id: string) => void;
   onMessage?: () => void;
   onFeedback?: () => void;
+  offlineAction?: ReactNode;
 }) {
   const { locale, t } = useI18n();
   const [localKey, setLocalKey] = useState<string | null>(null);
@@ -355,6 +357,7 @@ export function GuideView({
                   <ContactButtons section={contact} t={t} />
                 </div>
               )}
+              {offlineAction}
               <p className="hb-signature">HostBuddy · {t("guest.noInstall")}</p>
             </div>
           </div>

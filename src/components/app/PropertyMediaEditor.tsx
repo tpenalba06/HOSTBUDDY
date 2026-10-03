@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, ImagePlus, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { GuideSection, SectionMedia } from "@/lib/data/properties";
@@ -35,6 +35,9 @@ export function PropertyMediaEditor({
     return () => onBusyChange(false);
   }, [busy, onBusyChange]);
   const [error, setError] = useState("");
+  const [videoProgress, setVideoProgress] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
   const [dragged, setDragged] = useState<string | null>(null);
   const own = media
     .filter((item) => item.section_id === section?.id)
@@ -70,6 +73,8 @@ export function PropertyMediaEditor({
       setError(friendlyMessage(e));
     } finally {
       setBusy(false);
+      setVideoProgress("");
+      abortRef.current = null;
     }
   };
   const saveConfig = async (current: GuideSection, next: PropertyMediaConfig) => {
@@ -102,7 +107,19 @@ export function PropertyMediaEditor({
   const upload = (file: File, replacement?: SectionMedia, primary = false) =>
     run(async () => {
       const current = await getSection();
-      const item = await actions.upload(property.organization_id, property.id, current.id, file);
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const item = await actions.upload(property.organization_id, property.id, current.id, file, {
+        signal: controller.signal,
+        onProgress: ({ phase, percent }) =>
+          setVideoProgress(
+            phase === "loading"
+              ? "Préparation vidéo…"
+              : phase === "encoding"
+                ? `Optimisation vidéo · ${percent} %`
+                : "Envoi de la vidéo…",
+          ),
+      });
       // Persist the replacement before removing the previous file; a failed upload never destroys it.
       if (primary || replacement?.id === cover?.id || (!cover && item.media_type === "image"))
         await saveConfig(current, { ...config, coverId: item.id });
@@ -162,6 +179,16 @@ export function PropertyMediaEditor({
         <p role="status" className="mb-3 text-sm text-warning">
           {(section!.content as { mediaImportWarning: string }).mediaImportWarning}
         </p>
+      )}
+      {videoProgress && (
+        <div role="status" className="mb-3 flex items-center gap-3">
+          <span>{videoProgress}</span>
+          {!videoProgress.startsWith("Envoi") && (
+            <Button variant="outline" onClick={() => abortRef.current?.abort()}>
+              Annuler
+            </Button>
+          )}
+        </div>
       )}
       {error && (
         <p role="alert" className="mb-3 rounded-xl bg-warning-soft p-3">

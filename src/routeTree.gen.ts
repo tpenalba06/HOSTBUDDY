@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GuidePreviewRouteImport } from './routes/guide-preview'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -61,6 +62,11 @@ const GuidePreviewRoute = GuidePreviewRouteImport.update({
 const IntegrationsRoute = IntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfflineRoute = OfflineRouteImport.update({
+  id: '/offline',
+  path: '/offline',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/offline': typeof OfflineRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/offline': typeof OfflineRoute
   '/l/$slug': typeof LSlugRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/offline': typeof OfflineRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
   '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/guide-preview'
     | '/integrations'
+    | '/offline'
     | '/app'
     | '/l/$slug'
     | '/app/connections'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/guide-preview'
     | '/integrations'
+    | '/offline'
     | '/l/$slug'
     | '/app/connections'
     | '/app/dashboard'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/guide-preview'
     | '/integrations'
+    | '/offline'
     | '/_authenticated/app'
     | '/l/$slug'
     | '/_authenticated/app/connections'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   GuidePreviewRoute: typeof GuidePreviewRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  OfflineRoute: typeof OfflineRoute
   LSlugRoute: typeof LSlugRoute
   ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offline': {
+      id: '/offline'
+      path: '/offline'
+      fullPath: '/offline'
+      preLoaderRoute: typeof OfflineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -566,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   GuidePreviewRoute: GuidePreviewRoute,
   IntegrationsRoute: IntegrationsRoute,
+  OfflineRoute: OfflineRoute,
   LSlugRoute: LSlugRoute,
   ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,

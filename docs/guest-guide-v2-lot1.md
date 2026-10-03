@@ -12,6 +12,8 @@ Référence visuelle : « Planche UI HostBuddy, élégance méditerranéenne.png
 - Les vrais guides ne prennent aucune photo/donnée de Villa Mare : couverture issue de leurs médias, fond éditorial sans image en l’absence de photo. Les services ne reçoivent plus une photographie générique de petit-déjeuner/spa sans rapport avec le service.
 - Une fiche propose téléphone/carte seulement si renseignés. Aucune durée de trajet ni localisation n’est inventée. Les favoris sont conservés dans le navigateur, sans écriture serveur.
 
+Un aperçu voyageur plein écran est disponible à /guide-preview. Il est explicitement identifié comme logement de démonstration et utilise exactement le même composant que /l/$slug. Les vrais livrets restent accessibles depuis les liens publics des logements existants.
+
 ## Conservation et limites
 
 Aucun changement des RPC, policies RLS, schémas SQL, authentification, publication, import URL/texte, provenance ou serveur public. Le type de contenu public est étendu de façon additive pour les entries JSON ; le loader serveur garde le même accès RPC et la signature des médias privés.

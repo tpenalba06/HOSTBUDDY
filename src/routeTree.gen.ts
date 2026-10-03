@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as GuidePreviewRouteImport } from './routes/guide-preview'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
@@ -50,6 +51,11 @@ const AuthRoute = AuthRouteImport.update({
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidePreviewRoute = GuidePreviewRouteImport.update({
+  id: '/guide-preview',
+  path: '/guide-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntegrationsRoute = IntegrationsRouteImport.update({
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
   '/l/$slug': typeof LSlugRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/l/$slug': typeof LSlugRoute
@@ -234,6 +243,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/guide-preview'
     | '/integrations'
     | '/app'
     | '/l/$slug'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/guide-preview'
     | '/integrations'
     | '/l/$slug'
     | '/app/connections'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/demo'
+    | '/guide-preview'
     | '/integrations'
     | '/_authenticated/app'
     | '/l/$slug'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
+  GuidePreviewRoute: typeof GuidePreviewRoute
   IntegrationsRoute: typeof IntegrationsRoute
   LSlugRoute: typeof LSlugRoute
   ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide-preview': {
+      id: '/guide-preview'
+      path: '/guide-preview'
+      fullPath: '/guide-preview'
+      preLoaderRoute: typeof GuidePreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/integrations': {
@@ -544,6 +564,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
+  GuidePreviewRoute: GuidePreviewRoute,
   IntegrationsRoute: IntegrationsRoute,
   LSlugRoute: LSlugRoute,
   ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,

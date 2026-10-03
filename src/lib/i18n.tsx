@@ -2557,6 +2557,16 @@ const guideCopy: Record<Locale, string[]> = {
     "Não foi possível copiar. Selecione o texto acima.",
   ],
 };
+const guidePreviewCopy: Record<Locale, string> = {
+  fr: "Aperçu visuel · Logement de démonstration",
+  en: "Visual preview · Demonstration property",
+  es: "Vista previa · Alojamiento de demostración",
+  de: "Vorschau · Demo-Unterkunft",
+  it: "Anteprima · Alloggio dimostrativo",
+  pt: "Pré-visualização · Alojamento de demonstração",
+};
+for (const locale of LOCALES)
+  translations[locale]["guide.previewNotice"] = guidePreviewCopy[locale];
 const guideKeys = [
   "guide.menu",
   "guide.search",

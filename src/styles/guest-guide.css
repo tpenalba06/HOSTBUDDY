@@ -467,3 +467,12 @@
   border-radius: 24px;
   padding: 28px;
 }
+
+.hb-preview-notice {
+  padding: 9px 16px;
+  background: #eee8de;
+  text-align: center;
+  font-size: 11px;
+  color: #675f55;
+  letter-spacing: 0.035em;
+}

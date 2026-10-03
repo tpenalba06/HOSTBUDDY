@@ -1,5 +1,7 @@
 import type { PublicGuide, PublicSection } from "@/lib/data/public-guide.functions";
 
+import { resolvePropertyMedia } from "./property-media";
+
 export type GuideViewData = PublicGuide & { coverUrl?: string; subtitle?: string };
 export type GuideEntry = {
   id: string;
@@ -57,6 +59,7 @@ export function sectionEntries(section: PublicSection): GuideEntry[] {
 }
 export function guideCover(guide: GuideViewData) {
   return (
+    resolvePropertyMedia(guide.sections).cover?.url ||
     guide.coverUrl ||
     guide.sections
       .find((section) => sectionKind(section.key) === "welcome")

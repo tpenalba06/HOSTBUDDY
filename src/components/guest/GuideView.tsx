@@ -5,15 +5,12 @@ import {
   ArrowRight,
   Bookmark,
   Check,
-  Home,
-  KeyRound,
   MapPin,
   Menu,
   MessageCircle,
   Phone,
   Search,
   Star,
-  Wifi,
 } from "lucide-react";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -39,6 +36,8 @@ import {
   type GuideEntry,
   type GuideViewData,
 } from "./guide-model";
+
+import { PropertyMediaGallery } from "./PropertyMediaGallery";
 
 const sectionTone = (key: string) => {
   const kind = sectionKind(key);
@@ -75,6 +74,8 @@ export function GuideView({
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  const listScroll = useRef(0);
+  const indexScroll = useRef(false);
   const sections = localizedSections(guide, locale);
   const open = sections.find(
     (item) => item.key === (sectionKey === undefined ? localKey : sectionKey),
@@ -87,7 +88,24 @@ export function GuideView({
     setEntryId(null);
     setCopied(false);
     setMenu(false);
-    topRef.current?.scrollIntoView({ block: "start" });
+    if (key === null) indexScroll.current = true;
+    else topRef.current?.scrollIntoView({ block: "start" });
+  };
+  useEffect(() => {
+    if (!open && indexScroll.current) {
+      contentRef.current?.scrollIntoView({ block: "start" });
+      indexScroll.current = false;
+    }
+  }, [open]);
+  const selectEntry = (id: string | null) => {
+    if (id) {
+      listScroll.current = window.scrollY;
+      setEntryId(id);
+      topRef.current?.scrollIntoView({ block: "start" });
+    } else {
+      setEntryId(null);
+      requestAnimationFrame(() => window.scrollTo({ top: listScroll.current }));
+    }
   };
   const toggleMenu = () => {
     setQuery("");
@@ -116,15 +134,29 @@ export function GuideView({
     <div className="hb-guide" ref={topRef}>
       {open ? (
         <>
-          <header className="hb-guide-header">{navigation}</header>
+          {!selected && <header className="hb-guide-header">{navigation}</header>}
           {selected ? (
-            <EntryDetail section={open} entry={selected} onBack={() => setEntryId(null)} />
+            <EntryDetail section={open} entry={selected} onBack={() => selectEntry(null)} />
           ) : (
-            <div className="hb-guide-body">
-              <h1 className="hb-page-title">{cleanTitle(open.title)}</h1>
+            <div className="hb-guide-body hb-section-page">
+              <div className="hb-list-heading">
+                <h1 className="hb-page-title">{cleanTitle(open.title)}</h1>
+                <button
+                  className="hb-icon-button"
+                  onClick={toggleMenu}
+                  aria-label={t("guide.search")}
+                >
+                  <Search size={20} />
+                </button>
+              </div>
               <div className="hb-section-content">
                 {sectionKind(open.key) === "places" || sectionKind(open.key) === "activities" ? (
-                  <EntryList entries={entries} section={open} onSelect={setEntryId} />
+                  <EntryList
+                    key={open.key}
+                    entries={entries}
+                    section={open}
+                    onSelect={selectEntry}
+                  />
                 ) : (
                   <>
                     <SectionMedia section={open} />
@@ -175,7 +207,12 @@ export function GuideView({
             <button
               className="hb-discover"
               onClick={() =>
-                contentRef.current?.scrollIntoView({ block: "start", behavior: "smooth" })
+                contentRef.current?.scrollIntoView({
+                  block: "start",
+                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                    ? "auto"
+                    : "smooth",
+                })
               }
             >
               <span>{t("guide.discover")}</span>
@@ -184,76 +221,76 @@ export function GuideView({
               </span>
             </button>
           </section>
-          <div className="hb-guide-body" ref={contentRef}>
-            <div className="hb-index-heading">
-              <h2>{guide.name}</h2>
-              <button
-                className="hb-icon-button"
-                onClick={toggleMenu}
-                aria-label={t("guide.search")}
-              >
-                <Search size={20} />
-              </button>
-            </div>
-            <nav className="hb-essentials" aria-label={t("guide.essentials")}>
-              {["wifi", "arrival", "departure"].map((kind) => {
-                const section = sections.find((item) => sectionKind(item.key) === kind);
-                const Icon = kind === "wifi" ? Wifi : kind === "arrival" ? KeyRound : Home;
-                return section ? (
-                  <button key={kind} onClick={() => go(section.key)}>
-                    <Icon size={18} />
-                    <span>{cleanTitle(section.title)}</span>
-                  </button>
-                ) : null;
-              })}
-            </nav>
-            <div className="hb-section-grid">
-              {sections.map((section) => (
-                <SectionCard key={section.key} section={section} onClick={() => go(section.key)} />
-              ))}
-            </div>
-            {!sections.length && <p className="hb-empty">{t("guest.empty")}</p>}
-            {guide.review && guide.review.destinations.length > 0 && (
-              <section className="hb-review">
-                <Star size={24} />
-                <h2>{guide.review.title}</h2>
-                <p>{guide.review.message}</p>
-                {guide.review.destinations.map((destination) => {
-                  const href = safeWebUrl(destination.url);
-                  return href ? (
-                    <a
-                      key={destination.url}
-                      href={href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hb-button"
-                    >
-                      {destination.label}
-                    </a>
-                  ) : null;
-                })}
-              </section>
-            )}
-            <div className="hb-help-actions">
-              {guide.messagingEnabled && onMessage && (
-                <button className="hb-button" onClick={onMessage}>
-                  <MessageCircle size={18} />
-                  {t("guest.sendMessage")}
-                </button>
-              )}
-              {onFeedback && (
-                <button className="hb-button hb-button-light" onClick={onFeedback}>
-                  <Star size={18} />
-                  {t("guest.privateFeedback")}
-                </button>
-              )}
-            </div>
-            {contact && (
-              <div className="hb-contact">
-                <ContactButtons section={contact} t={t} />
+          <div className="hb-guide-body hb-index" ref={contentRef}>
+            {cover && (
+              <div className="hb-index-photo" aria-hidden="true">
+                <img src={cover} alt="" loading="lazy" />
               </div>
             )}
-            <p className="hb-signature">HostBuddy · {t("guest.noInstall")}</p>
+            <div className="hb-index-content">
+              <div className="hb-index-heading">
+                <h2>{guide.name}</h2>
+                <button
+                  className="hb-icon-button"
+                  onClick={toggleMenu}
+                  aria-label={t("guide.search")}
+                >
+                  <Search size={20} />
+                </button>
+              </div>
+              <PropertyMediaGallery sections={sections} />
+              <div className="hb-section-grid">
+                {sections.map((section) => (
+                  <SectionCard
+                    key={section.key}
+                    section={section}
+                    onClick={() => go(section.key)}
+                  />
+                ))}
+              </div>
+              {!sections.length && <p className="hb-empty">{t("guest.empty")}</p>}
+              {guide.review && guide.review.destinations.length > 0 && (
+                <section className="hb-review">
+                  <Star size={24} />
+                  <h2>{guide.review.title}</h2>
+                  <p>{guide.review.message}</p>
+                  {guide.review.destinations.map((destination) => {
+                    const href = safeWebUrl(destination.url);
+                    return href ? (
+                      <a
+                        key={destination.url}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hb-button"
+                      >
+                        {destination.label}
+                      </a>
+                    ) : null;
+                  })}
+                </section>
+              )}
+              <div className="hb-help-actions">
+                {guide.messagingEnabled && onMessage && (
+                  <button className="hb-button" onClick={onMessage}>
+                    <MessageCircle size={18} />
+                    {t("guest.sendMessage")}
+                  </button>
+                )}
+                {onFeedback && (
+                  <button className="hb-button hb-button-light" onClick={onFeedback}>
+                    <Star size={18} />
+                    {t("guest.privateFeedback")}
+                  </button>
+                )}
+              </div>
+              {contact && (
+                <div className="hb-contact">
+                  <ContactButtons section={contact} t={t} />
+                </div>
+              )}
+              <p className="hb-signature">HostBuddy · {t("guest.noInstall")}</p>
+            </div>
           </div>
         </>
       )}
@@ -346,19 +383,25 @@ function EntryList({
         {entries
           .filter((entry) => !category || entry.category === category)
           .map((entry) => {
-            const photo = section.media?.find(
-              (item) => item.type === "image" && item.url && entry.mediaIds?.includes(item.id),
-            );
+            const photo = entry.mediaIds?.flatMap(
+              (id) =>
+                section.media?.filter(
+                  (item) => item.id === id && item.type === "image" && item.url,
+                ) ?? [],
+            )[0];
             return (
-              <button className="hb-entry-card" key={entry.id} onClick={() => onSelect(entry.id)}>
-                {photo?.url && <img src={photo.url} alt="" loading="lazy" />}
-                <span className="hb-entry-title">
-                  {entry.title}
-                  <ArrowRight size={17} />
-                </span>
-                {entry.category && <span className="hb-entry-meta">{entry.category}</span>}
-                <span className="hb-entry-summary">{entry.text}</span>
-              </button>
+              <article
+                className={`hb-entry-card ${photo ? "hb-entry-illustrated" : ""}`}
+                key={entry.id}
+              >
+                <button className="hb-entry-open" onClick={() => onSelect(entry.id)}>
+                  {photo?.url && <img src={photo.url} alt="" loading="lazy" />}
+                  <span className="hb-entry-title">{entry.title}</span>
+                  {entry.category && <span className="hb-entry-meta">{entry.category}</span>}
+                  {!photo && <span className="hb-entry-summary">{entry.text}</span>}
+                </button>
+                <SaveEntry sectionId={section.id} entryId={entry.id} />
+              </article>
             );
           })}
       </div>
@@ -384,25 +427,9 @@ function EntryDetail({
   onBack: () => void;
 }) {
   const { t } = useI18n();
-  const [saved, setSaved] = useState(false);
-  const savedKey = `hostbuddy.saved-place.${section.id}.${entry.id}`;
-  useEffect(() => {
-    try {
-      setSaved(window.localStorage.getItem(savedKey) === "true");
-    } catch {
-      /* Private browsing keeps the choice in memory. */
-    }
-  }, [savedKey]);
-  const toggleSaved = () => {
-    const next = !saved;
-    setSaved(next);
-    try {
-      window.localStorage.setItem(savedKey, String(next));
-    } catch {
-      /* The guide still works without browser storage. */
-    }
-  };
-  const media = section.media?.filter((item) => entry.mediaIds?.includes(item.id)) ?? [];
+  const media = [...new Set(entry.mediaIds ?? [])].flatMap(
+    (id) => section.media?.filter((item) => item.id === id) ?? [],
+  );
   const cover = media.find((item) => item.type === "image" && item.url);
   const mapUrl =
     entry.mapUrl ||
@@ -418,14 +445,7 @@ function EntryDetail({
         <button className="hb-icon-button" onClick={onBack} aria-label={t("common.back")}>
           <ArrowLeft size={20} />
         </button>
-        <button
-          className="hb-icon-button"
-          aria-label={t("guide.save")}
-          aria-pressed={saved}
-          onClick={toggleSaved}
-        >
-          {saved ? <Check size={20} /> : <Bookmark size={20} />}
-        </button>
+        <SaveEntry sectionId={section.id} entryId={entry.id} />
       </div>
       <div className="hb-detail-panel">
         <h1 className="hb-page-title">{entry.title}</h1>
@@ -446,7 +466,9 @@ function EntryDetail({
           </a>
         )}
         <p className="hb-detail-description">{entry.text}</p>
-        <SectionMedia section={{ ...section, media: media.filter((item) => item !== cover) }} />
+        <div className="hb-detail-gallery">
+          <SectionMedia section={{ ...section, media }} />
+        </div>
         {mapUrl && (
           <a href={mapUrl} target="_blank" rel="noreferrer" className="hb-button">
             <MapPin size={18} />
@@ -455,5 +477,37 @@ function EntryDetail({
         )}
       </div>
     </article>
+  );
+}
+
+function SaveEntry({ sectionId, entryId }: { sectionId: string; entryId: string }) {
+  const { t } = useI18n();
+  const [saved, setSaved] = useState(false);
+  const savedKey = `hostbuddy.saved-place.${sectionId}.${entryId}`;
+  useEffect(() => {
+    try {
+      setSaved(window.localStorage.getItem(savedKey) === "true");
+    } catch {
+      /* Private browsing keeps the choice in memory. */
+    }
+  }, [savedKey]);
+  const toggleSaved = () => {
+    const next = !saved;
+    setSaved(next);
+    try {
+      window.localStorage.setItem(savedKey, String(next));
+    } catch {
+      /* The guide still works without browser storage. */
+    }
+  };
+  return (
+    <button
+      className="hb-save-entry hb-icon-button"
+      aria-label={t("guide.save")}
+      aria-pressed={saved}
+      onClick={toggleSaved}
+    >
+      {saved ? <Check size={20} /> : <Bookmark size={20} />}
+    </button>
   );
 }

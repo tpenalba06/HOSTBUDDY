@@ -2567,6 +2567,68 @@ const guidePreviewCopy: Record<Locale, string> = {
 };
 for (const locale of LOCALES)
   translations[locale]["guide.previewNotice"] = guidePreviewCopy[locale];
+const mediaCopy: Record<Locale, string[]> = {
+  fr: [
+    "Médias du logement",
+    "Photos du logement",
+    "Voir la photo",
+    "Présentation du logement",
+    "Découvrez le logement en vidéo",
+    "Photo du logement",
+  ],
+  en: [
+    "Property media",
+    "Property photos",
+    "View photo",
+    "Property introduction",
+    "Discover the property on video",
+    "Property photo",
+  ],
+  es: [
+    "Medios del alojamiento",
+    "Fotos del alojamiento",
+    "Ver foto",
+    "Presentación del alojamiento",
+    "Descubre el alojamiento en vídeo",
+    "Foto del alojamiento",
+  ],
+  de: [
+    "Medien der Unterkunft",
+    "Fotos der Unterkunft",
+    "Foto ansehen",
+    "Vorstellung der Unterkunft",
+    "Entdecken Sie die Unterkunft im Video",
+    "Foto der Unterkunft",
+  ],
+  it: [
+    "Media dell’alloggio",
+    "Foto dell’alloggio",
+    "Vedi foto",
+    "Presentazione dell’alloggio",
+    "Scopri l’alloggio in video",
+    "Foto dell’alloggio",
+  ],
+  pt: [
+    "Média do alojamento",
+    "Fotos do alojamento",
+    "Ver foto",
+    "Apresentação do alojamento",
+    "Descubra o alojamento em vídeo",
+    "Foto do alojamento",
+  ],
+};
+const mediaKeys = [
+  "media.heading",
+  "media.photos",
+  "media.viewPhoto",
+  "media.presentation",
+  "media.discover",
+  "media.photo",
+];
+for (const locale of LOCALES)
+  mediaKeys.forEach((key, index) => {
+    translations[locale][key] = mediaCopy[locale][index]!;
+  });
 const guideKeys = [
   "guide.menu",
   "guide.search",

@@ -5,13 +5,10 @@ import type { PublicSection } from "@/lib/data/public-guide.functions";
 import { useI18n } from "@/lib/i18n";
 import { GuideView } from "./GuideView";
 import { toPublicSections } from "./guide-adapters";
-import breakfastAsset from "@/assets/hostbuddy-breakfast.jpg.asset.json";
-import spaAsset from "@/assets/hostbuddy-spa.jpg.asset.json";
-import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 export const SECTIONS = [
   { id: "arrival", key: "section.arrival", icon: "🔑" },
-  { id: "wifi", key: "section.wifi", icon: "📶" },
   { id: "house", key: "section.house", icon: "🏡" },
+  { id: "wifi", key: "section.wifi", icon: "📶" },
   { id: "places", key: "section.places", icon: "📍" },
   { id: "services", key: "section.services", icon: "✨" },
   { id: "departure", key: "section.departure", icon: "🧳" },
@@ -23,7 +20,7 @@ export function GuestGuide({
   data,
   section,
   onSection,
-  heroImage = arrivalAsset.url,
+  heroImage = "/demo-guide/coast.webp",
   labels,
   visibleSections,
   sections,
@@ -38,7 +35,7 @@ export function GuestGuide({
   sections?: GuideSection[];
   media?: SectionMedia[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [requested, setRequested] = useState(false);
   const fallback: PublicSection[] = SECTIONS.filter(
     (item) =>
@@ -90,11 +87,14 @@ export function GuestGuide({
       })
     : fallback;
   const demoPhotos: Record<string, string> = {
-    arrival: heroImage,
+    arrival: "/demo-guide/house.webp",
     wifi: heroImage,
-    house: heroImage,
-    pool: spaAsset.url,
-    services: breakfastAsset.url,
+    house: "/demo-guide/house.webp",
+    places: "/demo-guide/restaurant.webp",
+    departure: "/demo-guide/house.webp",
+    contact: heroImage,
+    pool: "/demo-guide/pool.webp",
+    services: "/demo-guide/breakfast.webp",
   };
   const illustrated = actual.map((item) =>
     item.media?.length || !demoPhotos[item.key]
@@ -113,6 +113,44 @@ export function GuestGuide({
           ],
         },
   );
+  if (!sections) {
+    const places = illustrated.find((item) => item.key === "places");
+    if (places) {
+      const photos = [
+        "/demo-guide/coast.webp",
+        "/demo-guide/breakfast.webp",
+        "/demo-guide/restaurant.webp",
+      ];
+      places.content = {
+        entries: data.places.map((place, index) => ({
+          id: `demo-place-${index}`,
+          title: place.name,
+          text: place.note,
+          category:
+            {
+              fr: ["Plages", "Commerces", "Restaurants"],
+              en: ["Beaches", "Shops", "Restaurants"],
+              es: ["Playas", "Tiendas", "Restaurantes"],
+              de: ["Strände", "Geschäfte", "Restaurants"],
+              it: ["Spiagge", "Negozi", "Ristoranti"],
+              pt: ["Praias", "Lojas", "Restaurantes"],
+            }[locale][index] ?? "",
+          mediaIds:
+            index === 2
+              ? ["demo-place-photo-2", "demo-place-photo-0", "demo-place-photo-1"]
+              : [`demo-place-photo-${index}`],
+        })),
+      };
+      places.media = photos.map((url, index) => ({
+        id: `demo-place-photo-${index}`,
+        type: "image",
+        path: url,
+        url,
+        mimeType: "image/webp",
+        sortOrder: index,
+      }));
+    }
+  }
   return (
     <>
       <GuideView

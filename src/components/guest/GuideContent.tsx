@@ -205,6 +205,7 @@ export function SectionMedia({ section }: { section: PublicSection }) {
               key={item.id}
               src={item.url}
               controls
+              playsInline
               preload="metadata"
               className="aspect-video w-full rounded-xl bg-ink"
             />

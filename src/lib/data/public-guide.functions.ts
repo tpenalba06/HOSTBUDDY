@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import type { Database } from "@/integrations/supabase/types";
 
 export interface PublicSection {
@@ -10,6 +11,7 @@ export interface PublicSection {
   title: string;
   ctaLabel?: string | null;
   content: {
+    propertyMedia?: PropertyMediaConfig;
     items?: { label: string; text: string }[];
     entries?: {
       id?: string;
@@ -40,6 +42,11 @@ export interface PublicSection {
     caption?: string | null;
     altText?: string | null;
     sortOrder: number;
+    sizeBytes?: number;
+    durationSeconds?: number;
+    processingStatus?: "uploaded" | "processing" | "ready" | "failed";
+    posterUrl?: string;
+    revision?: string;
   }[];
 }
 export interface PublicGuide {

@@ -1,3 +1,5 @@
+import { addTeamCopy, addMessageCopy } from "./team-copy";
+import { addV1Copy } from "./v1-copy";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LOCALES = ["fr", "en", "es", "de", "it", "pt"] as const;
@@ -2667,6 +2669,9 @@ for (const locale of LOCALES)
   guideKeys.forEach((key, index) => {
     translations[locale][key] = guideCopy[locale][index] ?? "";
   });
+addV1Copy(translations);
+addTeamCopy(translations);
+addMessageCopy(translations);
 export const I18N_KEYS = Object.keys(translations.fr);
 export function missingTranslationKeys(locale: Locale) {
   return I18N_KEYS.filter((key) => !translations[locale][key]);

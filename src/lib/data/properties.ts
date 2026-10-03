@@ -59,12 +59,36 @@ export async function ensureOrganization() {
 export async function listProperties(orgId: string) {
   const { data, error } = await supabase
     .from("properties")
-    .select("*")
+    .select(
+      "*, property_fields(key,value), guide_sections(id,section_key,content), section_media(id,section_id,media_type,storage_path,sort_order)",
+    )
     .eq("organization_id", orgId)
     .neq("status", "archived")
     .order("created_at", { ascending: false });
   if (error) return fail(error);
-  return data;
+  const covers = data.map((property) => {
+    const welcome = property.guide_sections.find(
+      (section) => section.section_key.split("-")[0] === "welcome",
+    );
+    const coverId = (welcome?.content as { propertyMedia?: PropertyMediaConfig } | null)
+      ?.propertyMedia?.coverId;
+    const photos = property.section_media.filter((media) => media.media_type === "image");
+    return (
+      photos.find((media) => media.id === coverId) ??
+      photos.find((media) => media.section_id === welcome?.id) ??
+      photos[0]
+    );
+  });
+  const paths = covers.flatMap((cover) => (cover ? [cover.storage_path] : []));
+  const signed = paths.length
+    ? await supabase.storage.from("guide-media").createSignedUrls(paths, 900)
+    : null;
+  const urls = new Map(signed?.data?.map((item) => [item.path, item.signedUrl]) ?? []);
+  return data.map((property, index) => ({
+    ...property,
+    location: property.property_fields.find((field) => field.key === "address")?.value ?? null,
+    coverUrl: covers[index] ? (urls.get(covers[index]!.storage_path) ?? null) : null,
+  }));
 }
 
 export async function getProperty(id: string) {

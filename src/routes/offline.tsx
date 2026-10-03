@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useI18n } from "@/lib/i18n";
 import { GuideView } from "@/components/guest/GuideView";
 import type { GuideViewData } from "@/components/guest/guide-model";
 import {
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/offline")({
   component: OfflinePage,
 });
 function OfflinePage() {
+  const { t, locale } = useI18n();
   const { slug } = Route.useSearch();
   const [guide, setGuide] = useState<GuideViewData | null>(null);
   const [copies, setCopies] = useState<OfflineSnapshot[]>([]);
@@ -39,7 +41,7 @@ function OfflinePage() {
         return;
       }
       const snapshot = await readSnapshot(slug);
-      if (!snapshot) throw new Error("Ce guide n’a pas été enregistré sur cet appareil.");
+      if (!snapshot) throw new Error(t("offline.noCopy"));
       await verifySnapshot(snapshot);
       const restored = restoreGuide(snapshot);
       release = restored.dispose;
@@ -48,17 +50,14 @@ function OfflinePage() {
         setSavedAt(snapshot.savedAt);
       } else release();
     })().catch((e) => {
-      if (live) setError(e instanceof Error ? e.message : "Le guide enregistré est indisponible.");
+      if (live) setError(e instanceof Error ? e.message : t("offline.unavailable"));
     });
     return () => {
       live = false;
       release?.();
     };
-  }, [slug]);
-  const unavailable = () =>
-    setNotice(
-      "Une connexion Internet est nécessaire pour envoyer une demande, un message ou un retour. Aucune demande n’a été envoyée.",
-    );
+  }, [slug, t]);
+  const unavailable = () => setNotice(t("offline.requiresNetwork"));
   const remove = async (key: string) => {
     await deleteSnapshot(key);
     const remaining = await listSnapshots();
@@ -70,10 +69,10 @@ function OfflinePage() {
   return (
     <div className="hb-guide">
       <div className="hb-offline-banner">
-        <span>{slug ? "Copie enregistrée · lecture sans réseau" : "Vos guides enregistrés"}</span>
-        {savedAt && <small>{new Date(savedAt).toLocaleDateString("fr-FR")}</small>}
-        <a href="/offline">Mes copies</a>
-        {slug && <a href={`/l/${encodeURIComponent(slug)}`}>Version en ligne</a>}
+        <span>{slug ? t("offline.copy") : t("offline.savedGuides")}</span>
+        {savedAt && <small>{new Date(savedAt).toLocaleDateString(locale)}</small>}
+        <a href="/offline">{t("offline.myCopies")}</a>
+        {slug && <a href={`/l/${encodeURIComponent(slug)}`}>{t("offline.online")}</a>}
       </div>
       {notice && (
         <p role="status" className="hb-offline-notice">
@@ -95,17 +94,17 @@ function OfflinePage() {
       )}
       {!slug && (
         <main className="hb-offline-list">
-          <h1>Guides enregistrés</h1>
-          <p>Disponibles sur cet appareil. Une mise à jour nécessite une connexion.</p>
+          <h1>{t("offline.savedGuides")}</h1>
+          <p>{t("offline.available")}</p>
           {copies.map((item) => (
             <article key={item.slug}>
               <a href={`/offline?slug=${encodeURIComponent(item.slug)}`}>{item.guide.name}</a>
               <small>
                 {(item.bytes / 1024 / 1024).toFixed(1)} Mo ·{" "}
-                {new Date(item.savedAt).toLocaleDateString("fr-FR")}
+                {new Date(item.savedAt).toLocaleDateString(locale)}
               </small>
               <button onClick={() => void remove(item.slug).catch((e) => setError(e.message))}>
-                Supprimer la copie locale
+                {t("offline.delete")}
               </button>
             </article>
           ))}

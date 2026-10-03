@@ -1,74 +1,171 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { parseThreadSession, type GuestThread, type GuestThreadSession } from "@/lib/guest-thread";
+import { useEffect, useState } from "react";
 import { Check, Send, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import type { PublicService } from "./GuideContent";
 export function MessageDrawer({ slug, onClose }: { slug: string; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
   const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [session, setSession] = useState<GuestThreadSession | null>(null);
+  const [thread, setThread] = useState<GuestThread | null>(null);
+  const [refresh, setRefresh] = useState(0);
+  const storageKey = `hostbuddy.guest-thread.${slug}`;
+  useEffect(() => {
+    try {
+      setSession(parseThreadSession(JSON.parse(localStorage.getItem(storageKey) ?? "null")));
+    } catch {
+      /* A blocked local store never prevents sending a message. */
+    }
+  }, [storageKey]);
+  useEffect(() => {
+    if (!session) return;
+    let live = true;
+    const controller = new AbortController();
+    const read = async () => {
+      if (document.hidden) return;
+      try {
+        const response = await fetch("/api/public/messages", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            action: "read",
+            slug,
+            conversationId: session.id,
+            token: session.token,
+          }),
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("unavailable");
+        const result = (await response.json()) as { thread: GuestThread };
+        if (live) {
+          setThread(result.thread);
+          setError("");
+        }
+      } catch {
+        if (live) setError(t("message.failed"));
+      }
+    };
+    void read();
+    const timer = setInterval(() => void read(), 20_000);
+    return () => {
+      live = false;
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [session, slug, refresh, t]);
   return (
     <Drawer title={t("guest.sendMessage")} onClose={onClose}>
-      {sent ? (
-        <Success text={t("message.sent")} onClose={onClose} />
-      ) : (
-        <form
-          className="space-y-4"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setBusy(true);
-            setError("");
-            try {
-              const r = await fetch("/api/public/messages", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ slug, name, contact, message, website }),
-              });
-              if (!r.ok) throw new Error();
-              setSent(true);
-            } catch {
-              setError(t("message.failed"));
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <Field label={t("form.name")} value={name} onChange={setName} required />
-          <Field
-            label={`${t("form.contact")} (${t("common.optional")})`}
-            value={contact}
-            onChange={setContact}
-          />
-          <label className="block">
-            <span className="mb-1 block font-semibold">{t("form.message")}</span>
-            <textarea
-              className="field min-h-36"
-              required
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </label>
-          <label className="sr-only">
-            {t("form.website")}
-            <input value={website} onChange={(e) => setWebsite(e.target.value)} />
-          </label>
-          {error && (
-            <p role="alert" className="rounded-lg bg-warning-soft p-3">
-              {error}
-            </p>
-          )}
-          <Button className="w-full" disabled={busy || !name.trim() || !message.trim()}>
-            <Send />
-            {busy ? "…" : t("common.send")}
+      {session && (
+        <div className="mb-4 space-y-3" aria-live="polite">
+          {(thread?.messages ?? []).map((item) => (
+            <article
+              key={item.id}
+              className={`rounded-xl p-3 ${item.sender_type === "manager" ? "bg-secondary" : "border bg-background"}`}
+            >
+              <p className="text-xs font-semibold text-muted-foreground">
+                {item.sender_type === "manager" ? t("message.host") : t("message.you")} ·{" "}
+                {new Date(item.created_at).toLocaleString(locale, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  day: "numeric",
+                  month: "short",
+                })}
+              </p>
+              <p className="mt-1 whitespace-pre-wrap break-words">{item.body}</p>
+            </article>
+          ))}
+          <Button variant="ghost" onClick={() => setRefresh((value) => value + 1)}>
+            {t("message.refresh")}
           </Button>
-        </form>
+        </div>
       )}
+      <form
+        className="space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (busy) return;
+          setBusy(true);
+          setError("");
+          try {
+            const response = await fetch("/api/public/messages", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                slug,
+                name,
+                contact,
+                message,
+                website,
+                ...(session ? { conversationId: session.id, token: session.token } : {}),
+              }),
+            });
+            if (!response.ok) throw new Error("unavailable");
+            const result = (await response.json()) as { session?: GuestThreadSession };
+            if (!session) {
+              const next = parseThreadSession(result.session);
+              if (!next) throw new Error("unavailable");
+              setSession(next);
+              try {
+                localStorage.setItem(storageKey, JSON.stringify(next));
+              } catch {
+                /* The open conversation still works in memory. */
+              }
+            }
+            setMessage("");
+            setRefresh((value) => value + 1);
+          } catch {
+            setError(t("message.failed"));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {!session && (
+          <>
+            <Field label={t("form.name")} value={name} onChange={setName} required />
+            <Field
+              label={`${t("form.contact")} (${t("common.optional")})`}
+              value={contact}
+              onChange={setContact}
+            />
+          </>
+        )}
+        <label className="block">
+          <span className="mb-1 block font-semibold">{t("form.message")}</span>
+          <textarea
+            className="field min-h-28"
+            required
+            maxLength={2000}
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+          />
+        </label>
+        <label className="sr-only">
+          {t("form.website")}
+          <input
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+          />
+        </label>
+        {error && (
+          <p role="alert" className="rounded-lg bg-warning-soft p-3">
+            {error}
+          </p>
+        )}
+        <Button className="w-full" disabled={busy || (!session && !name.trim()) || !message.trim()}>
+          <Send />
+          {busy ? t("common.saving") : t("common.send")}
+        </Button>
+      </form>
     </Drawer>
   );
 }

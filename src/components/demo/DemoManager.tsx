@@ -269,7 +269,9 @@ export function DemoManager({
     screen = (
       <ManagerPropertiesScreen
         properties={properties.map((property) =>
-          property.id === "demo-villa-mare" ? { ...property, name: villaName } : property,
+          property.id === "demo-villa-mare"
+            ? { ...property, name: villaName, coverUrl: "/demo-guide/house.webp" }
+            : property,
         )}
         onAdd={() => setArea("new")}
         onEdit={(id) => {

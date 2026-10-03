@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { ambienceFor } from "@/components/guest/visual-library";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
 
 export type ManagerPropertySummary = {
@@ -34,6 +35,7 @@ export type ManagerPropertySummary = {
   slug: string;
   status: "draft" | "published" | "archived";
   location?: string | null;
+  coverUrl?: string | null;
 };
 
 export type ManagerMetrics = {
@@ -145,6 +147,12 @@ export function ManagerPropertiesScreen({
 }) {
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const shown = properties.filter((property) =>
+    `${property.name} ${property.location ?? ""}`
+      .toLocaleLowerCase()
+      .includes(search.toLocaleLowerCase().trim()),
+  );
 
   return (
     <div className="py-4 @sm:py-6">
@@ -162,32 +170,49 @@ export function ManagerPropertiesScreen({
         )}
       </div>
 
+      {properties.length > 4 && (
+        <input
+          type="search"
+          className="field mt-5"
+          aria-label={t("manager.searchProperties")}
+          placeholder={t("manager.searchProperties")}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      )}
       {properties.length ? (
         <div className="mt-6 grid gap-4 @lg:grid-cols-2">
-          {properties.map((property) => (
+          {!shown.length && <p className="text-muted-foreground">{t("manager.noResults")}</p>}
+          {shown.map((property) => (
             <article key={property.id} className="surface min-w-0 overflow-hidden">
-              <div className="bg-warm p-4 @sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p
-                      className={`text-sm font-bold ${
-                        property.status === "published" ? "text-success" : "text-warning"
-                      }`}
-                    >
-                      {property.status === "published" ? t("app.published") : t("app.draft")}
-                    </p>
-                    <h2 className="mt-1 truncate text-xl font-semibold @sm:text-2xl">
-                      {property.name}
-                    </h2>
-                    {property.location && (
-                      <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{property.location}</span>
-                      </p>
-                    )}
-                  </div>
-                  <Home className="h-6 w-6 shrink-0 text-primary" />
-                </div>
+              <div className="relative aspect-[16/10] overflow-hidden bg-warm">
+                <img
+                  src={property.coverUrl || ambienceFor(property.name)}
+                  alt={property.coverUrl ? property.name : t("media.ambience")}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                  onError={(event) => {
+                    const image = event.currentTarget;
+                    if (image.dataset["fallback"]) return;
+                    image.dataset["fallback"] = "true";
+                    image.src = ambienceFor(property.name);
+                  }}
+                />
+                <span className="absolute left-3 top-3 rounded-full bg-background/95 px-3 py-1 text-xs font-semibold text-foreground">
+                  {property.status === "published" ? t("app.published") : t("app.draft")}
+                </span>
+              </div>
+              <div className="px-4 pt-4 @sm:px-5">
+                <h2 className="break-words text-2xl font-semibold leading-tight">
+                  {property.name}
+                </h2>
+                {property.location && (
+                  <p className="mt-2 flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{property.location}</span>
+                  </p>
+                )}
               </div>
 
               <div className="grid gap-2 p-4 @sm:grid-cols-3">
@@ -676,32 +701,47 @@ export function ManagerTeamScreen({
   onRoleChange: (userId: string, role: "admin" | "member") => void | Promise<void>;
   onRemove: (userId: string) => void | Promise<void>;
 }) {
+  const { t } = useI18n();
+  const [error, setError] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "member">("member");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const change = async (task: () => void | Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await task();
+    } catch {
+      setError(t("team.error"));
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="py-4 @sm:py-6">
-      <BackButton label="Hébergements" onBack={onBack} />
+      <BackButton label={t("nav.properties")} onBack={onBack} />
       <PageHeading
-        eyebrow="Administration"
-        title="Équipe"
-        description="Des rôles simples, sans réglages techniques."
+        eyebrow={t("demo.ownerSpace")}
+        title={t("nav.team")}
+        description={t("demo.teamHint")}
       />
       <form
         className="surface mt-6 grid gap-3 p-4 @sm:p-5 @lg:grid-cols-[minmax(0,1fr)_180px_auto]"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (!email.trim()) return;
+          if (busy || !email.trim()) return;
           setBusy(true);
           setNotice("");
+          setError("");
           try {
             await onInvite(email.trim(), role);
             setEmail("");
-            setNotice(
-              "Invitation enregistrée. Le membre rejoindra l’équipe avec son compte HostBuddy.",
-            );
+            setNotice(t("team.notice"));
+          } catch {
+            setError(t("team.error"));
           } finally {
             setBusy(false);
           }
@@ -719,25 +759,30 @@ export function ManagerTeamScreen({
           />
         </label>
         <label>
-          <span className="mb-1 block font-semibold">Rôle</span>
+          <span className="mb-1 block font-semibold">{t("team.role")}</span>
           <select
             className="field"
             value={role}
             onChange={(event) => setRole(event.target.value as typeof role)}
           >
-            <option value="admin">Responsable</option>
-            <option value="member">Employé</option>
+            <option value="admin">{t("team.admin")}</option>
+            <option value="member">{t("team.member")}</option>
           </select>
         </label>
         <Button className="min-h-12 self-end" disabled={busy}>
           <MailPlus />
-          {busy ? "Ajout…" : "Inviter"}
+          {busy ? t("team.adding") : t("team.add")}
         </Button>
       </form>
+      {error && (
+        <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">
+          {error}
+        </p>
+      )}
       {notice && <p className="mt-3 rounded-xl bg-success-soft p-3 text-success">{notice}</p>}
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold @sm:text-2xl">Membres actifs</h2>
+        <h2 className="text-xl font-semibold @sm:text-2xl">{t("team.active")}</h2>
         <div className="mt-3 space-y-3">
           {members.map((member) => (
             <article
@@ -749,32 +794,36 @@ export function ManagerTeamScreen({
                 <p className="truncate font-bold">{member.email}</p>
                 <p className="text-sm text-muted-foreground">
                   {member.role === "owner"
-                    ? "Patron"
+                    ? t("team.owner")
                     : member.role === "admin"
-                      ? "Responsable"
-                      : "Employé"}
+                      ? t("team.admin")
+                      : t("team.member")}
                 </p>
               </div>
               {member.role !== "owner" && (
                 <>
                   <select
-                    aria-label="Modifier le rôle"
+                    aria-label={t("team.change")}
                     className="field"
+                    disabled={busy}
                     value={member.role}
                     onChange={(event) =>
-                      void onRoleChange(member.user_id, event.target.value as "admin" | "member")
+                      void change(() =>
+                        onRoleChange(member.user_id, event.target.value as "admin" | "member"),
+                      )
                     }
                   >
-                    <option value="admin">Responsable</option>
-                    <option value="member">Employé</option>
+                    <option value="admin">{t("team.admin")}</option>
+                    <option value="member">{t("team.member")}</option>
                   </select>
                   <Button
                     variant="ghost"
                     className="min-h-12 text-destructive"
-                    onClick={() => void onRemove(member.user_id)}
+                    disabled={busy}
+                    onClick={() => void change(() => onRemove(member.user_id))}
                   >
                     <Trash2 />
-                    Retirer
+                    {t("team.remove")}
                   </Button>
                 </>
               )}

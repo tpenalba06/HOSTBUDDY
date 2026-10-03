@@ -14,6 +14,10 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 type Copy = Record<string, string>;
 export const translations: Record<Locale, Copy> = {
   fr: {
+    "media.ambience": "Image d’ambiance HostBuddy",
+    "guide.servicesEyebrow": "Pour profiter du séjour",
+    "guide.servicesExplore": "Découvrir les services",
+    "guide.allInfo": "Toutes les infos",
     "common.back": "Retour",
     "common.backSite": "Retour au site",
     "common.home": "Accueil",
@@ -266,6 +270,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Seules les informations confirmées seront visibles par vos voyageurs.",
   },
   en: {
+    "media.ambience": "HostBuddy ambience image",
+    "guide.servicesEyebrow": "Make the most of your stay",
+    "guide.servicesExplore": "Explore services",
+    "guide.allInfo": "All information",
     "common.back": "Back",
     "common.backSite": "Back to site",
     "common.home": "Home",
@@ -513,6 +521,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Only confirmed information is visible to guests.",
   },
   es: {
+    "media.ambience": "Imagen de ambiente HostBuddy",
+    "guide.servicesEyebrow": "Disfruta de tu estancia",
+    "guide.servicesExplore": "Descubrir servicios",
+    "guide.allInfo": "Toda la información",
     "common.back": "Volver",
     "common.backSite": "Volver al sitio",
     "common.home": "Inicio",
@@ -760,6 +772,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo la información confirmada será visible.",
   },
   de: {
+    "media.ambience": "HostBuddy Stimmungsbild",
+    "guide.servicesEyebrow": "Den Aufenthalt genießen",
+    "guide.servicesExplore": "Services entdecken",
+    "guide.allInfo": "Alle Informationen",
     "common.back": "Zurück",
     "common.backSite": "Zurück zur Website",
     "common.home": "Startseite",
@@ -1008,6 +1024,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Nur bestätigte Informationen sind sichtbar.",
   },
   it: {
+    "media.ambience": "Immagine d’atmosfera HostBuddy",
+    "guide.servicesEyebrow": "Vivi il tuo soggiorno",
+    "guide.servicesExplore": "Scopri i servizi",
+    "guide.allInfo": "Tutte le informazioni",
     "common.back": "Indietro",
     "common.backSite": "Torna al sito",
     "common.home": "Home",
@@ -1252,6 +1272,10 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo le informazioni confermate saranno visibili.",
   },
   pt: {
+    "media.ambience": "Imagem de ambiente HostBuddy",
+    "guide.servicesEyebrow": "Aproveite a estadia",
+    "guide.servicesExplore": "Descobrir serviços",
+    "guide.allInfo": "Todas as informações",
     "common.back": "Voltar",
     "common.backSite": "Voltar ao site",
     "common.home": "Início",

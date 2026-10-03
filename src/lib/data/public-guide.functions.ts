@@ -12,6 +12,7 @@ export interface PublicSection {
   ctaLabel?: string | null;
   content: {
     propertyMedia?: PropertyMediaConfig;
+    explicitlyEnabled?: boolean;
     items?: { label: string; text: string }[];
     entries?: {
       id?: string;

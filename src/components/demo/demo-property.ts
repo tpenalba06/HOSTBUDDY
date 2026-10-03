@@ -2,6 +2,7 @@ import type { ManagerPropertySummary } from "@/components/app/ManagerScreens";
 import type { PropertyField, GuideSection, SectionMedia } from "@/lib/data/properties";
 import type { Service } from "@/lib/data/operations";
 import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
+import { initialGuideSections } from "@/lib/data/section-policy";
 import { FIELD_DEFS } from "@/lib/import-engine/fields";
 import {
   buildGuideContent,
@@ -36,7 +37,7 @@ export function createDemoProperty(
       key: def.key,
       category: def.category,
       label: def.label,
-      essential: def.essential,
+      essential: def.essential && !["parking", "contact"].includes(def.key),
       question: def.question,
       value: field?.value ?? null,
       status: field?.status ?? "missing",
@@ -66,30 +67,11 @@ export function createDemoProperty(
 }
 
 export function sectionsFromDemoFields(id: string, fields: PropertyField[]): GuideSection[] {
-  const definitions = [
-    ...new Map(FIELD_DEFS.map((def) => [def.section.key, def.section])).values(),
-  ];
-  return definitions.map((def) => ({
-    id: `${id}-section-${def.key}`,
-    property_id: id,
-    section_key: def.key,
-    title: def.title,
-    icon: def.icon,
+  return initialGuideSections(id, fields).map((section) => ({
+    ...section,
+    content: section.content as Json,
+    id: `${id}-section-${section.section_key}`,
     cta_label: null,
-    sort_order: def.order,
-    is_visible: true,
-    content: buildGuideContent(
-      def.key,
-      {},
-      fields
-        .filter(
-          (field) =>
-            field.status === "found" &&
-            field.value &&
-            FIELD_DEFS.find((d) => d.key === field.key)?.section.key === def.key,
-        )
-        .map((field) => ({ fieldKey: field.key, label: field.label, text: field.value! })),
-    ) as Json,
     created_at: "",
     updated_at: "",
   }));
@@ -128,7 +110,19 @@ export function answerDemoField(
   return {
     ...property,
     fields: property.fields.map((current) => (current.id === field.id ? updated : current)),
-    sections: property.sections.map((section) => ({
+    sections: (property.sections.some(
+      (section) =>
+        section.section_key === FIELD_DEFS.find((def) => def.key === field.key)?.section.key,
+    )
+      ? property.sections
+      : [
+          ...property.sections,
+          ...sectionsFromDemoFields(property.id, [updated]).filter(
+            (section) =>
+              !property.sections.some((existing) => existing.section_key === section.section_key),
+          ),
+        ]
+    ).map((section) => ({
       ...section,
       content:
         FIELD_DEFS.find((def) => def.key === field.key)?.section.key === section.section_key

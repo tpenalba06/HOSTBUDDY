@@ -31,12 +31,13 @@ const guide: PublicGuide = {
   sections: [section],
 };
 describe("shared guest guide compatibility", () => {
-  it("renders the property without borrowing fixture photographs or personal details", () => {
+  it("renders clearly identified HostBuddy ambience without fabricating property facts", () => {
     const html = renderToStaticMarkup(<GuideView guide={guide} />);
     expect(html).toContain("Maison réelle");
-    expect(html).not.toContain("<img");
+    expect(html).toContain("media.ambience");
+    expect(html).toContain("/hostbuddy-media/wifi.webp");
     expect(html).not.toMatch(/Villa Mare|soleil2026|breakfast|arrival.jpg|spa.jpg/);
-    expect(guideCover(guide)).toBeUndefined();
+    expect(guideCover(guide)).toBe("/hostbuddy-media/apartment.webp");
   });
   it("keeps a legacy combined Wi-Fi value intact without fabricating a separate password", () => {
     const html = renderToStaticMarkup(<GuideView guide={guide} sectionKey="wifi" />);

@@ -1,3 +1,4 @@
+import { validateMediaUpload } from "@/lib/data/media-validation";
 import { useEffect, useMemo, useState } from "react";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -177,7 +178,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
           cta_label: null,
           sort_order: order,
           is_visible: true,
-          content: { items: [] },
+          content: { items: [], explicitlyEnabled: true },
           created_at: "",
           updated_at: "",
         });
@@ -185,14 +186,43 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
         return created;
       },
       save: async (current, values) => {
-        const content = buildGuideContent(current.section_key, current.content, values.items);
+        if (values.propertyMedia) {
+          const updated = {
+            ...current,
+            content: {
+              ...(current.content as object),
+              propertyMedia: values.propertyMedia,
+            } as unknown as Json,
+          };
+          setSections((items) =>
+            items.map((item) =>
+              item.id === current.id
+                ? {
+                    ...item,
+                    content: {
+                      ...(item.content as object),
+                      propertyMedia: values.propertyMedia,
+                    } as unknown as Json,
+                  }
+                : item,
+            ),
+          );
+          return updated;
+        }
+        const content = buildGuideContent(
+          current.section_key,
+          values.propertyMedia
+            ? { ...(current.content as object), propertyMedia: values.propertyMedia }
+            : current.content,
+          values.items,
+        );
         const updated = {
           ...current,
           title: values.title,
           icon: values.icon,
           cta_label: values.ctaLabel || null,
           is_visible: values.isVisible,
-          content,
+          content: { ...content, explicitlyEnabled: values.isVisible },
         } as GuideSection;
         setSections((currentItems) =>
           currentItems.map((item) => (item.id === updated.id ? updated : item)),
@@ -217,6 +247,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
       reorder: async (next) => setSections(next),
       remove: async (id) => setSections((items) => items.filter((item) => item.id !== id)),
       upload: async (_org, _property, sectionId, file) => {
+        await validateMediaUpload(file);
         const url = URL.createObjectURL(file);
         const created = asMedia({
           id: `demo-media-${crypto.randomUUID()}`,
@@ -233,13 +264,18 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
           created_at: "",
         });
         setMedia((items) => [...items, created]);
-        if (file.type.startsWith("image/")) setHero(url);
+        if (
+          file.type.startsWith("image/") &&
+          sections.find((s) => s.id === sectionId)?.section_key.startsWith("welcome")
+        )
+          setHero(url);
         return created;
       },
       updateMedia: async (item, values) => {
         const updated = {
           ...item,
           alt_text: values.altText ?? item.alt_text,
+          sort_order: values.sortOrder ?? item.sort_order,
           caption: values.caption ?? item.caption,
         };
         setMedia((items) => items.map((current) => (current.id === item.id ? updated : current)));
@@ -264,12 +300,16 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
   const editor = (
     <GuideEditor
       data={{
-        property: { id: "demo", organization_id: "demo", status: "published" },
+        property: { id: "demo", name: data.name, organization_id: "demo", status: "published" },
         fields: [],
         sections,
         media,
       }}
       actions={actions}
+      onPublish={async () => {
+        flash();
+        showGuest();
+      }}
       onChanged={flash}
       onPreview={() => showGuest()}
     />
@@ -304,7 +344,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
       >
         <div className="demo-viewport overflow-y-auto overflow-x-hidden bg-background text-foreground">
           <div hidden={mode !== "guest"}>
-            <div className="mx-auto max-w-4xl p-3 @sm:p-6">
+            <div>
               <GuestGuide
                 data={data}
                 section={section}

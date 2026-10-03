@@ -1,3 +1,4 @@
+import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
@@ -26,10 +27,12 @@ import {
 } from "@/lib/data/properties";
 import { friendlyMessage } from "./Friendly";
 import { useI18n } from "@/lib/i18n";
+import { PropertyMediaEditor } from "./PropertyMediaEditor";
+import { sectionVisual } from "@/components/guest/visual-library";
 import { translationAvailability } from "@/lib/translation/service";
 import { getGuideItems, type GuideContentItem } from "@/lib/data/guide-content";
 
-export type EditorProperty = { id: string; organization_id: string; status: string };
+export type EditorProperty = { id: string; organization_id: string; status: string; name?: string };
 export type EditorData = {
   property: EditorProperty;
   fields: PropertyField[];
@@ -51,6 +54,7 @@ export type GuideEditorActions = {
       isVisible: boolean;
       icon: string;
       ctaLabel: string;
+      propertyMedia?: PropertyMediaConfig;
     },
   ) => Promise<GuideSection>;
   reorder: (sections: GuideSection[]) => Promise<void>;
@@ -63,12 +67,12 @@ export type GuideEditorActions = {
   ) => Promise<SectionMedia>;
   updateMedia: (
     media: SectionMedia,
-    values: { caption?: string; altText?: string },
+    values: { caption?: string; altText?: string; sortOrder?: number },
   ) => Promise<SectionMedia>;
   removeMedia: (media: SectionMedia) => Promise<void>;
   resolveMediaUrl: (media: SectionMedia) => Promise<string>;
 };
-const realActions: GuideEditorActions = {
+export const realGuideEditorActions: GuideEditorActions = {
   ensure: ensureGuideSections,
   add: addGuideSection,
   save: saveGuideSection,
@@ -103,21 +107,27 @@ export function GuideEditor({
   data,
   onChanged,
   onPreview,
-  actions = realActions,
+  onPublish,
+  actions = realGuideEditorActions,
   compact = false,
 }: {
   data: EditorData;
   onChanged: () => void;
-  onPreview: () => void;
+  onPreview: () => void | Promise<void>;
+  onPublish?: () => Promise<void>;
   actions?: GuideEditorActions;
   compact?: boolean;
 }) {
   const { t } = useI18n();
+  const flushers = useRef(new Map<string, () => Promise<void>>());
+  const actionLock = useRef(false);
   const [sections, setSections] = useState(data.sections);
   const [media, setMedia] = useState(data.media);
   const [open, setOpen] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mediaBusy, setMediaBusy] = useState(false);
+  const [transfers, setTransfers] = useState(0);
   const [templates, setTemplates] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -141,6 +151,24 @@ export function GuideEditor({
     window.setTimeout(() => setSaved(false), 2200);
     onChanged();
   };
+  const proceed = async (publish = false) => {
+    if (actionLock.current || mediaBusy || transfers > 0) return;
+    actionLock.current = true;
+    setSaving(true);
+    setError("");
+    try {
+      await Promise.all([...flushers.current.values()].map((flush) => flush()));
+      if (publish) {
+        await onPublish?.();
+        flash();
+      } else await onPreview();
+    } catch (e) {
+      setError(friendlyMessage(e));
+    } finally {
+      setSaving(false);
+      actionLock.current = false;
+    }
+  };
   const move = async (id: string, direction: -1 | 1) => {
     const index = sorted.findIndex((item) => item.id === id);
     const target = index + direction;
@@ -157,6 +185,8 @@ export function GuideEditor({
       await actions.reorder(ordered);
       flash();
     } catch (e) {
+      setSections(sorted);
+      onChanged();
       setError(friendlyMessage(e));
     }
   };
@@ -183,7 +213,8 @@ export function GuideEditor({
       <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
         <h2 className="text-2xl font-semibold @sm:text-3xl">{t("manager.guide")}</h2>
         <Button
-          onClick={onPreview}
+          onClick={() => void proceed()}
+          disabled={saving || mediaBusy || transfers > 0}
           variant="outline"
           className="min-h-12 w-full rounded-xl @sm:w-auto"
         >
@@ -191,6 +222,39 @@ export function GuideEditor({
           <span>{t("manager.preview")}</span>
         </Button>
       </div>
+      {onPublish && (
+        <Button
+          className="min-h-12 w-full rounded-full"
+          disabled={saving || mediaBusy || transfers > 0}
+          onClick={() => void proceed(true)}
+        >
+          {saving
+            ? t("common.saving")
+            : data.property.status === "published"
+              ? "Mettre à jour le guide"
+              : t("property.publish")}
+        </Button>
+      )}
+      <PropertyMediaEditor
+        property={data.property}
+        section={sections.find((section) => section.section_key.split("-")[0] === "welcome")}
+        media={media}
+        actions={actions}
+        onSection={(updated) => {
+          setSections((current) =>
+            current.some((s) => s.id === updated.id)
+              ? current.map((s) => (s.id === updated.id ? updated : s))
+              : [...current, updated],
+          );
+          onChanged();
+        }}
+        onMedia={(updated) => {
+          setMedia(updated);
+          onChanged();
+        }}
+        onPreview={() => void proceed()}
+        onBusyChange={setMediaBusy}
+      />
       <Button
         onClick={() => setTemplates(!templates)}
         className="min-h-14 w-full rounded-full text-base"
@@ -204,6 +268,7 @@ export function GuideEditor({
           {TEMPLATE_KEYS.map((key) => (
             <button
               key={key}
+              disabled={saving || mediaBusy || transfers > 0}
               onClick={() => add(key)}
               className="flex min-h-14 min-w-0 items-center gap-3 rounded-lg border bg-card px-4 text-left font-semibold hover:border-primary"
             >
@@ -235,27 +300,38 @@ export function GuideEditor({
             open={open === section.id}
             onToggle={() => setOpen(open === section.id ? null : section.id)}
             actions={actions}
+            registerFlush={(flush) => {
+              if (flush) flushers.current.set(section.id, flush);
+              else flushers.current.delete(section.id);
+            }}
             onSave={async (values) => {
               const updated = await actions.save(section, values);
-              setSections(sections.map((item) => (item.id === updated.id ? updated : item)));
+              setSections((current) =>
+                current.map((item) => (item.id === updated.id ? updated : item)),
+              );
               flash();
             }}
             onUpload={async (file) => {
-              const created = await actions.upload(
-                data.property.organization_id,
-                data.property.id,
-                section.id,
-                file,
-              );
-              setMedia([...media, created]);
-              flash();
+              setTransfers((current) => current + 1);
+              try {
+                const created = await actions.upload(
+                  data.property.organization_id,
+                  data.property.id,
+                  section.id,
+                  file,
+                );
+                setMedia((current) => [...current, created]);
+                flash();
+              } finally {
+                setTransfers((current) => current - 1);
+              }
             }}
             onMediaChange={(updated) =>
               setMedia(media.map((item) => (item.id === updated.id ? updated : item)))
             }
             onMediaRemove={async (item) => {
               await actions.removeMedia(item);
-              setMedia(media.filter((current) => current.id !== item.id));
+              setMedia((current) => current.filter((m) => m.id !== item.id));
               flash();
             }}
             onMoveUp={() => move(section.id, -1)}
@@ -264,9 +340,13 @@ export function GuideEditor({
             canDown={index < sorted.length - 1}
             onDelete={async () => {
               if (!window.confirm(`${t("common.delete")} ?`)) return;
-              await actions.remove(section.id);
-              setSections(sections.filter((item) => item.id !== section.id));
-              flash();
+              try {
+                await actions.remove(section.id);
+                setSections((current) => current.filter((item) => item.id !== section.id));
+                flash();
+              } catch (e) {
+                setError(friendlyMessage(e));
+              }
             }}
           />
         ))}
@@ -300,7 +380,9 @@ function SectionRow({
   canDown,
   onDelete,
   actions,
+  registerFlush,
 }: {
+  registerFlush: (flush: (() => Promise<void>) | null) => void;
   section: GuideSection;
   media: SectionMedia[];
   open: boolean;
@@ -334,65 +416,156 @@ function SectionRow({
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [rowError, setRowError] = useState("");
+  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const dirty = useRef(false);
+  const version = useRef(0);
+  const queue = useRef(Promise.resolve());
+  const draft = useRef({ title, items, isVisible: visible, icon, ctaLabel });
+  draft.current = { title, items, isVisible: visible, icon, ctaLabel };
   const hydrated = useRef(false);
   const saveRef = useRef(onSave);
   useEffect(() => {
     saveRef.current = onSave;
   }, [onSave]);
+  const flush = async () => {
+    clearTimeout(pending.current);
+    if (!dirty.current) {
+      await queue.current;
+      return;
+    }
+    const values = draft.current;
+    const revision = version.current;
+    if (!values.title.trim()) throw new Error("Donnez un titre à la rubrique.");
+    setBusy(true);
+    setRowError("");
+    const task = queue.current.catch(() => {}).then(() => saveRef.current(values));
+    queue.current = task;
+    try {
+      await task;
+      if (version.current === revision) dirty.current = false;
+    } catch (e) {
+      setRowError(friendlyMessage(e));
+      throw e;
+    } finally {
+      setBusy(false);
+    }
+  };
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+  const registerRef = useRef(registerFlush);
+  registerRef.current = registerFlush;
+  useEffect(() => {
+    registerRef.current(() => flushRef.current());
+    return () => {
+      registerRef.current(null);
+      clearTimeout(pending.current);
+    };
+  }, [section.id]);
   useEffect(() => {
     if (!hydrated.current) {
       hydrated.current = true;
       return;
     }
-    const timer = window.setTimeout(async () => {
-      if (!title.trim()) return;
-      setBusy(true);
-      try {
-        await saveRef.current({ title, items, isVisible: visible, icon, ctaLabel });
-      } finally {
-        setBusy(false);
-      }
+    dirty.current = true;
+    version.current += 1;
+    pending.current = setTimeout(() => {
+      void flushRef.current().catch(() => {});
     }, 800);
-    return () => window.clearTimeout(timer);
+    return () => clearTimeout(pending.current);
   }, [title, items, visible, icon, ctaLabel]);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   return (
     <article className="rounded-lg border bg-card">
-      <button
-        onClick={onToggle}
-        className="grid min-h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 text-left"
-      >
-        <span className="text-xl">{icon}</span>
-        <span className="min-w-0">
-          <span className="block truncate text-lg font-bold">{title}</span>
-          <span className="text-sm text-muted-foreground">
-            {visible ? t("manager.visible") : t("manager.hidden")}
-            {media.length ? ` · ${media.length}` : ""}
+      <div className="flex items-center gap-2 pr-4">
+        <button
+          onClick={onToggle}
+          className="grid min-h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 text-left"
+        >
+          <img
+            src={sectionVisual({ id: section.id, key: section.section_key, title, content: {} })}
+            alt=""
+            className="h-12 w-12 rounded-xl object-cover"
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-lg font-bold">{title}</span>
+            <span className="text-sm text-muted-foreground">
+              {visible ? t("manager.visible") : t("manager.hidden")}
+              {media.length ? ` · ${media.length}` : ""}
+            </span>
           </span>
-        </span>
-        {open ? <ChevronUp /> : <ChevronDown />}
-      </button>
+          {open ? <ChevronUp /> : <ChevronDown />}
+        </button>
+        <input
+          type="checkbox"
+          aria-label={`${t("manager.showSection")} : ${title}`}
+          checked={visible}
+          onChange={(e) => setVisible(e.target.checked)}
+          className="h-6 w-6 shrink-0 accent-primary"
+        />
+      </div>
       {open && (
         <div className="space-y-5 border-t p-4">
-          <div>
-            <p className="mb-2 font-semibold">{t("manager.icon")}</p>
-            <div className="flex flex-wrap gap-2">
-              {ICONS.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setIcon(item)}
-                  className={`h-12 w-12 rounded-lg border text-xl ${icon === item ? "border-primary bg-secondary" : "bg-card"}`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
           <label className="block">
             <span className="mb-1 block font-semibold">{t("manager.sectionTitle")}</span>
             <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
+          {section.section_key.split("-")[0] !== "welcome" && (
+            <>
+              <div>
+                <p className="font-semibold">{t("manager.media")}</p>
+                <p className="text-sm text-muted-foreground">{t("manager.mediaHelp")}</p>
+                <div className="mt-3 grid gap-3 @sm:grid-cols-2">
+                  {[...media]
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((item) => (
+                      <MediaItem
+                        key={item.id}
+                        item={item}
+                        actions={actions}
+                        onChange={onMediaChange}
+                        onRemove={() => onMediaRemove(item)}
+                      />
+                    ))}
+                </div>
+                <div className="mt-3 grid gap-2 @sm:grid-cols-2">
+                  <UploadButton
+                    icon={<ImagePlus />}
+                    label={t("manager.addPhoto")}
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    busy={uploading}
+                    onFile={async (file) => {
+                      setUploading(true);
+                      try {
+                        await onUpload(file);
+                      } catch (e) {
+                        setRowError(friendlyMessage(e));
+                      } finally {
+                        setUploading(false);
+                      }
+                    }}
+                  />
+                  <UploadButton
+                    icon={<Video />}
+                    label={t("manager.addVideo")}
+                    accept="video/mp4,video/webm"
+                    busy={uploading}
+                    onFile={async (file) => {
+                      setUploading(true);
+                      try {
+                        await onUpload(file);
+                      } catch (e) {
+                        setRowError(friendlyMessage(e));
+                      } finally {
+                        setUploading(false);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
           <div>
             <p className="mb-2 font-semibold">{t("manager.sectionContent")}</p>
             <div className="space-y-3">
@@ -449,52 +622,26 @@ function SectionRow({
               onChange={(e) => setVisible(e.target.checked)}
             />
           </label>
-          <div>
-            <p className="font-semibold">{t("manager.media")}</p>
-            <p className="text-sm text-muted-foreground">{t("manager.mediaHelp")}</p>
-            <div className="mt-3 grid gap-3 @sm:grid-cols-2">
-              {[...media]
-                .sort((a, b) => a.sort_order - b.sort_order)
-                .map((item) => (
-                  <MediaItem
-                    key={item.id}
-                    item={item}
-                    actions={actions}
-                    onChange={onMediaChange}
-                    onRemove={() => onMediaRemove(item)}
-                  />
-                ))}
-            </div>
-            <div className="mt-3 grid gap-2 @sm:grid-cols-2">
-              <UploadButton
-                icon={<ImagePlus />}
-                label={t("manager.addPhoto")}
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                busy={uploading}
-                onFile={async (file) => {
-                  setUploading(true);
-                  await onUpload(file);
-                  setUploading(false);
-                }}
-              />
-              <UploadButton
-                icon={<Video />}
-                label={t("manager.addVideo")}
-                accept="video/mp4,video/webm"
-                busy={uploading}
-                onFile={async (file) => {
-                  setUploading(true);
-                  await onUpload(file);
-                  setUploading(false);
-                }}
-              />
-            </div>
-          </div>
           <button onClick={() => setMore(!more)} className="min-h-12 font-semibold text-primary">
             {more ? t("manager.lessOptions") : t("manager.moreOptions")}
           </button>
           {more && (
             <div className="space-y-4 rounded-xl bg-muted p-4">
+              <div>
+                <p className="mb-2 font-semibold">{t("manager.icon")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {ICONS.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => setIcon(item)}
+                      className={`h-12 w-12 rounded-lg border text-xl ${icon === item ? "border-primary bg-secondary" : "bg-card"}`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <label className="block">
                 <span className="mb-1 block font-semibold">{t("manager.buttonText")}</span>
                 <input
@@ -519,11 +666,27 @@ function SectionRow({
               </div>
             </div>
           )}
+          {rowError && (
+            <p role="alert" className="rounded-xl bg-warning-soft p-3">
+              {rowError}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            disabled={busy || uploading}
+            onClick={() => void flush().catch(() => {})}
+          >
+            {busy ? t("common.saving") : t("common.save")}
+          </Button>
           <p
             aria-live="polite"
             className="flex min-h-12 items-center justify-center text-center text-sm font-semibold text-muted-foreground"
           >
-            {busy ? t("common.saving") : t("manager.autoSaved")}
+            {busy
+              ? t("common.saving")
+              : rowError
+                ? "Enregistrement à réessayer"
+                : t("manager.autoSaved")}
           </p>
         </div>
       )}
@@ -574,10 +737,14 @@ function MediaItem({
 }) {
   const { t } = useI18n();
   const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
   const [alt, setAlt] = useState(item.alt_text ?? "");
   const [caption, setCaption] = useState(item.caption ?? "");
   useEffect(() => {
-    actions.resolveMediaUrl(item).then(setUrl);
+    actions
+      .resolveMediaUrl(item)
+      .then(setUrl)
+      .catch((e) => setError(friendlyMessage(e)));
   }, [actions, item]);
   return (
     <div className="overflow-hidden rounded-lg border bg-background">
@@ -593,21 +760,40 @@ function MediaItem({
           />
         ))}
       <div className="space-y-2 p-3">
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
         <input
           className="field"
           value={alt}
           placeholder={t("common.optional")}
           onChange={(e) => setAlt(e.target.value)}
-          onBlur={() => actions.updateMedia(item, { altText: alt }).then(onChange)}
+          onBlur={() =>
+            actions
+              .updateMedia(item, { altText: alt })
+              .then(onChange)
+              .catch((e) => setError(friendlyMessage(e)))
+          }
         />
         <input
           className="field"
           value={caption}
           placeholder={t("common.optional")}
           onChange={(e) => setCaption(e.target.value)}
-          onBlur={() => actions.updateMedia(item, { caption }).then(onChange)}
+          onBlur={() =>
+            actions
+              .updateMedia(item, { caption })
+              .then(onChange)
+              .catch((e) => setError(friendlyMessage(e)))
+          }
         />
-        <Button variant="ghost" className="w-full text-destructive" onClick={onRemove}>
+        <Button
+          variant="ghost"
+          className="w-full text-destructive"
+          onClick={() => Promise.resolve(onRemove()).catch((e) => setError(friendlyMessage(e)))}
+        >
           <Trash2 />
           {t("common.delete")}
         </Button>

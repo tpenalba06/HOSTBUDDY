@@ -1,5 +1,6 @@
 import type { PublicGuide, PublicSection } from "@/lib/data/public-guide.functions";
 
+import { ambienceFor } from "./visual-library";
 import { resolvePropertyMedia } from "./property-media";
 
 export type GuideViewData = PublicGuide & { coverUrl?: string; subtitle?: string };
@@ -64,19 +65,38 @@ export function guideCover(guide: GuideViewData) {
     guide.sections
       .find((section) => sectionKind(section.key) === "welcome")
       ?.media?.find((item) => item.type === "image" && item.url)?.url ||
-    guide.sections
-      .flatMap((section) => section.media ?? [])
-      .find((item) => item.type === "image" && item.url)?.url ||
-    undefined
+    ambienceFor(
+      `${guide.name} ${guide.sections
+        .flatMap((section) => section.content.items ?? [])
+        .map((item) => item.text)
+        .join(" ")}`,
+    )
   );
 }
 export function localizedSections(guide: GuideViewData, locale: string) {
-  return guide.sections.map((section) => {
-    const translated = section.translations?.find(
-      (item) => item.locale === locale && !item.isStale,
-    );
-    return translated
-      ? { ...section, title: translated.title, content: translated.content }
-      : section;
-  });
+  return guide.sections
+    .filter((section) => {
+      if (
+        !["pool", "parking", "climate", "contact", "amenities"].includes(
+          sectionKind(section.key),
+        ) ||
+        section.content.explicitlyEnabled
+      )
+        return true;
+      return !!(
+        section.content.items?.some((item) => item.text.trim()) ||
+        section.content.entries?.length ||
+        section.media?.length ||
+        section.content.phones?.length ||
+        section.content.emails?.length
+      );
+    })
+    .map((section) => {
+      const translated = section.translations?.find(
+        (item) => item.locale === locale && !item.isStale,
+      );
+      return translated
+        ? { ...section, title: translated.title, content: translated.content }
+        : section;
+    });
 }

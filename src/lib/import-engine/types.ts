@@ -18,6 +18,8 @@ export interface ExtractedField {
 export interface ExtractionResult {
   propertyName: string | null;
   fields: ExtractedField[];
+  photos?: string[];
+  photoRightsConfirmed?: boolean;
 }
 
 /** Any extractor (deterministic rules today, structured AI tomorrow) implements this. */

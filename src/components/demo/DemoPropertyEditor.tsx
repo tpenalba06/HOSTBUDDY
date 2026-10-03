@@ -1,3 +1,4 @@
+import { validateMediaUpload } from "@/lib/data/media-validation";
 import { GuideView } from "@/components/guest/GuideView";
 import { toPublicSections } from "@/components/guest/guide-adapters";
 import { useState, type ReactNode } from "react";
@@ -56,7 +57,7 @@ export function DemoPropertyEditor({
         cta_label: null,
         sort_order: order,
         is_visible: true,
-        content: { items: [] },
+        content: { items: [], explicitlyEnabled: true },
         created_at: "",
         updated_at: "",
       };
@@ -64,13 +65,43 @@ export function DemoPropertyEditor({
       return section;
     },
     save: async (section, values) => {
+      if (values.propertyMedia) {
+        const updated = {
+          ...section,
+          content: {
+            ...(section.content as object),
+            propertyMedia: values.propertyMedia,
+          } as unknown as Json,
+        };
+        onChange((current) => ({
+          ...current,
+          sections: current.sections.map((item) =>
+            item.id === section.id
+              ? {
+                  ...item,
+                  content: {
+                    ...(item.content as object),
+                    propertyMedia: values.propertyMedia,
+                  } as unknown as Json,
+                }
+              : item,
+          ),
+        }));
+        return updated;
+      }
       const updated = {
         ...section,
         title: values.title,
         icon: values.icon,
         cta_label: values.ctaLabel || null,
         is_visible: values.isVisible,
-        content: buildGuideContent(section.section_key, section.content, values.items) as Json,
+        content: buildGuideContent(
+          section.section_key,
+          values.propertyMedia
+            ? { ...(section.content as object), propertyMedia: values.propertyMedia }
+            : section.content,
+          values.items,
+        ) as Json,
       };
       const updates = fieldUpdatesForGuideSection(
         section.section_key,
@@ -102,6 +133,7 @@ export function DemoPropertyEditor({
         sections: current.sections.filter((item) => item.id !== id),
       })),
     upload: async (_, __, sectionId, file) => {
+      await validateMediaUpload(file);
       const media = {
         id: `demo-media-${crypto.randomUUID()}`,
         organization_id: "demo",
@@ -123,6 +155,7 @@ export function DemoPropertyEditor({
     updateMedia: async (item, values) => {
       const updated = {
         ...item,
+        sort_order: values.sortOrder ?? item.sort_order,
         caption: values.caption ?? item.caption,
         alt_text: values.altText ?? item.alt_text,
       };
@@ -210,6 +243,10 @@ export function DemoPropertyEditor({
                 media: property.media,
               }}
               actions={actions}
+              onPublish={async () => {
+                onChange((current) => ({ ...current, status: "published" }));
+                flash();
+              }}
               onChanged={flash}
               onPreview={() => setPreview(true)}
             />
@@ -253,7 +290,32 @@ export function DemoPropertyEditor({
               const services = property.services.some((item) => item.id === service.id)
                 ? property.services.map((item) => (item.id === service.id ? service : item))
                 : [...property.services, service];
-              onChange((current) => ({ ...current, services }));
+              onChange((current) => ({
+                ...current,
+                services,
+                sections:
+                  values.isActive &&
+                  !current.sections.some(
+                    (section) => section.section_key.split("-")[0] === "services",
+                  )
+                    ? [
+                        ...current.sections,
+                        {
+                          id: `demo-services-${crypto.randomUUID()}`,
+                          property_id: current.id,
+                          section_key: "services",
+                          title: t("section.services"),
+                          icon: "✨",
+                          cta_label: null,
+                          sort_order: 6,
+                          is_visible: true,
+                          content: { items: [], explicitlyEnabled: true },
+                          created_at: "",
+                          updated_at: "",
+                        },
+                      ]
+                    : current.sections,
+              }));
               onServicesChange?.(services);
             }}
           />

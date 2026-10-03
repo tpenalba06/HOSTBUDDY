@@ -1,6 +1,6 @@
 # HostBuddy V2 — cahier des charges médias
 
-Statut : exigences acceptées le 3 octobre 2026. Le guide voyageur reste le seul lot visuel en cours. La refonte du back-office attend la validation de sa fidélité à la planche officielle.
+Statut : exigences acceptées le 3 octobre 2026. La DA voyageur est validée globalement ; consolidation et migration du gestionnaire autorisées. Voir `ux-consolidation-v2.md` pour le lot livré et ses limites.
 
 ## Expérience attendue
 
@@ -44,3 +44,7 @@ Restent à implémenter et tester dans les lots fonctionnels suivants : sélecti
 ## Critères de recette
 
 Photo réelle remplace l'ambiance ; médias supprimés/réordonnés reflétés dans l'aperçu ; anciens livrets inchangés ; vidéo non prête non affichée comme traitée ; erreurs réseau/quota sans faux succès ; vidéo et images essentielles lisibles après coupure réseau et redémarrage ; reprise interrompue ; suppression locale ; tests Safari iOS et Chrome Android ; permissions inter-organisations conservées. Tests, TypeScript et build verts avant chaque publication.
+
+## Consolidation UX autorisée et livrée
+
+Le gestionnaire dispose désormais du bloc Médias du logement (couverture, galerie, photo principale, remplacement/suppression, drag & drop avec boutons de déplacement, vidéo et aperçu). Le catalogue d’ambiance généré est intégré et les imports URL peuvent copier les photos de métadonnées du logement après confirmation des droits. Le contrôle navigateur impose 90 secondes/50 Mio avant upload vidéo. Le transcodage serveur, les métadonnées vérifiées serveur et le téléchargement offline persistant restent à connecter ; le lecteur actuel ne promet pas ces capacités.

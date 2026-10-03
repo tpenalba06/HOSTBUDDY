@@ -87,12 +87,12 @@ export function GuestGuide({
       })
     : fallback;
   const demoPhotos: Record<string, string> = {
-    arrival: "/demo-guide/house.webp",
-    wifi: heroImage,
+    arrival: "/hostbuddy-media/arrival.webp",
+    wifi: "/hostbuddy-media/wifi.webp",
     house: "/demo-guide/house.webp",
     places: "/demo-guide/restaurant.webp",
-    departure: "/demo-guide/house.webp",
-    contact: heroImage,
+    departure: "/hostbuddy-media/departure.webp",
+    contact: "/hostbuddy-media/contact.webp",
     pool: "/demo-guide/pool.webp",
     services: "/demo-guide/breakfast.webp",
   };

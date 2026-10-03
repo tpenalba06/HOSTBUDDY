@@ -37,6 +37,7 @@ import {
   type GuideViewData,
 } from "./guide-model";
 
+import { homeSections, sectionVisual } from "./visual-library";
 import { PropertyMediaGallery } from "./PropertyMediaGallery";
 
 const sectionTone = (key: string) => {
@@ -77,10 +78,23 @@ export function GuideView({
   const listScroll = useRef(0);
   const indexScroll = useRef(false);
   const sections = localizedSections(guide, locale);
+  const hasPropertyPhotos =
+    guide.sections.some(
+      (section) =>
+        sectionKind(section.key) === "welcome" &&
+        section.media?.some((item) => item.type === "image" && item.url),
+    ) || !!guide.coverUrl;
+  const hasPropertyGallery = sections.some(
+    (section) =>
+      sectionKind(section.key) === "welcome" &&
+      ((section.media?.filter((item) => item.type === "image").length ?? 0) > 1 ||
+        section.media?.some((item) => item.type === "video")),
+  );
   const open = sections.find(
     (item) => item.key === (sectionKey === undefined ? localKey : sectionKey),
   );
   const cover = guideCover(guide);
+  const { services: serviceSection, main, extra } = homeSections(sections);
   const contact = sections.find((item) => sectionKind(item.key) === "contact");
   const go = (key: string | null) => {
     setLocalKey(key);
@@ -196,8 +210,14 @@ export function GuideView({
         <>
           <section className={`hb-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}>
             {cover && (
-              <img src={cover} alt={guide.name} className="hb-cover-image" fetchPriority="high" />
+              <img
+                src={cover}
+                alt={hasPropertyPhotos ? guide.name : t("media.ambience")}
+                className="hb-cover-image"
+                fetchPriority="high"
+              />
             )}
+            {!hasPropertyPhotos && <p className="hb-ambience-label">{t("media.ambience")}</p>}
             <header className="hb-cover-nav">{navigation}</header>
             <div className="hb-cover-copy">
               <p>{t("guest.welcome")}</p>
@@ -228,6 +248,19 @@ export function GuideView({
               </div>
             )}
             <div className="hb-index-content">
+              {sections
+                .find((section) => sectionKind(section.key) === "welcome")
+                ?.content.items?.some((item) => item.text) && (
+                <details className="hb-welcome-info">
+                  <summary>{t("section.welcome")}</summary>
+                  <GenericTemplate
+                    items={
+                      sections.find((section) => sectionKind(section.key) === "welcome")?.content
+                        .items ?? []
+                    }
+                  />
+                </details>
+              )}
               <div className="hb-index-heading">
                 <h2>{guide.name}</h2>
                 <button
@@ -238,9 +271,20 @@ export function GuideView({
                   <Search size={20} />
                 </button>
               </div>
-              <PropertyMediaGallery sections={sections} />
+              {serviceSection && (
+                <button className="hb-services-feature" onClick={() => go(serviceSection.key)}>
+                  <img src={sectionVisual(serviceSection)} alt="" />
+                  <span>
+                    <span className="hb-eyebrow">{t("guide.servicesEyebrow")}</span>
+                    <strong>{cleanTitle(serviceSection.title)}</strong>
+                    <span className="hb-services-cta">
+                      {t("guide.servicesExplore")} <ArrowRight size={17} />
+                    </span>
+                  </span>
+                </button>
+              )}
               <div className="hb-section-grid">
-                {sections.map((section) => (
+                {main.map((section) => (
                   <SectionCard
                     key={section.key}
                     section={section}
@@ -248,6 +292,28 @@ export function GuideView({
                   />
                 ))}
               </div>
+              {extra.length > 0 && (
+                <details className="hb-all-info">
+                  <summary>
+                    {t("guide.allInfo")} <span>{extra.length}</span>
+                  </summary>
+                  <div className="hb-section-grid">
+                    {extra.map((section) => (
+                      <SectionCard
+                        key={section.key}
+                        section={section}
+                        onClick={() => go(section.key)}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
+              {hasPropertyGallery && (
+                <details className="hb-home-media">
+                  <summary>{t("media.heading")}</summary>
+                  <PropertyMediaGallery sections={sections} />
+                </details>
+              )}
               {!sections.length && <p className="hb-empty">{t("guest.empty")}</p>}
               {guide.review && guide.review.destinations.length > 0 && (
                 <section className="hb-review">
@@ -332,13 +398,10 @@ export function GuideView({
 }
 
 function SectionCard({ section, onClick }: { section: PublicSection; onClick: () => void }) {
-  const photo = section.media?.find((item) => item.type === "image" && item.url);
+  const photo = sectionVisual(section);
   return (
-    <button
-      className={`hb-section-card hb-tone-${sectionTone(section.key)} ${photo ? "" : "hb-section-card-text"}`}
-      onClick={onClick}
-    >
-      {photo?.url && <img src={photo.url} alt="" loading="lazy" />}
+    <button className={`hb-section-card hb-tone-${sectionTone(section.key)} `} onClick={onClick}>
+      {photo && <img src={photo} alt="" loading="lazy" />}
       <span className="hb-section-card-label">{cleanTitle(section.title)}</span>
       <span className="hb-card-arrow">
         <ArrowRight size={16} />

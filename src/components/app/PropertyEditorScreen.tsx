@@ -73,7 +73,7 @@ export function PropertyEditorScreen({
           ))}
       </div>
 
-      <div className="mt-6 grid gap-2 @sm:grid-cols-2 @lg:grid-cols-4">
+      <div className="property-editor-tabs mt-6 grid gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = mode === tab.id;
@@ -110,6 +110,7 @@ function NameEditor({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initial);
+  const [error, setError] = useState("");
   const t = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(t.current), []);
   return (
@@ -126,12 +127,17 @@ function NameEditor({
             () =>
               onRename(v)
                 .then(onSaved)
-                .catch(() => {}),
+                .catch(() => setError("Le nom n’a pas pu être enregistré. Réessayez.")),
             700,
           );
         }}
         aria-label="Nom de l’hébergement"
       />
+      {error && (
+        <span role="alert" className="text-sm text-destructive">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

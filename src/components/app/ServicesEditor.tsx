@@ -25,6 +25,7 @@ export function ServicesEditor({
       onSave={async (values) => {
         await saveService(organizationId, propertyId, values);
         await qc.invalidateQueries({ queryKey: key });
+        await qc.invalidateQueries({ queryKey: ["property", propertyId] });
       }}
     />
   );

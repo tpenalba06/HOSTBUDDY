@@ -36,6 +36,19 @@ export function parseVideoProbe(value: string) {
     throw new Error("La vidéo de présentation doit durer au maximum 90 secondes.");
   return { durationSeconds, width: stream.width, height: stream.height };
 }
+
+export async function readVideoProbeResult(code: number, readOutput: () => Promise<string>) {
+  // core 0.12.10 can return -1 after successfully writing ffprobe output.
+  // Accept it only when a fresh result exists and passes all metadata limits.
+  if (code !== 0 && code !== -1) throw new Error("Cette vidéo ne peut pas être lue.");
+  let result: string;
+  try {
+    result = await readOutput();
+  } catch {
+    throw new Error("Cette vidéo ne peut pas être lue.");
+  }
+  return parseVideoProbe(result);
+}
 export function videoEncodingArgs(input: string) {
   return [
     "-i",

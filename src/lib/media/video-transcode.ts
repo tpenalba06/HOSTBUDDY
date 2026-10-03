@@ -1,7 +1,7 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import workerURL from "@ffmpeg/ffmpeg/worker?worker&url";
 import {
-  parseVideoProbe,
+  readVideoProbeResult,
   videoEncodingArgs,
   VIDEO_POLICY,
   type UploadPreparation,
@@ -58,8 +58,10 @@ export async function transcodeVideo(file: File, options: UploadPreparation = {}
         ],
         10_000,
       );
-      if (code !== 0) throw new Error("Cette vidéo ne peut pas être lue.");
-      return parseVideoProbe((await encoder.readFile(output, "utf8")) as string);
+      return readVideoProbeResult(
+        code,
+        async () => (await encoder.readFile(output, "utf8")) as string,
+      );
     };
     await probe("input", "source.json");
     options.onProgress?.({ phase: "encoding", percent: 0 });

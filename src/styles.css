@@ -1,3 +1,4 @@
+@import "./styles/guest-guide.css";
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";

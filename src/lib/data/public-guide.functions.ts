@@ -9,7 +9,21 @@ export interface PublicSection {
   icon?: string;
   title: string;
   ctaLabel?: string | null;
-  content: { items?: { label: string; text: string }[]; phones?: string[]; emails?: string[] };
+  content: {
+    items?: { label: string; text: string }[];
+    entries?: {
+      id?: string;
+      title: string;
+      text?: string;
+      category?: string;
+      address?: string;
+      phone?: string;
+      mapUrl?: string;
+      mediaIds?: string[];
+    }[];
+    phones?: string[];
+    emails?: string[];
+  };
   translations?: {
     locale: string;
     title: string;

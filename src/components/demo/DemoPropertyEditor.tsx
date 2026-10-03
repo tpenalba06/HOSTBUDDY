@@ -1,3 +1,5 @@
+import { GuideView } from "@/components/guest/GuideView";
+import { toPublicSections } from "@/components/guest/guide-adapters";
 import { useState, type ReactNode } from "react";
 import {
   PropertyEditorScreen,
@@ -12,11 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import type { PropertyField } from "@/lib/data/properties";
 import type { Json } from "@/integrations/supabase/types";
-import {
-  buildGuideContent,
-  fieldUpdatesForGuideSection,
-  getGuideItems,
-} from "@/lib/data/guide-content";
+import { buildGuideContent, fieldUpdatesForGuideSection } from "@/lib/data/guide-content";
 import { answerDemoField, type DemoProperty } from "./demo-property";
 
 export function DemoPropertyEditor({
@@ -164,19 +162,23 @@ export function DemoPropertyEditor({
         <Button variant="outline" onClick={() => setPreview(false)}>
           ← {t("common.back")}
         </Button>
-        <h1 className="mt-4 text-3xl font-semibold">{property.name}</h1>
-        {property.sections
-          .filter((section) => section.is_visible)
-          .map((section) => (
-            <section key={section.id} className="surface mt-4 p-4">
-              <h2 className="text-xl font-semibold">{section.title}</h2>
-              {getGuideItems(section.section_key, section.content).map((item, index) => (
-                <p key={index} className="mt-2 whitespace-pre-line">
-                  {item.text}
-                </p>
-              ))}
-            </section>
-          ))}
+        <GuideView
+          guide={{
+            id: property.id,
+            name: property.name,
+            originalLocale: "fr",
+            sections: toPublicSections(property.sections, property.media),
+            services: property.services
+              .filter((item) => item.is_active)
+              .map((item) => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                price: Number(item.price),
+                pricingType: item.pricing_type as "fixed" | "per_person",
+              })),
+          }}
+        />
       </div>
     );
   return (

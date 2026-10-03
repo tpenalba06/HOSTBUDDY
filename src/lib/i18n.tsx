@@ -2495,6 +2495,82 @@ const managerDemoCopy: Record<Locale, Copy> = {
   },
 };
 for (const locale of LOCALES) Object.assign(translations[locale], managerDemoCopy[locale]);
+const guideCopy: Record<Locale, string[]> = {
+  fr: [
+    "Explorer le guide",
+    "Rechercher dans le guide",
+    "Votre guide de séjour",
+    "L’essentiel",
+    "Tous",
+    "Garder cette adresse",
+    "Démo : demande enregistrée localement",
+    "Impossible de copier. Sélectionnez le texte ci-dessus.",
+  ],
+  en: [
+    "Explore the guide",
+    "Search the guide",
+    "Your stay guide",
+    "Essentials",
+    "All",
+    "Save this place",
+    "Demo: request saved locally",
+    "Unable to copy. Select the text above.",
+  ],
+  es: [
+    "Explorar la guía",
+    "Buscar en la guía",
+    "Tu guía de estancia",
+    "Lo esencial",
+    "Todos",
+    "Guardar este lugar",
+    "Demo: solicitud guardada localmente",
+    "No se pudo copiar. Seleccione el texto de arriba.",
+  ],
+  de: [
+    "Guide entdecken",
+    "Im Guide suchen",
+    "Ihr Aufenthaltsguide",
+    "Das Wichtigste",
+    "Alle",
+    "Diesen Ort merken",
+    "Demo: Anfrage lokal gespeichert",
+    "Kopieren nicht möglich. Wählen Sie den Text oben aus.",
+  ],
+  it: [
+    "Esplora la guida",
+    "Cerca nella guida",
+    "La guida del soggiorno",
+    "L’essenziale",
+    "Tutti",
+    "Salva questo luogo",
+    "Demo: richiesta salvata localmente",
+    "Impossibile copiare. Seleziona il testo sopra.",
+  ],
+  pt: [
+    "Explorar o guia",
+    "Pesquisar no guia",
+    "O seu guia de estadia",
+    "O essencial",
+    "Todos",
+    "Guardar este local",
+    "Demo: pedido guardado localmente",
+    "Não foi possível copiar. Selecione o texto acima.",
+  ],
+};
+const guideKeys = [
+  "guide.menu",
+  "guide.search",
+  "guide.discover",
+  "guide.essentials",
+  "guide.all",
+  "guide.save",
+  "guide.demoRequest",
+  "guide.copyFailed",
+];
+for (const locale of LOCALES)
+  guideKeys.forEach((key, index) => {
+    translations[locale][key] = guideCopy[locale][index] ?? "";
+  });
 export const I18N_KEYS = Object.keys(translations.fr);
 export function missingTranslationKeys(locale: Locale) {
   return I18N_KEYS.filter((key) => !translations[locale][key]);

@@ -312,6 +312,8 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
                 heroImage={hero}
                 labels={labels}
                 visibleSections={visibleSections}
+                sections={sections}
+                media={media}
               />
             </div>
           </div>

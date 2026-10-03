@@ -32,7 +32,7 @@ import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticate
 import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
 import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
-import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages.$id'
+import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages_.$id'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -157,9 +157,9 @@ const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
 } as any)
 const AuthenticatedAppMessagesIdRoute =
   AuthenticatedAppMessagesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAppMessagesRoute,
+    id: '/messages_/$id',
+    path: '/messages/$id',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppPIdRoute = AuthenticatedAppPIdRouteImport.update({
   id: '/p/$id',
@@ -182,7 +182,7 @@ export interface FileRoutesByFullPath {
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
-  '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
+  '/app/messages': typeof AuthenticatedAppMessagesRoute
   '/app/new': typeof AuthenticatedAppNewRoute
   '/app/orders': typeof AuthenticatedAppOrdersRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
@@ -207,7 +207,7 @@ export interface FileRoutesByTo {
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
-  '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
+  '/app/messages': typeof AuthenticatedAppMessagesRoute
   '/app/new': typeof AuthenticatedAppNewRoute
   '/app/orders': typeof AuthenticatedAppOrdersRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
@@ -235,7 +235,7 @@ export interface FileRoutesById {
   '/_authenticated/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/_authenticated/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
-  '/_authenticated/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
+  '/_authenticated/app/messages': typeof AuthenticatedAppMessagesRoute
   '/_authenticated/app/new': typeof AuthenticatedAppNewRoute
   '/_authenticated/app/orders': typeof AuthenticatedAppOrdersRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
@@ -243,7 +243,7 @@ export interface FileRoutesById {
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
-  '/_authenticated/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
+  '/_authenticated/app/messages_/$id': typeof AuthenticatedAppMessagesIdRoute
   '/_authenticated/app/p/$id': typeof AuthenticatedAppPIdRoute
 }
 export interface FileRouteTypes {
@@ -323,7 +323,7 @@ export interface FileRouteTypes {
     | '/api/public/messages'
     | '/api/public/orders'
     | '/_authenticated/app/'
-    | '/_authenticated/app/messages/$id'
+    | '/_authenticated/app/messages_/$id'
     | '/_authenticated/app/p/$id'
   fileRoutesById: FileRoutesById
 }
@@ -504,12 +504,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app/messages/$id': {
-      id: '/_authenticated/app/messages/$id'
-      path: '/$id'
+    '/_authenticated/app/messages_/$id': {
+      id: '/_authenticated/app/messages_/$id'
+      path: '/messages/$id'
       fullPath: '/app/messages/$id'
       preLoaderRoute: typeof AuthenticatedAppMessagesIdRouteImport
-      parentRoute: typeof AuthenticatedAppMessagesRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/p/$id': {
       id: '/_authenticated/app/p/$id'
@@ -521,20 +521,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAppMessagesRouteChildren {
-  AuthenticatedAppMessagesIdRoute: typeof AuthenticatedAppMessagesIdRoute
-}
-
-const AuthenticatedAppMessagesRouteChildren: AuthenticatedAppMessagesRouteChildren =
-  {
-    AuthenticatedAppMessagesIdRoute: AuthenticatedAppMessagesIdRoute,
-  }
-
-const AuthenticatedAppMessagesRouteWithChildren =
-  AuthenticatedAppMessagesRoute._addFileChildren(
-    AuthenticatedAppMessagesRouteChildren,
-  )
-
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
@@ -542,11 +528,12 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppImportTextRoute: typeof AuthenticatedAppImportTextRoute
   AuthenticatedAppImportUrlRoute: typeof AuthenticatedAppImportUrlRoute
   AuthenticatedAppManualRoute: typeof AuthenticatedAppManualRoute
-  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRouteWithChildren
+  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
   AuthenticatedAppNewRoute: typeof AuthenticatedAppNewRoute
   AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppMessagesIdRoute: typeof AuthenticatedAppMessagesIdRoute
   AuthenticatedAppPIdRoute: typeof AuthenticatedAppPIdRoute
 }
 
@@ -557,11 +544,12 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppImportTextRoute: AuthenticatedAppImportTextRoute,
   AuthenticatedAppImportUrlRoute: AuthenticatedAppImportUrlRoute,
   AuthenticatedAppManualRoute: AuthenticatedAppManualRoute,
-  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRouteWithChildren,
+  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
   AuthenticatedAppNewRoute: AuthenticatedAppNewRoute,
   AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppMessagesIdRoute: AuthenticatedAppMessagesIdRoute,
   AuthenticatedAppPIdRoute: AuthenticatedAppPIdRoute,
 }
 

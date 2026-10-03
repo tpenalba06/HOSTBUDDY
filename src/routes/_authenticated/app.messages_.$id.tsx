@@ -7,7 +7,7 @@ import { ManagerConversationScreen } from "@/components/app/ManagerConversationS
 
 const threadQuery = (id: string) =>
   queryOptions({ queryKey: ["conversation", id], queryFn: () => getConversation(id) });
-export const Route = createFileRoute("/_authenticated/app/messages/$id")({
+export const Route = createFileRoute("/_authenticated/app/messages_/$id")({
   head: () => ({
     meta: [
       { title: "Conversation — HostBuddy" },

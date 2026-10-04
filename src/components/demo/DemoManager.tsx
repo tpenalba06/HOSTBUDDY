@@ -60,8 +60,9 @@ export function DemoManager({
       },
     ];
   });
-  const currentProperties = properties.map((property) =>
-    property.id === villa.id ? villa : property,
+  const currentProperties = useMemo(
+    () => properties.map((property) => (property.id === villa.id ? villa : property)),
+    [properties, villa],
   );
   const propertyForEditor = currentProperties.find((property) => property.id === selectedProperty);
   const [initialOperations] = useState(() => villaMareOperations(villa));
@@ -80,8 +81,8 @@ export function DemoManager({
 
   const metrics = useMemo(
     () => ({
-      properties: properties.length,
-      published: properties.filter((property) => property.status === "published").length,
+      properties: currentProperties.length,
+      published: currentProperties.filter((property) => property.status === "published").length,
       unread: conversations.filter((conversation) =>
         conversation.messages.some(
           (message) => message.sender_type === "guest" && !message.read_at,
@@ -103,7 +104,7 @@ export function DemoManager({
         created_at: item.created_at,
       })),
     }),
-    [conversations, feedback, orders, properties],
+    [conversations, feedback, orders, currentProperties],
   );
 
   const navigate = (next: ManagerArea) => {

@@ -1321,9 +1321,11 @@
 
 /* Mobile entry stays short so Services and the main shortcuts are immediately reachable. */
 @container (max-width: 759px) {
-  .hb-cover {
+  .hb-cover,
+  .hb-device-mobile .hb-cover {
     height: 260px;
     min-height: 260px;
+    max-height: 260px;
   }
   .hb-cover-copy {
     top: auto;

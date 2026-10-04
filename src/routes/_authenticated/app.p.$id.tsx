@@ -235,10 +235,20 @@ function PropertyPage() {
         }
         previewAction={
           <div className="grid w-full grid-cols-2 gap-2 @sm:w-auto">
-            <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className="btn btn-secondary min-h-12">
+            <a
+              href={`/l/${property.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary min-h-12"
+            >
               {t("app.viewGuide")}
             </a>
-            <button type="button" className="btn btn-secondary min-h-12" aria-expanded={showQr} onClick={() => setShowQr((current) => !current)}>
+            <button
+              type="button"
+              className="btn btn-secondary min-h-12"
+              aria-expanded={showQr}
+              onClick={() => setShowQr((current) => !current)}
+            >
               <QrCode className="h-5 w-5" />
               {t("qr.title")}
             </button>

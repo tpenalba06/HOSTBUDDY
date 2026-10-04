@@ -167,9 +167,12 @@
   margin-bottom: 14px;
 }
 .hb-cover-copy h1 {
-  font-size: clamp(68px, 21cqw, 132px);
+  font-size: clamp(48px, 13cqw, 112px);
   line-height: 0.98;
-  max-width: 6.2ch;
+  max-width: min(10ch, 100%);
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: auto;
   text-wrap: balance;
 }
 .hb-cover-copy .hb-eyebrow {
@@ -1055,8 +1058,8 @@
   left: 6%;
 }
 .hb-cover-copy h1 {
-  max-width: 7ch;
-  font-size: clamp(70px, 11cqw, 126px);
+  max-width: min(10ch, 100%);
+  font-size: clamp(54px, 9.5cqw, 112px);
 }
 .hb-discover {
   display: grid;
@@ -1172,8 +1175,8 @@
     right: 24px;
   }
   .hb-cover-copy h1 {
-    font-size: clamp(68px, 20cqw, 94px);
-    max-width: 7ch;
+    font-size: clamp(42px, 13cqw, 72px);
+    max-width: min(11ch, 100%);
     line-height: 0.98;
   }
   .hb-cover-copy .hb-eyebrow {

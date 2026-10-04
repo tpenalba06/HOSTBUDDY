@@ -109,13 +109,14 @@ function NameEditor({
   initial: string;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState(initial);
   const [error, setError] = useState("");
   const t = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(t.current), []);
   return (
     <label className="mt-2 block max-w-xl">
-      <span className="sr-only">Nom de l’hébergement</span>
+      <span className="sr-only">{t("manager.propertyName")}</span>
       <input
         className="w-full border-0 bg-transparent p-0 text-sm font-medium text-muted-foreground outline-none transition focus:text-foreground @sm:text-base"
         value={name}
@@ -127,11 +128,11 @@ function NameEditor({
             () =>
               onRename(v)
                 .then(onSaved)
-                .catch(() => setError("Le nom n’a pas pu être enregistré. Réessayez.")),
+                .catch(() => setError(t("manager.propertyNameError"))),
             700,
           );
         }}
-        aria-label="Nom de l’hébergement"
+        aria-label={t("manager.propertyName")}
       />
       {error && (
         <span role="alert" className="text-sm text-destructive">

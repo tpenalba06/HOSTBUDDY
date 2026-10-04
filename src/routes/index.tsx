@@ -112,8 +112,11 @@ function Landing() {
                   {t("common.demo")}
                 </Link>
               </div>
-              <p className="mt-4 text-sm font-semibold text-ink-foreground/80">
-                {t("marketing.startingPrice")} · {t("marketing.price")}
+              <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
+                {t("marketing.startingPrice")} ·{" "}
+                <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
+                  {t("marketing.price")}
+                </span>
               </p>
               <p className="mt-2 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.trial")}

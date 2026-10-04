@@ -8,7 +8,6 @@ import {
   Eye,
   Home,
   ImagePlus,
-  Languages,
   Plus,
   Trash2,
   Video,
@@ -33,7 +32,6 @@ import { useI18n } from "@/lib/i18n";
 import { ManagerGuidePreview } from "./ManagerGuidePreview";
 import { PropertyMediaEditor } from "./PropertyMediaEditor";
 import { sectionVisual } from "@/components/guest/visual-library";
-import { translationAvailability } from "@/lib/translation/service";
 import { getGuideItems, type GuideContentItem } from "@/lib/data/guide-content";
 
 export type EditorProperty = {
@@ -113,6 +111,15 @@ const TEMPLATE_KEYS = [
   "contact",
   "custom",
 ] as const;
+const SYSTEM_SECTION_KEYS = new Set<string>([
+  "welcome",
+  ...TEMPLATE_KEYS.filter((key) => key !== "custom"),
+]);
+const sectionKind = (section: GuideSection) => section.section_key.split("-")[0] ?? "custom";
+const sectionLabel = (section: GuideSection, t: (key: string) => string) => {
+  const kind = sectionKind(section);
+  return SYSTEM_SECTION_KEYS.has(kind) ? t(`section.${kind}`) : section.title;
+};
 
 export function GuideEditor({
   data,
@@ -248,7 +255,7 @@ export function GuideEditor({
             onClick={() => setOpen(section.id)}
           >
             <span className="editor-rail-mark" />
-            {section.title}
+            {sectionLabel(section, t)}
           </button>
         ))}
       </nav>
@@ -323,14 +330,6 @@ export function GuideEditor({
             ))}
           </div>
         )}
-        {!translationAvailability.enabled && (
-          <details className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">
-            <summary className="cursor-pointer font-semibold text-foreground">
-              {t("manager.autoTranslation")}
-            </summary>
-            <p className="mt-2">{t("manager.translationUnavailable")}</p>
-          </details>
-        )}
         {error && (
           <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">
             {error}
@@ -341,6 +340,7 @@ export function GuideEditor({
             <div key={section.id} hidden={open !== section.id}>
               <SectionRow
                 section={section}
+                displayTitle={sectionLabel(section, t)}
                 media={media.filter((item) => item.section_id === section.id)}
                 open={open === section.id}
                 onToggle={() => setOpen(open === section.id ? null : section.id)}
@@ -430,6 +430,7 @@ export function GuideEditor({
 
 function SectionRow({
   section,
+  displayTitle,
   media,
   open,
   onToggle,
@@ -447,6 +448,7 @@ function SectionRow({
 }: {
   registerFlush: (flush: (() => Promise<void>) | null) => void;
   section: GuideSection;
+  displayTitle: string;
   media: SectionMedia[];
   open: boolean;
   onToggle: () => void;
@@ -562,7 +564,7 @@ function SectionRow({
             className="h-12 w-12 rounded-xl object-cover"
           />
           <span className="min-w-0">
-            <span className="block truncate text-lg font-bold">{title}</span>
+            <span className="block truncate text-lg font-bold">{displayTitle}</span>
             <span className="text-sm text-muted-foreground">
               {visible ? t("manager.visible") : t("manager.hidden")}
               {media.length ? ` · ${media.length}` : ""}
@@ -572,7 +574,7 @@ function SectionRow({
         </button>
         <input
           type="checkbox"
-          aria-label={`${t("manager.showSection")} : ${title}`}
+          aria-label={`${t("manager.showSection")} : ${displayTitle}`}
           checked={visible}
           onChange={(e) => setVisible(e.target.checked)}
           className="h-6 w-6 shrink-0 accent-primary"
@@ -758,7 +760,7 @@ function SectionRow({
             {busy
               ? t("common.saving")
               : rowError
-                ? "Enregistrement à réessayer"
+                ? t("manager.retrySave")
                 : t("manager.autoSaved")}
           </p>
         </div>

@@ -8,6 +8,7 @@ import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import type { Json } from "@/integrations/supabase/types";
 import { friendlyMessage } from "./Friendly";
 import { ambienceFor } from "@/components/guest/visual-library";
+import { useI18n } from "@/lib/i18n";
 
 export function PropertyMediaEditor({
   property,
@@ -28,6 +29,7 @@ export function PropertyMediaEditor({
   onPreview: () => void;
   onBusyChange: (busy: boolean) => void;
 }) {
+  const { t } = useI18n();
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -114,10 +116,10 @@ export function PropertyMediaEditor({
         onProgress: ({ phase, percent }) =>
           setVideoProgress(
             phase === "loading"
-              ? "Préparation vidéo…"
+              ? t("manager.videoPreparing")
               : phase === "encoding"
-                ? `Optimisation vidéo · ${percent} %`
-                : "Envoi de la vidéo…",
+                ? t("manager.videoOptimizing").replace("{percent}", String(percent))
+                : t("manager.videoUploading"),
           ),
       });
       // Persist the replacement before removing the previous file; a failed upload never destroys it.
@@ -167,12 +169,12 @@ export function PropertyMediaEditor({
   return (
     <section
       className="property-media-editor surface mb-6 p-4 sm:p-6"
-      aria-label="Médias du logement"
+      aria-label={t("manager.propertyMedia")}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl">Médias du logement</h2>
+        <h2 className="text-2xl">{t("manager.propertyMedia")}</h2>
         <Button variant="outline" disabled={busy} onClick={onPreview}>
-          Aperçu voyageur
+          {t("manager.guestPreview")}
         </Button>
       </div>
       {(section?.content as { mediaImportWarning?: string })?.mediaImportWarning && (
@@ -183,9 +185,9 @@ export function PropertyMediaEditor({
       {videoProgress && (
         <div role="status" className="mb-3 flex items-center gap-3">
           <span>{videoProgress}</span>
-          {!videoProgress.startsWith("Envoi") && (
+          {videoProgress !== t("manager.videoUploading") && (
             <Button variant="outline" onClick={() => abortRef.current?.abort()}>
-              Annuler
+              {t("manager.cancel")}
             </Button>
           )}
         </div>
@@ -212,11 +214,11 @@ export function PropertyMediaEditor({
                   }`,
                 )
           }
-          alt="Couverture du logement"
+          alt={t("manager.coverAlt")}
         />
         <div className="absolute bottom-3 right-3">
           {input(
-            "Modifier la couverture",
+            t("manager.changeCover"),
             "image/jpeg,image/png,image/webp,image/avif",
             cover,
             true,
@@ -224,7 +226,7 @@ export function PropertyMediaEditor({
         </div>
         {!cover && (
           <span className="absolute left-3 top-3 rounded-full bg-card/90 px-3 py-1 text-xs">
-            Ambiance HostBuddy
+            {t("manager.hostbuddyAmbience")}
           </span>
         )}
       </div>
@@ -258,14 +260,14 @@ export function PropertyMediaEditor({
                   })
                 }
               >
-                {cover?.id === item.id ? "✓ Principale" : "Photo principale"}
+                {cover?.id === item.id ? `✓ ${t("manager.mainPhoto")}` : t("manager.setMainPhoto")}
               </Button>
-              {input("Remplacer", "image/jpeg,image/png,image/webp,image/avif", item)}
+              {input(t("manager.replace"), "image/jpeg,image/png,image/webp,image/avif", item)}
               <div className="flex justify-between">
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Avancer la photo"
+                  aria-label={t("manager.movePhotoForward")}
                   disabled={busy || index === 0}
                   onClick={() => void reorder(item.id, images[index - 1]!.id)}
                 >
@@ -274,7 +276,7 @@ export function PropertyMediaEditor({
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Reculer la photo"
+                  aria-label={t("manager.movePhotoBack")}
                   disabled={busy || index === images.length - 1}
                   onClick={() => void reorder(images[index + 1]!.id, item.id)}
                 >
@@ -283,7 +285,7 @@ export function PropertyMediaEditor({
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Supprimer la photo"
+                  aria-label={t("manager.deletePhoto")}
                   disabled={busy}
                   onClick={() =>
                     void run(async () => {
@@ -302,11 +304,11 @@ export function PropertyMediaEditor({
       <div className="mt-4 flex flex-wrap gap-3">
         <span className="inline-flex items-center gap-2">
           <ImagePlus size={18} />
-          {input("Ajouter des photos", "image/jpeg,image/png,image/webp,image/avif")}
+          {input(t("manager.addPhotos"), "image/jpeg,image/png,image/webp,image/avif")}
         </span>
         <span className="inline-flex items-center gap-2">
           <Video size={18} />
-          {input("Ajouter une vidéo", "video/mp4,video/webm")}
+          {input(t("manager.addVideo"), "video/mp4,video/webm")}
         </span>
       </div>
       {own
@@ -321,7 +323,7 @@ export function PropertyMediaEditor({
               className="aspect-video w-full rounded-xl"
             />
             <div className="mt-2 flex gap-2">
-              {input("Remplacer la vidéo", "video/mp4,video/webm", item)}
+              {input(t("manager.replaceVideo"), "video/mp4,video/webm", item)}
               <Button
                 variant="ghost"
                 disabled={busy}
@@ -332,15 +334,15 @@ export function PropertyMediaEditor({
                   })
                 }
               >
-                Supprimer
+                {t("common.delete")}
               </Button>
             </div>
           </div>
         ))}
       <p role="status" className="mt-3 text-sm text-muted-foreground">
         {busy
-          ? "Enregistrement…"
-          : "Photos : 10 Mo max. Vidéo : 50 Mo max., 90 secondes. Glissez les photos pour les réordonner."}
+          ? t("common.saving")
+          : t("manager.mediaLimits")}
       </p>
     </section>
   );

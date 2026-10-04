@@ -469,6 +469,22 @@
   background: transparent;
   outline: none;
 }
+.manager-property-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-width: 0;
+}
+.manager-property-sort {
+  max-width: 122px;
+  min-height: 36px;
+  padding: 6px 26px 6px 10px;
+  border: 1px solid #e9e3da;
+  border-radius: 99px;
+  background: #f2eee8;
+  color: #675f55;
+  font-size: 11px;
+}
 .manager-property-filters {
   display: flex;
   gap: 9px;
@@ -700,7 +716,7 @@
   .manager-properties > div:first-child {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  .manager-property-search {
+  .manager-property-tools {
     grid-column: 1 / -1;
     grid-row: 2;
   }

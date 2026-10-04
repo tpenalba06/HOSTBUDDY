@@ -2,6 +2,7 @@ import { addTeamCopy, addMessageCopy } from "./team-copy";
 import { addProviderCopy } from "./provider-copy";
 import { addPaymentCopy } from "./payment-copy";
 import { addV1Copy } from "./v1-copy";
+import { addVisualPolishCopy } from "./visual-polish-copy";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LOCALES = ["fr", "en", "es", "de", "it", "pt"] as const;
@@ -149,7 +150,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copier",
     "guest.copied": "Copié",
     "guest.contact": "Contact",
-    "guest.privateFeedback": "Envoyer un retour privé",
+    "guest.privateFeedback": "Évaluez votre expérience",
     "guest.sendMessage": "Envoyer un message",
     "guest.noServices": "Aucun service disponible pour le moment.",
     "guest.request": "Demander",
@@ -405,7 +406,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copy",
     "guest.copied": "Copied",
     "guest.contact": "Contact",
-    "guest.privateFeedback": "Send private feedback",
+    "guest.privateFeedback": "Rate your experience",
     "guest.sendMessage": "Send a message",
     "guest.noServices": "No services are available right now.",
     "guest.request": "Request",
@@ -658,7 +659,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copiar",
     "guest.copied": "Copiado",
     "guest.contact": "Contacto",
-    "guest.privateFeedback": "Enviar comentario privado",
+    "guest.privateFeedback": "Valora tu experiencia",
     "guest.sendMessage": "Enviar un mensaje",
     "guest.noServices": "No hay servicios disponibles por ahora.",
     "guest.request": "Solicitar",
@@ -910,7 +911,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Kopieren",
     "guest.copied": "Kopiert",
     "guest.contact": "Kontakt",
-    "guest.privateFeedback": "Privates Feedback senden",
+    "guest.privateFeedback": "Bewerten Sie Ihren Aufenthalt",
     "guest.sendMessage": "Nachricht senden",
     "guest.noServices": "Derzeit sind keine Services verfügbar.",
     "guest.request": "Anfragen",
@@ -1162,7 +1163,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copia",
     "guest.copied": "Copiato",
     "guest.contact": "Contatto",
-    "guest.privateFeedback": "Invia feedback privato",
+    "guest.privateFeedback": "Valuta la tua esperienza",
     "guest.sendMessage": "Invia un messaggio",
     "guest.noServices": "Nessun servizio disponibile al momento.",
     "guest.request": "Richiedi",
@@ -1410,7 +1411,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copiar",
     "guest.copied": "Copiado",
     "guest.contact": "Contacto",
-    "guest.privateFeedback": "Enviar comentário privado",
+    "guest.privateFeedback": "Avalie a sua experiência",
     "guest.sendMessage": "Enviar mensagem",
     "guest.noServices": "Nenhum serviço disponível de momento.",
     "guest.request": "Pedir",
@@ -2705,6 +2706,7 @@ for (const locale of LOCALES) {
 addProviderCopy(translations);
 addPaymentCopy(translations);
 addV1Copy(translations);
+addVisualPolishCopy(translations);
 addTeamCopy(translations);
 addMessageCopy(translations);
 export const I18N_KEYS = Object.keys(translations.fr);

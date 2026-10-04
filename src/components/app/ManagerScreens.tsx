@@ -38,6 +38,7 @@ export type ManagerPropertySummary = {
   status: "draft" | "published" | "archived";
   location?: string | null;
   coverUrl?: string | null;
+  created_at?: string;
 };
 
 export type ManagerMetrics = {
@@ -151,28 +152,51 @@ export function ManagerPropertiesScreen({
   const [qr, setQr] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "draft" | "published">("all");
-  const shown = properties.filter(
-    (property) =>
-      (status === "all" || property.status === status) &&
-      `${property.name} ${property.location ?? ""}`
-        .toLocaleLowerCase()
-        .includes(search.toLocaleLowerCase().trim()),
-  );
+  const [sort, setSort] = useState<"az" | "za" | "newest" | "oldest">("newest");
+  const shown = properties
+    .filter(
+      (property) =>
+        (status === "all" || property.status === status) &&
+        `${property.name} ${property.location ?? ""}`
+          .toLocaleLowerCase()
+          .includes(search.toLocaleLowerCase().trim()),
+    )
+    .sort((a, b) => {
+      if (sort === "az" || sort === "za") {
+        const result = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+        return sort === "az" ? result : -result;
+      }
+      const result = new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
+      return sort === "oldest" ? result : -result;
+    });
 
   return (
     <div className="manager-properties py-4 @sm:py-6">
       <div className="grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
         <PageHeading title={t("app.myProperties")} />
-        <label className="manager-property-search">
-          <Search size={16} />
-          <input
-            type="search"
-            aria-label={t("manager.searchProperties")}
-            placeholder={t("manager.searchProperties")}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
+        <div className="manager-property-tools">
+          <label className="manager-property-search">
+            <Search size={16} />
+            <input
+              type="search"
+              aria-label={t("manager.searchProperties")}
+              placeholder={t("manager.searchProperties")}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <select
+            className="manager-property-sort"
+            aria-label={t("manager.sortLabel")}
+            value={sort}
+            onChange={(event) => setSort(event.target.value as typeof sort)}
+          >
+            <option value="az">{t("manager.sortAZ")}</option>
+            <option value="za">{t("manager.sortZA")}</option>
+            <option value="newest">{t("manager.sortNewest")}</option>
+            <option value="oldest">{t("manager.sortOldest")}</option>
+          </select>
+        </div>
         {role !== "member" && onAdd && (
           <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
             <Plus />

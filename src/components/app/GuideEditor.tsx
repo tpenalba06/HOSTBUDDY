@@ -2,17 +2,7 @@ import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  Home,
-  ImagePlus,
-  Languages,
-  Plus,
-  Trash2,
-  Video,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Home, ImagePlus, Plus, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -33,7 +23,6 @@ import { useI18n } from "@/lib/i18n";
 import { ManagerGuidePreview } from "./ManagerGuidePreview";
 import { PropertyMediaEditor } from "./PropertyMediaEditor";
 import { sectionVisual } from "@/components/guest/visual-library";
-import { translationAvailability } from "@/lib/translation/service";
 import { getGuideItems, type GuideContentItem } from "@/lib/data/guide-content";
 
 export type EditorProperty = {
@@ -113,6 +102,15 @@ const TEMPLATE_KEYS = [
   "contact",
   "custom",
 ] as const;
+const SYSTEM_SECTION_KEYS = new Set<string>([
+  "welcome",
+  ...TEMPLATE_KEYS.filter((key) => key !== "custom"),
+]);
+const sectionKind = (section: GuideSection) => section.section_key.split("-")[0] ?? "custom";
+const sectionLabel = (section: GuideSection, t: (key: string) => string) => {
+  const kind = sectionKind(section);
+  return SYSTEM_SECTION_KEYS.has(kind) ? t(`section.${kind}`) : section.title;
+};
 
 export function GuideEditor({
   data,
@@ -248,7 +246,7 @@ export function GuideEditor({
             onClick={() => setOpen(section.id)}
           >
             <span className="editor-rail-mark" />
-            {section.title}
+            {sectionLabel(section, t)}
           </button>
         ))}
       </nav>
@@ -323,14 +321,6 @@ export function GuideEditor({
             ))}
           </div>
         )}
-        {!translationAvailability.enabled && (
-          <details className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">
-            <summary className="cursor-pointer font-semibold text-foreground">
-              {t("manager.autoTranslation")}
-            </summary>
-            <p className="mt-2">{t("manager.translationUnavailable")}</p>
-          </details>
-        )}
         {error && (
           <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">
             {error}
@@ -341,6 +331,7 @@ export function GuideEditor({
             <div key={section.id} hidden={open !== section.id}>
               <SectionRow
                 section={section}
+                displayTitle={sectionLabel(section, t)}
                 media={media.filter((item) => item.section_id === section.id)}
                 open={open === section.id}
                 onToggle={() => setOpen(open === section.id ? null : section.id)}
@@ -430,6 +421,7 @@ export function GuideEditor({
 
 function SectionRow({
   section,
+  displayTitle,
   media,
   open,
   onToggle,
@@ -447,6 +439,7 @@ function SectionRow({
 }: {
   registerFlush: (flush: (() => Promise<void>) | null) => void;
   section: GuideSection;
+  displayTitle: string;
   media: SectionMedia[];
   open: boolean;
   onToggle: () => void;
@@ -469,6 +462,7 @@ function SectionRow({
 }) {
   const { t } = useI18n();
   const [title, setTitle] = useState(section.title);
+  const [titleEdited, setTitleEdited] = useState(false);
   const [items, setItems] = useState<GuideContentItem[]>(() => {
     const current = itemsOf(section);
     return current.length ? current : [blankItem()];
@@ -549,6 +543,8 @@ function SectionRow({
   }, []);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const visibleTitle =
+    SYSTEM_SECTION_KEYS.has(sectionKind(section)) && !titleEdited ? displayTitle : title;
   return (
     <article className="rounded-lg border bg-card">
       <div className="flex items-center gap-2 pr-4">
@@ -562,7 +558,7 @@ function SectionRow({
             className="h-12 w-12 rounded-xl object-cover"
           />
           <span className="min-w-0">
-            <span className="block truncate text-lg font-bold">{title}</span>
+            <span className="block truncate text-lg font-bold">{displayTitle}</span>
             <span className="text-sm text-muted-foreground">
               {visible ? t("manager.visible") : t("manager.hidden")}
               {media.length ? ` · ${media.length}` : ""}
@@ -572,7 +568,7 @@ function SectionRow({
         </button>
         <input
           type="checkbox"
-          aria-label={`${t("manager.showSection")} : ${title}`}
+          aria-label={`${t("manager.showSection")} : ${displayTitle}`}
           checked={visible}
           onChange={(e) => setVisible(e.target.checked)}
           className="h-6 w-6 shrink-0 accent-primary"
@@ -582,7 +578,14 @@ function SectionRow({
         <div className="space-y-5 border-t p-4">
           <label className="block">
             <span className="mb-1 block font-semibold">{t("manager.sectionTitle")}</span>
-            <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              className="field"
+              value={visibleTitle}
+              onChange={(e) => {
+                setTitleEdited(true);
+                setTitle(e.target.value);
+              }}
+            />
           </label>
           {section.section_key.split("-")[0] !== "welcome" && (
             <>
@@ -755,11 +758,7 @@ function SectionRow({
             aria-live="polite"
             className="flex min-h-12 items-center justify-center text-center text-sm font-semibold text-muted-foreground"
           >
-            {busy
-              ? t("common.saving")
-              : rowError
-                ? "Enregistrement à réessayer"
-                : t("manager.autoSaved")}
+            {busy ? t("common.saving") : rowError ? t("manager.retrySave") : t("manager.autoSaved")}
           </p>
         </div>
       )}

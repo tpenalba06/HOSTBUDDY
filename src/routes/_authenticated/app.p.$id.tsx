@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { QrCode } from "lucide-react";
 import {
   getProperty,
   publishProperty,
@@ -93,6 +94,7 @@ function PropertyPage() {
   const [mode, setMode] = useState<"guide" | "details" | "services" | "reviews">("guide");
 
   const [preview, setPreview] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [previewServices, setPreviewServices] = useState<
     NonNullable<import("@/components/guest/guide-model").GuideViewData["services"]>
   >([]);
@@ -232,16 +234,32 @@ function PropertyPage() {
           </Link>
         }
         previewAction={
-          <a
-            href={`/l/${property.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-secondary min-h-12 w-full @sm:w-auto"
-          >
-            {t("app.viewGuide")}
-          </a>
+          <div className="grid w-full grid-cols-2 gap-2 @sm:w-auto">
+            <a
+              href={`/l/${property.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary min-h-12"
+            >
+              {t("app.viewGuide")}
+            </a>
+            <button
+              type="button"
+              className="btn btn-secondary min-h-12"
+              aria-expanded={showQr}
+              onClick={() => setShowQr((current) => !current)}
+            >
+              <QrCode className="h-5 w-5" />
+              {t("qr.title")}
+            </button>
+          </div>
         }
       >
+        {showQr && property.status === "published" && (
+          <section className="surface mx-auto mt-6 max-w-md p-5">
+            <QrCard slug={property.slug} name={property.name} />
+          </section>
+        )}
         {mode === "guide" && (
           <div className="mt-7">
             <GuideEditor

@@ -1,6 +1,7 @@
 export const HOSTBUDDY_PLAN = {
   baseCents: 999,
-  includedProperties: 3,
+  freeProperties: 1,
+  includedProperties: 2,
   extraCents: 299,
   currency: "eur",
 } as const;
@@ -9,8 +10,18 @@ export function subscriptionQuote(propertyCount: number) {
   const extraQuantity = Math.max(0, propertyCount - HOSTBUDDY_PLAN.includedProperties);
   return {
     extraQuantity,
-    monthlyCents: HOSTBUDDY_PLAN.baseCents + extraQuantity * HOSTBUDDY_PLAN.extraCents,
+    monthlyCents:
+      propertyCount <= HOSTBUDDY_PLAN.freeProperties
+        ? 0
+        : HOSTBUDDY_PLAN.baseCents + extraQuantity * HOSTBUDDY_PLAN.extraCents,
   };
+}
+export const SERVICE_FEE_BASIS_POINTS = 200;
+/** Integer cents, rounded once per order; separate from Stripe processing fees. */
+export function serviceFeeCents(amount: number) {
+  if (!Number.isSafeInteger(amount) || amount < 50 || amount > 99999900)
+    throw new Error("invalid_amount");
+  return Math.round((amount * SERVICE_FEE_BASIS_POINTS) / 10000);
 }
 export function cents(value: number | string) {
   const number = Number(value);

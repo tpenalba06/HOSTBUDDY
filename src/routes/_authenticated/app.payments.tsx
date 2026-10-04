@@ -12,6 +12,7 @@ function PaymentsPage() {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [feeAccepted, setFeeAccepted] = useState(false);
   const [link, setLink] = useState("");
   const query = useQuery({
     queryKey: ["payments", org.id],
@@ -28,7 +29,12 @@ function PaymentsPage() {
     setError(false);
     try {
       const result = await managePayments({
-        data: { organizationId: org.id, action, ...(id ? { id } : {}) },
+        data: {
+          organizationId: org.id,
+          action,
+          ...(action === "connect" ? { feeTermsAccepted: feeAccepted } : {}),
+          ...(id ? { id } : {}),
+        },
       });
       if ("url" in result) {
         if (action === "payment_link") setLink(result.url);
@@ -44,6 +50,12 @@ function PaymentsPage() {
   if (org.role !== "owner") return <p role="alert">{t("app.readOnly")}</p>;
   const format = (n: number) =>
     new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(n / 100);
+  const billingAction =
+    state?.quote.monthlyCents === 0 ||
+    (state?.account?.stripe_subscription_id &&
+      !["canceled", "incomplete_expired"].includes(state.account.subscription_status))
+      ? "portal"
+      : "billing";
   return (
     <div className="py-6">
       <h1 className="text-4xl">{t("nav.payments")}</h1>
@@ -63,9 +75,26 @@ function PaymentsPage() {
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <section className="surface p-6">
           <h2 className="text-2xl">{t("payments.subscription")}</h2>
-          <p className="mt-4 font-display text-3xl">{t("marketing.price")}</p>
+          <p className="mt-4 font-display text-3xl">
+            {state?.quote.monthlyCents === 0 ? t("payments.free") : t("marketing.price")}
+          </p>
+          <p className="mt-2 text-sm">{t("payments.freeNote")}</p>
+          {state && (
+            <p className="mt-3 font-semibold">
+              {t("payments.counter")
+                .replace("{count}", String(state.quote.propertyCount))
+                .replace("{amount}", format(state.quote.monthlyCents))}
+            </p>
+          )}
+          <p className="mt-2 text-sm text-muted-foreground">{t("payments.syncNote")}</p>
+          {state?.syncPending && (
+            <p role="alert" className="mt-3 text-warning">
+              {t("payments.syncPending")}
+            </p>
+          )}
           <p className="mt-2 text-sm text-muted-foreground">{t("marketing.priceNote")}</p>
-          {!state?.config.billing ? (
+          {state?.quote.monthlyCents === 0 && !state.account?.stripe_subscription_id ? null : !state
+              ?.config.billing ? (
             <p className="mt-5 text-muted-foreground">{t("payments.notConfigured")}</p>
           ) : (
             <>
@@ -83,12 +112,8 @@ function PaymentsPage() {
                   {new Date(state.account.current_period_end).toLocaleDateString(locale)}
                 </p>
               )}
-              <Button
-                className="mt-5 min-h-12"
-                disabled={busy}
-                onClick={() => act(state.account?.stripe_subscription_id ? "portal" : "billing")}
-              >
-                {t(state.account?.stripe_subscription_id ? "payments.manage" : "payments.setup")}
+              <Button className="mt-5 min-h-12" disabled={busy} onClick={() => act(billingAction)}>
+                {t(billingAction === "portal" ? "payments.manage" : "payments.setup")}
               </Button>
             </>
           )}
@@ -100,8 +125,25 @@ function PaymentsPage() {
               state?.account?.charges_enabled ? "payments.confirmation" : "payments.notConfigured",
             )}
           </p>
+          <p className="mt-4 text-sm">{t("payments.feeTerms")}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("payments.feeRefundNote")}</p>
           {state?.config.connect && (
-            <Button className="mt-5 min-h-12" disabled={busy} onClick={() => act("connect")}>
+            <label className="mt-4 flex items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1 h-5 w-5 shrink-0"
+                checked={feeAccepted}
+                onChange={(e) => setFeeAccepted(e.target.checked)}
+              />
+              {t("payments.feeAccept")}
+            </label>
+          )}
+          {state?.config.connect && (
+            <Button
+              className="mt-5 min-h-12"
+              disabled={busy || !feeAccepted}
+              onClick={() => act("connect")}
+            >
               {t("payments.connect")}
             </Button>
           )}
@@ -115,21 +157,26 @@ function PaymentsPage() {
           </Button>
         </section>
       </div>
-      {!!state?.confirmedOrders?.length && state.account?.charges_enabled && (
-        <section className="mt-6 surface p-6">
-          <h2 className="text-2xl">{t("payments.paymentLink")}</h2>
-          {state.confirmedOrders?.map((order) => (
-            <div key={order.id} className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <span>
-                {order.services?.name} · {format(Number(order.total_amount) * 100)}
-              </span>
-              <Button disabled={busy} onClick={() => act("payment_link", order.id)}>
-                {t("payments.paymentLink")}
-              </Button>
-            </div>
-          ))}
-        </section>
-      )}
+      {!!state?.confirmedOrders?.length &&
+        state.account?.charges_enabled &&
+        state.account.service_fee_terms_version === "services-2pct-v1" && (
+          <section className="mt-6 surface p-6">
+            <h2 className="text-2xl">{t("payments.paymentLink")}</h2>
+            {state.confirmedOrders?.map((order) => (
+              <div
+                key={order.id}
+                className="mt-4 flex flex-wrap items-center justify-between gap-3"
+              >
+                <span>
+                  {order.services?.name} · {format(Number(order.total_amount) * 100)}
+                </span>
+                <Button disabled={busy} onClick={() => act("payment_link", order.id)}>
+                  {t("payments.paymentLink")}
+                </Button>
+              </div>
+            ))}
+          </section>
+        )}
       {link && (
         <div className="mt-4 rounded-xl border bg-card p-4">
           <p className="break-all text-sm">{link}</p>
@@ -167,6 +214,12 @@ function PaymentsPage() {
                         : ["failed", "expired"].includes(payment.status)
                           ? "payments.failed"
                           : "payments.pending",
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t("payments.feeAmount").replace(
+                  "{amount}",
+                  format(payment.application_fee_cents ?? 0),
                 )}
               </p>
               {payment.status === "paid" && (

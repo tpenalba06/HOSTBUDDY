@@ -1,12 +1,36 @@
 import { describe, it, expect } from "vitest";
-import { subscriptionQuote, cents, paymentState, paymentEnvironment } from "./payment-policy";
+import {
+  subscriptionQuote,
+  cents,
+  paymentState,
+  paymentEnvironment,
+  serviceFeeCents,
+} from "./payment-policy";
 import Stripe from "stripe";
 describe("payment safety", () => {
-  it("prices 3 included properties and additional units on the server", () => {
-    expect(subscriptionQuote(0).monthlyCents).toBe(999);
-    expect(subscriptionQuote(3).monthlyCents).toBe(999);
-    expect(subscriptionQuote(5)).toEqual({ extraQuantity: 2, monthlyCents: 1597 });
-    expect(() => subscriptionQuote(-1)).toThrow();
+  it("makes one property free and prices two included properties", () => {
+    for (const [count, expected] of [
+      [0, 0],
+      [1, 0],
+      [2, 999],
+      [3, 1298],
+      [5, 1896],
+      [10, 3391],
+    ])
+      expect(subscriptionQuote(count!).monthlyCents).toBe(expected);
+    expect(subscriptionQuote(5).extraQuantity).toBe(3);
+    for (const n of [-1, 1.5, NaN, Infinity]) expect(() => subscriptionQuote(n)).toThrow();
+  });
+  it("rounds the separate 2% platform fee in integer cents", () => {
+    for (const [amount, fee] of [
+      [1500, 30],
+      [5000, 100],
+      [10000, 200],
+      [1299, 26],
+      [50, 1],
+    ])
+      expect(serviceFeeCents(amount!)).toBe(fee);
+    for (const amount of [0, 49, NaN, 1500.5]) expect(() => serviceFeeCents(amount)).toThrow();
   });
   it("rejects invalid or free checkout amounts", () => {
     expect(cents("29.99")).toBe(2999);

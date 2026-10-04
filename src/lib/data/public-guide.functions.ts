@@ -101,6 +101,11 @@ export const getPublicGuide = createServerFn({ method: "GET" })
         .from("guide-media")
         .createSignedUrls(paths, 3600);
       const urls = new Map((signed ?? []).map((item) => [item.path, item.signedUrl]));
+      if (result.services)
+        result.services = result.services.map((service) => ({
+          ...service,
+          imagePath: service.imagePath ? (urls.get(service.imagePath) ?? null) : null,
+        }));
       result.sections = result.sections.map((section) =>
         section.media
           ? {
@@ -114,5 +119,8 @@ export const getPublicGuide = createServerFn({ method: "GET" })
           : section,
       );
     }
+    if (!paths.length)
+      if (result.services)
+        result.services = result.services.map((service) => ({ ...service, imagePath: null }));
     return result;
   });

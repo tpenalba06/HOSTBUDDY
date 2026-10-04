@@ -320,6 +320,8 @@ function Landing() {
             </div>
             <div className="surface p-8">
               <h3 className="text-3xl font-semibold">{t("marketing.pricing")}</h3>
+              <p className="mt-4 font-semibold">{t("payments.free")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("payments.freeNote")}</p>
               <p className="mt-6 font-display text-5xl font-semibold">{t("marketing.price")}</p>
               <p className="mt-2 text-muted-foreground">{t("marketing.priceNote")}</p>
               <Link

@@ -5,6 +5,7 @@ const schema = z.object({
   organizationId: z.string().uuid(),
   action: z.enum(["overview", "billing", "portal", "connect", "payment_link", "refund"]),
   id: z.string().uuid().optional(),
+  feeTermsAccepted: z.boolean().optional(),
 });
 export const managePayments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -21,7 +22,10 @@ export const managePayments = createServerFn({ method: "POST" })
         case "portal":
           return await server.startPortal(data.organizationId);
         case "connect":
-          return await server.connectOnboarding(data.organizationId);
+          return await server.connectOnboarding(
+            data.organizationId,
+            data.feeTermsAccepted === true,
+          );
         case "payment_link":
           if (!data.id) throw new Error("invalid_request");
           return await server.createOrderPaymentLink(data.organizationId, data.id);

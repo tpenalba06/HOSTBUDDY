@@ -75,8 +75,20 @@ export async function saveService(
     price: number;
     pricingType: "fixed" | "per_person";
     isActive: boolean;
+    imagePath?: string | null;
   },
 ) {
+  if (values.imagePath) {
+    const { data: photo, error } = await supabase
+      .from("section_media")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("property_id", propertyId)
+      .eq("media_type", "image")
+      .eq("storage_path", values.imagePath)
+      .maybeSingle();
+    if (error || !photo) throw new FriendlyError("Choisissez une photo de ce logement.");
+  }
   const payload = {
     organization_id: orgId,
     property_id: propertyId,
@@ -85,6 +97,7 @@ export async function saveService(
     price: Math.max(0, values.price),
     pricing_type: values.pricingType,
     is_active: values.isActive,
+    ...(values.imagePath !== undefined ? { image_path: values.imagePath } : {}),
   };
   const response = values.id
     ? await supabase.from("services").update(payload).eq("id", values.id).select("*").single()
@@ -163,4 +176,28 @@ export async function dashboardMetrics(orgId: string) {
       .reduce((sum, item) => sum + Number(item.total_amount), 0),
     recentFeedback: feedback.data ?? [],
   };
+}
+
+export async function listServicePhotos(orgId: string, propertyId: string) {
+  const { data, error } = await supabase
+    .from("section_media")
+    .select("id,storage_path,alt_text,guide_sections!inner(is_visible)")
+    .eq("organization_id", orgId)
+    .eq("property_id", propertyId)
+    .eq("media_type", "image")
+    .eq("guide_sections.is_visible", true)
+    .order("sort_order");
+  if (error) return fail(error);
+  if (!data.length) return [];
+  const signed = await supabase.storage.from("guide-media").createSignedUrls(
+    data.map((item) => item.storage_path),
+    900,
+  );
+  if (signed.error) return fail(signed.error);
+  const urls = new Map(signed.data.map((item) => [item.path, item.signedUrl]));
+  return data.map((item) => ({
+    path: item.storage_path,
+    url: urls.get(item.storage_path) ?? "",
+    label: item.alt_text ?? "",
+  }));
 }

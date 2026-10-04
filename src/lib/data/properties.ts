@@ -1,3 +1,4 @@
+import { reconcileBilling } from "@/lib/integrations/billing.functions";
 import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
 import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
@@ -572,6 +573,8 @@ export async function createPropertyFromExtraction(
     .select("*")
     .single();
   if (error) return fail(error);
+  // The SQL outbox survives network failures; the manager polling/scheduler retries.
+  void reconcileBilling({ data: { organizationId: orgId } }).catch(() => {});
   const byKey = new Map(result?.fields.map((f) => [f.key, f]) ?? []);
   const now = new Date().toISOString();
   const rows = FIELD_DEFS.map((def) => {

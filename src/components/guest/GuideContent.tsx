@@ -13,6 +13,7 @@ import {
   Wifi,
 } from "lucide-react";
 import { useState } from "react";
+import { wifiCredentials } from "@/lib/import-engine/wifi-credentials";
 import { Button } from "@/components/ui/button";
 import type { PublicSection } from "@/lib/data/public-guide.functions";
 export const GenericTemplate = ({ items }: { items: { label: string; text: string }[] }) => (
@@ -73,9 +74,10 @@ export function WifiTemplate({
   onCopy: () => void;
 }) {
   const [copyError, setCopyError] = useState(false);
-  const network = items[0]?.text ?? "—";
-  const password = items[1]?.text;
-  const copyText = password || items[0]?.text;
+  const explicit = wifiCredentials(items.map((item) => item.text).join("\n"));
+  const network = explicit ? (explicit.network ?? "—") : (items[0]?.text ?? "—");
+  const password = explicit ? explicit.password : items[1]?.text;
+  const copyText = password || (explicit ? explicit.network : items[0]?.text);
 
   return (
     <div className="mx-auto max-w-xl rounded-2xl bg-ink p-6 text-ink-foreground shadow-phone">
@@ -236,6 +238,14 @@ export function ServiceList({
     <div className="grid gap-4 sm:grid-cols-2">
       {services.map((service) => (
         <article key={service.id} className="overflow-hidden rounded-xl border bg-card">
+          {service.imagePath && (
+            <img
+              src={service.imagePath}
+              alt={service.name}
+              loading="lazy"
+              className="aspect-[4/3] w-full object-cover"
+            />
+          )}
           <div className="p-4">
             <div className="flex justify-between gap-3">
               <div>
@@ -244,6 +254,9 @@ export function ServiceList({
               </div>
               <strong className="shrink-0 text-primary">
                 {Number(service.price).toFixed(2)} €
+                {service.pricingType === "per_person" && (
+                  <span className="block text-xs font-normal">{t("services.perPerson")}</span>
+                )}
               </strong>
             </div>
             <Button

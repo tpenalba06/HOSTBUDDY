@@ -17,6 +17,7 @@ import { Route as GuidePreviewRouteImport } from './routes/guide-preview'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as ApiBillingSyncRouteImport } from './routes/api/billing-sync'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
 import { Route as PayTokenRouteImport } from './routes/pay.$token'
@@ -79,6 +80,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiBillingSyncRoute = ApiBillingSyncRouteImport.update({
+  id: '/api/billing-sync',
+  path: '/api/billing-sync',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe-webhook',
@@ -213,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/offline': typeof OfflineRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
   '/pay/$token': typeof PayTokenRoute
@@ -244,6 +251,7 @@ export interface FileRoutesByTo {
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
   '/offline': typeof OfflineRoute
+  '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
   '/pay/$token': typeof PayTokenRoute
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/offline': typeof OfflineRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
   '/pay/$token': typeof PayTokenRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/offline'
     | '/app'
+    | '/api/billing-sync'
     | '/api/stripe-webhook'
     | '/l/$slug'
     | '/pay/$token'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/guide-preview'
     | '/integrations'
     | '/offline'
+    | '/api/billing-sync'
     | '/api/stripe-webhook'
     | '/l/$slug'
     | '/pay/$token'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/offline'
     | '/_authenticated/app'
+    | '/api/billing-sync'
     | '/api/stripe-webhook'
     | '/l/$slug'
     | '/pay/$token'
@@ -409,6 +421,7 @@ export interface RootRouteChildren {
   GuidePreviewRoute: typeof GuidePreviewRoute
   IntegrationsRoute: typeof IntegrationsRoute
   OfflineRoute: typeof OfflineRoute
+  ApiBillingSyncRoute: typeof ApiBillingSyncRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LSlugRoute: typeof LSlugRoute
   PayTokenRoute: typeof PayTokenRoute
@@ -476,6 +489,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app'
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/billing-sync': {
+      id: '/api/billing-sync'
+      path: '/api/billing-sync'
+      fullPath: '/api/billing-sync'
+      preLoaderRoute: typeof ApiBillingSyncRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/stripe-webhook': {
       id: '/api/stripe-webhook'
@@ -699,6 +719,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidePreviewRoute: GuidePreviewRoute,
   IntegrationsRoute: IntegrationsRoute,
   OfflineRoute: OfflineRoute,
+  ApiBillingSyncRoute: ApiBillingSyncRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LSlugRoute: LSlugRoute,
   PayTokenRoute: PayTokenRoute,

@@ -72,6 +72,15 @@ export function splitSnippets(text: string): string[] {
 }
 
 function guessName(snippets: string[]): string | null {
+  const explicitNames = snippets.flatMap((snippet) => {
+    const match = snippet.match(
+      /^(?:nom (?:du logement|de l[’']h[eé]bergement|de la propri[eé]t[eé])|property name|accommodation name|nombre del alojamiento|name der unterkunft|nome (?:dell[’']alloggio|do alojamento))\s*[:=]\s*(.+)$/i,
+    );
+    return match?.[1]?.trim() ? [match[1].trim()] : [];
+  });
+  if (new Set(explicitNames).size === 1 && explicitNames[0]!.length <= 120)
+    return explicitNames[0]!;
+  if (explicitNames.length) return null;
   const first = snippets[0];
   if (!first || first.length > 80 || /[.:!?]$/.test(first)) return null;
   const looksLikeField = Object.values(RULES).some((rule) => rule.test(first));
@@ -85,7 +94,15 @@ function guessName(snippets: string[]): string | null {
 export function extractFromText(text: string, baseConfidence = 0.85): ExtractionResult {
   const all = splitSnippets(text);
   const name = guessName(all);
-  const snippets = name ? all.slice(1) : all;
+  const snippets = name
+    ? all.filter(
+        (snippet, index) =>
+          !(index === 0 && snippet === name) &&
+          !/^(?:nom (?:du logement|de l[’']h[eé]bergement|de la propri[eé]t[eé])|property name|accommodation name|nombre del alojamiento|name der unterkunft|nome (?:dell[’']alloggio|do alojamento))\s*[:=]/i.test(
+            snippet,
+          ),
+      )
+    : all;
 
   const fields: ExtractedField[] = FIELD_DEFS.map((def) => {
     const rule = RULES[def.key];

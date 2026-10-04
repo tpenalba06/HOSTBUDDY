@@ -101,6 +101,9 @@ function PropertyPage() {
   const openPreview = async () => {
     await qc.invalidateQueries({ queryKey: ["property", id] });
     const services = await listServices(property.organization_id, id);
+    const photos = await import("@/lib/data/operations").then((m) =>
+      m.listServicePhotos(property.organization_id, id),
+    );
     setPreviewServices(
       services
         .filter((service) => service.is_active)
@@ -109,6 +112,7 @@ function PropertyPage() {
           name: service.name,
           description: service.description,
           price: Number(service.price),
+          imagePath: photos.find((photo) => photo.path === service.image_path)?.url ?? null,
           pricingType: service.pricing_type as "fixed" | "per_person",
         })),
     );

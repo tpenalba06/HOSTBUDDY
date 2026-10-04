@@ -11,6 +11,7 @@ type Draft = {
   price: string;
   pricingType: "fixed" | "per_person";
   isActive: boolean;
+  imagePath?: string | null;
 };
 const empty: Draft = { name: "", description: "", price: "", pricingType: "fixed", isActive: true };
 export type ServiceValues = {
@@ -20,14 +21,17 @@ export type ServiceValues = {
   price: number;
   pricingType: "fixed" | "per_person";
   isActive: boolean;
+  imagePath?: string | null;
 };
 export function ServicesScreen({
   services,
   loading = false,
   onSave,
+  photos = [],
 }: {
   services: Service[];
   loading?: boolean;
+  photos?: { path: string; url: string; label: string }[];
   onSave: (values: ServiceValues) => Promise<void>;
 }) {
   const { t } = useI18n();
@@ -88,6 +92,33 @@ export function ServicesScreen({
               onChange={(e) => setDraft({ ...draft, description: e.target.value })}
             />
           </label>
+          {!!photos.length && (
+            <fieldset>
+              <legend className="mb-2 font-semibold">{t("payments.servicePhoto")}</legend>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  aria-pressed={!draft.imagePath}
+                  onClick={() => setDraft({ ...draft, imagePath: null })}
+                >
+                  {t("payments.noPhoto")}
+                </button>
+                {photos.map((photo, index) => (
+                  <button
+                    key={photo.path}
+                    type="button"
+                    className={`h-20 w-24 overflow-hidden rounded-xl border-2 ${draft.imagePath === photo.path ? "border-primary" : "border-transparent"}`}
+                    aria-pressed={draft.imagePath === photo.path}
+                    onClick={() => setDraft({ ...draft, imagePath: photo.path })}
+                    aria-label={`${t("payments.servicePhoto")} ${index + 1}`}
+                  >
+                    <img src={photo.url} alt={photo.label} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
               <span className="mb-1 block font-semibold">{t("services.price")}</span>
@@ -165,6 +196,7 @@ export function ServicesScreen({
                   price: String(service.price),
                   pricingType: service.pricing_type,
                   isActive: service.is_active,
+                  imagePath: service.image_path,
                 });
                 setOpen(true);
               }}

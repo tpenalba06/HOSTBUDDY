@@ -1270,3 +1270,28 @@
     font-size: 11px;
   }
 }
+
+/* Internal-page additions only; the validated home composition stays intact. */
+.hb-quick-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+.hb-section-information {
+  min-width: 0;
+}
+@container (min-width:1000px) {
+  .hb-section-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+  .hb-section-detail-layout > div:first-child {
+    grid-template-columns: 1fr;
+  }
+  .hb-section-detail-layout .hb-section-information > div {
+    max-width: 100%;
+  }
+}

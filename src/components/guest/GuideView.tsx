@@ -97,6 +97,11 @@ export function GuideView({
   );
   const cover = guideCover(guide);
   const { services: serviceSection, main, extra } = homeSections(sections);
+  const address = guide.sections
+    .flatMap((section) => section.content.items ?? [])
+    .find((item) =>
+      /^(adresse|address|dirección|anschrift|indirizzo|morada)$/i.test(item.label.trim()),
+    )?.text;
   const contact = sections.find((item) => sectionKind(item.key) === "contact");
   const go = (key: string | null) => {
     setLocalKey(key);
@@ -174,35 +179,80 @@ export function GuideView({
                     onSelect={selectEntry}
                   />
                 ) : (
-                  <>
+                  <div
+                    className={
+                      open.media?.length &&
+                      ["wifi", "arrival", "departure", "house", "rules", "amenities"].includes(
+                        sectionKind(open.key),
+                      )
+                        ? "hb-section-detail-layout"
+                        : undefined
+                    }
+                  >
                     <SectionMedia section={open} />
-                    {sectionKind(open.key) === "wifi" ? (
-                      <WifiTemplate
-                        items={open.content.items ?? []}
-                        t={t}
-                        copied={copied}
-                        onCopy={() => setCopied(true)}
-                      />
-                    ) : sectionKind(open.key) === "arrival" ? (
-                      <ArrivalTemplate items={open.content.items ?? []} contact={contact} t={t} />
-                    ) : ["house", "rules", "amenities"].includes(sectionKind(open.key)) ? (
-                      <HouseTemplate items={open.content.items ?? []} />
-                    ) : sectionKind(open.key) === "departure" ? (
-                      <DepartureTemplate
-                        items={open.content.items ?? []}
-                        onFeedback={onFeedback}
-                        t={t}
-                      />
-                    ) : sectionKind(open.key) === "services" ? (
-                      <>
+                    <div className="hb-section-information">
+                      {sectionKind(open.key) === "wifi" ? (
+                        <WifiTemplate
+                          items={open.content.items ?? []}
+                          t={t}
+                          copied={copied}
+                          onCopy={() => setCopied(true)}
+                        />
+                      ) : sectionKind(open.key) === "arrival" ? (
+                        <ArrivalTemplate items={open.content.items ?? []} contact={contact} t={t} />
+                      ) : ["house", "rules", "amenities"].includes(sectionKind(open.key)) ? (
+                        <HouseTemplate items={open.content.items ?? []} />
+                      ) : sectionKind(open.key) === "departure" ? (
+                        <DepartureTemplate
+                          items={open.content.items ?? []}
+                          onFeedback={onFeedback}
+                          t={t}
+                        />
+                      ) : sectionKind(open.key) === "services" ? (
+                        <>
+                          <GenericTemplate items={open.content.items ?? []} />
+                          <ServiceList
+                            services={guide.services ?? []}
+                            onRequest={onRequest}
+                            t={t}
+                          />
+                        </>
+                      ) : (
                         <GenericTemplate items={open.content.items ?? []} />
-                        <ServiceList services={guide.services ?? []} onRequest={onRequest} t={t} />
-                      </>
-                    ) : (
-                      <GenericTemplate items={open.content.items ?? []} />
-                    )}
-                    {sectionKind(open.key) === "contact" && <ContactButtons section={open} t={t} />}
-                  </>
+                      )}
+                      {sectionKind(open.key) === "contact" && (
+                        <ContactButtons section={open} t={t} />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="hb-quick-contact">
+                {contact?.content.phones?.[0] && (
+                  <a
+                    className="hb-button hb-button-light"
+                    href={`tel:${contact.content.phones[0]}`}
+                  >
+                    <Phone size={16} />
+                    {t("guest.call")}
+                  </a>
+                )}
+                {guide.messagingEnabled && onMessage && (
+                  <button className="hb-button hb-button-light" onClick={onMessage}>
+                    <MessageCircle size={16} />
+                    {t("guest.sendMessage")}
+                  </button>
+                )}
+                {address && (
+                  <a
+                    className="hb-button hb-button-light"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                  >
+                    <MapPin size={16} />
+                    {t("guest.route")}
+                  </a>
                 )}
               </div>
             </div>

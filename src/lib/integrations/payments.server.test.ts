@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
   create: vi.fn(),
   retrieve: vi.fn(),
   account: vi.fn(),
+  refund: vi.fn(),
+  intent: vi.fn(),
 }));
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
@@ -32,10 +34,18 @@ vi.mock("@/integrations/supabase/client.server", () => ({
 vi.mock("stripe", () => ({
   default: class {
     checkout = { sessions: { create: state.create, retrieve: state.retrieve } };
+    paymentIntents = { retrieve: state.intent };
+    refunds = { create: state.refund };
     v2 = { core: { accounts: { retrieve: state.account } } };
   },
 }));
-import { checkoutForToken, handleStripeEvent, requireOwner } from "./payments.server";
+import {
+  checkoutForToken,
+  handleStripeEvent,
+  requireOwner,
+  refundOrderPayment,
+  connectOnboarding,
+} from "./payments.server";
 
 describe("service checkout server orchestration (mocked providers)", () => {
   const payment = {
@@ -44,6 +54,7 @@ describe("service checkout server orchestration (mocked providers)", () => {
     organization_id: "org-1",
     stripe_account_id: "acct_host",
     amount_cents: 1500,
+    application_fee_cents: 30,
     currency: "eur",
     status: "pending",
     checkout_session_id: null,
@@ -70,6 +81,7 @@ describe("service checkout server orchestration (mocked providers)", () => {
     await checkoutForToken("a".repeat(64));
     const [params, options] = state.create.mock.calls[0]!;
     expect(params.line_items[0].price_data.unit_amount).toBe(1500);
+    expect(params.payment_intent_data.application_fee_amount).toBe(30);
     expect(options.stripeAccount).toBe("acct_host");
     expect(state.queries[1]!.calls).toContainEqual(["eq", "organization_id", "org-1"]);
     expect(
@@ -77,6 +89,28 @@ describe("service checkout server orchestration (mocked providers)", () => {
         q.calls.some((c) => c[0] === "update" && (c[1] as { status?: string }).status === "paid"),
       ),
     ).toBe(false);
+  });
+  it("preserves legacy zero-fee transactions", async () => {
+    state.results.push({ ...payment, application_fee_cents: 0 }, { status: "confirmed" });
+    await checkoutForToken("a".repeat(64));
+    expect(
+      state.create.mock.calls[0]![0].payment_intent_data.application_fee_amount,
+    ).toBeUndefined();
+  });
+  it("requests refund of the platform fee on the host account", async () => {
+    state.results.push({ ...payment, status: "paid", payment_intent_id: "pi_host" });
+    await refundOrderPayment("org-1", payment.id);
+    expect(state.refund).toHaveBeenCalledWith(
+      { payment_intent: "pi_host", refund_application_fee: true },
+      { stripeAccount: "acct_host", idempotencyKey: `hb-refund-${payment.id}` },
+    );
+    expect(state.queries[0]!.calls).toContainEqual(["eq", "organization_id", "org-1"]);
+  });
+  it("requires fee acceptance before Stripe onboarding", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_synthetic");
+    await expect(connectOnboarding("org-1", false)).rejects.toThrow("fee_terms_required");
+    expect(state.account).not.toHaveBeenCalled();
+    expect(state.queries).toEqual([]);
   });
   it("reuses an open session instead of creating another charge", async () => {
     state.results.push({ ...payment, checkout_session_id: "cs_old" }, { status: "confirmed" });
@@ -137,6 +171,48 @@ describe("service checkout server orchestration (mocked providers)", () => {
     expect(state.queries[0]!.calls).toContainEqual(["eq", "stripe_account_id", "acct_host"]);
     expect(state.queries[0]!.calls).toContainEqual(["eq", "amount_cents", 1500]);
     expect(state.queries[0]!.calls).toContainEqual(["is", "checkout_session_id", null]);
+    expect(state.rpc.mock.calls[0]![1]._change.status).toBe("paid");
+  });
+  it("rejects a paid webhook whose actual Stripe platform fee differs from the ledger", async () => {
+    state.results.push({ application_fee_cents: 30 });
+    state.intent.mockResolvedValue({ application_fee_amount: 0 });
+    await expect(
+      handleStripeEvent({
+        id: "evt_bad_fee",
+        type: "checkout.session.completed",
+        account: "acct_host",
+        created: 123,
+        data: {
+          object: {
+            id: "cs_fee",
+            mode: "payment",
+            payment_status: "paid",
+            payment_intent: "pi_fee",
+            amount_total: 1500,
+            currency: "eur",
+          },
+        },
+      } as unknown as Stripe.Event),
+    ).rejects.toThrow("payment_fee_mismatch");
+    expect(state.rpc).not.toHaveBeenCalled();
+    state.results.push({ application_fee_cents: 30 });
+    state.intent.mockResolvedValue({ application_fee_amount: 30 });
+    await handleStripeEvent({
+      id: "evt_good_fee",
+      type: "checkout.session.completed",
+      account: "acct_host",
+      created: 124,
+      data: {
+        object: {
+          id: "cs_fee",
+          mode: "payment",
+          payment_status: "paid",
+          payment_intent: "pi_fee",
+          amount_total: 1500,
+          currency: "eur",
+        },
+      },
+    } as unknown as Stripe.Event);
     expect(state.rpc.mock.calls[0]![1]._change.status).toBe("paid");
   });
   it("rejects financial access for admins and members", async () => {

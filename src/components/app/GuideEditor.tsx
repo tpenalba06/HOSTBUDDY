@@ -2,16 +2,7 @@ import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  Home,
-  ImagePlus,
-  Plus,
-  Trash2,
-  Video,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Home, ImagePlus, Plus, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -757,11 +748,7 @@ function SectionRow({
             aria-live="polite"
             className="flex min-h-12 items-center justify-center text-center text-sm font-semibold text-muted-foreground"
           >
-            {busy
-              ? t("common.saving")
-              : rowError
-                ? t("manager.retrySave")
-                : t("manager.autoSaved")}
+            {busy ? t("common.saving") : rowError ? t("manager.retrySave") : t("manager.autoSaved")}
           </p>
         </div>
       )}

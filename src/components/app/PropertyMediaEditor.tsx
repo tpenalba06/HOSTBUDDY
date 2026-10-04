@@ -340,9 +340,7 @@ export function PropertyMediaEditor({
           </div>
         ))}
       <p role="status" className="mt-3 text-sm text-muted-foreground">
-        {busy
-          ? t("common.saving")
-          : t("manager.mediaLimits")}
+        {busy ? t("common.saving") : t("manager.mediaLimits")}
       </p>
     </section>
   );

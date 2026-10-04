@@ -185,7 +185,12 @@ export function ManagerPropertiesScreen({
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
-          <select className="manager-property-sort" aria-label={t("manager.sortLabel")} value={sort} onChange={(event) => setSort(event.target.value as typeof sort)}>
+          <select
+            className="manager-property-sort"
+            aria-label={t("manager.sortLabel")}
+            value={sort}
+            onChange={(event) => setSort(event.target.value as typeof sort)}
+          >
             <option value="az">{t("manager.sortAZ")}</option>
             <option value="za">{t("manager.sortZA")}</option>
             <option value="newest">{t("manager.sortNewest")}</option>

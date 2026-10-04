@@ -57,7 +57,7 @@ Configurer BILLING_SYNC_SECRET puis un scheduler serveur qui appelle POST /api/b
 - Un build vert ne prouve ni les transactions externes ni l'indépendance au réseau.
 - Les anciens prix Stripe doivent être rapprochés explicitement ; un prix étranger est refusé, pas converti aveuglément.
 - Les navigateurs peuvent supprimer des données locales sous pression de stockage.
-- Les captures prises avant le dernier correctif montraient la coupure Services et le Wi-Fi combiné ; des captures finales doivent confirmer le correctif synchronisé.
+- Les captures finales du dernier commit reçu par Lovable confirment le CTA Services visible à 393 px, les titres anglais Arrival/Departure et la séparation réelle du réseau HB_AUDIT_V2 et du mot de passe en desktop. Les captures intermédiaires ne servent pas de livrable final.
 - Aucun compte de voyageur réel contacté : tous les messages/commandes/retours de test concernent le logement AUDIT et des contenus fictifs.
 
 ## Tests

@@ -543,7 +543,8 @@ function SectionRow({
   }, []);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
-  const visibleTitle = SYSTEM_SECTION_KEYS.has(sectionKind(section)) && !titleEdited ? displayTitle : title;
+  const visibleTitle =
+    SYSTEM_SECTION_KEYS.has(sectionKind(section)) && !titleEdited ? displayTitle : title;
   return (
     <article className="rounded-lg border bg-card">
       <div className="flex items-center gap-2 pr-4">

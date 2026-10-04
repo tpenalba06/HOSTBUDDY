@@ -389,3 +389,381 @@
     font-size: 12px;
   }
 }
+
+/* Concierge reference board — shared by real manager and demo. */
+.manager-shell {
+  background: #faf7f2;
+}
+.manager-shell-grid {
+  max-width: none;
+  grid-template-columns: 205px minmax(0, 1fr);
+}
+.manager-shell-sidebar {
+  background: #faf7f2;
+  padding: 24px 14px;
+}
+.manager-sidebar-wordmark {
+  font:
+    400 32px/1.2 "HB Newsreader",
+    Georgia,
+    serif;
+  letter-spacing: -0.06em;
+  margin: 2px 10px 24px;
+}
+.manager-shell-sidebar nav {
+  display: grid;
+  gap: 2px;
+}
+.manager-shell-sidebar nav :is(a, button) {
+  min-height: 42px;
+  height: auto;
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 400;
+}
+.manager-shell-sidebar nav :is(a, button)[aria-current="page"],
+.manager-shell-sidebar nav .bg-primary {
+  background: #eee8de;
+  color: #201b16;
+  box-shadow: none;
+}
+.manager-shell-sidebar nav svg {
+  width: 17px;
+  height: 17px;
+}
+.manager-shell-content {
+  padding: 30px 32px 60px;
+}
+.manager-shell .surface {
+  border-radius: 9px;
+  border-color: #e8e1d8;
+  box-shadow: 0 4px 12px #4b413809;
+}
+.manager-properties > div:first-child {
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 260px) auto;
+  align-items: center;
+  gap: 18px;
+}
+.manager-properties h1 {
+  font-size: 34px;
+}
+.manager-properties > div:first-child > button {
+  min-height: 44px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+.manager-property-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: #f2eee8;
+  border: 1px solid #e9e3da;
+}
+.manager-property-search input {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+  background: transparent;
+  outline: none;
+}
+.manager-property-filters {
+  display: flex;
+  gap: 9px;
+  margin: 22px 0 18px;
+}
+.manager-property-filters button {
+  min-height: 34px;
+  padding: 5px 18px;
+  font-size: 12px;
+  font-weight: 400;
+  background: #f0ece6;
+}
+.manager-property-filters button[aria-pressed="true"] {
+  background: #33291d;
+  color: white;
+  box-shadow: none;
+}
+.manager-property-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.manager-property-card {
+  position: relative;
+  padding-bottom: 15px;
+}
+.manager-property-photo {
+  aspect-ratio: 1.8;
+}
+.manager-property-card > div:nth-child(2) {
+  padding: 15px 15px 9px;
+}
+.manager-property-card h2 {
+  padding-right: 18px;
+  font-size: 25px;
+}
+.manager-property-card p {
+  margin-top: 5px;
+  font-size: 12px;
+}
+.manager-property-card p svg {
+  display: none;
+}
+.manager-property-status {
+  display: inline-block;
+  margin: 0 15px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+.manager-property-status.is-published {
+  color: #087537;
+  background: #d4efdc;
+}
+.manager-property-status.is-draft {
+  color: #1267a2;
+  background: #e3f0f8;
+}
+.manager-property-menu {
+  position: absolute;
+  right: 6px;
+  top: calc((100cqw - 80px) / 3 / 1.8);
+}
+.manager-property-menu {
+  top: auto;
+  bottom: 40px;
+}
+.manager-property-menu summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+}
+.manager-property-menu summary::-webkit-details-marker {
+  display: none;
+}
+.manager-property-actions {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  top: 36px;
+  width: 190px;
+  border: 1px solid #e4ddd2;
+  border-radius: 9px;
+  background: #fffcf8;
+  box-shadow: 0 8px 25px #302a2420;
+}
+.manager-property-card:has(details[open]) {
+  overflow: visible;
+  z-index: 2;
+}
+.manager-shell > header {
+  background: #faf7f2;
+}
+.manager-shell > header > div > :first-child {
+  font:
+    400 28px "HB Newsreader",
+    Georgia,
+    serif;
+}
+.manager-shell > header > div > :first-child > span:first-child {
+  display: none;
+}
+.guide-editor-workspace {
+  display: grid;
+  grid-template-columns: 155px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  background: #fffcf8;
+  border: 1px solid #e8e1d8;
+  border-radius: 10px;
+  padding: 20px;
+}
+.guide-editor-rail {
+  display: grid;
+  gap: 5px;
+  padding-top: 46px;
+}
+.guide-editor-rail button {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-height: 40px;
+  padding: 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: left;
+}
+.guide-editor-rail button[aria-pressed="true"] {
+  background: #eee8de;
+}
+.editor-rail-mark {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #756b5e;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.guide-editor-form {
+  min-width: 0;
+}
+.guide-editor-form h2 {
+  font-size: 25px;
+}
+.guide-editor-form .field {
+  min-height: 40px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.guide-editor-form > button {
+  min-height: 42px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+.guide-editor-form .property-media-editor {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+.guide-editor-form .property-media-editor > div:first-child h2 {
+  font:
+    13px "HB Manrope",
+    sans-serif;
+}
+.guide-editor-form .property-media-editor > div:first-child button {
+  display: none;
+}
+.guide-editor-form .property-media-editor > .relative {
+  border-radius: 7px;
+}
+.guide-editor-form .property-media-editor > .relative > img {
+  height: 150px;
+  aspect-ratio: auto;
+}
+.guide-editor-preview {
+  display: none;
+  min-width: 0;
+}
+.guide-editor-preview h3 {
+  font-size: 25px;
+  margin-bottom: 18px;
+}
+.guide-editor-phone {
+  border: 7px solid #171714;
+  border-radius: 30px;
+  height: 550px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: #f6f1ea;
+}
+.guide-editor-phone .hb-cover {
+  height: 536px;
+  min-height: 536px;
+}
+.guide-editor-phone .hb-cover-copy h1 {
+  font-size: 52px;
+}
+.guide-editor-phone .hb-cover-copy > p:first-child {
+  font-size: 17px;
+}
+.guide-editor-phone .hb-cover-copy .hb-eyebrow {
+  font-size: 9px;
+}
+.guide-editor-phone .hb-discover {
+  font-size: 13px;
+}
+@container (min-width:1100px) {
+  .guide-editor-workspace {
+    grid-template-columns: 150px minmax(0, 1fr) 270px;
+  }
+  .guide-editor-preview {
+    display: block;
+  }
+}
+@container (min-width:721px) {
+  .manager-shell > header > div > :first-child {
+    visibility: hidden;
+  }
+  .manager-shell > header {
+    height: 48px;
+  }
+  .manager-shell-embedded .manager-shell-grid {
+    padding-top: 48px;
+  }
+}
+@container (max-width:1000px) {
+  .manager-properties > div:first-child {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .manager-property-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .manager-property-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (max-width:720px) {
+  .manager-shell-content {
+    padding: 20px 17px 90px;
+  }
+  .manager-properties > div:first-child {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+  .manager-properties h1 {
+    font-size: 30px;
+  }
+  .manager-properties > div:first-child > button {
+    width: auto;
+    max-width: 160px;
+    padding: 10px;
+    font-size: 11px;
+  }
+  .manager-property-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .manager-property-photo {
+    aspect-ratio: 2.2;
+  }
+  .manager-property-card {
+    border: 0;
+    border-radius: 20px;
+  }
+  .manager-property-card > div:nth-child(2) {
+    position: relative;
+    background: #fffcf8;
+    margin-top: -15px;
+    border-radius: 20px 20px 0 0;
+    padding-top: 15px;
+  }
+  .manager-property-card h2 {
+    font-size: 26px;
+  }
+  .manager-property-filters {
+    gap: 6px;
+  }
+  .manager-property-filters button {
+    padding-inline: 14px;
+  }
+  .guide-editor-workspace {
+    display: block;
+    padding: 14px;
+  }
+  .guide-editor-rail {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 0 14px;
+    gap: 6px;
+  }
+  .guide-editor-rail button {
+    flex: 0 0 auto;
+    max-width: 190px;
+  }
+}

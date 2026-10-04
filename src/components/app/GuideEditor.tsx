@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
+  Home,
   ImagePlus,
   Languages,
   Plus,
@@ -29,6 +30,7 @@ import {
 } from "@/lib/data/properties";
 import { friendlyMessage } from "./Friendly";
 import { useI18n } from "@/lib/i18n";
+import { ManagerGuidePreview } from "./ManagerGuidePreview";
 import { PropertyMediaEditor } from "./PropertyMediaEditor";
 import { sectionVisual } from "@/components/guest/visual-library";
 import { translationAvailability } from "@/lib/translation/service";
@@ -226,148 +228,186 @@ export function GuideEditor({
     }
   };
   return (
-    <div className={`space-y-4 ${compact ? "guide-editor-compact" : ""}`}>
-      <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
-        <h2 className="text-2xl font-semibold @sm:text-3xl">{t("manager.guide")}</h2>
+    <div className={`guide-editor-workspace ${compact ? "guide-editor-compact" : ""}`}>
+      <nav className="guide-editor-rail" aria-label={t("manager.editContent")}>
+        <button type="button" aria-pressed={!open} onClick={() => setOpen(null)}>
+          <Home size={17} />
+          {t("manager.general")}
+        </button>
+        {sorted.map((section) => (
+          <button
+            type="button"
+            key={section.id}
+            aria-pressed={open === section.id}
+            onClick={() => setOpen(section.id)}
+          >
+            <span className="editor-rail-mark" />
+            {section.title}
+          </button>
+        ))}
+      </nav>
+      <div className="guide-editor-form space-y-4">
+        <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
+          <h2 className="text-2xl font-semibold @sm:text-3xl">{t("manager.editContent")}</h2>
+          <Button
+            onClick={() => void proceed()}
+            disabled={saving || mediaBusy || transfers > 0}
+            variant="outline"
+            className="min-h-12 w-full rounded-xl @sm:w-auto"
+          >
+            <Eye />
+            <span>{t("manager.preview")}</span>
+          </Button>
+        </div>
+        {onPublish && (
+          <Button
+            className="min-h-12 w-full rounded-full"
+            disabled={saving || mediaBusy || transfers > 0}
+            onClick={() => void proceed(true)}
+          >
+            {saving
+              ? t("common.saving")
+              : data.property.status === "published"
+                ? t("manager.publishChanges")
+                : t("property.publish")}
+          </Button>
+        )}
+        <div hidden={open !== null}>
+          <PropertyMediaEditor
+            property={data.property}
+            section={sections.find((section) => section.section_key.split("-")[0] === "welcome")}
+            media={media}
+            actions={actions}
+            onSection={(updated) => {
+              setSections((current) =>
+                current.some((s) => s.id === updated.id)
+                  ? current.map((s) => (s.id === updated.id ? updated : s))
+                  : [...current, updated],
+              );
+              onChanged();
+            }}
+            onMedia={(updated) => {
+              setMedia(updated);
+              onChanged();
+            }}
+            onPreview={() => void proceed()}
+            onBusyChange={setMediaBusy}
+          />
+        </div>
         <Button
-          onClick={() => void proceed()}
-          disabled={saving || mediaBusy || transfers > 0}
-          variant="outline"
-          className="min-h-12 w-full rounded-xl @sm:w-auto"
+          onClick={() => setTemplates(!templates)}
+          className="min-h-14 w-full rounded-full text-base"
         >
-          <Eye />
-          <span>{t("manager.preview")}</span>
+          <Plus />
+          {t("manager.addSection")}
         </Button>
-      </div>
-      {onPublish && (
-        <Button
-          className="min-h-12 w-full rounded-full"
-          disabled={saving || mediaBusy || transfers > 0}
-          onClick={() => void proceed(true)}
-        >
-          {saving
-            ? t("common.saving")
-            : data.property.status === "published"
-              ? t("manager.publishChanges")
-              : t("property.publish")}
-        </Button>
-      )}
-      <PropertyMediaEditor
-        property={data.property}
-        section={sections.find((section) => section.section_key.split("-")[0] === "welcome")}
-        media={media}
-        actions={actions}
-        onSection={(updated) => {
-          setSections((current) =>
-            current.some((s) => s.id === updated.id)
-              ? current.map((s) => (s.id === updated.id ? updated : s))
-              : [...current, updated],
-          );
-          onChanged();
-        }}
-        onMedia={(updated) => {
-          setMedia(updated);
-          onChanged();
-        }}
-        onPreview={() => void proceed()}
-        onBusyChange={setMediaBusy}
-      />
-      <Button
-        onClick={() => setTemplates(!templates)}
-        className="min-h-14 w-full rounded-full text-base"
-      >
-        <Plus />
-        {t("manager.addSection")}
-      </Button>
-      {templates && (
-        <div className="surface grid gap-2 p-4 @sm:grid-cols-2">
-          <p className="col-span-full font-bold">{t("manager.chooseTemplate")}</p>
-          {TEMPLATE_KEYS.map((key) => (
-            <button
-              key={key}
-              disabled={saving || mediaBusy || transfers > 0}
-              onClick={() => add(key)}
-              className="flex min-h-14 min-w-0 items-center gap-3 rounded-lg border bg-card px-4 text-left font-semibold hover:border-primary"
-            >
-              <span className="shrink-0 text-xl">{ICONS[TEMPLATE_KEYS.indexOf(key)]}</span>
-              <span className="min-w-0">{t(`section.${key}`)}</span>
-            </button>
+        {templates && (
+          <div className="surface grid gap-2 p-4 @sm:grid-cols-2">
+            <p className="col-span-full font-bold">{t("manager.chooseTemplate")}</p>
+            {TEMPLATE_KEYS.map((key) => (
+              <button
+                key={key}
+                disabled={saving || mediaBusy || transfers > 0}
+                onClick={() => add(key)}
+                className="flex min-h-14 min-w-0 items-center gap-3 rounded-lg border bg-card px-4 text-left font-semibold hover:border-primary"
+              >
+                <span className="shrink-0 text-xl">{ICONS[TEMPLATE_KEYS.indexOf(key)]}</span>
+                <span className="min-w-0">{t(`section.${key}`)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {!translationAvailability.enabled && (
+          <details className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">
+            <summary className="cursor-pointer font-semibold text-foreground">
+              {t("manager.autoTranslation")}
+            </summary>
+            <p className="mt-2">{t("manager.translationUnavailable")}</p>
+          </details>
+        )}
+        {error && (
+          <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">
+            {error}
+          </p>
+        )}
+        <div className="space-y-3">
+          {sorted.map((section, index) => (
+            <div key={section.id} hidden={open !== section.id}>
+              <SectionRow
+                section={section}
+                media={media.filter((item) => item.section_id === section.id)}
+                open={open === section.id}
+                onToggle={() => setOpen(open === section.id ? null : section.id)}
+                actions={actions}
+                registerFlush={(flush) => {
+                  if (flush) flushers.current.set(section.id, flush);
+                  else flushers.current.delete(section.id);
+                }}
+                onSave={async (values) => {
+                  const updated = await actions.save(section, values);
+                  setSections((current) =>
+                    current.map((item) => (item.id === updated.id ? updated : item)),
+                  );
+                  flash();
+                }}
+                onUpload={async (file) => {
+                  setTransfers((current) => current + 1);
+                  try {
+                    const created = await actions.upload(
+                      data.property.organization_id,
+                      data.property.id,
+                      section.id,
+                      file,
+                    );
+                    setMedia((current) => [...current, created]);
+                    flash();
+                  } finally {
+                    setTransfers((current) => current - 1);
+                  }
+                }}
+                onMediaChange={(updated) =>
+                  setMedia(media.map((item) => (item.id === updated.id ? updated : item)))
+                }
+                onMediaRemove={async (item) => {
+                  await actions.removeMedia(item);
+                  setMedia((current) => current.filter((m) => m.id !== item.id));
+                  flash();
+                }}
+                onMoveUp={() => move(section.id, -1)}
+                onMoveDown={() => move(section.id, 1)}
+                canUp={index > 0}
+                canDown={index < sorted.length - 1}
+                onDelete={async () => {
+                  if (!window.confirm(`${t("common.delete")} ?`)) return;
+                  try {
+                    await actions.remove(section.id);
+                    setSections((current) => current.filter((item) => item.id !== section.id));
+                    flash();
+                  } catch (e) {
+                    setError(friendlyMessage(e));
+                  }
+                }}
+              />
+            </div>
           ))}
         </div>
-      )}
-      {!translationAvailability.enabled && (
-        <details className="rounded-xl bg-muted px-4 py-3 text-sm text-muted-foreground">
-          <summary className="cursor-pointer font-semibold text-foreground">
-            {t("manager.autoTranslation")}
-          </summary>
-          <p className="mt-2">{t("manager.translationUnavailable")}</p>
-        </details>
-      )}
-      {error && (
-        <p role="alert" className="rounded-lg bg-warning-soft p-3 text-foreground">
-          {error}
-        </p>
-      )}
-      <div className="space-y-3">
-        {sorted.map((section, index) => (
-          <SectionRow
-            key={section.id}
-            section={section}
-            media={media.filter((item) => item.section_id === section.id)}
-            open={open === section.id}
-            onToggle={() => setOpen(open === section.id ? null : section.id)}
-            actions={actions}
-            registerFlush={(flush) => {
-              if (flush) flushers.current.set(section.id, flush);
-              else flushers.current.delete(section.id);
-            }}
-            onSave={async (values) => {
-              const updated = await actions.save(section, values);
-              setSections((current) =>
-                current.map((item) => (item.id === updated.id ? updated : item)),
-              );
-              flash();
-            }}
-            onUpload={async (file) => {
-              setTransfers((current) => current + 1);
-              try {
-                const created = await actions.upload(
-                  data.property.organization_id,
-                  data.property.id,
-                  section.id,
-                  file,
-                );
-                setMedia((current) => [...current, created]);
-                flash();
-              } finally {
-                setTransfers((current) => current - 1);
-              }
-            }}
-            onMediaChange={(updated) =>
-              setMedia(media.map((item) => (item.id === updated.id ? updated : item)))
-            }
-            onMediaRemove={async (item) => {
-              await actions.removeMedia(item);
-              setMedia((current) => current.filter((m) => m.id !== item.id));
-              flash();
-            }}
-            onMoveUp={() => move(section.id, -1)}
-            onMoveDown={() => move(section.id, 1)}
-            canUp={index > 0}
-            canDown={index < sorted.length - 1}
-            onDelete={async () => {
-              if (!window.confirm(`${t("common.delete")} ?`)) return;
-              try {
-                await actions.remove(section.id);
-                setSections((current) => current.filter((item) => item.id !== section.id));
-                flash();
-              } catch (e) {
-                setError(friendlyMessage(e));
-              }
-            }}
-          />
-        ))}
       </div>
+      <aside className="guide-editor-preview">
+        <h3>{t("manager.preview")}</h3>
+        <div className="guide-editor-phone">
+          <ManagerGuidePreview
+            compact
+            data={{
+              ...data,
+              property: { ...data.property, name: data.property.name ?? "" },
+              sections,
+              media,
+            }}
+            resolveMediaUrl={actions.resolveMediaUrl}
+            onBack={() => void proceed()}
+          />
+        </div>
+      </aside>
       <div
         aria-live="polite"
         className={`fixed bottom-20 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-5 py-3 font-semibold text-ink-foreground shadow-phone transition ${saved || saving ? "opacity-100" : "pointer-events-none opacity-0"}`}

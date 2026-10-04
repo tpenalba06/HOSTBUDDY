@@ -171,6 +171,7 @@ export function ManagerShell({
         className={`manager-shell-grid ${embedded ? "h-full pt-[69px]" : "mx-auto w-full max-w-7xl"}`}
       >
         <aside className="manager-shell-sidebar min-h-0 overflow-y-auto border-r bg-card/60 p-4">
+          <div className="manager-sidebar-wordmark">HostBuddy</div>
           <nav className="space-y-1" aria-label={t("demo.manager")}>
             <ShellItem
               item={properties}

@@ -15,6 +15,8 @@ import {
   Home,
   MailPlus,
   MapPin,
+  MoreHorizontal,
+  Search,
   MessageCircle,
   PackageCheck,
   Pencil,
@@ -148,25 +150,29 @@ export function ManagerPropertiesScreen({
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"draft" | "published">(() =>
-    properties.some((p) => p.status === "draft") ? "draft" : "published",
-  );
+  const [status, setStatus] = useState<"all" | "draft" | "published">("all");
   const shown = properties.filter(
     (property) =>
-      property.status === status &&
+      (status === "all" || property.status === status) &&
       `${property.name} ${property.location ?? ""}`
         .toLocaleLowerCase()
         .includes(search.toLocaleLowerCase().trim()),
   );
 
   return (
-    <div className="py-4 @sm:py-6">
+    <div className="manager-properties py-4 @sm:py-6">
       <div className="grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
-        <PageHeading
-          eyebrow={t("demo.ownerSpace")}
-          title={t("app.myProperties")}
-          description={t("demo.propertiesHint")}
-        />
+        <PageHeading title={t("app.myProperties")} />
+        <label className="manager-property-search">
+          <Search size={16} />
+          <input
+            type="search"
+            aria-label={t("manager.searchProperties")}
+            placeholder={t("manager.searchProperties")}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </label>
         {role !== "member" && onAdd && (
           <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
             <Plus />
@@ -175,12 +181,8 @@ export function ManagerPropertiesScreen({
         )}
       </div>
 
-      <div
-        className="mt-6 inline-flex max-w-full gap-1 rounded-full bg-muted p-1"
-        role="group"
-        aria-label={t("app.myProperties")}
-      >
-        {(["draft", "published"] as const).map((value) => (
+      <div className="manager-property-filters" role="group" aria-label={t("app.myProperties")}>
+        {(["all", "published", "draft"] as const).map((value) => (
           <button
             key={value}
             type="button"
@@ -191,30 +193,34 @@ export function ManagerPropertiesScreen({
             }}
             className={`min-h-12 rounded-full px-5 text-sm font-semibold ${status === value ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}
           >
-            {t(value === "draft" ? "manager.drafts" : "manager.published")}{" "}
+            {t(
+              value === "all"
+                ? "guide.all"
+                : value === "draft"
+                  ? "manager.drafts"
+                  : "manager.published",
+            )}{" "}
             <span className="ml-2 opacity-60">
-              {properties.filter((p) => p.status === value).length}
+              {properties.filter((p) => value === "all" || p.status === value).length}
             </span>
           </button>
         ))}
       </div>
 
-      {properties.length > 4 && (
-        <input
-          type="search"
-          className="field mt-5"
-          aria-label={t("manager.searchProperties")}
-          placeholder={t("manager.searchProperties")}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-      )}
       {properties.length ? (
-        <div className="mt-6 grid gap-4 @lg:grid-cols-2">
+        <div className="manager-property-grid">
           {!shown.length && <p className="text-muted-foreground">{t("manager.noResults")}</p>}
           {shown.map((property) => (
-            <article key={property.id} className="surface min-w-0 overflow-hidden">
-              <div className="relative aspect-[16/10] overflow-hidden bg-warm">
+            <article
+              key={property.id}
+              className="manager-property-card surface min-w-0 overflow-hidden"
+            >
+              <button
+                type="button"
+                onClick={() => onEdit(property.id)}
+                aria-label={`${t(role === "member" ? "common.view" : "common.edit")} ${property.name}`}
+                className="manager-property-photo relative block w-full overflow-hidden bg-warm"
+              >
                 <img
                   src={property.coverUrl || ambienceFor(property.name)}
                   alt={property.coverUrl ? property.name : t("media.ambience")}
@@ -228,10 +234,7 @@ export function ManagerPropertiesScreen({
                     image.src = ambienceFor(property.name);
                   }}
                 />
-                <span className="absolute left-3 top-3 rounded-full bg-background/95 px-3 py-1 text-xs font-semibold text-foreground">
-                  {property.status === "published" ? t("app.published") : t("app.draft")}
-                </span>
-              </div>
+              </button>
               <div className="px-4 pt-4 @sm:px-5">
                 <h2 className="break-words text-2xl font-semibold leading-tight">
                   {property.name}
@@ -244,49 +247,58 @@ export function ManagerPropertiesScreen({
                 )}
               </div>
 
-              <div className="grid gap-2 p-4 @sm:grid-cols-3">
-                {renderEdit ? (
-                  renderEdit(
-                    property,
-                    "btn btn-primary min-h-12",
-                    role === "member" ? t("common.view") : t("common.edit"),
-                  )
-                ) : (
-                  <Button className="min-h-12" onClick={() => onEdit(property.id)}>
-                    <Pencil />
-                    {role === "member" ? t("common.view") : t("common.edit")}
-                  </Button>
-                )}
-                {property.status === "published" ? (
-                  <>
-                    {renderView ? (
-                      renderView(property, "btn btn-secondary min-h-12", t("common.view"))
-                    ) : (
+              <span
+                className={`manager-property-status ${property.status === "published" ? "is-published" : "is-draft"}`}
+              >
+                {property.status === "published" ? t("app.published") : t("app.draft")}
+              </span>
+              <details className="manager-property-menu">
+                <summary aria-label={t(role === "member" ? "common.view" : "common.edit")}>
+                  <MoreHorizontal size={19} />
+                </summary>
+                <div className="manager-property-actions grid gap-2 p-3">
+                  {renderEdit ? (
+                    renderEdit(
+                      property,
+                      "btn btn-primary min-h-12",
+                      role === "member" ? t("common.view") : t("common.edit"),
+                    )
+                  ) : (
+                    <Button className="min-h-12" onClick={() => onEdit(property.id)}>
+                      <Pencil />
+                      {role === "member" ? t("common.view") : t("common.edit")}
+                    </Button>
+                  )}
+                  {property.status === "published" ? (
+                    <>
+                      {renderView ? (
+                        renderView(property, "btn btn-secondary min-h-12", t("common.view"))
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="min-h-12"
+                          onClick={() => onView(property.slug)}
+                        >
+                          <Eye />
+                          {t("common.view")}
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         className="min-h-12"
-                        onClick={() => onView(property.slug)}
+                        onClick={() => setQr(qr === property.id ? null : property.id)}
                       >
-                        <Eye />
-                        {t("common.view")}
+                        <QrCode />
+                        QR
                       </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      className="min-h-12"
-                      onClick={() => setQr(qr === property.id ? null : property.id)}
-                    >
-                      <QrCode />
-                      QR
-                    </Button>
-                  </>
-                ) : (
-                  <p className="self-center text-sm text-muted-foreground @sm:col-span-2">
-                    {t("app.publishHint")}
-                  </p>
-                )}
-              </div>
-
+                    </>
+                  ) : (
+                    <p className="self-center text-sm text-muted-foreground @sm:col-span-2">
+                      {t("app.publishHint")}
+                    </p>
+                  )}
+                </div>
+              </details>
               {qr === property.id && (
                 <div className="mx-4 mb-4 rounded-xl border bg-muted p-4 text-center">
                   {renderQr(property)}

@@ -11,11 +11,13 @@ export function ManagerGuidePreview({
   resolveMediaUrl,
   extras,
   onBack,
+  compact = false,
 }: {
   data: EditorData & { property: EditorData["property"] & { name: string } };
   resolveMediaUrl: GuideEditorActions["resolveMediaUrl"];
   extras?: Partial<GuideViewData>;
   onBack: () => void;
+  compact?: boolean;
 }) {
   const [guide, setGuide] = useState<GuideViewData | null>(null);
   const [error, setError] = useState("");
@@ -44,14 +46,16 @@ export function ManagerGuidePreview({
   }, [data, resolveMediaUrl, extras]);
   return (
     <div className="manager-guide-preview">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <Button variant="outline" onClick={onBack}>
-          Retour à l’édition
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          Aperçu · vos modifications enregistrées
-        </span>
-      </div>
+      {!compact && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <Button variant="outline" onClick={onBack}>
+            Retour à l’édition
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Aperçu · vos modifications enregistrées
+          </span>
+        </div>
+      )}
       {error && <p role="alert">{error}</p>}
       {!guide && !error && <p role="status">Chargement de l’aperçu…</p>}
       {notice && (

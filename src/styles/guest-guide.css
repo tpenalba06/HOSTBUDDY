@@ -1297,3 +1297,47 @@
     max-width: 100%;
   }
 }
+
+/* The landing phone is a crop of the guest guide, never a separately drawn interface. */
+.hb-marketing-phone {
+  height: 520px;
+  container-type: inline-size;
+}
+.hb-marketing-phone .hb-cover {
+  height: 210px;
+  min-height: 210px;
+}
+.hb-marketing-phone .hb-cover-copy {
+  top: auto;
+  bottom: 24px;
+}
+.hb-marketing-phone .hb-cover-copy h1 {
+  font-size: 36px;
+}
+.hb-marketing-phone .hb-discover,
+.hb-marketing-phone .hb-index-heading {
+  display: none;
+}
+
+/* Mobile entry stays short so Services and the main shortcuts are immediately reachable. */
+@container (max-width: 759px) {
+  .hb-cover {
+    height: 260px;
+    min-height: 260px;
+  }
+  .hb-cover-copy {
+    top: auto;
+    bottom: 24px;
+  }
+  .hb-cover-copy h1 {
+    font-size: clamp(30px, 9cqw, 42px);
+    max-width: 100%;
+  }
+  .hb-cover-copy .hb-eyebrow {
+    margin-top: 8px;
+  }
+  .hb-discover,
+  .hb-index-heading {
+    display: none;
+  }
+}

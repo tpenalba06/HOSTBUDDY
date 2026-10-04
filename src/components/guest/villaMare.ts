@@ -126,6 +126,10 @@ const localized = {
 } as const;
 export type GuideData = {
   name: string;
+  location: string;
+  coverUrl: string;
+  gallery: string[];
+  sectionPhotos: Record<string, string>;
   host: string;
   phone: string;
   email: string;
@@ -142,6 +146,19 @@ export function getVillaMare(locale: Locale): GuideData {
   const d = localized[locale];
   return {
     name: "Villa Mare",
+    location: "Antibes",
+    coverUrl: "/demo-guide/house.webp",
+    gallery: ["/demo-guide/house.webp", "/demo-guide/pool.webp", "/demo-guide/coast.webp"],
+    sectionPhotos: {
+      arrival: "/hostbuddy-media/arrival.webp",
+      wifi: "/hostbuddy-media/wifi.webp",
+      house: "/demo-guide/house.webp",
+      places: "/demo-guide/restaurant.webp",
+      departure: "/hostbuddy-media/departure.webp",
+      contact: "/hostbuddy-media/contact.webp",
+      pool: "/demo-guide/pool.webp",
+      services: "/demo-guide/breakfast.webp",
+    },
     host: d.host,
     phone: "+33612345678",
     email: "bonjour@conciergerie-azur.fr",

@@ -1,7 +1,7 @@
 import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
 import { validateMediaUpload } from "@/lib/data/media-validation";
 import { GuideView } from "@/components/guest/GuideView";
-import { toPublicSections } from "@/components/guest/guide-adapters";
+import { demoGuide } from "./villa-mare-fixture";
 import { useState, type ReactNode } from "react";
 import {
   PropertyEditorScreen,
@@ -214,23 +214,7 @@ export function DemoPropertyEditor({
         <Button variant="outline" onClick={() => setPreview(false)}>
           ← {t("common.back")}
         </Button>
-        <GuideView
-          guide={{
-            id: property.id,
-            name: property.name,
-            originalLocale: "fr",
-            sections: toPublicSections(property.sections, property.media),
-            services: property.services
-              .filter((item) => item.is_active)
-              .map((item) => ({
-                id: item.id,
-                name: item.name,
-                description: item.description,
-                price: Number(item.price),
-                pricingType: item.pricing_type as "fixed" | "per_person",
-              })),
-          }}
-        />
+        <GuideView guide={demoGuide(property)} />
       </div>
     );
   return (
@@ -292,6 +276,13 @@ export function DemoPropertyEditor({
         <div className="mt-7">
           <ServicesScreen
             services={property.services}
+            photos={property.media
+              .filter((item) => item.media_type === "image")
+              .map((item) => ({
+                path: item.storage_path,
+                url: item.storage_path,
+                label: item.alt_text || property.name,
+              }))}
             onSave={async (values) => {
               const service = {
                 id: values.id ?? `demo-service-${crypto.randomUUID()}`,
@@ -302,7 +293,7 @@ export function DemoPropertyEditor({
                 price: values.price,
                 pricing_type: values.pricingType,
                 is_active: values.isActive,
-                image_path: null,
+                image_path: values.imagePath ?? null,
                 created_at: "",
                 updated_at: "",
               };

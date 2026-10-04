@@ -1,3 +1,4 @@
+import { VillaMarePhone } from "@/components/marketing/VillaMarePhone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -48,7 +49,7 @@ function Landing() {
         <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
           <Link
             to="/integrations"
-            className="inline-flex min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:px-2 sm:text-base"
+            className="hidden min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:inline-flex sm:px-2 sm:text-base"
           >
             {t("marketing.integrations")}
           </Link>
@@ -56,7 +57,7 @@ function Landing() {
           <Link
             to="/auth"
             search={{ mode: "login" }}
-            className="btn btn-secondary hidden md:inline-flex"
+            className="btn btn-secondary min-h-12 px-3 text-sm sm:px-5"
           >
             {t("common.login")}
           </Link>
@@ -122,40 +123,7 @@ function Landing() {
                 {t("marketing.trial")}
               </p>
             </div>
-            <Link
-              to="/demo"
-              className="mx-auto block w-full max-w-[290px] overflow-hidden rounded-[32px] border-[8px] border-ink bg-background text-foreground shadow-phone"
-              aria-label={t("common.demo")}
-            >
-              <img
-                src="/demo-guide/house.webp"
-                alt={t("marketing.arrivalAlt")}
-                width="280"
-                height="160"
-                className="h-36 w-full object-cover"
-              />
-              <div className="p-4">
-                <p className="text-xs text-muted-foreground">{t("guest.welcome")}</p>
-                <h2 className="mt-1 font-display text-3xl">Villa Mare</h2>
-                <div className="mt-4 flex min-h-20 items-center justify-between gap-2 rounded-xl bg-accent px-4 font-semibold">
-                  <span>{t("section.services")}</span>
-                  <ArrowRight size={20} />
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {["arrival", "wifi", "places", "departure"].map((key) => (
-                    <span
-                      key={key}
-                      className="flex min-h-16 items-center rounded-lg bg-secondary p-3 text-sm font-semibold"
-                    >
-                      {t(`section.${key}`)}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-4 text-center text-xs text-muted-foreground">
-                  {t("guest.noInstall")}
-                </p>
-              </div>
-            </Link>
+            <VillaMarePhone />
           </div>
         </section>
 

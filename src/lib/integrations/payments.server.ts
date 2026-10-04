@@ -96,13 +96,12 @@ export async function paymentOverview(org: string) {
   const current = await account(org);
   if (current.stripe_account_id) {
     const connected = await stripeClient().v2.core.accounts.retrieve(current.stripe_account_id, {
-      include: ["configuration.merchant", "configuration.recipient"],
+      include: ["configuration.merchant"],
     });
     const charges =
       connected.configuration?.merchant?.capabilities?.card_payments?.status === "active";
     const payouts =
-      connected.configuration?.recipient?.capabilities?.stripe_balance?.stripe_transfers?.status ===
-      "active";
+      connected.configuration?.merchant?.capabilities?.stripe_balance?.payouts?.status === "active";
     checked(
       await paymentDb
         .from("organization_payment_accounts")
@@ -313,7 +312,7 @@ export async function paymentSummary(token: string) {
     currency: payment.currency,
     status: payment.status,
     name: order.services?.name ?? "",
-    canPay: order.status === "confirmed" && payment.status === "pending",
+    canPay: order.status === "confirmed" && ["pending", "expired"].includes(payment.status),
   };
 }
 export async function checkoutForToken(token: string) {
@@ -327,8 +326,7 @@ export async function checkoutForToken(token: string) {
   if (
     !payment ||
     Date.parse(payment.expires_at) < Date.now() ||
-    payment.status === "paid" ||
-    payment.status === "refunded"
+    !["pending", "expired"].includes(payment.status)
   )
     throw new Error("payment_link_unavailable");
   const order = required(
@@ -348,38 +346,55 @@ export async function checkoutForToken(token: string) {
   });
   if (connected.configuration?.merchant?.capabilities?.card_payments?.status !== "active")
     throw new Error("payment_not_configured");
-  const session = payment.checkout_session_id
+  const previous = payment.checkout_session_id
     ? await stripe.checkout.sessions.retrieve(
         payment.checkout_session_id,
         {},
         { stripeAccount: payment.stripe_account_id },
       )
-    : await stripe.checkout.sessions.create(
-        {
-          mode: "payment",
-          line_items: [
-            {
-              price_data: {
-                currency: payment.currency,
-                unit_amount: payment.amount_cents,
-                product_data: { name: order.services?.name ?? "Service" },
+    : null;
+  if (previous?.status === "complete") throw new Error("payment_link_unavailable");
+  const session =
+    previous?.status === "open"
+      ? previous
+      : await stripe.checkout.sessions.create(
+          {
+            mode: "payment",
+            line_items: [
+              {
+                price_data: {
+                  currency: payment.currency,
+                  unit_amount: payment.amount_cents,
+                  product_data: { name: order.services?.name ?? "Service" },
+                },
+                quantity: 1,
               },
-              quantity: 1,
-            },
-          ],
-          metadata: { payment_id: payment.id },
-          payment_intent_data: { metadata: { payment_id: payment.id } },
-          success_url: `${appOrigin()}/pay/${token}`,
-          cancel_url: `${appOrigin()}/pay/${token}`,
-        },
-        { stripeAccount: payment.stripe_account_id, idempotencyKey: `hb-service-${payment.id}` },
-      );
+            ],
+            metadata: { payment_id: payment.id },
+            payment_intent_data: { metadata: { payment_id: payment.id } },
+            success_url: `${appOrigin()}/pay/${token}`,
+            cancel_url: `${appOrigin()}/pay/${token}`,
+          },
+          {
+            stripeAccount: payment.stripe_account_id,
+            idempotencyKey: `hb-service-${payment.id}-${previous?.id ?? "initial"}`,
+          },
+        );
   checked(
     await paymentDb
       .from("order_payments")
       .update({ checkout_session_id: session.id })
       .eq("id", payment.id),
   );
+  if (session.status === "open") {
+    checked(
+      await paymentDb
+        .from("order_payments")
+        .update({ status: "pending" })
+        .eq("id", payment.id)
+        .eq("status", "expired"),
+    );
+  }
   if (!session.url || session.status !== "open") throw new Error("payment_link_unavailable");
   return { url: session.url };
 }
@@ -405,8 +420,8 @@ export async function handleStripeEvent(event: Stripe.Event) {
   const stripe = stripeClient();
   let change: Json = {};
   if (
-    event.type.startsWith("customer.subscription.") ||
-    event.type.startsWith("invoice.payment_")
+    !event.account &&
+    (event.type.startsWith("customer.subscription.") || event.type.startsWith("invoice.payment_"))
   ) {
     const object = event.data.object;
     const subId =
@@ -429,7 +444,11 @@ export async function handleStripeEvent(event: Stripe.Event) {
     }
   } else if (event.type.startsWith("checkout.session.")) {
     const session = event.data.object as Stripe.Checkout.Session;
-    if (session.mode === "subscription" && typeof session.subscription === "string") {
+    if (
+      !event.account &&
+      session.mode === "subscription" &&
+      typeof session.subscription === "string"
+    ) {
       const sub = await stripe.subscriptions.retrieve(session.subscription);
       const end = sub.items.data[0]?.current_period_end;
       change = {
@@ -439,7 +458,27 @@ export async function handleStripeEvent(event: Stripe.Event) {
         status: sub.status,
         period_end: end ? new Date(end * 1000).toISOString() : null,
       };
-    } else if (event.account) {
+    } else if (event.account && session.mode === "payment") {
+      // Stripe may deliver a webhook before the Checkout creation request has
+      // persisted its session ID. Bind only the first session, and only after
+      // matching the signed event's account, amount and currency to our ledger.
+      if (
+        session.metadata?.["payment_id"] &&
+        /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+          session.metadata["payment_id"],
+        )
+      ) {
+        checked(
+          await paymentDb
+            .from("order_payments")
+            .update({ checkout_session_id: session.id })
+            .eq("id", session.metadata["payment_id"])
+            .eq("stripe_account_id", event.account)
+            .eq("amount_cents", session.amount_total ?? -1)
+            .eq("currency", session.currency ?? "")
+            .is("checkout_session_id", null),
+        );
+      }
       const status =
         session.payment_status === "paid"
           ? "paid"

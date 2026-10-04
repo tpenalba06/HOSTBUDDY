@@ -10,7 +10,8 @@ describe("payment safety", () => {
   });
   it("rejects invalid or free checkout amounts", () => {
     expect(cents("29.99")).toBe(2999);
-    for (const amount of [0, -1, NaN, Infinity]) expect(() => cents(amount)).toThrow();
+    for (const amount of [0, -1, NaN, Infinity, 0.001, 0.49]) expect(() => cents(amount)).toThrow();
+    expect(cents(0.5)).toBe(50);
   });
   it("does not regress paid or refunded payments on delayed events", () => {
     expect(paymentState("paid", "expired")).toBe("paid");

@@ -6,7 +6,8 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         const signature = request.headers.get("stripe-signature");
         const secret = process.env["STRIPE_WEBHOOK_SECRET"];
         const connectSecret = process.env["STRIPE_CONNECT_WEBHOOK_SECRET"];
-        if (!signature || !secret) return new Response("Unavailable", { status: 400 });
+        if (!signature || (!secret && !connectSecret))
+          return new Response("Unavailable", { status: 400 });
         const reader = request.body?.getReader();
         if (!reader) return new Response("Invalid", { status: 400 });
         let raw = "";
@@ -34,14 +35,13 @@ export const Route = createFileRoute("/api/stripe-webhook")({
         }
         let event;
         try {
-          event = await stripe.webhooks.constructEventAsync(raw, signature, secret);
+          const { verifyStripeWebhook } = await import("@/lib/integrations/stripe-webhook.server");
+          event = await verifyStripeWebhook(stripe, raw, signature, {
+            platform: secret,
+            connect: connectSecret,
+          });
         } catch {
-          try {
-            if (!connectSecret) throw new Error();
-            event = await stripe.webhooks.constructEventAsync(raw, signature, connectSecret);
-          } catch {
-            return new Response("Invalid signature", { status: 400 });
-          }
+          return new Response("Invalid signature", { status: 400 });
         }
         try {
           await handleStripeEvent(event);

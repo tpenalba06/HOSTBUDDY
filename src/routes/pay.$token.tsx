@@ -18,6 +18,10 @@ function PaymentPage() {
   const summary = useQuery({
     queryKey: ["payment-info", token],
     retry: false,
+    // A browser return is not proof of payment. Poll the signed-webhook result
+    // briefly so a successful checkout is acknowledged without a manual reload.
+    refetchInterval: (query) =>
+      query.state.data?.canPay && query.state.dataUpdateCount < 20 ? 3000 : false,
     queryFn: async () => {
       const response = await fetch("/api/public/payment-info", {
         method: "POST",
@@ -70,6 +74,7 @@ function PaymentPage() {
           onClick={async () => {
             if (busy) return;
             setBusy(true);
+            setError(false);
             try {
               const response = await fetch("/api/public/checkout", {
                 method: "POST",

@@ -15,7 +15,9 @@ export function subscriptionQuote(propertyCount: number) {
 export function cents(value: number | string) {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0 || number > 999999) throw new Error("invalid_amount");
-  return Math.round(number * 100);
+  const amount = Math.round(number * 100);
+  if (amount < 50) throw new Error("invalid_amount");
+  return amount;
 }
 export function paymentState(current: string, incoming: string) {
   if (current === "refunded") return current;

@@ -112,8 +112,8 @@ function NameEditor({
   const { t } = useI18n();
   const [name, setName] = useState(initial);
   const [error, setError] = useState("");
-  const t = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(t.current), []);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
   return (
     <label className="mt-2 block max-w-xl">
       <span className="sr-only">{t("manager.propertyName")}</span>
@@ -123,8 +123,8 @@ function NameEditor({
         onChange={(e) => {
           const v = e.target.value;
           setName(v);
-          clearTimeout(t.current);
-          t.current = setTimeout(
+          clearTimeout(timer.current);
+          timer.current = setTimeout(
             () =>
               onRename(v)
                 .then(onSaved)

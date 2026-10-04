@@ -367,10 +367,16 @@ export async function updateSectionMedia(
 }
 
 export async function removeSectionMedia(media: SectionMedia) {
-  const { error: storageError } = await supabase.storage
-    .from("guide-media")
-    .remove([media.storage_path]);
-  if (storageError) return fail(storageError);
+  const { data: retained, error: retentionError } = await supabase.rpc("is_published_media", {
+    _path: media.storage_path,
+  });
+  if (retentionError) return fail(retentionError);
+  if (!retained) {
+    const { error: storageError } = await supabase.storage
+      .from("guide-media")
+      .remove([media.storage_path]);
+    if (storageError) return fail(storageError);
+  }
   const { error } = await supabase.from("section_media").delete().eq("id", media.id);
   if (error) fail(error);
 }
@@ -697,13 +703,8 @@ export function publishProperty(property: Property, fields: PropertyField[]): Pr
   if (current) return current;
   const task = (async () => {
     await ensureGuideSections(property.id, fields);
-    const { data, error } = await supabase
-      .from("properties")
-      .update({ status: "published", published_at: new Date().toISOString() })
-      .eq("id", property.id)
-      .select("id,status")
-      .single();
-    if (error || data?.status !== "published")
+    const { error } = await supabase.rpc("publish_property", { _property: property.id });
+    if (error)
       return fail(error, "La publication a échoué. Vos modifications sont conservées. Réessayez.");
   })();
   publishing.set(property.id, task);

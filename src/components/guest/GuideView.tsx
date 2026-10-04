@@ -244,11 +244,6 @@ export function GuideView({
             </button>
           </section>
           <div className="hb-guide-body hb-index" ref={contentRef}>
-            {cover && (
-              <div className="hb-index-photo" aria-hidden="true">
-                <img src={cover} alt="" loading="lazy" />
-              </div>
-            )}
             <div className="hb-index-content">
               {sections
                 .find((section) => sectionKind(section.key) === "welcome")

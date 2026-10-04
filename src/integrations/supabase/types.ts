@@ -872,6 +872,12 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_provider_draft: {
+        Args: { _org: string; _provider: string; _external: string; _name: string; _fields: Json };
+        Returns: string;
+      };
+      publish_property: { Args: { _property: string }; Returns: undefined };
+      is_published_media: { Args: { _path: string }; Returns: boolean };
       open_guest_thread: {
         Args: {
           _slug: string;

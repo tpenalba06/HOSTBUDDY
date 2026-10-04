@@ -73,7 +73,7 @@ function Landing() {
             className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover object-center sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]"
           />
           <div className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] rounded-xl bg-gradient-to-r from-ink/95 via-ink/70 to-ink/20 sm:inset-x-5 lg:inset-x-8" />
-          <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-7rem)] max-w-6xl items-center px-4 py-8 sm:px-10 sm:py-14 lg:px-16">
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-10 sm:py-14 lg:grid-cols-[1.3fr_0.7fr] lg:px-12">
             <div className="max-w-2xl text-ink-foreground">
               <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-card/95 px-4 py-2 text-sm font-bold text-foreground shadow-soft">
                 <WandSparkles className="h-4 w-4 text-primary" />
@@ -100,12 +100,6 @@ function Landing() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <strong className="font-display text-4xl font-semibold">
-                  {t("marketing.price")}
-                </strong>
-                <span className="text-ink-foreground/80">{t("marketing.priceNote")}</span>
-              </div>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">
                   {t("common.try")}
@@ -119,9 +113,46 @@ function Landing() {
                 </Link>
               </div>
               <p className="mt-4 text-sm font-semibold text-ink-foreground/80">
+                {t("marketing.startingPrice")} · {t("marketing.price")}
+              </p>
+              <p className="mt-2 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.trial")}
               </p>
             </div>
+            <Link
+              to="/demo"
+              className="mx-auto block w-full max-w-[290px] overflow-hidden rounded-[32px] border-[8px] border-ink bg-background text-foreground shadow-phone"
+              aria-label={t("common.demo")}
+            >
+              <img
+                src="/demo-guide/house.webp"
+                alt={t("marketing.arrivalAlt")}
+                width="280"
+                height="160"
+                className="h-36 w-full object-cover"
+              />
+              <div className="p-4">
+                <p className="text-xs text-muted-foreground">{t("guest.welcome")}</p>
+                <h2 className="mt-1 font-display text-3xl">Villa Mare</h2>
+                <div className="mt-4 flex min-h-20 items-center justify-between gap-2 rounded-xl bg-accent px-4 font-semibold">
+                  <span>{t("section.services")}</span>
+                  <ArrowRight size={20} />
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {["arrival", "wifi", "places", "departure"].map((key) => (
+                    <span
+                      key={key}
+                      className="flex min-h-16 items-center rounded-lg bg-secondary p-3 text-sm font-semibold"
+                    >
+                      {t(`section.${key}`)}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-4 text-center text-xs text-muted-foreground">
+                  {t("guest.noInstall")}
+                </p>
+              </div>
+            </Link>
           </div>
         </section>
 

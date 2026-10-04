@@ -1,4 +1,6 @@
 import { addTeamCopy, addMessageCopy } from "./team-copy";
+import { addProviderCopy } from "./provider-copy";
+import { addPaymentCopy } from "./payment-copy";
 import { addV1Copy } from "./v1-copy";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -2669,6 +2671,27 @@ for (const locale of LOCALES)
   guideKeys.forEach((key, index) => {
     translations[locale][key] = guideCopy[locale][index] ?? "";
   });
+const consolidationCopy = {
+  fr: ["Brouillons", "Publiés", "À partir de", "Paiements", "Publier les modifications"],
+  en: ["Drafts", "Published", "From", "Payments", "Publish changes"],
+  es: ["Borradores", "Publicados", "Desde", "Pagos", "Publicar cambios"],
+  de: ["Entwürfe", "Veröffentlicht", "Ab", "Zahlungen", "Änderungen veröffentlichen"],
+  it: ["Bozze", "Pubblicati", "A partire da", "Pagamenti", "Pubblica modifiche"],
+  pt: ["Rascunhos", "Publicados", "A partir de", "Pagamentos", "Publicar alterações"],
+};
+for (const locale of LOCALES) {
+  [
+    "manager.drafts",
+    "manager.published",
+    "marketing.startingPrice",
+    "nav.payments",
+    "manager.publishChanges",
+  ].forEach((key, index) => {
+    translations[locale][key] = consolidationCopy[locale][index]!;
+  });
+}
+addProviderCopy(translations);
+addPaymentCopy(translations);
 addV1Copy(translations);
 addTeamCopy(translations);
 addMessageCopy(translations);

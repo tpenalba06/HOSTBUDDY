@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-const backend = vi.hoisted(() => ({ from: vi.fn() }));
+const backend = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: backend }));
 vi.mock("@/lib/import-engine/url-import.functions", () => ({ importPropertyPhotos: vi.fn() }));
 import { publishProperty, saveGuideSection } from "./properties";
@@ -18,20 +18,19 @@ const section = {
   created_at: "",
   updated_at: "",
 } as GuideSection;
-beforeEach(() => backend.from.mockReset());
+beforeEach(() => {
+  backend.from.mockReset();
+  backend.rpc.mockReset();
+});
 describe("publication safety", () => {
   it("coalesces double clicks and leaves existing sections, media and settings intact", async () => {
     let release!: (value: unknown) => void;
-    const update = vi.fn(() => ({
-      eq: () => ({
-        select: () => ({
-          single: () =>
-            new Promise((resolve) => {
-              release = resolve;
-            }),
+    backend.rpc.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
         }),
-      }),
-    }));
+    );
     backend.from.mockImplementation((table) =>
       table === "guide_sections"
         ? {
@@ -39,7 +38,7 @@ describe("publication safety", () => {
               eq: () => ({ order: async () => ({ data: [section], error: null }) }),
             }),
           }
-        : { update },
+        : {},
     );
     const first = publishProperty(property, []);
     const second = publishProperty(property, []);
@@ -48,15 +47,11 @@ describe("publication safety", () => {
     await Promise.resolve();
     release({ data: { id: "p", status: "published" }, error: null });
     await first;
-    expect(update).toHaveBeenCalledTimes(1);
+    expect(backend.rpc).toHaveBeenCalledExactlyOnceWith("publish_property", { _property: "p" });
     expect(backend.from.mock.calls.flat()).not.toContain("section_media");
   });
   it("rejects failed publication and allows a subsequent retry", async () => {
-    const update = vi.fn(() => ({
-      eq: () => ({
-        select: () => ({ single: async () => ({ data: null, error: new Error("RLS") }) }),
-      }),
-    }));
+    backend.rpc.mockResolvedValue({ error: new Error("RLS") });
     backend.from.mockImplementation((table) =>
       table === "guide_sections"
         ? {
@@ -64,11 +59,11 @@ describe("publication safety", () => {
               eq: () => ({ order: async () => ({ data: [section], error: null }) }),
             }),
           }
-        : { update },
+        : {},
     );
     await expect(publishProperty(property, [])).rejects.toThrow("publication");
     await expect(publishProperty(property, [])).rejects.toThrow("publication");
-    expect(update).toHaveBeenCalledTimes(2);
+    expect(backend.rpc).toHaveBeenCalledTimes(2);
   });
   it("preserves the latest gallery config when a text edit uses an older section snapshot", async () => {
     let payload: Record<string, unknown> = {};

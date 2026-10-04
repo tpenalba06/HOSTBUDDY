@@ -1,5 +1,6 @@
 import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
+import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
@@ -127,6 +128,7 @@ export function GuideEditor({
   const [media, setMedia] = useState(data.media);
   const [open, setOpen] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [publishedSaved, setPublishedSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [mediaBusy, setMediaBusy] = useState(false);
   const [transfers, setTransfers] = useState(0);
@@ -143,11 +145,24 @@ export function GuideEditor({
       .then(setSections)
       .catch((e) => setError(friendlyMessage(e)));
   }, [actions, data.fields, data.property.id, sections.length]);
+  useBlocker({
+    shouldBlockFn: async () => {
+      if (mediaBusy || transfers > 0) return true;
+      try {
+        await Promise.all([...flushers.current.values()].map((flush) => flush()));
+        return false;
+      } catch {
+        return true;
+      }
+    },
+    enableBeforeUnload: () => saving || mediaBusy || transfers > 0,
+  });
   const sorted = useMemo(
     () => [...sections].sort((a, b) => a.sort_order - b.sort_order),
     [sections],
   );
-  const flash = () => {
+  const flash = (published = false) => {
+    setPublishedSaved(published);
     setSaving(false);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2200);
@@ -162,7 +177,7 @@ export function GuideEditor({
       await Promise.all([...flushers.current.values()].map((flush) => flush()));
       if (publish) {
         await onPublish?.();
-        flash();
+        flash(true);
       } else await onPreview();
     } catch (e) {
       setError(friendlyMessage(e));
@@ -233,7 +248,7 @@ export function GuideEditor({
           {saving
             ? t("common.saving")
             : data.property.status === "published"
-              ? "Mettre à jour le guide"
+              ? t("manager.publishChanges")
               : t("property.publish")}
         </Button>
       )}
@@ -359,7 +374,7 @@ export function GuideEditor({
       >
         {saving
           ? t("common.saving")
-          : data.property.status === "published"
+          : publishedSaved
             ? `✓ ${t("manager.guideUpdated")}`
             : `✓ ${t("common.saved")}`}
       </div>
@@ -476,6 +491,16 @@ function SectionRow({
     }, 800);
     return () => clearTimeout(pending.current);
   }, [title, items, visible, icon, ctaLabel]);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (dirty.current) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, []);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   return (

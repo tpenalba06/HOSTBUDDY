@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
+  CreditCard,
   Cable,
   ClipboardList,
   Home,
@@ -20,7 +21,15 @@ import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 
 export type ManagerArea =
-  "properties" | "messages" | "orders" | "feedback" | "connections" | "dashboard" | "team" | "new";
+  | "properties"
+  | "messages"
+  | "orders"
+  | "feedback"
+  | "connections"
+  | "dashboard"
+  | "team"
+  | "new"
+  | "payments";
 type Role = "owner" | "admin" | "member";
 type ManagerPath =
   | "/app"
@@ -29,6 +38,7 @@ type ManagerPath =
   | "/app/feedback"
   | "/app/connections"
   | "/app/dashboard"
+  | "/app/payments"
   | "/app/team"
   | "/app/new";
 type NavItem = { id: ManagerArea; to: ManagerPath; label: string; icon: LucideIcon };
@@ -80,6 +90,12 @@ export function ManagerShell({
             label: t("nav.dashboard"),
             icon: BarChart3,
           },
+          {
+            id: "payments" as const,
+            to: "/app/payments" as const,
+            label: t("nav.payments"),
+            icon: CreditCard,
+          },
           { id: "team" as const, to: "/app/team" as const, label: t("nav.team"), icon: Users },
         ]
       : []),
@@ -90,21 +106,23 @@ export function ManagerShell({
     label: t("nav.properties"),
     icon: Home,
   };
-  const routeArea: ManagerArea = pathname.startsWith("/app/messages")
-    ? "messages"
-    : pathname.startsWith("/app/orders")
-      ? "orders"
-      : pathname.startsWith("/app/feedback")
-        ? "feedback"
-        : pathname.startsWith("/app/connections")
-          ? "connections"
-          : pathname.startsWith("/app/dashboard")
-            ? "dashboard"
-            : pathname.startsWith("/app/team")
-              ? "team"
-              : pathname.startsWith("/app/new")
-                ? "new"
-                : "properties";
+  const routeArea: ManagerArea = pathname.startsWith("/app/payments")
+    ? "payments"
+    : pathname.startsWith("/app/messages")
+      ? "messages"
+      : pathname.startsWith("/app/orders")
+        ? "orders"
+        : pathname.startsWith("/app/feedback")
+          ? "feedback"
+          : pathname.startsWith("/app/connections")
+            ? "connections"
+            : pathname.startsWith("/app/dashboard")
+              ? "dashboard"
+              : pathname.startsWith("/app/team")
+                ? "team"
+                : pathname.startsWith("/app/new")
+                  ? "new"
+                  : "properties";
   const current = onNavigate ? active : routeArea;
   useEffect(() => {
     if (embedded) contentRef.current?.scrollTo({ top: 0 });

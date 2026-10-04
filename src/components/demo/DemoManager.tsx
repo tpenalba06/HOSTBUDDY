@@ -382,6 +382,13 @@ export function DemoManager({
     );
   } else if (area === "connections") {
     screen = <ManagerConnectionsScreen onBack={() => setArea("properties")} />;
+  } else if (area === "payments") {
+    screen = (
+      <section className="surface p-6">
+        <h1 className="text-3xl">{t("nav.payments")}</h1>
+        <p className="mt-4 text-muted-foreground">{t("payments.notConfigured")}</p>
+      </section>
+    );
   } else if (area === "team") {
     screen = (
       <ManagerTeamScreen

@@ -46,8 +46,14 @@ const AMBIGUOUS =
 const TIME_FIELDS = new Set(["arrival", "departure"]);
 
 function normalizedTimes(text: string) {
-  return [...text.matchAll(/\b([01]?\d|2[0-3])(?:\s*[h:]\s*([0-5]\d))?\b/gi)]
-    .map((match) => `${match[1]}:${match[2] ?? "00"}`)
+  return [
+    ...text.matchAll(/\b([01]?\d|2[0-3])(?:\s*h(?:\s*([0-5]\d))?|\s*:\s*([0-5]\d)|\s*(am|pm)\b)/gi),
+  ]
+    .map((match) => {
+      let hour = Number(match[1]);
+      if (match[4]) hour = (hour % 12) + (match[4].toLowerCase() === "pm" ? 12 : 0);
+      return `${hour}:${match[2] ?? match[3] ?? "00"}`;
+    })
     .filter((value, index, all) => all.indexOf(value) === index);
 }
 
@@ -116,34 +122,8 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
     };
   });
 
-  const reviewCandidates = fields
-    .map((field, index) => ({ field, index }))
-    .filter(({ field }) => field.status === "to_verify");
-
-  const detectedCount = fields.filter((field) => field.status !== "missing").length;
-  const reviewBudget = Math.floor(detectedCount * 0.1);
-
-  if (reviewCandidates.length > reviewBudget) {
-    const keep = new Set(
-      reviewCandidates
-        .sort((a, b) => {
-          const aEssential = FIELD_DEFS[a.index]?.essential ? 1 : 0;
-          const bEssential = FIELD_DEFS[b.index]?.essential ? 1 : 0;
-          return bEssential - aEssential || b.field.confidence - a.field.confidence;
-        })
-        .slice(0, reviewBudget)
-        .map(({ field }) => field.key),
-    );
-
-    for (const field of fields) {
-      if (field.status === "to_verify" && !keep.has(field.key)) {
-        field.status = "missing";
-        field.value = null;
-        field.confidence = 0;
-      }
-    }
-  }
-
+  // Uncertain evidence stays visible for review, regardless of how much there is.
+  // A confidence quota must never turn detected source content into missing data.
   return { propertyName: name, fields };
 }
 

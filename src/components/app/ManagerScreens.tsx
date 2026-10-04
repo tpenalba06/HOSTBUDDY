@@ -148,10 +148,15 @@ export function ManagerPropertiesScreen({
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const shown = properties.filter((property) =>
-    `${property.name} ${property.location ?? ""}`
-      .toLocaleLowerCase()
-      .includes(search.toLocaleLowerCase().trim()),
+  const [status, setStatus] = useState<"draft" | "published">(() =>
+    properties.some((p) => p.status === "draft") ? "draft" : "published",
+  );
+  const shown = properties.filter(
+    (property) =>
+      property.status === status &&
+      `${property.name} ${property.location ?? ""}`
+        .toLocaleLowerCase()
+        .includes(search.toLocaleLowerCase().trim()),
   );
 
   return (
@@ -168,6 +173,30 @@ export function ManagerPropertiesScreen({
             {t("app.add")}
           </Button>
         )}
+      </div>
+
+      <div
+        className="mt-6 inline-flex max-w-full gap-1 rounded-full bg-muted p-1"
+        role="group"
+        aria-label={t("app.myProperties")}
+      >
+        {(["draft", "published"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={status === value}
+            onClick={() => {
+              setStatus(value);
+              setQr(null);
+            }}
+            className={`min-h-12 rounded-full px-5 text-sm font-semibold ${status === value ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}
+          >
+            {t(value === "draft" ? "manager.drafts" : "manager.published")}{" "}
+            <span className="ml-2 opacity-60">
+              {properties.filter((p) => p.status === value).length}
+            </span>
+          </button>
+        ))}
       </div>
 
       {properties.length > 4 && (
@@ -650,9 +679,19 @@ export function ManagerFeedbackScreen({
   );
 }
 
-export function ManagerConnectionsScreen({ onBack }: { onBack?: () => void }) {
+export function ManagerConnectionsScreen({
+  onBack,
+  guestyAction,
+  guestyConnected = false,
+}: {
+  onBack?: () => void;
+  guestyAction?: ReactNode;
+  guestyConnected?: boolean;
+}) {
   const { t } = useI18n();
-  const priorities = INTEGRATIONS.filter((item) => item.category === "pms").slice(0, 4);
+  const priorities = INTEGRATIONS.filter(
+    (item) => item.category === "pms" && item.id !== "guesty",
+  ).slice(0, 3);
   return (
     <div className="py-4 @sm:py-6">
       <BackButton label={t("common.back")} onBack={onBack} />
@@ -662,7 +701,10 @@ export function ManagerConnectionsScreen({ onBack }: { onBack?: () => void }) {
       <section className="mt-7">
         <h2 className="text-xl font-semibold @sm:text-2xl">{t("connections.connected")}</h2>
         <div className="mt-4 rounded-xl border border-dashed bg-card p-6 text-center">
-          <p className="font-semibold">{t("connections.none")}</p>
+          <p className="font-semibold">
+            Guesty · {t(guestyConnected ? "provider.connected" : "provider.notConnected")}
+          </p>
+          {guestyAction}
           <p className="mt-1 text-sm text-muted-foreground">{t("connections.importHint")}</p>
         </div>
       </section>

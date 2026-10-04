@@ -462,6 +462,7 @@ function SectionRow({
 }) {
   const { t } = useI18n();
   const [title, setTitle] = useState(section.title);
+  const [titleEdited, setTitleEdited] = useState(false);
   const [items, setItems] = useState<GuideContentItem[]>(() => {
     const current = itemsOf(section);
     return current.length ? current : [blankItem()];
@@ -542,6 +543,7 @@ function SectionRow({
   }, []);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const visibleTitle = SYSTEM_SECTION_KEYS.has(sectionKind(section)) && !titleEdited ? displayTitle : title;
   return (
     <article className="rounded-lg border bg-card">
       <div className="flex items-center gap-2 pr-4">
@@ -575,7 +577,14 @@ function SectionRow({
         <div className="space-y-5 border-t p-4">
           <label className="block">
             <span className="mb-1 block font-semibold">{t("manager.sectionTitle")}</span>
-            <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              className="field"
+              value={visibleTitle}
+              onChange={(e) => {
+                setTitleEdited(true);
+                setTitle(e.target.value);
+              }}
+            />
           </label>
           {section.section_key.split("-")[0] !== "welcome" && (
             <>

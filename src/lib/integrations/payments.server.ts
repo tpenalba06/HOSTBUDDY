@@ -468,7 +468,9 @@ export async function handleStripeEvent(event: Stripe.Event) {
   checked(
     await paymentDb.rpc("apply_stripe_event", {
       _event: event.id,
-      _account: event.account ?? null,
+      // Postgres RPC parameters are nullable at runtime; the regenerated types
+      // narrow the arg to string, so cast to preserve passing null accounts.
+      _account: (event.account ?? null) as string,
       _created: event.created,
       _change: change,
     }),

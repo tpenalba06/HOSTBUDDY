@@ -15,6 +15,7 @@ La direction artistique et les composants visuels ont été conservés.
 - Montants en euros inférieurs à 0,50 € : refusés par le serveur.
 - Équipe : lecture par le client authentifié du propriétaire ; correction SQL du résultat e-mail (`varchar` vers `text`).
 - Commandes : les clients authentifiés peuvent lire et modifier le statut dans leur organisation ; ils ne peuvent plus créer/supprimer directement les commandes ni modifier leur prix. La création voyageur reste serveur.
+- Upload image : le message de progression annonce maintenant une photo, au lieu d'annoncer une vidéo ; traduction dans les six langues, sans changement de mise en page.
 
 ## Audit et niveau de preuve
 
@@ -22,14 +23,14 @@ La direction artistique et les composants visuels ont été conservés.
 | --- | --- | --- |
 | Navigation / gestionnaire | Démo : logements, services, commandes, messages et conversation, retours, connexions, équipe | Données locales de démonstration, pas un test client réel |
 | Guide / services | Ouverture du catalogue et demande en démo ; tests de composants partagés | Demande de réservation sans paiement immédiat ; le paiement suit une confirmation gestionnaire |
-| Imports | Revue des adaptateurs, validation/provenance, sécurité URL, suite de tests extraction/texte/photos | Imports authentifiés réels non rejoués dans ce navigateur |
-| Publication | Tests RPC, doubles clics, préservation médias/paramètres | Publication/republication réelle non rejouée pendant cette passe |
-| Messages / commandes / retours | Revue endpoints, validation des corps, RPC serveur et anti-spam ; écrans démo ouverts | Envoi/réponse réels non rejoués |
-| Authentification | Accès `/app` redirigé vers `/auth`, contrôle du middleware et des parcours de récupération | Login, Google, reset, logout/refresh à vérifier avec un compte connecté |
-| Équipe | Tests unitaires propriétaire/membre ; RPC SQL réel avec contexte JWT propriétaire après correction | Envoi des invitations e-mail non vérifié ; préparation d'accès n'est pas preuve d'envoi |
+| Imports | Import texte réel avec propriétaire connecté : 7 informations trouvées, 11 manquantes ; correction/validation avant création ; pas de rubrique Piscine/Parking pour les mentions négatives | Imports URL des plateformes non rejoués ; le nom importé conservait le préfixe « Nom du logement : », corrigé manuellement à la validation |
+| Publication | Création, édition, upload couverture, publication réelle, URL publique, QR affiché ; changement Wi-Fi, republication et nouvelle valeur visible après refresh public | Scan QR sur téléphone physique et mise hors ligne non rejoués |
+| Messages / commandes / retours | Demande réelle de service fictif à 15 €, réception gestionnaire et confirmation ; retour privé synthétique reçu côté gestionnaire | Conversation aller-retour non rejouée pendant cette passe ; aucune transaction de paiement |
+| Authentification | Connexion Google réussie sur le compte réel ; session conservée après rechargement de l'éditeur et de l'équipe | Création de compte, reset, logout/login non rejoués |
+| Équipe | Tests unitaires propriétaire/membre ; RPC SQL réel avec contexte JWT propriétaire après correction ; page Équipe chargée dans la session réelle | Envoi des invitations e-mail non vérifié ; préparation d'accès n'est pas preuve d'envoi |
 | Sécurité des commandes | Test SQL A/B : statut autorisé, prix et suppression refusés, insertion directe refusée, isolation entre organisations | Test ciblé ; ne constitue pas une certification de toutes les politiques de l'app |
 | Registre Stripe | Test SQL réel : mauvais montant/compte rejetés, paiement conforme enregistré, doublon ignoré, événement tardif sans régression | Événements synthétiques, aucune transaction réseau Stripe exécutée |
-| Médias / offline | Revue limites, upload, moteur vidéo navigateur, blobs IndexedDB et tests offline/intégrité | Pas de transcodage serveur prouvé ; perte de réseau et réouverture sur téléphone non rejouées ici |
+| Médias / offline | Upload réel d'une image sur le logement fictif, fallback remplacé dans l'aperçu et couverture conservée sur le guide public ; revue vidéo/IndexedDB et tests offline/intégrité | Réorganisation/remplacement/suppression non rejoués ici ; pas de transcodage serveur prouvé ; perte de réseau et réouverture sur téléphone non rejouées |
 | Internationalisation | Suite i18n ; les copies Stripe passent par les traductions | Plusieurs erreurs backend/offline sont encore rédigées en français |
 | Performance | Build production ; SDK Stripe chargé côté serveur | Mesures réseau mobile/Lighthouse et matrice complète 360–1440 non réalisées |
 
@@ -40,6 +41,18 @@ La direction artistique et les composants visuels ont été conservés.
 - Signatures Stripe : payloads synthétiques signés par le SDK officiel, tampering refusé.
 - SQL `scripts/validation/order-payment-integrity.sql` : fixtures isolées, événements synthétiques et changements de droits tous annulés par ROLLBACK.
 - RPC équipe testé avec le JWT d'un propriétaire, sans modification de données.
+- CI GitHub : deux exécutions vertes après la livraison des corrections Stripe/équipe/commandes.
+- Navigateur réel desktop, viewport observé 1363 × 936 : Google → import texte → validation → création → couverture → service → publication → URL publique → demande → confirmation → édition → republication → retour privé. Aucun mock dans ce parcours.
+
+## Données de validation conservées
+
+Un nouveau logement explicitement fictif a été créé : `AUDIT HostBuddy 04-10-2026` (`0d0a4cec-a438-43a0-836a-55e34503e52b`). Il reste publié sur le preview pour inspection :
+
+https://preview--host-buddy-concierge.lovable.app/l/audit-hostbuddy-04-10-2026-7ad333
+
+Il contient une couverture issue de la bibliothèque HostBuddy, un service fictif à 15 €, une commande synthétique confirmée et un retour privé synthétique. Aucune prestation réelle et aucun encaissement. Aucun logement existant modifié ni donnée réelle supprimée.
+
+Observation UX restante : le texte Wi-Fi importé apparaît comme une information complète sous « Réseau », plutôt que comme réseau et mot de passe séparés. Le contenu est conservé mais sa structuration peut être améliorée.
 
 ## Base de données
 
@@ -48,11 +61,11 @@ Deux migrations ciblées ont été validées en transaction annulée puis appliq
 - `0014_order_payment_integrity.sql` : restriction des privilèges des commandes ; retour arrière documenté dans le fichier.
 - `0015_team_email_result_type.sql` : correction du type renvoyé par le RPC, contrôle propriétaire conservé.
 
-Aucune donnée réelle supprimée, aucune réinitialisation, aucune modification de contenu ou de DA.
+Aucune donnée réelle supprimée, aucune réinitialisation et aucun changement de DA. Seul le nouveau logement fictif a reçu du contenu de validation.
 
 ## Stripe — activation restant à faire
 
-Le SDK et les routes étaient déjà présents. Cette passe les complète ; elle ne prouve pas un compte Stripe connecté.
+Le SDK et les routes étaient déjà présents. Cette passe les complète. La page Paiements du compte propriétaire connecté affiche réellement que les paiements ne sont pas activés ; aucun onboarding Connect n'est proposé tant que la configuration serveur est absente. L'accès au compte Stripe et ses secrets de test restent indispensables.
 
 Configurer exclusivement dans les secrets serveur Lovable Cloud :
 
@@ -70,7 +83,8 @@ Ne passer `STRIPE_LIVE_VERIFIED=true` qu'après validation complète. Les encais
 ## Points restant à traiter
 
 - Accès au compte Stripe et test d'une transaction réelle en mode test.
-- Parcours navigateur avec gestionnaire connecté : import, médias, publication, QR, republication, messages/commande/retour et droits.
+- Compléter les parcours : import URL, messages aller-retour, scan QR physique, mise hors ligne, rôles admin/membre en navigateur et récupération de compte.
+- Import texte : retirer les préfixes du nom et séparer réseau/mot de passe lorsque les données sont explicites, avec tests de non-régression.
 - Invitations e-mail : livraison réelle à démontrer.
 - Facturation SaaS : synchronisation des quantités si des logements sont ajoutés après souscription à contrôler avant activation.
 - Vidéo : le moteur actuel optimise dans le navigateur ; transcodage serveur non démontré.

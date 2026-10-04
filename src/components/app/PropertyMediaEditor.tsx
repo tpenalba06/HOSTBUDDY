@@ -119,7 +119,11 @@ export function PropertyMediaEditor({
               ? t("manager.videoPreparing")
               : phase === "encoding"
                 ? t("manager.videoOptimizing").replace("{percent}", String(percent))
-                : t("manager.videoUploading"),
+                : t(
+                    file.type.startsWith("video/")
+                      ? "manager.videoUploading"
+                      : "manager.photoUploading",
+                  ),
           ),
       });
       // Persist the replacement before removing the previous file; a failed upload never destroys it.
@@ -185,11 +189,12 @@ export function PropertyMediaEditor({
       {videoProgress && (
         <div role="status" className="mb-3 flex items-center gap-3">
           <span>{videoProgress}</span>
-          {videoProgress !== t("manager.videoUploading") && (
-            <Button variant="outline" onClick={() => abortRef.current?.abort()}>
-              {t("manager.cancel")}
-            </Button>
-          )}
+          {videoProgress !== t("manager.videoUploading") &&
+            videoProgress !== t("manager.photoUploading") && (
+              <Button variant="outline" onClick={() => abortRef.current?.abort()}>
+                {t("manager.cancel")}
+              </Button>
+            )}
         </div>
       )}
       {error && (

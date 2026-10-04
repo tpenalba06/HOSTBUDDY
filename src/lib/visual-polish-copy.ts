@@ -29,6 +29,7 @@ const keys = [
   "manager.propertyName",
   "manager.propertyNameError",
   "qr.title",
+  "manager.photoUploading",
 ] as const;
 
 const copy: Record<Locale, readonly string[]> = {
@@ -61,6 +62,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Nom de l’hébergement",
     "Le nom n’a pas pu être enregistré. Réessayez.",
     "QR code",
+    "Envoi de la photo…",
   ],
   en: [
     "Welcome",
@@ -91,6 +93,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Property name",
     "The name could not be saved. Please try again.",
     "QR code",
+    "Uploading photo…",
   ],
   es: [
     "Bienvenida",
@@ -121,6 +124,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Nombre del alojamiento",
     "No se pudo guardar el nombre. Inténtalo de nuevo.",
     "Código QR",
+    "Subiendo foto…",
   ],
   de: [
     "Willkommen",
@@ -151,6 +155,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Name der Unterkunft",
     "Der Name konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "QR-Code",
+    "Foto wird hochgeladen…",
   ],
   it: [
     "Benvenuto",
@@ -181,6 +186,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Nome dell’alloggio",
     "Impossibile salvare il nome. Riprova.",
     "Codice QR",
+    "Caricamento foto…",
   ],
   pt: [
     "Boas-vindas",
@@ -211,6 +217,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Nome do alojamento",
     "Não foi possível guardar o nome. Tente novamente.",
     "Código QR",
+    "A enviar fotografia…",
   ],
 };
 

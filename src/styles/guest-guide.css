@@ -1246,3 +1246,24 @@
     font-size: 14px;
   }
 }
+
+.hb-device-mobile .hb-cover {
+  height: min(844px, 100svh);
+  max-height: 844px;
+}
+@container (max-width:759px) {
+  .hb-entry-grid {
+    gap: 21px;
+  }
+  .hb-entry-meta {
+    color: #302a24;
+  }
+  .hb-entry-open > img {
+    margin-bottom: 10px;
+  }
+  .hb-filters button {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+}

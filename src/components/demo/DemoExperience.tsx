@@ -317,7 +317,13 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
   const editor = (
     <GuideEditor
       data={{
-        property: { id: "demo", name: data.name, organization_id: "demo", status: "published" },
+        property: {
+          id: "demo",
+          name: data.name,
+          organization_id: "demo",
+          status: "published",
+          coverUrl: "/demo-guide/coast.webp",
+        },
         fields: [],
         sections,
         media,

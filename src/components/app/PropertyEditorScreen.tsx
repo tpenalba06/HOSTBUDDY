@@ -37,7 +37,7 @@ export function PropertyEditorScreen({
   ];
 
   return (
-    <div className="py-4 @sm:py-6">
+    <div className="property-editor-screen py-4 @sm:py-6">
       {backAction ?? (
         <Button variant="outline" className="min-h-12 text-primary" onClick={onBack}>
           ← {t("app.myProperties")}

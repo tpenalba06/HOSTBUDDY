@@ -146,6 +146,22 @@ export function DemoManager({
           updated_at: "",
         })),
       },
+      {
+        ...createDemoProperty("demo-maison-oliviers", {
+          propertyName: "Maison Oliviers",
+          fields: [],
+        }),
+        location: "Porto-Vecchio",
+        coverUrl: "/demo-guide/pool.webp",
+      },
+      {
+        ...createDemoProperty("demo-appartement-centre", {
+          propertyName: "Appartement Centre",
+          fields: [],
+        }),
+        location: "Bordeaux",
+        coverUrl: "/hostbuddy-media/apartment.webp",
+      },
     ];
   });
   const activeProperty = properties.find((property) => property.id === selectedProperty);

@@ -201,7 +201,8 @@ export function PropertyMediaEditor({
           src={
             cover
               ? urls[cover.id]
-              : ambienceFor(
+              : property.coverUrl ||
+                ambienceFor(
                   `${property.name ?? ""} ${
                     section
                       ? getGuideItems(section.section_key, section.content)

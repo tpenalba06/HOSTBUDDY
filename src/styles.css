@@ -767,3 +767,105 @@
     max-width: 190px;
   }
 }
+
+/* Second visual comparison: constrain navigation's intrinsic width and reduce editor chrome. */
+.manager-shell-sidebar {
+  min-width: 0;
+}
+.manager-shell-sidebar nav {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.manager-shell-sidebar nav :is(a, button) {
+  min-width: 0;
+  max-width: 100%;
+  justify-content: flex-start;
+}
+.manager-shell-sidebar nav svg {
+  flex-shrink: 0;
+}
+.property-editor-screen > button:first-child,
+.property-editor-screen > a:first-child {
+  min-height: 34px;
+  padding: 5px 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 12px;
+}
+.property-editor-screen > div:nth-child(2) {
+  margin-top: 7px;
+}
+.property-editor-screen > div:nth-child(2) h1 {
+  font-size: 30px;
+}
+.property-editor-screen .property-editor-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.property-editor-screen .property-editor-tabs button {
+  min-height: 36px;
+  border-radius: 7px;
+  padding: 7px 14px;
+  font-size: 12px;
+  border-color: transparent;
+}
+.property-editor-screen .property-editor-tabs button[aria-pressed="true"] {
+  background: #eee8de;
+  color: #201b16;
+  box-shadow: none;
+}
+.guide-editor-form > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.guide-editor-form > div:first-child h2 {
+  flex: 1;
+  font-size: 25px;
+}
+.guide-editor-form > div:first-child button {
+  min-height: 34px;
+  width: auto;
+  border-radius: 6px;
+  padding: 7px 11px;
+  background: #33291d;
+  color: #fff;
+  font-size: 11px;
+}
+.guide-editor-form .property-media-editor .btn {
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+.guide-editor-form .property-media-editor > .relative {
+  overflow: hidden;
+}
+.guide-editor-form .property-media-editor > .relative > img {
+  height: 130px;
+}
+.guide-editor-form .property-media-editor > .relative span {
+  font-size: 9px;
+  padding: 3px 7px;
+}
+.guide-editor-form .property-media-editor > .grid label {
+  min-height: 38px;
+}
+.guide-editor-preview h3 {
+  font-size: 23px;
+}
+@container (max-width:720px) {
+  .property-editor-screen .property-editor-tabs button {
+    flex-direction: row;
+  }
+  .guide-editor-form > div:first-child {
+    display: block;
+  }
+  .guide-editor-form > div:first-child button {
+    margin-top: 10px;
+  }
+}

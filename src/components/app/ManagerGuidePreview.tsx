@@ -33,6 +33,7 @@ export function ManagerGuidePreview({
             ...extras,
             id: data.property.id,
             name: data.property.name,
+            ...(data.property.coverUrl ? { coverUrl: data.property.coverUrl } : {}),
             originalLocale: "fr",
             sections: toPublicSections(data.sections, media),
           });

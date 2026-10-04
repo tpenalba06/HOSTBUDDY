@@ -36,7 +36,13 @@ import { sectionVisual } from "@/components/guest/visual-library";
 import { translationAvailability } from "@/lib/translation/service";
 import { getGuideItems, type GuideContentItem } from "@/lib/data/guide-content";
 
-export type EditorProperty = { id: string; organization_id: string; status: string; name?: string };
+export type EditorProperty = {
+  id: string;
+  organization_id: string;
+  status: string;
+  name?: string;
+  coverUrl?: string | null;
+};
 export type EditorData = {
   property: EditorProperty;
   fields: PropertyField[];

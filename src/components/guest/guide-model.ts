@@ -73,7 +73,11 @@ export function guideCover(guide: GuideViewData) {
     )
   );
 }
-export function localizedSections(guide: GuideViewData, locale: string) {
+export function localizedSections(
+  guide: GuideViewData,
+  locale: string,
+  translate?: (key: string) => string,
+) {
   return guide.sections
     .filter((section) => {
       if (
@@ -95,8 +99,11 @@ export function localizedSections(guide: GuideViewData, locale: string) {
       const translated = section.translations?.find(
         (item) => item.locale === locale && !item.isStale,
       );
-      return translated
+      const localized = translated
         ? { ...section, title: translated.title, content: translated.content }
         : section;
+      const labelKey = `section.${sectionKind(section.key)}`;
+      const label = translate?.(labelKey);
+      return label && label !== labelKey ? { ...localized, title: label } : localized;
     });
 }

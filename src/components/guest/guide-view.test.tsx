@@ -110,6 +110,14 @@ describe("shared guest guide compatibility", () => {
     translated.translations[0]!.isStale = true;
     expect(localizedSections({ ...guide, sections: [translated] }, "en")[0]?.title).toBe("Wi-Fi");
   });
+  it("localizes system labels while preserving custom titles and authored content", () => {
+    const translate = (key: string) => (key === "section.wifi" ? "Wireless network" : key);
+    const custom = { ...section, key: "custom-123", title: "Notre histoire" };
+    const result = localizedSections({ ...guide, sections: [section, custom] }, "en", translate);
+    expect(result[0]?.title).toBe("Wireless network");
+    expect(result[0]?.content).toEqual(section.content);
+    expect(result[1]?.title).toBe("Notre histoire");
+  });
   it("keeps real service requests and original textual content without stock photographs", () => {
     const serviceGuide = {
       ...guide,

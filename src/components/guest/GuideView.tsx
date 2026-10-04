@@ -79,7 +79,7 @@ export function GuideView({
   const topRef = useRef<HTMLDivElement>(null);
   const listScroll = useRef(0);
   const indexScroll = useRef(false);
-  const sections = localizedSections(guide, locale);
+  const sections = localizedSections(guide, locale, t);
   const hasPropertyPhotos =
     guide.sections.some(
       (section) =>

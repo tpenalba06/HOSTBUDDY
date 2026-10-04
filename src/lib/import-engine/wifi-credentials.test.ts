@@ -28,6 +28,10 @@ describe("explicit property and Wi-Fi import normalization", () => {
     });
   });
   it("preserves semicolons inside a password", () => {
+    expect(wifiCredentials("Wi-Fi : réseau HB_AUDIT_V2 ; mot de passe test-audit-2026.")).toEqual({
+      network: "HB_AUDIT_V2",
+      password: "test-audit-2026.",
+    });
     expect(wifiCredentials("Réseau : A\nMot de passe : sun;moon")).toEqual({
       network: "A",
       password: "sun;moon",

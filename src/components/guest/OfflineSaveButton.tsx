@@ -13,9 +13,16 @@ const copy: Record<
     hint: string;
     saved: string;
     fragile: string;
+    preparing: string;
+    failed: string;
+    cancelled: string;
   }
 > = {
   fr: {
+    preparing: "Enregistrement du guide…",
+    failed: "L’enregistrement a échoué. Réessayez.",
+    cancelled: "Enregistrement annulé. Votre copie précédente est conservée.",
+
     save: "Enregistrer hors connexion",
     update: "Actualiser la copie",
     open: "Ouvrir la copie enregistrée",
@@ -26,6 +33,10 @@ const copy: Record<
       "La copie reste disponible après fermeture. Le navigateur peut l’effacer si l’appareil manque d’espace.",
   },
   en: {
+    preparing: "Saving the guide…",
+    failed: "Saving failed. Please try again.",
+    cancelled: "Saving cancelled. Your previous copy is preserved.",
+
     save: "Save offline",
     update: "Update saved copy",
     open: "Open saved copy",
@@ -35,6 +46,10 @@ const copy: Record<
     fragile: "The copy survives closing the browser. Your browser may remove it if storage is low.",
   },
   es: {
+    preparing: "Guardando la guía…",
+    failed: "No se pudo guardar. Inténtalo de nuevo.",
+    cancelled: "Guardado cancelado. Se conserva la copia anterior.",
+
     save: "Guardar sin conexión",
     update: "Actualizar copia",
     open: "Abrir copia guardada",
@@ -44,6 +59,10 @@ const copy: Record<
     fragile: "La copia se conserva al cerrar. El navegador puede borrarla si falta espacio.",
   },
   de: {
+    preparing: "Guide wird gespeichert…",
+    failed: "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+    cancelled: "Speichern abgebrochen. Die vorherige Kopie bleibt erhalten.",
+
     save: "Offline speichern",
     update: "Kopie aktualisieren",
     open: "Gespeicherte Kopie öffnen",
@@ -54,6 +73,10 @@ const copy: Record<
       "Die Kopie bleibt nach dem Schließen erhalten. Bei wenig Speicher kann der Browser sie entfernen.",
   },
   it: {
+    preparing: "Salvataggio della guida…",
+    failed: "Salvataggio non riuscito. Riprova.",
+    cancelled: "Salvataggio annullato. La copia precedente è conservata.",
+
     save: "Salva offline",
     update: "Aggiorna copia",
     open: "Apri copia salvata",
@@ -63,6 +86,10 @@ const copy: Record<
     fragile: "La copia resta dopo la chiusura. Il browser può rimuoverla se manca spazio.",
   },
   pt: {
+    preparing: "A guardar o guia…",
+    failed: "Não foi possível guardar. Tente novamente.",
+    cancelled: "Gravação cancelada. A cópia anterior foi preservada.",
+
     save: "Guardar offline",
     update: "Atualizar cópia",
     open: "Abrir cópia guardada",
@@ -100,19 +127,24 @@ export function OfflineSaveButton({ guide, slug }: { guide: GuideViewData; slug:
     const controller = new AbortController();
     abort.current = controller;
     setError("");
-    setProgress("Préparation du guide…");
+    setProgress(labels.preparing);
     try {
       const { saveGuideOffline } = await import("@/lib/offline/download");
-      const result = await saveGuideOffline(guide, slug, setProgress, controller.signal);
+      const result = await saveGuideOffline(
+        guide,
+        slug,
+        () => setProgress(labels.preparing),
+        controller.signal,
+      );
       setSaved(true);
       setPersistent(result.persistent);
     } catch (e) {
       setError(
         controller.signal.aborted
-          ? "Enregistrement annulé. Votre copie précédente est conservée."
-          : e instanceof Error
+          ? labels.cancelled
+          : locale === "fr" && e instanceof Error
             ? e.message
-            : "L’enregistrement a échoué. Réessayez.",
+            : labels.failed,
       );
     } finally {
       abort.current = null;

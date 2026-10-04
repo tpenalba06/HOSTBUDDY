@@ -1217,10 +1217,12 @@
     width: 12px;
   }
   .hb-services-feature {
-    height: 150px;
+    height: auto;
+    min-height: 150px;
   }
   .hb-services-feature > img {
-    height: 150px;
+    height: 100%;
+    min-height: 150px;
   }
   .hb-services-feature > span {
     padding: 15px;

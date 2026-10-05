@@ -32,3 +32,14 @@ DA préservée ; source actuelle GuideView/ManagerShell. Stripe sandbox uniqueme
 
 Rapports spécialisés : docs/v1-security-continuation.md, docs/v1-video-offline-continuation.md, docs/v1-imports-i18n-continuation.md, docs/v1-responsive-qr-continuation.md, docs/stripe-runtime-bindings-20261005.md.
 Aucune reprise automatique après quota n'a été démontrée.
+
+## Checkpoint de reprise — lot réseau et scheduler
+- Distant Lovable 2a2968d3a318946f174bc5f989934314b21b8022 ; miroir local c85a1d2. QR import dynamique corrige node:fs en SSR workerd ; photo unique Services pleine largeur. DA conservée.
+- Revalidation preview externe : bundle index-BJIpuip3.js observé, aucune nouvelle erreur SSR, zéro ancre imbriquée et zéro overflow horizontal desktop. Les anciennes erreurs console du bundle DVLS_V8_ sont historiques.
+- Vrai offline navigateur automatisé Lovable : production workerd, 390×844, guide fictif fermé, réseau coupé (same-origin et externe échouent), réouverture : texte, 5/5 images, Wi-Fi/Arrivée/navigation fonctionnent. Vidéo non testée : fixture sans vidéo.
+- 42 captures / 7 largeurs × 6 écrans publics/démo, pas de débordement. Ne couvre PAS les écrans gestionnaires réels authentifiés ni scan smartphone physique.
+- HTTP JWT A réel : lectures cross-org vides et accès refusés. Deuxième JWT B/auth/signup/reset/invitations pas encore validés. Aucun changement effectif de données réelles.
+- Scheduler : handler corrigé bindings Cloudflare ; 15 nouvelles assertions ; vrai test SQL queue en transaction annulée passé. Workflow préparé mais NON activé : accès GitHub secrets nécessaire.
+- Validation complète locale : npm run check, 193 tests / 37 fichiers, TypeScript/build OK, lint 0 erreur/16 avertissements.
+- Tâche native Lovable Stripe sandbox démarrée umsg_01m45qvapqe8194bf4yazzq9bz : uniquement nouvelle organisation fictive owner self, aucun logement réel muté, retour Checkout et preuves webhook si possibles ; sinon imports réseau/QR.
+- Prochaine action exacte : récupérer get_message de cette tâche, conserver les commits Lovable concurrents, vérifier parcours Stripe réel puis documenter. Scheduler : configurer secrets test via accès humain autorisé avant workflow_dispatch. Transcodage serveur, vidéo offline, seconde session B et scan physique restent non prouvés. Verdict NO-GO PRODUCTION.

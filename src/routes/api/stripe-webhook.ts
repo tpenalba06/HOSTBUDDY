@@ -4,8 +4,11 @@ export const Route = createFileRoute("/api/stripe-webhook")({
     handlers: {
       POST: async ({ request }) => {
         const signature = request.headers.get("stripe-signature");
-        const secret = process.env["STRIPE_WEBHOOK_SECRET"];
-        const connectSecret = process.env["STRIPE_CONNECT_WEBHOOK_SECRET"];
+        const { paymentServerEnvironment } =
+          await import("@/lib/integrations/payment-environment.server");
+        const env = paymentServerEnvironment(request);
+        const secret = env["STRIPE_WEBHOOK_SECRET"];
+        const connectSecret = env["STRIPE_CONNECT_WEBHOOK_SECRET"];
         if (!signature || (!secret && !connectSecret))
           return new Response("Unavailable", { status: 400 });
         const reader = request.body?.getReader();

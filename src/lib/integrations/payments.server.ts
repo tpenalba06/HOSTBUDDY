@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { paymentServerEnvironment } from "./payment-environment.server";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -75,11 +76,15 @@ const checked = <T>(value: { data: T; error: unknown }): T => {
   return value.data;
 };
 export function stripeClient() {
-  if (!paymentEnvironment(process.env).enabled) throw new Error("payment_not_configured");
-  return new Stripe(process.env["STRIPE_SECRET_KEY"]!, { maxNetworkRetries: 2, timeout: 20_000 });
+  const env = paymentServerEnvironment();
+  if (!paymentEnvironment(env).enabled) throw new Error("payment_not_configured");
+  return new Stripe(env["STRIPE_SECRET_KEY"]!, {
+    maxNetworkRetries: 2,
+    timeout: 20_000,
+  });
 }
 export function appOrigin() {
-  const url = new URL(process.env["HOSTBUDDY_APP_URL"] ?? "");
+  const url = new URL(paymentServerEnvironment()["HOSTBUDDY_APP_URL"] ?? "");
   if (url.protocol !== "https:" || url.username || url.password)
     throw new Error("payment_not_configured");
   return url.origin;
@@ -112,7 +117,7 @@ async function account(org: string) {
   );
 }
 export async function paymentOverview(org: string) {
-  const config = paymentEnvironment(process.env);
+  const config = paymentEnvironment(paymentServerEnvironment());
   const propertyCount = await billablePropertyCount(org);
   const quote = { propertyCount, ...subscriptionQuote(propertyCount) };
   if (!config.enabled)
@@ -176,7 +181,8 @@ async function billablePropertyCount(org: string) {
   return count;
 }
 export async function syncOrganizationBilling(org: string) {
-  if (!paymentEnvironment(process.env).billing) return { pending: false, configured: false };
+  if (!paymentEnvironment(paymentServerEnvironment()).billing)
+    return { pending: false, configured: false };
   for (let attempt = 0; attempt < 5; attempt++) {
     const lease = randomUUID();
     const job = checked(
@@ -197,7 +203,7 @@ export async function syncOrganizationBilling(org: string) {
         current.stripe_subscription_id,
         job.propertyCount,
         job.revision,
-        process.env,
+        paymentServerEnvironment(),
       );
       checked(
         await paymentDb.rpc("complete_billing_sync", {
@@ -229,7 +235,8 @@ export async function syncOrganizationBilling(org: string) {
   return { pending: !!job && job.synced_revision < job.revision, configured: true };
 }
 export async function syncPendingBilling() {
-  if (!paymentEnvironment(process.env).billing) throw new Error("payment_not_configured");
+  if (!paymentEnvironment(paymentServerEnvironment()).billing)
+    throw new Error("payment_not_configured");
   const jobs = checked(
     await paymentDb
       .from("organization_billing_sync")
@@ -248,7 +255,8 @@ export async function startBilling(org: string) {
   const count = await billablePropertyCount(org);
   const { extraQuantity, monthlyCents } = subscriptionQuote(count);
   if (!monthlyCents) throw new Error("subscription_not_required");
-  if (!paymentEnvironment(process.env).billing) throw new Error("payment_not_configured");
+  if (!paymentEnvironment(paymentServerEnvironment()).billing)
+    throw new Error("payment_not_configured");
   const stripe = stripeClient();
   const current = await account(org);
   if (
@@ -270,7 +278,7 @@ export async function startBilling(org: string) {
     current.stripe_customer_id = customer.id;
   }
   // Price IDs and quantities are selected exclusively by the server.
-  const { base, extra } = await billingPrices(stripe, process.env);
+  const { base, extra } = await billingPrices(stripe, paymentServerEnvironment());
   const open = await reconcileBillingCheckouts(stripe, current.stripe_customer_id!, org, count);
   if (open?.url) return { url: open.url };
   const line_items = [
@@ -321,7 +329,8 @@ export async function startPortal(org: string) {
   return { url: portal.url };
 }
 export async function connectOnboarding(org: string, feeTermsAccepted: boolean) {
-  if (!paymentEnvironment(process.env).connect) throw new Error("payment_not_configured");
+  if (!paymentEnvironment(paymentServerEnvironment()).connect)
+    throw new Error("payment_not_configured");
   if (!feeTermsAccepted) throw new Error("fee_terms_required");
   checked(
     await paymentDb
@@ -372,7 +381,8 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean) 
   return { url: link.url };
 }
 export async function createOrderPaymentLink(org: string, orderId: string) {
-  if (!paymentEnvironment(process.env).connect) throw new Error("payment_not_configured");
+  if (!paymentEnvironment(paymentServerEnvironment()).connect)
+    throw new Error("payment_not_configured");
   const current = await account(org);
   if (!current.stripe_account_id || !current.charges_enabled)
     throw new Error("payment_not_configured");

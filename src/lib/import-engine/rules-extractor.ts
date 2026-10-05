@@ -9,7 +9,7 @@ const RAW_RULES: Record<string, RegExp> = {
   arrival:
     /(arriv[ée]e?|check.?in|arrival|llegada|ankunft|arrivo|chegada|à partir de \d{1,2}\s?h|from \d{1,2}(:\d{2})?|ab \d{1,2}(:\d{2})?)/i,
   access:
-    /(cl[ée]s?|keys?|llaves?|schl[üu]ssel|chiav[ei]|chaves?|bo[iî]te [àa] cl|lockbox|key box|caja de llaves|schl[üu]sselkasten|cassetta.*chiav|caixa.*chav|access code|code d'acc[eè]s|digicode|portail|gate|portal|t[üu]r(?!\p{L})|porta|serrure|lock|badge|keynest|cadenas)/i,
+    /(cl[ée]s?|keys?|llaves?|schl[üu]ssel|chiav[ei]|chaves?|bo[iî]te [àa] cl|lockbox|key box|caja de llaves|schl[üu]sselkasten|cassetta.*chiav|caixa.*chav|access code|code d'acc[eè]s|digicode|portail|gate|portal|t[üu]r(?!\p{L})|porta|serrure|lock|badge|keynest|cadenas)/iu,
   parking:
     /(parking|se garer|stationn|garage|car park|parkplatz|aparcamiento|estacionamiento|parcheggio|estacionamento)/i,
   wifi: /(wi.?fi|mot de passe|mdp|password|contraseña|passwort|senha|password|r[ée]seau|network|red wi.?fi|netzwerk|rete wi.?fi|ssid|livebox|freebox)/i,
@@ -25,7 +25,7 @@ const RAW_RULES: Record<string, RegExp> = {
   rules:
     /(interdit|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
   trash:
-    /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?(?!\p{L})|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/i,
+    /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?(?!\p{L})|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/iu,
   departure:
     /(d[ée]part|check.?out|departure|salida|abreise|partenza|partida|quitter le logement|avant \d{1,2}\s?h|before \d{1,2}|antes de \d{1,2}|bis \d{1,2}|entro le \d{1,2}|até às? \d{1,2})/i,
   contact:
@@ -47,7 +47,7 @@ const RULES: Record<string, RegExp> = Object.fromEntries(
     key,
     new RegExp(
       `(?<![\\p{L}\\d_])(?:${rule.source.replace(/\\b(?=[|)])/g, "(?![\\p{L}\\d_])")})`,
-      `${rule.flags}u`,
+      `${rule.flags.replace("u", "")}u`,
     ),
   ]),
 );

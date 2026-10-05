@@ -379,6 +379,9 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean, 
         account_onboarding: {
           // Required by Accounts v2: onboard the configuration requested at creation.
           configurations: ["merchant"],
+          // SDK typings lag the 2025-09-30.preview API, which requires this field.
+        } as Stripe.V2.Core.AccountLinkCreateParams.UseCase.AccountOnboarding & {
+          configurations: string[];
           refresh_url: `${appOrigin()}/app/payments`,
           return_url: `${appOrigin()}/app/payments`,
         },

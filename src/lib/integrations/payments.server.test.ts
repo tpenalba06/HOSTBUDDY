@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   account: vi.fn(),
   refund: vi.fn(),
   intent: vi.fn(),
+  createAccount: vi.fn(),
+  createAccountLink: vi.fn(),
 }));
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
@@ -21,7 +23,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({
         then: (resolve: (v: unknown) => unknown) =>
           Promise.resolve({ data: result ?? null, error: null }).then(resolve),
       };
-      for (const method of ["select", "eq", "is", "update", "single", "maybeSingle"])
+      for (const method of ["select", "eq", "is", "update", "upsert", "single", "maybeSingle"])
         builder[method] = (...args: unknown[]) => {
           entry.calls.push([method, ...args]);
           return builder;
@@ -36,7 +38,12 @@ vi.mock("stripe", () => ({
     checkout = { sessions: { create: state.create, retrieve: state.retrieve } };
     paymentIntents = { retrieve: state.intent };
     refunds = { create: state.refund };
-    v2 = { core: { accounts: { retrieve: state.account } } };
+    v2 = {
+      core: {
+        accounts: { retrieve: state.account, create: state.createAccount },
+        accountLinks: { create: state.createAccountLink },
+      },
+    };
   },
 }));
 import {
@@ -75,6 +82,34 @@ describe("service checkout server orchestration (mocked providers)", () => {
       url: "https://checkout.stripe.com/synthetic",
     });
     state.rpc.mockResolvedValue({ data: true, error: null });
+  });
+  it("requires an explicit business country before any database write", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "fictional-secret");
+    for (const country of [undefined, "", "France", "1A"]) {
+      await expect(connectOnboarding("org-1", true, country)).rejects.toThrow("country_required");
+    }
+    expect(state.queries).toHaveLength(0);
+    expect(state.createAccount).not.toHaveBeenCalled();
+  });
+  it("sends the chosen country and the proven Connect preview version, preserving billing API", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "fictional-secret");
+    state.results.push(null, null, null, { stripe_account_id: null }, null);
+    state.createAccount.mockResolvedValue({ id: "acct_fixture" });
+    state.createAccountLink.mockResolvedValue({ url: "https://connect.stripe.com/fixture" });
+    await expect(connectOnboarding("org-1", true, "fr")).resolves.toEqual({
+      url: "https://connect.stripe.com/fixture",
+    });
+    expect(state.createAccount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        identity: { country: "FR" },
+        metadata: { organization_id: "org-1" },
+      }),
+      { idempotencyKey: "hb-connect-org-1", apiVersion: "2025-09-30.preview" },
+    );
+    expect(state.createAccountLink).toHaveBeenCalledWith(
+      expect.objectContaining({ account: "acct_fixture" }),
+      { apiVersion: "2025-09-30.preview" },
+    );
   });
   it("takes the price from the tenant's ledger and targets the host account", async () => {
     state.results.push(payment, { status: "confirmed", services: { name: "Breakfast" } });

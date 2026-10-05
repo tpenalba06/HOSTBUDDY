@@ -39,6 +39,7 @@ import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedb
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
 import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
 import { Route as ApiPublicPaymentInfoRouteImport } from './routes/api/public/payment-info'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages_.$id'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
 
@@ -199,6 +200,11 @@ const ApiPublicPaymentInfoRoute = ApiPublicPaymentInfoRouteImport.update({
   path: '/api/public/payment-info',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppMessagesIdRoute =
   AuthenticatedAppMessagesIdRouteImport.update({
     id: '/messages_/$id',
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -272,6 +279,7 @@ export interface FileRoutesByTo {
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -307,6 +315,7 @@ export interface FileRoutesById {
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/messages_/$id': typeof AuthenticatedAppMessagesIdRoute
   '/_authenticated/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -342,6 +351,7 @@ export interface FileRouteTypes {
     | '/api/public/messages'
     | '/api/public/orders'
     | '/api/public/payment-info'
+    | '/api/public/stripe-webhook'
     | '/app/'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/api/public/messages'
     | '/api/public/orders'
     | '/api/public/payment-info'
+    | '/api/public/stripe-webhook'
     | '/app'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/api/public/messages'
     | '/api/public/orders'
     | '/api/public/payment-info'
+    | '/api/public/stripe-webhook'
     | '/_authenticated/app/'
     | '/_authenticated/app/messages_/$id'
     | '/_authenticated/app/p/$id'
@@ -430,6 +442,7 @@ export interface RootRouteChildren {
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
   ApiPublicOrdersRoute: typeof ApiPublicOrdersRoute
   ApiPublicPaymentInfoRoute: typeof ApiPublicPaymentInfoRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -644,6 +657,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentInfoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/messages_/$id': {
       id: '/_authenticated/app/messages_/$id'
       path: '/messages/$id'
@@ -728,6 +748,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,
   ApiPublicOrdersRoute: ApiPublicOrdersRoute,
   ApiPublicPaymentInfoRoute: ApiPublicPaymentInfoRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

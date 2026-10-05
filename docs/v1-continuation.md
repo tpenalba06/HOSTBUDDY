@@ -50,3 +50,9 @@ Aucune reprise automatique après quota n'a été démontrée.
 - PMS Guesty corrigé pour bindings Cloudflare et statut clé 32 octets ; aucun provider réseau annoncé opérationnel. npm run check : 197 tests/38 fichiers, TypeScript/build réussis.
 - Preview externe /demo reconstruit avec index-BJIpuip3.js ; aucune nouvelle erreur SSR. Capture hostbuddy-v1-preview-20261005.jpg.
 - QR démo affiché à la bonne URL absolue /demo ; clic PNG envoyé, événement téléchargement navigateur cloud a expiré sans chemin retourné. Ne pas prétendre fichier reçu ni scan physique effectué.
+
+### Paiement sandbox réel et correction des blocages
+- Lot Lovable 0fa6844eebac29f37746e2cf9f72f1e2baff43b6 : Checkout réel 4242 payé, subscription active 999+299 ; archive/restauration uniquement fixture C donne 999 puis 1298. Webhooks Stripe échouent 401 preview. Replay de vrais événements vers localhost 200, distinct d'une livraison réelle.
+- Connect échoue faute de country et version preview ; correction root : pays légal explicite sans défaut, Accounts/AccountLinks preview par requête, Billing inchangé. Webhook signé déplacé vers /api/public/stripe-webhook avec ancienne route compatible.
+- Validation complète correction : 203 tests/39 fichiers, TS/lint/build réussis. Prochaine action : après synchronisation, changer URLs endpoints Stripe TEST uniquement et observer vrais événements livrés ; tester Connect pays fictif FR et arrêter uniquement sur vraie dépendance OTP/accord. Ne pas considérer 2%/refunds validés avant paiement service réel sandbox.
+- CI PMS distant réussie : runs 37294255141 et 37294260558.

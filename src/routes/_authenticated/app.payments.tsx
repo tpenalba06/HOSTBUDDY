@@ -13,6 +13,7 @@ function PaymentsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [feeAccepted, setFeeAccepted] = useState(false);
+  const [country, setCountry] = useState("");
   const [link, setLink] = useState("");
   const query = useQuery({
     queryKey: ["payments", org.id],
@@ -32,7 +33,7 @@ function PaymentsPage() {
         data: {
           organizationId: org.id,
           action,
-          ...(action === "connect" ? { feeTermsAccepted: feeAccepted } : {}),
+          ...(action === "connect" ? { feeTermsAccepted: feeAccepted, country } : {}),
           ...(id ? { id } : {}),
         },
       });
@@ -128,6 +129,24 @@ function PaymentsPage() {
           <p className="mt-4 text-sm">{t("payments.feeTerms")}</p>
           <p className="mt-2 text-sm text-muted-foreground">{t("payments.feeRefundNote")}</p>
           {state?.config.connect && (
+            <label className="mt-4 block text-sm">
+              {t("payments.businessCountry")}
+              <input
+                className="mt-2 block min-h-12 w-full rounded-xl border bg-background px-3"
+                value={country}
+                onChange={(e) => setCountry(e.target.value.toUpperCase())}
+                minLength={2}
+                maxLength={2}
+                autoComplete="country"
+                placeholder="FR"
+                aria-describedby="payment-country-hint"
+              />
+              <span id="payment-country-hint" className="mt-1 block text-muted-foreground">
+                {t("payments.countryHint")}
+              </span>
+            </label>
+          )}
+          {state?.config.connect && (
             <label className="mt-4 flex items-start gap-3 text-sm">
               <input
                 type="checkbox"
@@ -141,7 +160,7 @@ function PaymentsPage() {
           {state?.config.connect && (
             <Button
               className="mt-5 min-h-12"
-              disabled={busy || !feeAccepted}
+              disabled={busy || !feeAccepted || !/^[A-Z]{2}$/.test(country)}
               onClick={() => act("connect")}
             >
               {t("payments.connect")}

@@ -329,10 +329,11 @@ export async function startPortal(org: string) {
   });
   return { url: portal.url };
 }
-export async function connectOnboarding(org: string, feeTermsAccepted: boolean) {
+export async function connectOnboarding(org: string, feeTermsAccepted: boolean, country?: string) {
   if (!paymentEnvironment(paymentServerEnvironment()).connect)
     throw new Error("payment_not_configured");
   if (!feeTermsAccepted) throw new Error("fee_terms_required");
+  if (!country || !/^[A-Za-z]{2}$/.test(country)) throw new Error("country_required");
   checked(
     await paymentDb
       .from("organization_payment_accounts")
@@ -355,11 +356,12 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean) 
     const connected = await stripe.v2.core.accounts.create(
       {
         dashboard: "full",
+        identity: { country: country.toUpperCase() },
         defaults: { responsibilities: { fees_collector: "stripe", losses_collector: "stripe" } },
         configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
         metadata: { organization_id: org },
       },
-      { idempotencyKey: `hb-connect-${org}` },
+      { idempotencyKey: `hb-connect-${org}`, apiVersion: "2025-09-30.preview" },
     );
     checked(
       await paymentDb
@@ -369,16 +371,19 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean) 
     );
     current.stripe_account_id = connected.id;
   }
-  const link = await stripe.v2.core.accountLinks.create({
-    account: current.stripe_account_id,
-    use_case: {
-      type: "account_onboarding",
-      account_onboarding: {
-        refresh_url: `${appOrigin()}/app/payments`,
-        return_url: `${appOrigin()}/app/payments`,
+  const link = await stripe.v2.core.accountLinks.create(
+    {
+      account: current.stripe_account_id,
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          refresh_url: `${appOrigin()}/app/payments`,
+          return_url: `${appOrigin()}/app/payments`,
+        },
       },
     },
-  });
+    { apiVersion: "2025-09-30.preview" },
+  );
   return { url: link.url };
 }
 export async function createOrderPaymentLink(org: string, orderId: string) {

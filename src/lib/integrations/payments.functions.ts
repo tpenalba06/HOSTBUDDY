@@ -6,6 +6,11 @@ const schema = z.object({
   action: z.enum(["overview", "billing", "portal", "connect", "payment_link", "refund"]),
   id: z.string().uuid().optional(),
   feeTermsAccepted: z.boolean().optional(),
+  country: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/)
+    .optional(),
 });
 export const managePayments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -25,6 +30,7 @@ export const managePayments = createServerFn({ method: "POST" })
           return await server.connectOnboarding(
             data.organizationId,
             data.feeTermsAccepted === true,
+            data.country,
           );
         case "payment_link":
           if (!data.id) throw new Error("invalid_request");

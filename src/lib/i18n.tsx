@@ -2705,6 +2705,36 @@ for (const locale of LOCALES) {
     translations[locale][key] = consolidationCopy[locale][index]!;
   });
 }
+Object.assign(translations.fr, {
+  "payments.businessCountry": "Pays de votre entreprise",
+  "payments.countryHint":
+    "Code pays à deux lettres, par exemple FR. Choisissez le pays légal de votre entreprise.",
+});
+Object.assign(translations.en, {
+  "payments.businessCountry": "Business country",
+  "payments.countryHint":
+    "Two-letter country code, for example FR. Choose your business’s legal country.",
+});
+Object.assign(translations.es, {
+  "payments.businessCountry": "País de tu empresa",
+  "payments.countryHint":
+    "Código de país de dos letras, por ejemplo FR. Elige el país legal de tu empresa.",
+});
+Object.assign(translations.de, {
+  "payments.businessCountry": "Land Ihres Unternehmens",
+  "payments.countryHint":
+    "Ländercode mit zwei Buchstaben, zum Beispiel FR. Wählen Sie den rechtlichen Sitz Ihres Unternehmens.",
+});
+Object.assign(translations.it, {
+  "payments.businessCountry": "Paese della tua attività",
+  "payments.countryHint":
+    "Codice paese di due lettere, ad esempio FR. Scegli il paese legale della tua attività.",
+});
+Object.assign(translations.pt, {
+  "payments.businessCountry": "País da sua empresa",
+  "payments.countryHint":
+    "Código de país de duas letras, por exemplo FR. Escolha o país legal da sua empresa.",
+});
 addQrCopy(translations);
 addImportCopy(translations);
 addProviderCopy(translations);

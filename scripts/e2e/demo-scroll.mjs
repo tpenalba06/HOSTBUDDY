@@ -1,6 +1,8 @@
 // Run with a local dev/preview server and Playwright Chromium installed.
 // HOSTBUDDY_PLAYWRIGHT_MODULE may point to the runtime's playwright-core module.
 import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
+import process from "node:process";
 const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE || "playwright-core");
 const browser = await chromium.launch({
   headless: true,
@@ -40,7 +42,8 @@ try {
           // The desktop property list can fit; open the existing editor for long content.
           await demo.locator(".manager-property-card").first().getByRole("button").first().click();
         }
-        await demo.scrollIntoViewIfNeeded();
+        await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+        await page.waitForTimeout(150);
         const state = await owner.evaluate((el) => ({
           h: el.clientHeight,
           sh: el.scrollHeight,
@@ -56,10 +59,44 @@ try {
         const box = await owner.boundingBox();
         const x = box.x + box.width / 2,
           y = Math.min(height - 110, Math.max(150, box.y + 100));
+        console.error(
+          JSON.stringify({
+            route,
+            mode,
+            width,
+            state,
+            box,
+            x,
+            y,
+            hit: await page.evaluate(
+              ({ x, y }) => ({
+                tag: document.elementFromPoint(x, y)?.tagName,
+                classes: document.elementFromPoint(x, y)?.className,
+                inside: !!document.elementFromPoint(x, y)?.closest(".demo-viewport"),
+                sy: scrollY,
+              }),
+              { x, y },
+            ),
+          }),
+        );
+        await page.screenshot({
+          path: (process.env.RUNNER_TEMP || "/tmp") + `/hb-scroll-${width}-${mode}.png`,
+        });
         await page.mouse.move(x, y);
         await page.mouse.wheel(0, 250);
         await page.waitForTimeout(250);
-        assert.ok((await owner.evaluate((el) => el.scrollTop)) > 0, "internal scroll moves");
+        console.error(
+          JSON.stringify({
+            afterWheel: await owner.evaluate((el) => ({ top: el.scrollTop, sy: window.scrollY })),
+            route,
+            mode,
+            width,
+          }),
+        );
+        assert.ok(
+          (await owner.evaluate((el) => el.scrollTop)) > 0,
+          `internal scroll moves ${route} ${mode} ${width}`,
+        );
         if (route === "/") {
           await owner.evaluate((el) => {
             el.scrollTop = el.scrollHeight;
@@ -68,7 +105,8 @@ try {
           await page.mouse.wheel(0, 250);
           await page.waitForTimeout(250);
           assert.ok((await page.evaluate(() => scrollY)) > before, "bottom chains to document");
-          await demo.scrollIntoViewIfNeeded();
+          await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+          await page.waitForTimeout(150);
           await owner.evaluate((el) => {
             el.scrollTop = 0;
           });
@@ -112,6 +150,10 @@ try {
     await context.close();
   }
   console.log(JSON.stringify(evidence, null, 2));
+  await writeFile(
+    (process.env.RUNNER_TEMP || "/tmp") + "/demo-scroll-results.json",
+    JSON.stringify(evidence, null, 2),
+  );
 } finally {
   await browser.close();
 }

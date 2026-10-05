@@ -51,3 +51,5 @@ jobs:
           path: |
             ${{ runner.temp }}/demo-scroll-evidence.json
             ${{ runner.temp }}/hb-dev.log
+            ${{ runner.temp }}/hb-scroll-*.png
+            ${{ runner.temp }}/demo-scroll-results.json

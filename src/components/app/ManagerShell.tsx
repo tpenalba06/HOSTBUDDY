@@ -133,7 +133,7 @@ export function ManagerShell({
   };
   return (
     <div
-      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-clip" : "min-h-screen"}`}
+      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-visible" : "min-h-screen"}`}
     >
       <header
         className={`${embedded ? "absolute" : "sticky"} inset-x-0 top-0 z-30 border-b bg-background/95 backdrop-blur`}

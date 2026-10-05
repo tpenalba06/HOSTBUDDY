@@ -116,14 +116,16 @@ try {
           // scrollTop jump that can race the compositor's wheel target.
           for (let step = 0; step < 32; step++) {
             const atBottom = await owner.evaluate(
-              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight,
+              (el) => Math.ceil(el.scrollTop) >= el.scrollHeight - el.clientHeight,
             );
             if (atBottom) break;
             await page.mouse.wheel(0, 300);
             await page.waitForTimeout(100);
           }
           assert.ok(
-            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight),
+            await owner.evaluate(
+              (el) => Math.ceil(el.scrollTop) >= el.scrollHeight - el.clientHeight,
+            ),
             "reached bottom with wheel",
           );
           // End the previous wheel gesture before starting a new gesture at the boundary.

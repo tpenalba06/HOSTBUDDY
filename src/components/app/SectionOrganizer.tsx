@@ -97,7 +97,7 @@ export function SectionOrganizer({
           ))}
         </div>
       </SortableContext>
-      <DragOverlay>
+      <DragOverlay style={{ pointerEvents: "none" }}>
         {dragged ? (
           <div className="section-organizer-overlay">
             <GripVertical size={18} />

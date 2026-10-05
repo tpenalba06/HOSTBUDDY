@@ -178,11 +178,25 @@ try {
       await page.waitForFunction(() => document.querySelector(".section-organizer").scrollTop > 0);
       mobileScroll = { duringDrag: await rail.evaluate((el) => el.scrollTop) };
       await touch("touchCancel");
+      await page.waitForFunction(
+        () => !document.querySelector(".section-organizer-row.is-dragging"),
+      );
+      await page.locator(".section-organizer-overlay").waitFor({ state: "hidden" });
+      await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
       assert.deepEqual(await order(), expected, "Cancelled drag must not persist a new order");
       await rail.evaluate((el) => (el.scrollTop = 0));
       // Swipe on a row body: only the handle activates sorting, normal scrolling must still work.
-      const bodyX = box.x + box.width * 0.65,
-        bodyY = box.y + box.height * 0.7;
+      const swipeBox = await rail.boundingBox();
+      assert(swipeBox);
+      const bodyX = swipeBox.x + swipeBox.width * 0.65,
+        bodyY = swipeBox.y + swipeBox.height * 0.7;
+      assert(
+        await page.evaluate(
+          ({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".section-organizer"),
+          { x: bodyX, y: bodyY },
+        ),
+        "Swipe must start on the organizer body",
+      );
       await touch("touchStart", bodyX, bodyY);
       for (let i = 1; i <= 10; i++) {
         await touch("touchMove", bodyX, bodyY - i * 10);

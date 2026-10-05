@@ -83,7 +83,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
         className={`demo-frame mx-auto w-full overflow-clip rounded-xl border bg-background shadow-soft ${compact ? "" : "max-w-6xl"}`}
       >
         <div
-          className={`demo-viewport bg-background text-foreground ${mode === "manager" ? "overflow-clip" : "overflow-x-hidden overflow-y-auto"}`}
+          className={`demo-viewport bg-background text-foreground ${mode === "manager" ? "overflow-visible" : "overflow-x-hidden overflow-y-auto"}`}
         >
           <div hidden={mode !== "guest"}>
             <GuideView

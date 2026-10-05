@@ -3,7 +3,7 @@ import { homeSections, sectionVisual, ambienceFor } from "./visual-library";
 import type { PublicSection } from "@/lib/data/public-guide.functions";
 const section = (key: string): PublicSection => ({ id: key, key, title: key, content: {} });
 describe("home hierarchy", () => {
-  it("places services before a stable compact index and keeps facilities in all information", () => {
+  it("keeps services structural and preserves every editorial section in manager order", () => {
     const result = homeSections(
       [
         "pool",
@@ -19,13 +19,15 @@ describe("home hierarchy", () => {
     );
     expect(result.services?.key).toBe("services");
     expect(result.main.map((item) => item.key)).toEqual([
+      "pool",
+      "contact",
       "wifi",
       "arrival",
       "places",
       "departure",
-      "contact",
+      "parking",
     ]);
-    expect(result.extra.map((item) => item.key)).toEqual(["pool", "parking"]);
+    expect(result.extra).toEqual([]);
   });
   it("keeps all custom sections and repeated sections reachable without modifying the source", () => {
     const sections = ["custom-a", "wifi-a", "wifi-b", "services"].map(section);

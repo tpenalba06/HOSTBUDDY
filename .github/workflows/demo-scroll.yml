@@ -7,6 +7,13 @@ on:
       - "src/styles.css"
       - "src/components/demo/**"
       - "src/components/app/ManagerShell.tsx"
+      - "src/components/app/GuideEditor.tsx"
+      - "src/components/app/PropertyMediaEditor.tsx"
+      - "src/components/app/SectionOrganizer.tsx"
+      - "src/components/app/section-order.ts"
+      - "src/components/guest/**"
+      - "src/lib/editor-copy.ts"
+      - "scripts/e2e/editor-ux.mjs"
       - "scripts/e2e/demo-scroll.mjs"
       - ".github/workflows/demo-scroll.yml"
 permissions:
@@ -40,6 +47,12 @@ jobs:
           done
           cat "$RUNNER_TEMP/hb-dev.log"
           exit 1
+      - name: Verify editor reordering and presentation videos
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          HOSTBUDDY_PLAYWRIGHT_MODULE="$RUNNER_TEMP/hb-browser/node_modules/playwright/index.mjs" \
+            node scripts/e2e/editor-ux.mjs
       - name: Verify native wheel chaining and touch
         run: |
           HOSTBUDDY_PLAYWRIGHT_MODULE="$RUNNER_TEMP/hb-browser/node_modules/playwright/index.mjs" \
@@ -52,4 +65,7 @@ jobs:
             ${{ runner.temp }}/demo-scroll-evidence.json
             ${{ runner.temp }}/hb-dev.log
             ${{ runner.temp }}/hb-scroll-*.png
+            /tmp/hb-editor-*.png
+            /tmp/hb-intro-*.png
+            /tmp/hb-editor-evidence.json
             ${{ runner.temp }}/demo-scroll-results.json

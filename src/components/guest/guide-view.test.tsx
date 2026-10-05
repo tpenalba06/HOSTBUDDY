@@ -192,3 +192,60 @@ describe("shared guest guide compatibility", () => {
     expect(raw[0]?.id).toBe("b");
   });
 });
+
+describe("presentation video placement", () => {
+  const welcome: PublicSection = { id: "welcome", key: "welcome", title: "Welcome", content: {} };
+  const services: PublicSection = {
+    id: "services",
+    key: "services",
+    title: "Services",
+    content: {},
+  };
+  const video: NonNullable<PublicSection["media"]>[number] = {
+    id: "intro",
+    path: "intro.mp4",
+    url: "https://media.example/intro.mp4",
+    type: "video",
+    mimeType: "video/mp4",
+    sortOrder: 0,
+    processingStatus: "ready",
+  };
+  it("adds no empty video block to existing guides without video", () => {
+    const html = renderToStaticMarkup(
+      <GuideView guide={{ ...guide, sections: [welcome, services, section] }} />,
+    );
+    expect(html).not.toContain("hb-presentation-video");
+    expect(html).not.toContain("<video");
+  });
+  it("renders the main video once, after the hero and before full-width services", () => {
+    const html = renderToStaticMarkup(
+      <GuideView
+        guide={{ ...guide, sections: [{ ...welcome, media: [video] }, services, section] }}
+      />,
+    );
+    expect(html.indexOf("hb-cover")).toBeLessThan(html.indexOf("hb-presentation-video"));
+    expect(html.indexOf("hb-presentation-video")).toBeLessThan(html.indexOf("hb-services-feature"));
+    expect(html.match(/<video/g)).toHaveLength(1);
+    expect(html).toContain("playsInline");
+    expect(html).not.toContain("autoPlay");
+  });
+  it("explicit removal hides legacy alternative videos too", () => {
+    const html = renderToStaticMarkup(
+      <GuideView
+        guide={{
+          ...guide,
+          sections: [
+            {
+              ...welcome,
+              content: { propertyMedia: { version: 1, presentationVideoId: null } },
+              media: [video],
+            },
+            services,
+          ],
+        }}
+      />,
+    );
+    expect(html).not.toContain("<video");
+    expect(html).not.toContain("hb-home-media");
+  });
+});

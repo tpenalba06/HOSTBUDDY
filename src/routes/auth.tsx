@@ -22,10 +22,10 @@ export const Route = createFileRoute("/auth")({
       { title: "Essayer HostBuddy gratuitement" },
       {
         name: "description",
-        content: "Créez votre compte en 30 secondes. 30 jours gratuits, sans carte bancaire.",
+        content: "Créez votre compte en 30 secondes. 1 logement gratuit, sans carte bancaire.",
       },
       { property: "og:title", content: "Essayer HostBuddy gratuitement" },
-      { property: "og:description", content: "30 jours gratuits, sans carte bancaire." },
+      { property: "og:description", content: "1 logement gratuit, sans carte bancaire." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -285,6 +285,9 @@ function AuthPage() {
           {t("auth.forgot")}
         </Link>
       )}
+      <a href="/legal" className="mt-4 inline-block min-h-12 py-3 text-sm text-primary underline">
+        {t("legal.title")}
+      </a>
       <p className="mt-6 text-center">
         {isSignup ? `${t("auth.existing")} ` : `${t("auth.new")} `}
         <Link

@@ -7,8 +7,10 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
   const url = new URL(endpoint);
   if (
     url.protocol !== "https:" ||
-    !/^(?:id-)?preview--[a-z0-9-]+\.lovable\.app$/.test(url.hostname) ||
-    url.pathname !== "/api/billing-sync" ||
+    !/^(?:(?:id-)?preview--[a-z0-9-]+|project--[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-dev)\.lovable\.app$/.test(
+      url.hostname,
+    ) ||
+    url.pathname !== "/api/public/billing-sync" ||
     url.search ||
     url.hash ||
     url.username ||

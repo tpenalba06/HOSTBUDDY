@@ -114,7 +114,7 @@ function Landing() {
                 </Link>
               </div>
               <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
-                {t("marketing.startingPrice")} ·{" "}
+                {t("marketing.paidTier")} ·{" "}
                 <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
                   {t("marketing.price")}
                 </span>
@@ -313,6 +313,9 @@ function Landing() {
           <Link to="/integrations" className="font-semibold text-primary hover:underline">
             {t("marketing.integrations")}
           </Link>
+          <a href="/legal" className="min-h-12 py-3 text-primary underline">
+            {t("legal.title")}
+          </a>
           <p className="text-sm text-muted-foreground">
             © 2026 HostBuddy · {t("marketing.footer")}
           </p>

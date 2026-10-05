@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { runBillingSync } from "./run-billing-sync.mjs";
-const endpoint = "https://preview--host-buddy-concierge.lovable.app/api/billing-sync";
+const endpoint =
+  "https://project--ad0b09fe-b134-491b-8601-9d64d6d27b86-dev.lovable.app/api/public/billing-sync";
 const secret = "synthetic_scheduler_secret_not_a_real_key";
 describe("preview billing scheduler runner", () => {
   it("retries a temporary failure and succeeds without a user session", async () => {
@@ -10,6 +11,13 @@ describe("preview billing scheduler runner", () => {
     expect(send).toHaveBeenCalledTimes(2);
     expect(send.mock.calls[0][1].redirect).toBe("error");
     expect(wait).toHaveBeenCalledOnce();
+  });
+  it("rejects the session-protected old route without transmitting a secret", async () => {
+    const send = vi.fn();
+    await expect(
+      runBillingSync({ endpoint: endpoint.replace("/public/", "/"), secret, send }),
+    ).rejects.toThrow("invalid");
+    expect(send).not.toHaveBeenCalled();
   });
   it("does not retry rejected credentials", async () => {
     const send = vi.fn().mockResolvedValue({ status: 401 });

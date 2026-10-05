@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GuidePreviewRouteImport } from './routes/guide-preview'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as ApiBillingSyncRouteImport } from './routes/api/billing-sync'
@@ -34,6 +35,7 @@ import { Route as AuthenticatedAppNewRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/app.orders'
 import { Route as AuthenticatedAppPaymentsRouteImport } from './routes/_authenticated/app.payments'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
+import { Route as ApiPublicBillingSyncRouteImport } from './routes/api/public/billing-sync'
 import { Route as ApiPublicCheckoutRouteImport } from './routes/api/public/checkout'
 import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
@@ -70,6 +72,11 @@ const GuidePreviewRoute = GuidePreviewRouteImport.update({
 const IntegrationsRoute = IntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OfflineRoute = OfflineRouteImport.update({
@@ -175,6 +182,11 @@ const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const ApiPublicBillingSyncRoute = ApiPublicBillingSyncRouteImport.update({
+  id: '/api/public/billing-sync',
+  path: '/api/public/billing-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCheckoutRoute = ApiPublicCheckoutRouteImport.update({
   id: '/api/public/checkout',
   path: '/api/public/checkout',
@@ -223,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/legal': typeof LegalRoute
   '/offline': typeof OfflineRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/api/billing-sync': typeof ApiBillingSyncRoute
@@ -241,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/app/orders': typeof AuthenticatedAppOrdersRoute
   '/app/payments': typeof AuthenticatedAppPaymentsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
@@ -257,6 +271,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/legal': typeof LegalRoute
   '/offline': typeof OfflineRoute
   '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -274,6 +289,7 @@ export interface FileRoutesByTo {
   '/app/orders': typeof AuthenticatedAppOrdersRoute
   '/app/payments': typeof AuthenticatedAppPaymentsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
@@ -292,6 +308,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/legal': typeof LegalRoute
   '/offline': typeof OfflineRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/api/billing-sync': typeof ApiBillingSyncRoute
@@ -310,6 +327,7 @@ export interface FileRoutesById {
   '/_authenticated/app/orders': typeof AuthenticatedAppOrdersRoute
   '/_authenticated/app/payments': typeof AuthenticatedAppPaymentsRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
@@ -328,6 +346,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/guide-preview'
     | '/integrations'
+    | '/legal'
     | '/offline'
     | '/app'
     | '/api/billing-sync'
@@ -346,6 +365,7 @@ export interface FileRouteTypes {
     | '/app/orders'
     | '/app/payments'
     | '/app/team'
+    | '/api/public/billing-sync'
     | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
@@ -362,6 +382,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/guide-preview'
     | '/integrations'
+    | '/legal'
     | '/offline'
     | '/api/billing-sync'
     | '/api/stripe-webhook'
@@ -379,6 +400,7 @@ export interface FileRouteTypes {
     | '/app/orders'
     | '/app/payments'
     | '/app/team'
+    | '/api/public/billing-sync'
     | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
@@ -396,6 +418,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/guide-preview'
     | '/integrations'
+    | '/legal'
     | '/offline'
     | '/_authenticated/app'
     | '/api/billing-sync'
@@ -414,6 +437,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/orders'
     | '/_authenticated/app/payments'
     | '/_authenticated/app/team'
+    | '/api/public/billing-sync'
     | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
@@ -432,11 +456,13 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   GuidePreviewRoute: typeof GuidePreviewRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  LegalRoute: typeof LegalRoute
   OfflineRoute: typeof OfflineRoute
   ApiBillingSyncRoute: typeof ApiBillingSyncRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LSlugRoute: typeof LSlugRoute
   PayTokenRoute: typeof PayTokenRoute
+  ApiPublicBillingSyncRoute: typeof ApiPublicBillingSyncRoute
   ApiPublicCheckoutRoute: typeof ApiPublicCheckoutRoute
   ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
@@ -487,6 +513,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/offline': {
@@ -622,6 +655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/api/public/billing-sync': {
+      id: '/api/public/billing-sync'
+      path: '/api/public/billing-sync'
+      fullPath: '/api/public/billing-sync'
+      preLoaderRoute: typeof ApiPublicBillingSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/checkout': {
       id: '/api/public/checkout'
       path: '/api/public/checkout'
@@ -738,11 +778,13 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   GuidePreviewRoute: GuidePreviewRoute,
   IntegrationsRoute: IntegrationsRoute,
+  LegalRoute: LegalRoute,
   OfflineRoute: OfflineRoute,
   ApiBillingSyncRoute: ApiBillingSyncRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LSlugRoute: LSlugRoute,
   PayTokenRoute: PayTokenRoute,
+  ApiPublicBillingSyncRoute: ApiPublicBillingSyncRoute,
   ApiPublicCheckoutRoute: ApiPublicCheckoutRoute,
   ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,

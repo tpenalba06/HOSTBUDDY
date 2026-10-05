@@ -1,5 +1,3 @@
-import QRCode from "qrcode";
-
 export function publicGuidePath(slug: string) {
   return `/l/${encodeURIComponent(slug)}`;
 }
@@ -22,6 +20,9 @@ export function qrFilename(slug: string, extension: "png" | "svg") {
 export async function generateQrAssets(url: string) {
   const destination = new URL(url);
   if (!/^https?:$/.test(destination.protocol)) throw new Error("Invalid QR destination");
+  // Loaded on demand: the Node build of qrcode requires node:fs, which the
+  // server runtime lacks, and broke SSR of every page rendering QrCard.
+  const { default: QRCode } = await import("qrcode");
   const options = { width: 1024, margin: 2, errorCorrectionLevel: "M" as const };
   const [png, svg] = await Promise.all([
     QRCode.toDataURL(destination.toString(), options),

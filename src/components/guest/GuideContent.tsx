@@ -182,9 +182,20 @@ export function DepartureTemplate({
     </>
   );
 }
-export function SectionMedia({ section }: { section: PublicSection }) {
+export function SectionMedia({
+  section,
+  wide = false,
+}: {
+  section: PublicSection;
+  wide?: boolean;
+}) {
+  const count = section.media?.filter((item) => item.url).length ?? 0;
+  if (!count) return null;
+  // A lone photo spans the row (no orphan half-empty grid cell); `wide` lowers
+  // its height when it heads a full-width page such as Services.
+  const single = count === 1;
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className={`mb-5 grid gap-4 ${single ? "" : "sm:grid-cols-2"}`}>
       {section.media?.map(
         (item) =>
           item.url &&
@@ -194,7 +205,7 @@ export function SectionMedia({ section }: { section: PublicSection }) {
                 src={item.url}
                 alt={item.altText ?? ""}
                 loading="lazy"
-                className="aspect-[4/3] w-full rounded-xl object-cover"
+                className={`aspect-[4/3] w-full rounded-xl object-cover ${single && wide ? "sm:aspect-[21/9]" : ""}`}
               />
               {item.caption && (
                 <figcaption className="mt-1 text-sm text-muted-foreground">

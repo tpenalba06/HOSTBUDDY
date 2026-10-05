@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { readOrganizationTeam } from "./team-access";
+import { readOrganizationTeam, requireOrganizationOwner } from "./team-access";
 type Client = Parameters<typeof readOrganizationTeam>[0];
 describe("team user context", () => {
   const client = (role: string, rpc: unknown) => {
@@ -13,11 +13,39 @@ describe("team user context", () => {
     await readOrganizationTeam(client("owner", rpc), "org-1", "user-1");
     expect(rpc).toHaveBeenCalledExactlyOnceWith("get_organization_team", { _org: "org-1" });
   });
-  it("denies non-owner access before invoking the team RPC", async () => {
+  it.each(["admin", "member", "unknown"])(
+    "denies %s access before invoking the team RPC",
+    async (role) => {
+      const rpc = vi.fn();
+      await expect(
+        readOrganizationTeam(client(role, rpc), "org-1", "user-1"),
+      ).rejects.toBeInstanceOf(Response);
+      expect(rpc).not.toHaveBeenCalled();
+    },
+  );
+  it("fails closed when membership lookup fails", async () => {
+    const query: Record<string, unknown> = {};
+    const eq = vi.fn(() => query);
+    query["select"] = () => query;
+    query["eq"] = eq;
+    query["maybeSingle"] = async () => ({ data: null, error: { message: "database unavailable" } });
     const rpc = vi.fn();
+    const backend = { from: () => query, rpc } as unknown as Client;
     await expect(
-      readOrganizationTeam(client("member", rpc), "org-1", "user-1"),
-    ).rejects.toBeInstanceOf(Response);
+      requireOrganizationOwner(backend, "organization-b", "user-a"),
+    ).rejects.toMatchObject({ status: 403 });
+    expect(eq.mock.calls).toEqual([
+      ["organization_id", "organization-b"],
+      ["user_id", "user-a"],
+    ]);
     expect(rpc).not.toHaveBeenCalled();
+  });
+  it("returns a safe error when the user-context RPC rejects access", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValue({ data: null, error: { message: "private database details" } });
+    await expect(readOrganizationTeam(client("owner", rpc), "org-1", "user-1")).rejects.toThrow(
+      "team unavailable",
+    );
   });
 });

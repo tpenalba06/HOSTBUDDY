@@ -155,12 +155,12 @@ async function performSaveGuideOffline(
   const media: SavedMedia[] = [];
   let bytes = 0;
   const sources = guide.sections.flatMap((section) =>
-    (section.media ?? []).map((item) => ({
-      id: item.id,
-      url: item.url,
-      video: item.type === "video",
-    })),
+    (section.media ?? []).flatMap((item) => [
+      { id: item.id, url: item.url, video: item.type === "video" },
+      ...(item.posterUrl ? [{ id: `poster:${item.id}`, url: item.posterUrl, video: false }] : []),
+    ]),
   );
+  if (guide.coverUrl) sources.push({ id: "guide:cover", url: guide.coverUrl, video: false });
   for (const item of guide.services ?? [])
     if (item.imagePath)
       sources.push({ id: `service:${item.id}`, url: item.imagePath, video: false });
@@ -188,6 +188,7 @@ async function performSaveGuideOffline(
     media.push({ id: item.id, blob, digest: await mediaDigest(blob) });
   }
   // Signed URLs are discarded. The restored reader uses complete local blobs.
+  const { coverUrl: _cover, ...offlineGuide } = guide;
   const snapshot: OfflineSnapshot = {
     version: 1,
     slug,
@@ -196,8 +197,9 @@ async function performSaveGuideOffline(
     media,
     shellCache,
     persistent: (await navigator.storage?.persist?.().catch(() => false)) ?? false,
+    requiredMediaIds: unique.map((item) => item.id),
     guide: {
-      ...guide,
+      ...offlineGuide,
       sections: guide.sections.map((section) => ({
         ...section,
         media:

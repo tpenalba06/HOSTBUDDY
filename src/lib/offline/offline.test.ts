@@ -81,6 +81,52 @@ describe("complete persistent offline snapshots", () => {
     await deleteSnapshot(first.slug);
     expect(await readSnapshot(first.slug)).toBeUndefined();
   });
+  it("rejects a missing referenced video even when the byte count is internally consistent", async () => {
+    const value = await snapshot();
+    value.media = [];
+    value.bytes = 0;
+    await expect(verifySnapshot(value)).rejects.toThrow("incomplète");
+  });
+  it("requires every recorded cover, poster and service image and rejects ambiguous duplicate IDs", async () => {
+    const value = await snapshot();
+    value.requiredMediaIds = ["video-1", "service:breakfast"];
+    await expect(verifySnapshot(value)).rejects.toThrow("incomplète");
+    value.requiredMediaIds = ["video-1"];
+    value.media.push(value.media[0]!);
+    value.bytes *= 2;
+    await expect(verifySnapshot(value)).rejects.toThrow("incomplète");
+  });
+  it("restores the cover, poster and service image from persisted blobs without network URLs", async () => {
+    const value = await snapshot();
+    const photo = new Blob(["photo"], { type: "image/webp" });
+    for (const id of ["guide:cover", "poster:video-1", "service:breakfast"])
+      value.media.push({ id, blob: photo, digest: await mediaDigest(photo) });
+    value.bytes = value.media.reduce((sum, item) => sum + item.blob.size, 0);
+    value.requiredMediaIds = value.media.map((item) => item.id);
+    value.guide.services = [
+      {
+        id: "breakfast",
+        name: "Breakfast",
+        description: "",
+        price: 25,
+        pricingType: "fixed",
+        imagePath: null,
+      },
+    ];
+    await putSnapshot(value);
+    const loaded = (await readSnapshot(value.slug))!;
+    await verifySnapshot(loaded);
+    const create = vi.spyOn(URL, "createObjectURL").mockImplementation(() => "blob:local");
+    const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const restored = restoreGuide(loaded);
+    expect(restored.guide.coverUrl).toBe("blob:local");
+    expect(restored.guide.sections[0]!.media![0]!.posterUrl).toBe("blob:local");
+    expect(restored.guide.services![0]!.imagePath).toBe("blob:local");
+    restored.dispose();
+    expect(revoke).toHaveBeenCalledTimes(4);
+    create.mockRestore();
+    revoke.mockRestore();
+  });
 });
 describe("bounded complete downloads", () => {
   it("reads actual bytes when content-length is absent", async () => {

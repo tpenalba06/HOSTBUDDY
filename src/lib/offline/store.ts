@@ -15,6 +15,7 @@ export interface OfflineSnapshot {
   bytes: number;
   shellCache: string;
   persistent: boolean;
+  requiredMediaIds?: string[];
 }
 function openDB() {
   return new Promise<IDBDatabase>((resolve, reject) => {
@@ -58,8 +59,15 @@ export async function mediaDigest(blob: Blob) {
   return [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 export async function verifySnapshot(snapshot: OfflineSnapshot) {
+  const ids = new Set(snapshot.media.map((item) => item.id));
+  const required = [
+    ...(snapshot.requiredMediaIds ?? []),
+    ...snapshot.guide.sections.flatMap((section) => (section.media ?? []).map((item) => item.id)),
+  ];
   if (
     snapshot.version !== 1 ||
+    ids.size !== snapshot.media.length ||
+    required.some((id) => !ids.has(id)) ||
     snapshot.media.reduce((sum, item) => sum + item.blob.size, 0) !== snapshot.bytes
   )
     throw new Error(
@@ -74,9 +82,15 @@ export function restoreGuide(snapshot: OfflineSnapshot) {
   const urls = new Map(snapshot.media.map((item) => [item.id, URL.createObjectURL(item.blob)]));
   const guide: GuideViewData = {
     ...snapshot.guide,
+    ...(urls.has("guide:cover") ? { coverUrl: urls.get("guide:cover")! } : {}),
     sections: snapshot.guide.sections.map((section) => ({
       ...section,
-      media: section.media?.map((item) => ({ ...item, url: urls.get(item.id) ?? null })) ?? [],
+      media:
+        section.media?.map((item) => ({
+          ...item,
+          url: urls.get(item.id) ?? null,
+          ...(urls.has(`poster:${item.id}`) ? { posterUrl: urls.get(`poster:${item.id}`)! } : {}),
+        })) ?? [],
     })),
     services:
       snapshot.guide.services?.map((item) => ({

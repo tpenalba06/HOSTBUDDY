@@ -100,20 +100,19 @@ function OfflinePage() {
             <article key={item.slug}>
               <a href={`/offline?slug=${encodeURIComponent(item.slug)}`}>{item.guide.name}</a>
               <small>
-                {(item.bytes / 1024 / 1024).toFixed(1)} Mo ·{" "}
-                {new Date(item.savedAt).toLocaleDateString(locale)}
+                {new Intl.NumberFormat(locale, {
+                  style: "unit",
+                  unit: "megabyte",
+                  maximumFractionDigits: 1,
+                }).format(item.bytes / 1024 / 1024)}{" "}
+                · {new Date(item.savedAt).toLocaleDateString(locale)}
               </small>
               <button onClick={() => void remove(item.slug).catch((e) => setError(e.message))}>
                 {t("offline.delete")}
               </button>
             </article>
           ))}
-          {!copies.length && (
-            <p>
-              Aucun guide enregistré. Ouvrez un guide en ligne et choisissez « Enregistrer hors
-              connexion ».
-            </p>
-          )}
+          {!copies.length && <p>{t("offline.empty")}</p>}
         </main>
       )}
     </div>

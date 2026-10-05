@@ -226,6 +226,16 @@ const copy: Record<Locale, readonly string[]> = {
   ],
 };
 export function addV1Copy(translations: Record<Locale, Record<string, string>>) {
+  const emptyCopies: Record<Locale, string> = {
+    fr: "Aucun guide enregistré. Ouvrez un guide en ligne et choisissez « Enregistrer hors connexion ».",
+    en: "No saved guides. Open a guide online and choose ‘Save offline’.",
+    es: "No hay guías guardadas. Abre una guía en línea y elige «Guardar sin conexión».",
+    de: "Keine gespeicherten Reiseführer. Öffne einen Reiseführer online und wähle „Offline speichern“.",
+    it: "Nessuna guida salvata. Apri una guida online e scegli «Salva offline».",
+    pt: "Nenhum guia guardado. Abra um guia online e escolha «Guardar offline».",
+  };
+  for (const locale of Object.keys(emptyCopies) as Locale[])
+    translations[locale]["offline.empty"] = emptyCopies[locale];
   for (const locale of Object.keys(copy) as Locale[])
     keys.forEach((key, index) => {
       translations[locale][key] = copy[locale][index] ?? "";

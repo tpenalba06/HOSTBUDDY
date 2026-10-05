@@ -1,0 +1,53 @@
+name: Demo scroll browser checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/guest-guide-v2-lot1]
+    paths:
+      - "src/styles.css"
+      - "src/components/demo/**"
+      - "src/components/app/ManagerShell.tsx"
+      - "scripts/e2e/demo-scroll.mjs"
+      - ".github/workflows/demo-scroll.yml"
+permissions:
+  contents: read
+concurrency:
+  group: demo-scroll-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - name: Install isolated browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hb-browser" --no-package-lock playwright@1.62.1
+          "$RUNNER_TEMP/hb-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Start local application
+        run: |
+          bun run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/hb-dev.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5173 > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/hb-dev.log"
+          exit 1
+      - name: Verify native wheel chaining and touch
+        run: |
+          HOSTBUDDY_PLAYWRIGHT_MODULE="$RUNNER_TEMP/hb-browser/node_modules/playwright/index.mjs" \
+            node scripts/e2e/demo-scroll.mjs > "$RUNNER_TEMP/demo-scroll-evidence.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: demo-scroll-evidence
+          path: |
+            ${{ runner.temp }}/demo-scroll-evidence.json
+            ${{ runner.temp }}/hb-dev.log

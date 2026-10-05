@@ -206,7 +206,7 @@
 
 .demo-viewport {
   height: clamp(720px, 78dvh, 980px);
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
 }
 
 .manager-shell {
@@ -347,7 +347,7 @@
   }
 }
 
-/* One scroll owner in the embedded demo; avoids the document and frame moving together. */
+/* One internal scroll owner; native scroll chaining continues into the document. */
 .demo-container .demo-viewport {
   height: min(820px, 82dvh);
   min-height: 420px;
@@ -355,8 +355,21 @@
 .demo-container .manager-shell-embedded {
   height: 100%;
 }
-.demo-container .manager-shell-embedded .manager-shell-grid {
+.manager-shell-embedded .manager-shell-grid {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
   min-height: 0;
+}
+.manager-shell-embedded .manager-shell-content {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+}
+@container (max-width: 720px) {
+  .manager-shell-embedded .manager-shell-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .manager-shell .surface {
   border-radius: 22px;

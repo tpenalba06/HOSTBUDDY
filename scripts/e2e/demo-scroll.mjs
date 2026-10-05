@@ -116,20 +116,24 @@ try {
           // scrollTop jump that can race the compositor's wheel target.
           for (let step = 0; step < 32; step++) {
             const atBottom = await owner.evaluate(
-              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1,
+              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight,
             );
             if (atBottom) break;
             await page.mouse.wheel(0, 300);
             await page.waitForTimeout(100);
           }
           assert.ok(
-            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1),
+            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight),
             "reached bottom with wheel",
           );
           // End the previous wheel gesture before starting a new gesture at the boundary.
           // Chromium otherwise keeps its compositor scroll latch on the inner scroller.
           await page.waitForTimeout(1000);
           const before = await page.evaluate(() => scrollY);
+          const beforeOwner = await owner.evaluate((el) => ({
+            top: el.scrollTop,
+            max: el.scrollHeight - el.clientHeight,
+          }));
           await page.mouse.wheel(0, 250);
           await page.waitForTimeout(250);
           console.error(
@@ -139,6 +143,7 @@ try {
               mode,
               width,
               before,
+              beforeOwner,
               after: await page.evaluate(() => scrollY),
               owner: await owner.evaluate((el) => ({
                 top: el.scrollTop,

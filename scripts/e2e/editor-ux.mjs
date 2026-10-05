@@ -198,7 +198,8 @@ try {
       false,
     );
     await page.screenshot({ path: `/tmp/hb-editor-${width}.png`, fullPage: true });
-    // Actual browser metadata checks, including portrait playback aspect ratio.
+    const videoEvidence = [];
+    // Upload through the real browser preparation pipeline, then verify inline playback.
     if (width === 390 || width === 1440) {
       await page
         .locator(".guide-editor-rail")
@@ -239,13 +240,19 @@ try {
           () => {
             const player = document.querySelector(".presentation-video-editor video");
             return (
-              player &&
-              player.readyState >= 1 &&
-              !document.querySelector(".presentation-video-editor input")?.disabled
+              document.querySelector(".property-media-editor [role=alert]") ||
+              (player &&
+                player.readyState >= 1 &&
+                !document.querySelector(".presentation-video-editor input")?.disabled)
             );
           },
           undefined,
           { timeout: 120000 },
+        );
+        assert.equal(
+          await page.locator(".property-media-editor [role=alert]").count(),
+          0,
+          await page.locator(".property-media-editor").innerText(),
         );
         await demo.getByRole("tab").nth(0).click();
         const video = guest.locator("[data-presentation-video] video");
@@ -269,13 +276,31 @@ try {
         assert(
           await page.evaluate(() => {
             const intro = document.querySelector("[data-presentation-video]"),
-              services = document.querySelector(".hb-services-feature");
+              services = document.querySelector(".hb-services-feature"),
+              cover = document.querySelector(".hb-cover");
             return (
               intro &&
               services &&
+              cover &&
+              !!(cover.compareDocumentPosition(intro) & Node.DOCUMENT_POSITION_FOLLOWING) &&
               !!(intro.compareDocumentPosition(services) & Node.DOCUMENT_POSITION_FOLLOWING)
             );
           }),
+        );
+        videoEvidence.push(
+          await video.evaluate(
+            (v, name) => ({
+              name,
+              width: v.videoWidth,
+              height: v.videoHeight,
+              currentTime: v.currentTime,
+              autoplay: v.autoplay,
+              playsInline: v.playsInline,
+              renderedHeight: v.getBoundingClientRect().height,
+              placement: "after-cover-before-services",
+            }),
+            name,
+          ),
         );
         await page.screenshot({ path: `/tmp/hb-intro-${name}-${width}.png`, fullPage: true });
         await demo.getByRole("tab").nth(1).click();
@@ -299,6 +324,7 @@ try {
       fallback: true,
       mobileScroll,
       video: width === 390 || width === 1440,
+      videoEvidence,
     });
     await context.close();
   }

@@ -38,6 +38,10 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/hb-browser" --no-package-lock playwright@1.62.1
           "$RUNNER_TEMP/hb-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Prepare real video codec assets for local browser tests
+        run: |
+          bun run build
+          cp -R .output/public/video-codec public/video-codec
       - name: Start local application
         run: |
           bun run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/hb-dev.log" 2>&1 &

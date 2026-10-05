@@ -16,6 +16,8 @@ try {
     [390, 844],
     [430, 932],
     [768, 1024],
+    [820, 1180],
+    [1024, 900],
     [1440, 1000],
   ]) {
     const context = await browser.newContext({
@@ -89,7 +91,9 @@ try {
           }),
         );
         await page.screenshot({
-          path: (process.env.RUNNER_TEMP || "/tmp") + `/hb-scroll-${width}-${mode}.png`,
+          path:
+            (process.env.RUNNER_TEMP || "/tmp") +
+            `/hb-scroll-${route === "/" ? "home" : "demo"}-${width}-${mode}.png`,
         });
         await page.mouse.move(x, y);
         await page.mouse.wheel(0, 250);
@@ -121,6 +125,9 @@ try {
             await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1),
             "reached bottom with wheel",
           );
+          // End the previous wheel gesture before starting a new gesture at the boundary.
+          // Chromium otherwise keeps its compositor scroll latch on the inner scroller.
+          await page.waitForTimeout(400);
           const before = await page.evaluate(() => scrollY);
           await page.mouse.wheel(0, 250);
           await page.waitForTimeout(250);
@@ -136,6 +143,24 @@ try {
                 top: el.scrollTop,
                 max: el.scrollHeight - el.clientHeight,
               })),
+              ancestors: await page.evaluate(
+                ({ x, y }) => {
+                  const result = [];
+                  for (let el = document.elementFromPoint(x, y); el; el = el.parentElement) {
+                    const css = getComputedStyle(el);
+                    result.push({
+                      cls: el.className,
+                      overflow: css.overflowY,
+                      chain: css.overscrollBehaviorY,
+                      top: el.scrollTop,
+                      height: el.clientHeight,
+                      scrollHeight: el.scrollHeight,
+                    });
+                  }
+                  return result;
+                },
+                { x, y },
+              ),
               hit: await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, {
                 x,
                 y,
@@ -171,22 +196,36 @@ try {
     }
     if (width === 390) {
       await page.goto(origin + "/");
-      await page.locator(".demo-container").scrollIntoViewIfNeeded();
-      const owner = page.locator(".demo-container .demo-viewport");
-      const box = await owner.boundingBox();
+      const demo = page.locator(".demo-container");
+      await demo.waitFor({ state: "visible" });
+      await page.waitForLoadState("networkidle");
       const cdp = await context.newCDPSession(page);
-      const x = Math.round(box.x + box.width / 2),
-        y = Math.min(height - 180, Math.round(box.y + 180));
-      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-      for (let i = 1; i <= 10; i++)
-        await cdp.send("Input.dispatchTouchEvent", {
-          type: "touchMove",
-          touchPoints: [{ x, y: y - i * 10 }],
+      for (const mode of ["guest", "manager"]) {
+        await demo
+          .getByRole("tab")
+          .nth(mode === "guest" ? 0 : 1)
+          .click();
+        const owner = demo.locator(mode === "guest" ? ".demo-viewport" : ".manager-shell-content");
+        await owner.evaluate((el) => {
+          el.scrollIntoView({ block: "center", behavior: "instant" });
+          el.scrollTop = 0;
         });
-      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-      await page.waitForTimeout(300);
-      assert.ok((await owner.evaluate((el) => el.scrollTop)) > 0, "touch swipe scrolls guest");
-      evidence.push({ width, touchPassed: true });
+        const box = await owner.boundingBox();
+        const x = Math.round(box.x + box.width / 2),
+          y = Math.min(height - 180, Math.round(box.y + 180));
+        await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+        for (let i = 1; i <= 10; i++) {
+          await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove",
+            touchPoints: [{ x, y: y - i * 10 }],
+          });
+          await page.waitForTimeout(16);
+        }
+        await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+        await page.waitForTimeout(300);
+        assert.ok((await owner.evaluate((el) => el.scrollTop)) > 0, `touch swipe scrolls ${mode}`);
+        evidence.push({ width, mode, touchPassed: true });
+      }
     }
     await context.close();
   }

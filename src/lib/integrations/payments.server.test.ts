@@ -73,9 +73,13 @@ describe("service checkout server orchestration (mocked providers)", () => {
     state.queries = [];
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_synthetic");
     vi.stubEnv("HOSTBUDDY_APP_URL", "https://example.test");
-    state.account.mockResolvedValue({
-      configuration: { merchant: { capabilities: { card_payments: { status: "active" } } } },
+    state.account.mockImplementation(async (_id, _params, options) => {
+      expect(options).toEqual({ apiVersion: "2025-09-30.preview" });
+      return {
+        configuration: { merchant: { capabilities: { card_payments: { status: "active" } } } },
+      };
     });
+
     state.create.mockResolvedValue({
       id: "cs_new",
       status: "open",

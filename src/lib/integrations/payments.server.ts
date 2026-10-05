@@ -125,9 +125,13 @@ export async function paymentOverview(org: string) {
   const sync = await syncOrganizationBilling(org);
   const current = await account(org);
   if (current.stripe_account_id) {
-    const connected = await stripeClient().v2.core.accounts.retrieve(current.stripe_account_id, {
-      include: ["configuration.merchant"],
-    });
+    const connected = await stripeClient().v2.core.accounts.retrieve(
+      current.stripe_account_id,
+      {
+        include: ["configuration.merchant"],
+      },
+      { apiVersion: "2025-09-30.preview" },
+    );
     const charges =
       connected.configuration?.merchant?.capabilities?.card_payments?.status === "active";
     const payouts =
@@ -495,9 +499,13 @@ export async function checkoutForToken(token: string) {
   );
   if (order.status !== "confirmed") throw new Error("order_not_confirmed");
   const stripe = stripeClient();
-  const connected = await stripe.v2.core.accounts.retrieve(payment.stripe_account_id, {
-    include: ["configuration.merchant"],
-  });
+  const connected = await stripe.v2.core.accounts.retrieve(
+    payment.stripe_account_id,
+    {
+      include: ["configuration.merchant"],
+    },
+    { apiVersion: "2025-09-30.preview" },
+  );
   if (connected.configuration?.merchant?.capabilities?.card_payments?.status !== "active")
     throw new Error("payment_not_configured");
   const previous = payment.checkout_session_id

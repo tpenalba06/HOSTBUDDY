@@ -182,7 +182,13 @@ export function DepartureTemplate({
     </>
   );
 }
-export function SectionMedia({ section, wide = false }: { section: PublicSection; wide?: boolean }) {
+export function SectionMedia({
+  section,
+  wide = false,
+}: {
+  section: PublicSection;
+  wide?: boolean;
+}) {
   const count = section.media?.filter((item) => item.url).length ?? 0;
   if (!count) return null;
   // A lone photo spans the row (no orphan half-empty grid cell); `wide` lowers

@@ -192,14 +192,9 @@ export function GuideView({
                     <SectionMedia
                       section={open}
                       wide={
-                        ![
-                          "wifi",
-                          "arrival",
-                          "departure",
-                          "house",
-                          "rules",
-                          "amenities",
-                        ].includes(sectionKind(open.key))
+                        !["wifi", "arrival", "departure", "house", "rules", "amenities"].includes(
+                          sectionKind(open.key),
+                        )
                       }
                     />
                     <div className="hb-section-information">

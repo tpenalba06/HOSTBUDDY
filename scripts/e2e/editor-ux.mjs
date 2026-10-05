@@ -38,6 +38,7 @@ try {
     assert(initial.length >= 3);
     const first = rail.locator(".section-drag-handle").nth(0);
     const third = rail.locator(".section-drag-handle").nth(2);
+    await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
     await third.scrollIntoViewIfNeeded();
     await first.scrollIntoViewIfNeeded();
     const from = await first.boundingBox(),
@@ -127,7 +128,7 @@ try {
     assert.deepEqual(await order(), expected);
     let mobileScroll;
     if (width < 500) {
-      await rail.scrollIntoViewIfNeeded();
+      await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
       await rail.evaluate((el) => (el.scrollTop = 0));
       const cdp = await context.newCDPSession(page);
       const touch = (type, x, y) =>

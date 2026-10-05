@@ -54,6 +54,7 @@ jobs:
           HOSTBUDDY_PLAYWRIGHT_MODULE="$RUNNER_TEMP/hb-browser/node_modules/playwright/index.mjs" \
             node scripts/e2e/editor-ux.mjs
       - name: Verify native wheel chaining and touch
+        if: ${{ !cancelled() }}
         run: |
           HOSTBUDDY_PLAYWRIGHT_MODULE="$RUNNER_TEMP/hb-browser/node_modules/playwright/index.mjs" \
             node scripts/e2e/demo-scroll.mjs > "$RUNNER_TEMP/demo-scroll-evidence.json"

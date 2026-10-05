@@ -1,5 +1,6 @@
 import type { Locale } from "./i18n";
 const keys = [
+  "editor.videoTitle",
   "editor.videoHelp",
   "editor.sectionsOrder",
   "editor.moveSection",
@@ -11,6 +12,7 @@ const keys = [
 ];
 const copy: Record<Locale, string[]> = {
   fr: [
+    "Vidéo de présentation",
     "Présentez le logement à vos voyageurs en quelques secondes.",
     "Ordre des sections",
     "Déplacer la section",
@@ -21,6 +23,7 @@ const copy: Record<Locale, string[]> = {
     "Section déplacée",
   ],
   en: [
+    "Welcome video",
     "Introduce your property to your guests in a few seconds.",
     "Section order",
     "Move section",
@@ -31,6 +34,7 @@ const copy: Record<Locale, string[]> = {
     "Section moved",
   ],
   es: [
+    "Vídeo de presentación",
     "Presente el alojamiento a sus huéspedes en unos segundos.",
     "Orden de las secciones",
     "Mover sección",
@@ -41,6 +45,7 @@ const copy: Record<Locale, string[]> = {
     "Sección movida",
   ],
   de: [
+    "Vorstellungsvideo",
     "Stellen Sie Ihren Gästen die Unterkunft in wenigen Sekunden vor.",
     "Reihenfolge der Abschnitte",
     "Abschnitt verschieben",
@@ -51,6 +56,7 @@ const copy: Record<Locale, string[]> = {
     "Abschnitt verschoben",
   ],
   it: [
+    "Video di presentazione",
     "Presentate l’alloggio ai vostri ospiti in pochi secondi.",
     "Ordine delle sezioni",
     "Sposta sezione",
@@ -61,6 +67,7 @@ const copy: Record<Locale, string[]> = {
     "Sezione spostata",
   ],
   pt: [
+    "Vídeo de apresentação",
     "Apresente o alojamento aos seus hóspedes em poucos segundos.",
     "Ordem das secções",
     "Mover secção",

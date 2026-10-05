@@ -274,11 +274,11 @@ export function PropertyMediaEditor({
       </div>
       <div
         className="presentation-video-editor mb-6 rounded-2xl border p-4"
-        aria-label={t("media.presentation")}
+        aria-label={t("editor.videoTitle")}
       >
         <div className="mb-2 flex items-center gap-2">
           <Video size={20} />
-          <h3 className="text-xl">{t("media.presentation")}</h3>
+          <h3 className="text-xl">{t("editor.videoTitle")}</h3>
           <span className="ml-auto text-xs text-muted-foreground">{t("common.optional")}</span>
         </div>
         <p className="mb-4 text-sm text-muted-foreground">{t("editor.videoHelp")}</p>
@@ -289,7 +289,7 @@ export function PropertyMediaEditor({
               playsInline
               preload="metadata"
               src={urls[presentation.id]}
-              aria-label={t("media.presentation")}
+              aria-label={t("editor.videoTitle")}
               className="presentation-editor-player"
             />
             {duration && (

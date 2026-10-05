@@ -376,10 +376,13 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean, 
       account: current.stripe_account_id,
       use_case: {
         type: "account_onboarding",
+        // Accounts v2 (2025-09-30.preview) requires the configurations to onboard;
+        // the SDK typings lag behind, hence the widened object.
         account_onboarding: {
+          configurations: ["merchant"],
           refresh_url: `${appOrigin()}/app/payments`,
           return_url: `${appOrigin()}/app/payments`,
-        },
+        } as { refresh_url: string; return_url: string },
       },
     },
     { apiVersion: "2025-09-30.preview" },

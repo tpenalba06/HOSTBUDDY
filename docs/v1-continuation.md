@@ -1,51 +1,34 @@
-# HostBuddy — suivi de continuation V1
+# HostBuddy — reprise V1, 5 octobre 2026
 
-Mise à jour : 2026-10-05. Source : branche Lovable `feat/guest-guide-v2-lot1`.
-Dernier commit distant connu avant cette reprise : `ab0e4ec22d5f4af27303b68b2be6930e48683b10`.
+## État et règles
+DA préservée ; source actuelle GuideView/ManagerShell. Stripe sandbox uniquement, aucune production finale, aucun paiement réel, aucune suppression réelle. Dernier distant avant consolidation : 7f81db71265c960a6672f878129b59a2d7b04c47. Le commit contenant ce fichier est le checkpoint de reprise ; utiliser git log -1 pour son SHA local puis vérifier GitHub avant toute synchronisation.
 
-## Règles
+## Livré et validé
+- Secrets Stripe lus depuis les bindings Cloudflare de chaque requête, sans mélange de tenants ni clés frontend.
+- Sandbox acct_1UMyq3PirDxaYw93 : tarifs mensuels 999 et 299 centimes créés et enregistrés dans le vault serveur.
+- Base price_1UN6sgPirDxaYw93lEMzdaOy ; extra price_1UN6umPirDxaYw933fIdzbcB.
+- Webhooks test actifs : Connect we_1UN06zPirDxaYw93XwThoGCI, Billing we_1UN72kPirDxaYw93Yp5EZkTH. Vault contient STRIPE_SECRET_KEY, STRIPE_CONNECT_WEBHOOK_SECRET, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_BASE, STRIPE_PRICE_EXTRA, HOSTBUDDY_APP_URL. Aucune valeur privée enregistrée ici.
+- Migration 0017 validée dans une transaction annulée, appliquée à la vraie base preview puis tests rejoués : trois assertions fixtures/roles/isolation true. Fixtures fictives intégralement annulées. Rollback documenté et volontairement protégé car il réintroduit les failles.
+- Annulation upload et nettoyage atomique, cache invalidé sur contenu des assets, gestion des téléchargements interrompus.
+- QR protégé des races/changements de logement ; génération réelle PNG testée.
+- Imports robots/redirections/provenance et équipements négatifs corrigés ; interfaces imports/QR/erreurs médias localisées ; PMS honnêtement classés.
+- npm run check terminé avec succès : 178 tests, 35 fichiers ; TypeScript et build réussis ; lint 0 erreur, 16 avertissements préexistants.
 
-Conserver la DA, GuideView, ManagerShell et les données réelles. Mode Stripe test uniquement. Aucun déploiement final production autorisé. Modifications additives, petits commits, pas de force-push. Les validations précédentes restent acquises sauf régression ou changement concerné.
+## Blocages et validations restantes
+- Lovable récupère le SHA runtime mais affiche Échec de la génération / aperçu non à jour. Build local et CI runtime passent. La cause backend Lovable n'est pas encore identifiée ; ne pas annoncer les corrections live.
+- Session gestionnaire preview expirée : vrai Checkout/Billing/Connect/SCA/remboursements/2 % non rejoués. Aucun résultat réseau simulé présenté comme paiement terminé.
+- Transcodage vidéo serveur absent (pipeline FFmpeg/WASM navigateur uniquement). Processeur externe à provisionner ; reprise upload non implémentée.
+- Fermeture/réouverture texte/images déjà vérifiée auparavant ; vraie coupure réseau et vidéo hors ligne encore non prouvées.
+- Signup/reset/email invitation et routes HTTP A/B avec deux sessions à rejouer ; SQL RLS réellement testé.
+- Imports réseau plateformes, scan physique QR, captures de tous les viewports, Lighthouse/réseau lent, sauvegarde finale restent à faire.
+- PMS nécessitent credentials/partenariats selon provider ; ne pas prétendre une connexion validée.
 
-## Tâche actuelle
+## Prochaines actions exactes
+1. Vérifier git status et SHA distant ; conserver les éventuelles modifications Lovable concurrentes.
+2. Résoudre uniquement le rebuild du preview Lovable, sans publier en production et sans modifier la DA.
+3. Une fois preview réellement reconstruit : compte test authentifié → /app/payments → Mode test ; tester Checkout réel sandbox puis webhook et registre commandes.
+4. Si auth/processeur externe bloque : documenter, passer aux tests publics/offline/responsive réalisables. Ne pas demander de validation pour des corrections réversibles.
+5. Rejouer npm run check après changement, synchroniser commits et attendre CI ; verdict actuel NO-GO PRODUCTION.
 
-P1 : secrets Stripe enregistrés mais le preview affiche encore une configuration inactive. Vérifier une reconstruction du preview après ajout des secrets, puis comparer la disponibilité dans le preview compilé et dans le développement Lovable. Ne jamais afficher de valeurs de secrets dans les logs ou réponses.
-
-## Déjà réellement validé
-
-- Renderer voyageur partagé et source Villa Mare commune ; scroll gestionnaire corrigé.
-- Publication authentifiée ; demandes de services, messages et retours privés.
-- Persistance locale texte/images après fermeture et réouverture ; coupure effective de réseau non encore prouvée.
-- 126 tests, lint sans erreur (16 avertissements préexistants), TypeScript et build réussis lors de la précédente passe.
-- Sandbox Stripe `acct_1UMyq3PirDxaYw93` ; webhook connecté actif `we_1UN06zPirDxaYw93XwThoGCI` vers `/api/stripe-webhook` du preview ; événements Checkout completed/expired/async success/async failure et charge.refunded.
-- Secrets serveur Lovable ajoutés : STRIPE_SECRET_KEY (test), STRIPE_CONNECT_WEBHOOK_SECRET, HOSTBUDDY_APP_URL. Aucune valeur dans ce fichier.
-- Compte gestionnaire Google connecté ; après refresh, Paiements reste inactif. Aucun Checkout réseau complet réussi.
-
-## Backlog, dans l'ordre
-
-1. Stripe : visibilité runtime des secrets ; produits/prix Billing 999/299 centimes ; webhook plateforme séparé ; Connect/onboarding ; Checkout, SCA, erreurs, frais 2 %, remboursement, idempotence et isolation ; abonnement/portal et quantités.
-2. Vidéo : pipeline actuel navigateur FFmpeg/WASM H264/AAC ; transcodage serveur absent. Vérifier upload réel, progression/annulation/lecture et infrastructure serveur disponible.
-3. Offline : fermeture puis coupure effective du réseau puis réouverture et navigation, texte/images/vidéo.
-4. Comptes/rôles : reset email, invitations fictives, owner/admin/member, tests RLS et routes A/B.
-5. Imports : texte et URL autorisées, provenance et photos ; expliciter les plateformes bloquées.
-6. Contrôle final renderer unique et source Villa Mare, sans refaire inutilement le travail validé.
-7. Responsive 360/390/430/768/820/1024/1440 et écrans secondaires.
-8. i18n système, contenus personnalisés préservés.
-9. QR PNG réel et URL ; scan physique à distinguer du décodage automatisé.
-10. PMS : uniquement adaptateurs vérifiables ; distinguer credentials/partenariat/stub.
-11. Préproduction : tests, CI, rollback, backup, secrets, performance et verdict GO/NO-GO, sans déployer.
-
-## Blocages externes
-
-- Prix Billing et webhook plateforme non encore configurés.
-- Onboarding Stripe/KYC et validation humaine éventuelle à isoler des tâches réalisables.
-- Pas encore de fournisseur de transcodage serveur connecté ni test physique Android/iOS.
-- Envoi à de vraies personnes interdit ; les emails de tests nécessitent une boîte de test réellement accessible.
-- Pas de mécanisme démontré de reprise automatique après quota ; ce suivi permet une reprise au prochain lancement.
-
-## Reprise exacte
-
-1. Vérifier SHA GitHub/Lovable sans écraser des changements concurrents.
-2. Après synchronisation de ce commit, recharger `/app/payments` dans la session gestionnaire ; chercher l'indication Mode test et le bouton Connect.
-3. Si toujours absent, comparer le preview développement et le preview compilé ; vérifier les liaisons runtime plutôt que déplacer les clés dans le frontend.
-4. Si une dépendance Stripe externe bloque, la noter ici et passer à la vidéo/offline. Ne jamais déclarer un parcours réseau terminé sur la seule base d'un test simulé.
+Rapports spécialisés : docs/v1-security-continuation.md, docs/v1-video-offline-continuation.md, docs/v1-imports-i18n-continuation.md, docs/v1-responsive-qr-continuation.md, docs/stripe-runtime-bindings-20261005.md.
+Aucune reprise automatique après quota n'a été démontrée.

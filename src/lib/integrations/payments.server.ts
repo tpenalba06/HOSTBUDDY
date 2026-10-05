@@ -210,7 +210,8 @@ export async function syncOrganizationBilling(org: string) {
           _org: org,
           _lease: lease,
           _revision: job.revision,
-          _error: null,
+          // SQL accepts NULL (success); generated types mark the arg non-null.
+          _error: null as unknown as string,
         }),
       );
     } catch {

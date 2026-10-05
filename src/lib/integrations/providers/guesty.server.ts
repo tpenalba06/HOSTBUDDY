@@ -3,6 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sealCredentials, openCredentials } from "./crypto.server";
 import { normalizeGuesty, guestyPage } from "./guesty";
+import { providerEncryptionConfigured } from "./environment.server";
 import { z } from "zod";
 type Connection = {
   organization_id: string;
@@ -173,7 +174,7 @@ export async function guestyStatus(org: string) {
     .maybeSingle();
   if (error) throw new Error("provider_unavailable");
   return {
-    configured: !!process.env["PMS_ENCRYPTION_KEY"],
+    configured: providerEncryptionConfigured(),
     connected: !!data?.last_success_at,
     lastSuccess: data?.last_success_at ?? null,
   };

@@ -43,3 +43,10 @@ Aucune reprise automatique après quota n'a été démontrée.
 - Validation complète locale : npm run check, 193 tests / 37 fichiers, TypeScript/build OK, lint 0 erreur/16 avertissements.
 - Tâche native Lovable Stripe sandbox démarrée umsg_01m45qvapqe8194bf4yazzq9bz : uniquement nouvelle organisation fictive owner self, aucun logement réel muté, retour Checkout et preuves webhook si possibles ; sinon imports réseau/QR.
 - Prochaine action exacte : récupérer get_message de cette tâche, conserver les commits Lovable concurrents, vérifier parcours Stripe réel puis documenter. Scheduler : configurer secrets test via accès humain autorisé avant workflow_dispatch. Transcodage serveur, vidéo offline, seconde session B et scan physique restent non prouvés. Verdict NO-GO PRODUCTION.
+
+### Suite du checkpoint
+- Scheduler synchronisé distant 93572fa224d3d21a3e86206512de41fa05d91783 : CI push et PR success (runs 37293570388 / 37293577736). Workflow toujours non activé.
+- Rapport Stripe initial ec46b2ff : mode test/Billing/Connect détectés par vraie fonction serveur ; fixture dédiée deux brouillons ; vrai Checkout 999 cents ouvert, pas encore payé. Ne pas confondre session créée et paiement réussi. Suite native umsg_01m45r1f5ee9hap0ky8c1wtzkz en cours avec troisième logement fictif autorisé.
+- PMS Guesty corrigé pour bindings Cloudflare et statut clé 32 octets ; aucun provider réseau annoncé opérationnel. npm run check : 197 tests/38 fichiers, TypeScript/build réussis.
+- Preview externe /demo reconstruit avec index-BJIpuip3.js ; aucune nouvelle erreur SSR. Capture hostbuddy-v1-preview-20261005.jpg.
+- QR démo affiché à la bonne URL absolue /demo ; clic PNG envoyé, événement téléchargement navigateur cloud a expiré sans chemin retourné. Ne pas prétendre fichier reçu ni scan physique effectué.

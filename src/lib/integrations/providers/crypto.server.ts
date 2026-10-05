@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { providerEncryptionKey } from "./environment.server";
 const key = () => {
-  const value = Buffer.from(process.env["PMS_ENCRYPTION_KEY"] ?? "", "base64");
+  const value = Buffer.from(providerEncryptionKey() ?? "", "base64");
   if (value.length !== 32) throw new Error("provider_not_configured");
   return value;
 };

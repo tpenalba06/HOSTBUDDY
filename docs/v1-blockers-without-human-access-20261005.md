@@ -145,33 +145,66 @@ pratiques **96** ; FCP/LCP 2,3 s, TBT 600 ms, CLS 0,071. Preuve métrique :
 Mesure limitée : Google Fonts inaccessible depuis le runtime ; un asset
 `/__l5e/assets-v1/…` dépend du proxy d'hébergement et renvoie 404 localement.
 Ces erreurs ne démontrent pas des ressources cassées sur le site publié.
-Couleurs, images et composants non changés. Aucun score de performance du
-guide hébergé n'est inventé.
+Couleurs, images et composants non changés. Les mesures locales ne sont pas comparables directement au site hébergé.
 
-Le CLI distant dans ce workspace échoue avant chargement (`ERR_EMPTY_RESPONSE`).
-La CI ajoute donc un audit borné du homepage et du véritable guide TEST publié,
-sans credentials ni contournement. Seuls scores/métriques/IDs d'audits sont
-conservés en artifact : les rapports bruts avec URLs de médias signées ne sont
-pas publiés. Les résultats réellement obtenus sont à consulter dans Actions.
+La CI a exécuté deux audits anonymes du site actuellement publié, sans session
+ni credentials, avec vérification préalable du véritable guide TEST. CI de
+validation et récupération : https://github.com/tpenalba06/HOSTBUDDY/actions/runs/37388737037
+Les changements de cette branche ne sont pas déployés : ce sont des mesures du
+site existant, pas la preuve d'une amélioration après correctif.
+
+| Page publiée | Performance | Accessibilité | Bonnes pratiques | LCP     | TBT    |
+| ------------ | ----------- | ------------- | ---------------- | ------- | ------ |
+| Accueil      | 53          | 97            | 100              | 11,78 s | 497 ms |
+| Guide TEST   | 64          | 93            | 100              | 7,46 s  | 75 ms  |
+
+Le premier audit donnait 11,75 s / 6,31 s : les mesures varient, mais la lenteur
+est confirmée. Les rapports numériques détaillés sont conservés dans
+`docs/audits/lighthouse-hosted-{home,guide}-slow-network-20261005.json`. Aucun
+rapport brut, URL signée, contenu de page ou screenshot n'est publié.
+
+Décomposition LCP du second audit :
+
+- Accueil : TTFB 139 ms, attente avant requête image 584 ms, chargement image
+  **11 026 ms**, rendu 27 ms. Rectangle 387 × 1431 : image principale.
+- Guide : TTFB **2 298 ms**, attente image 37 ms, chargement image **5 102 ms**,
+  rendu 23 ms. Rectangle 412 × 260 : couverture. L'image est déjà prioritaire.
+- Lighthouse estime 1,17 Mo d'images évitables sur l'accueil et 404 Ko sur le
+  guide ; feuilles de styles bloquantes également signalées. Ces estimations
+  ne justifient pas de changer la DA ou les contenus des clients.
+
+Correction technique minimale préparée : `fetchPriority="high"` et preload SSR
+automatique pour
+l'image principale de l'accueil, avec le même URL, dimensions et rendu. Aucune
+modification de GuideView, photos, polices, CSS ou contenu marketing. Cela cible
+la découverte/priorité réseau ; **aucun gain chiffré n'est revendiqué avant un
+audit d'une preview déployée**. La latence serveur du guide et la livraison des
+médias restent à vérifier avec accès à l'hébergement TEST et ses timings ; aucun
+cache partagé de contenus signés ni transformation payante n'est activé.
+
+Les alertes contraste/landmark sont documentées et laissées hors périmètre DA.
 
 ## Validation et matrice
 
 Tests ciblés après chaque lot, puis `npm run check` : **257 tests / 46 fichiers**,
 TypeScript/build réussis, lint zéro erreur / 16 warnings existants.
 
-| État | Élément                               | Preuve ou action exacte                                                                                                                       |
-| ---- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| ✅   | Journal + intégrité des 21 SQL        | Contrôle automatisé et installation locale neuve                                                                                              |
-| ✅   | Backup/restauration TEST              | Datadir et pg_dump SQL, checksums, rôles, guide anonyme                                                                                       |
-| ✅   | Monitoring et garde-fous code         | Signaux sûrs, headers, mode webhook, guard frontend, tests                                                                                    |
-| ✅   | Lighthouse/réseau lent local          | Métriques conservées ; périmètre local explicite                                                                                              |
-| 🟠   | État réel des migrations hébergées    | Donner un accès sécurisé en lecture au catalogue Supabase, ou exécuter `migration-state.sql` et transmettre sa sortie                         |
-| 🟠   | Déploiement TEST des protections      | Donner accès à une preview administrable ; y valider/appliquer seulement `0020`, puis déployer le code TEST et tester les requêtes parallèles |
-| 🟠   | Backup réellement exploitable         | Donner accès lecture source DB/Storage et une cible TEST vide distincte ; choisir le lieu chiffré de conservation                             |
-| 🟠   | Alertes reçues                        | Activer les notifications Actions ; autoriser un canal gratuit de réception des erreurs serveur                                               |
-| 🟠   | Stripe/scheduler/Auth réseau          | Connecter les accès TEST via mécanisme sécurisé ; accord Stripe uniquement par l'exploitant si exigé ; boîte email sandbox et sessions A/B    |
-| ❌   | Validation opérationnelle V1 complète | Paiement/refund TEST, scheduler réel, Auth HTTP A/B et récupération Supabase restent non prouvés                                              |
+| État | Élément                                | Preuve ou action exacte                                                                                                                       |
+| ---- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅   | Journal + intégrité des 21 SQL         | Contrôle automatisé et installation locale neuve                                                                                              |
+| ✅   | Backup/restauration TEST               | Datadir et pg_dump SQL, checksums, rôles, guide anonyme                                                                                       |
+| ✅   | Monitoring et garde-fous code          | Signaux sûrs, headers, mode webhook, guard frontend, tests                                                                                    |
+| ✅   | Lighthouse/réseau lent local et publié | Deux audits anonymes CI, métriques et décomposition LCP conservées                                                                            |
+| 🟠   | État réel des migrations hébergées     | Donner un accès sécurisé en lecture au catalogue Supabase, ou exécuter `migration-state.sql` et transmettre sa sortie                         |
+| 🟠   | Déploiement TEST des protections       | Donner accès à une preview administrable ; y valider/appliquer seulement `0020`, puis déployer le code TEST et tester les requêtes parallèles |
+| 🟠   | Backup réellement exploitable          | Donner accès lecture source DB/Storage et une cible TEST vide distincte ; choisir le lieu chiffré de conservation                             |
+| 🟠   | Alertes reçues                         | Activer les notifications Actions ; autoriser un canal gratuit de réception des erreurs serveur                                               |
+| 🟠   | Stripe/scheduler/Auth réseau           | Connecter les accès TEST via mécanisme sécurisé ; accord Stripe uniquement par l'exploitant si exigé ; boîte email sandbox et sessions A/B    |
+| 🟠   | Performance après correction           | Déployer uniquement une preview TEST administrable ; vérifier priorité image, timings serveur/Storage et refaire un audit borné               |
+| ❌   | Performance réseau lent publiée        | LCP 11,78 s accueil / 7,46 s guide ; priorisation préparée, lenteur restante non résolue                                                      |
+| ❌   | Validation opérationnelle V1 complète  | Paiement/refund TEST, scheduler réel, Auth HTTP A/B et récupération Supabase restent non prouvés                                              |
 
 **NO-GO technique V1 opérationnelle.** Le code prêt et les preuves locales ne
-remplacent pas les validations externes. Aucun autre P0/P1 non corrigé n'a été
-confirmé dans les fichiers inspectés ; ceci ne garantit pas l'absence de bugs.
+remplacent pas les validations externes. La lenteur en réseau lent est confirmée ; les accès TEST restent nécessaires
+pour terminer la validation opérationnelle et mesurer les corrections. Aucun
+retour du P0 « guide indisponible » observé pendant ces audits anonymes.

@@ -68,6 +68,7 @@ function Landing() {
         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
           <img
             src={arrivalAsset.url}
+            fetchPriority="high"
             alt={t("marketing.arrivalAlt")}
             width={1536}
             height={1024}

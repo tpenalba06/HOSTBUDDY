@@ -1,3 +1,22 @@
+# Production restoration completed — 2026-10-05, 22:30 Paris
+
+User authorized applying 0019 to the shared database and publishing the corrected
+site after the initial report below. Migration applied without changing customer
+rows; 13/13 published snapshots now available. Published source
+`7bbe9e5016b2ec88cf1fdc0436f8d9b13fe7a983`; deployment request
+`32bebd77-172a-4782-9380-2c4dc226c776`. GitHub Validate passed.
+
+Real anonymous cloud browser: previously denied audit guide now renders and
+survives refresh, Wi-Fi section shows saved content, back navigation works,
+all five rendered images load. Second previously denied duplex guide renders.
+Desktop viewport 1363x936. No mobile viewport control is exposed by the browser;
+mobile browser validation remains open and must not be claimed as passed.
+Screenshot saved as `hostbuddy-guide-restaure-1791232200811.jpg`.
+The original diagnostic/application-boundary notes below describe the state
+before the user's later production authorization.
+
+---
+
 # P0 public guide restoration — 2026-10-05
 
 ## Confirmed cause

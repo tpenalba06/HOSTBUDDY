@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({
-  env: { STRIPE_WEBHOOK_SECRET: "fictional-webhook-secret" },
+  env: { STRIPE_WEBHOOK_SECRET: "fictional-webhook-secret", STRIPE_SECRET_KEY: "sk_test_fixture" },
   verify: vi.fn(),
   handle: vi.fn(),
   client: vi.fn(() => ({})),
@@ -39,6 +39,11 @@ describe("public webhook uses the same authenticated handler as the legacy route
       413,
     );
     expect(state.verify).not.toHaveBeenCalled();
+  });
+  it("rejects a correctly signed Live event in a TEST environment before DB processing", async () => {
+    state.verify.mockResolvedValueOnce({ id: "fixture-event", livemode: true });
+    expect((await handleStripeWebhookRequest(request("{}", "fixture"))).status).toBe(400);
+    expect(state.handle).not.toHaveBeenCalled();
   });
   it("preserves raw UTF-8 for verification and acknowledges only handled events", async () => {
     const raw = '{"description":"Séjour fictif ☀"}';

@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run test && npm run typecheck && npm run build",
+    "check": "node scripts/check-migrations.mjs && npm run lint && npm run test && npm run typecheck && npm run build",
     "format": "prettier --write ."
   },
   "overrides": {

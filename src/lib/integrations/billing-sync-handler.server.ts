@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { paymentServerEnvironment } from "./payment-environment.server";
+import { reportOperationalEvent } from "../operational-events.server";
 
 /** Authenticate before loading any admin client or touching billing jobs. */
 export async function handleBillingSyncRequest(
@@ -25,11 +26,13 @@ export async function handleBillingSyncRequest(
     return Response.json({ error: "billing_sync_mode_mismatch" }, { status: 409, headers });
   try {
     const result = await sync();
+    if (result.pending) reportOperationalEvent("billing_sync_pending", result.pending);
     return Response.json(result, {
       status: result.pending ? 503 : 200,
       headers: result.pending ? { ...headers, "Retry-After": "60" } : headers,
     });
   } catch {
+    reportOperationalEvent("billing_sync_failed");
     return Response.json(
       { error: "billing_sync_unavailable" },
       { status: 503, headers: { ...headers, "Retry-After": "60" } },

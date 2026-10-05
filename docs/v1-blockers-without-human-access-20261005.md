@@ -1,0 +1,177 @@
+# Clôture technique sans accès humain — 5 octobre 2026
+
+Base vérifiée : `68d93995a6ed08d6e749e63c1350f3d671f00b92` sur
+`feat/guest-guide-v2-lot1`. Aucun changement UX/DA, GuideView, drag, vidéo,
+scroll ou marketing. Aucun appel Lovable, déploiement, merge, paiement Live,
+email ou écriture sur une base hébergée.
+
+## Migrations
+
+Le journal référence maintenant les 21 SQL `0000`…`0020`, en ordre strict.
+Les six entrées historiques sont conservées, et aucun SQL `0000`…`0019` n'a
+été changé. `meta/manifest.json` fixe leurs SHA-256 ; `npm run check` vérifie
+fichiers, journal et manifest. Cette validation n'applique aucune migration.
+
+**Le journal du dépôt est réconcilié ; le ledger de la base hébergée reste
+inconnu.** Aucun accès DB disponible sans passer par le service interdit.
+`scripts/validation/migration-state.sql` inventorie les objets, RLS, ACL,
+fonctions et triggers en lecture seule. Ne jamais marquer des migrations comme
+appliquées uniquement parce que leurs fichiers sont présents. Ne pas lancer
+aveuglément `drizzle-kit migrate` sur une base existante : les migrations
+appliquées manuellement pourraient être rejouées.
+
+P1 identifié dans les quotas : `count` puis `insert` sans sérialisation peuvent
+laisser passer plusieurs requêtes concurrentes. `0020_atomic_public_rate_limits`
+ajoute un verrou transactionnel par fingerprint AVANT le comptage dans cinq
+RPC de soumission. Il préserve corps, ACL, quotas et données ; réapplication
+prévue idempotente. Aucune table ou policy ajoutée. Migration préparée et
+testée localement, **non appliquée à Supabase**. Un vrai test parallèle sur
+PostgreSQL hébergé reste nécessaire ; PGlite sérialise ses requêtes.
+
+Rollback `scripts/rollback/0020_atomic_public_rate_limits.sql` limité par opt-in
+TEST et retirant uniquement le verrou. Il réouvre la course : préférer un
+correctif en avant. Les rollbacks `0017`/`0019` ne sont pas un plan sûr de
+production : ils réouvrent des failles ou le P0 des guides.
+
+## Backup → restauration → vérification
+
+Preuve exécutée : PostgreSQL **18.3 embarqué via PGlite**, schémas Auth/Storage
+minimaux simulant les dépendances Supabase, identités et contenu fictifs.
+Les 21 migrations sont exécutées sur une base neuve en mémoire.
+
+1. Créer un logement, un propriétaire, du contenu et un objet Storage fictifs,
+   puis publier via le vrai `publish_property` SQL.
+2. Exécuter les assertions SQL publication, queue/retry, intégrité paiement
+   (dont webhook dupliqué), équipe/RLS et quotas atomiques.
+3. Exporter le datadir et un **vrai pg_dump WASM** des schémas public/auth/storage.
+   Sauvegarder séparément les octets Storage fictifs et leurs checksums.
+4. Fermer la source. Restaurer le datadir dans une nouvelle instance ; comparer
+   données, RLS, policies, grants et définitions de fonctions, puis rejouer les
+   assertions sous les rôles SQL concernés.
+5. Restaurer indépendamment le dump SQL dans une seconde base neuve ; comparer
+   le même fingerprint et rejouer les assertions. Restaurer `row_security=on`
+   après les paramètres de session du dump, avant les tests de rôles.
+6. Lire le guide publié sous le rôle `anon`, sans sujet gestionnaire.
+
+Toutes ces étapes passent. Preuve : `docs/audits/local-recovery-20261005.json`.
+La CI `Validate` exécute désormais cette procédure sans secrets externes.
+Elle utilise les packages officiels épinglés PGlite 0.5.8 / tools 0.4.8 ; aucune
+dépendance de production ajoutée. Un datadir PGlite n'est pas une archive
+restaurable telle quelle dans Supabase. La preuve SQL est locale ; elle ne
+prouve pas une restauration des services Auth/Storage hébergés.
+
+Reproduction locale (packages de test hors dépôt) :
+
+```sh
+npm install --prefix /tmp/hb-recovery-tools --no-audit --no-fund @electric-sql/pglite@0.5.8 @electric-sql/pglite-tools@0.4.8
+HOSTBUDDY_PGLITE_MODULE=/tmp/hb-recovery-tools/node_modules/@electric-sql/pglite/dist/index.js HOSTBUDDY_PGDUMP_MODULE=/tmp/hb-recovery-tools/node_modules/@electric-sql/pglite-tools/dist/pg_dump.js node scripts/validation/local-recovery.mjs
+```
+
+### Procédure réelle préparée, pas exécutée
+
+- Accès source **lecture seule** pour inventaire, dump DB et export de tous les
+  objets privés. Aucune suppression, restauration ou réplication sur la source.
+- Utiliser la procédure officielle Supabase CLI : exports rôles, schéma,
+  données, historique des migrations et personnalisations Auth/Storage. Les
+  policies HostBuddy sur `storage.objects` doivent être incluses explicitement.
+- Exporter séparément les fichiers du bucket privé `guide-media`, avec chemin,
+  taille, MIME et SHA-256. Le dump DB ne contient que leurs métadonnées.
+- Sauvegarder la configuration serveur, la configuration Auth (URLs de retour,
+  SMTP/providers) et la liste des secrets séparément, chiffrées ; ne pas exporter
+  les valeurs dans Git, un rapport ou un artifact CI public.
+- Chiffrer le bundle hors dépôt, conserver checksums/date/version/outils et un
+  lieu de sauvegarde restreint. Aucun abonnement ou PITR payant activé.
+- Créer un environnement de restauration TEST distinct et vide, vérifier sa
+  référence différente de la source, déconnecter mails/webhooks/scheduler et
+  laisser Stripe Live absent. Restaurer selon la procédure Supabase adaptée à
+  ses schémas gérés ; ne pas rejouer le dump intégral sur une base existante.
+- Restaurer les fichiers privés ; vérifier les checksums, ACL et RLS, les deux
+  tenants, publications et photos signées. Vérifier `get_public_guide` via rôle
+  anonyme ; contrôler ensuite le vrai service Auth et les sessions HTTP TEST.
+- Conserver les preuves et établir responsable, fréquence, rétention et délai
+  de récupération avant de considérer le backup hébergé opérationnel.
+
+Sources : https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore,
+https://supabase.com/docs/guides/platform/backups,
+https://pglite.dev/docs/api et https://pglite.dev/docs/pglite-tools.
+
+## Monitoring, alertes et sécurité
+
+Événements structurés `hostbuddy.operations.v1` ajoutés pour erreurs serveur,
+webhook indisponible/échoué/mauvais mode, billing échoué/file restante. Champs
+fixes seulement : événement, date, niveau et nombre pending. Aucun body,
+URL, token, signature, exception ou donnée voyageur. Les erreurs internes
+capturées ne sérialisent plus messages, stacks, causes ou objets arbitraires.
+Les réponses restent génériques et un webhook échoué reste en 503/retry.
+
+**Les signaux sont testés ; leur livraison à un destinataire externe n'est
+pas configurée ni prouvée.** Aucun service payant ajouté. GitHub fournit déjà
+l'état failed des workflows ; notification personnelle à activer dans
+Settings → Notifications → System → Actions → On GitHub → Only notify for
+failed workflows → Save. Les logs d'exécution serveur devront être reliés à un
+canal d'alerte autorisé après accès à l'hébergement, puis testés avec une panne
+fictive. Pas de nouveau endpoint public dévoilant les erreurs.
+
+Sécurité revue et protections testées :
+
+- Build refusé si une variable VITE contient un secret Stripe/Supabase ou un
+  JWT service_role. Vérification aussi après chargement des fichiers `.env`
+  par Vite. Scan des assets publics construits : zéro motif de secret privé.
+- `nosniff`, `no-referrer` (liens de paiement/capacités), HSTS sur HTTPS,
+  `no-store` sur auth/app/pay/API/server functions. Pas de CSP improvisée qui
+  casserait médias ou previews ; le comportement d'embed est conservé.
+- Auth middleware vérifie le JWT ; les guides passent par RPC publié ; RLS,
+  rôles équipe et tables de capabilities sont testés dans PostgreSQL local.
+- Endpoints Stripe public/legacy partagent signature et portée Connect/platform.
+  Mode signé Live/TEST doit correspondre à la clé serveur avant traitement DB.
+- Idempotence Stripe : clés stables pour checkout/refund ; RPC SQL refuse le
+  second traitement du même événement et les régressions d'état.
+- JSON/body public bornés, erreurs génériques ; quotas SQL de messages,
+  commandes et feedback conservés et durcis par `0020`.
+
+Limites : les fingerprints fondés sur les headers IP supposent un proxy de
+confiance ; protection volumétrique/WAF et rate limit global du provider non
+vérifiés. Les endpoints payment-info/checkout reposent sur un token aléatoire
+256 bits et l'idempotence, pas sur un quota IP distribué spécifique. Pas de
+revendication de test de charge/DDoS ou de certification sécurité complète.
+
+## Lighthouse / réseau lent
+
+Lighthouse 13.5.0, build production local servi par workerd, mobile et throttling
+DevTools réellement activé : performance **79**, accessibilité **97**, bonnes
+pratiques **96** ; FCP/LCP 2,3 s, TBT 600 ms, CLS 0,071. Preuve métrique :
+`docs/audits/lighthouse-local-slow-network-20261005.json`.
+
+Mesure limitée : Google Fonts inaccessible depuis le runtime ; un asset
+`/__l5e/assets-v1/…` dépend du proxy d'hébergement et renvoie 404 localement.
+Ces erreurs ne démontrent pas des ressources cassées sur le site publié.
+Couleurs, images et composants non changés. Aucun score de performance du
+guide hébergé n'est inventé.
+
+Le CLI distant dans ce workspace échoue avant chargement (`ERR_EMPTY_RESPONSE`).
+La CI ajoute donc un audit borné du homepage et du véritable guide TEST publié,
+sans credentials ni contournement. Seuls scores/métriques/IDs d'audits sont
+conservés en artifact : les rapports bruts avec URLs de médias signées ne sont
+pas publiés. Les résultats réellement obtenus sont à consulter dans Actions.
+
+## Validation et matrice
+
+Tests ciblés après chaque lot, puis `npm run check` : **257 tests / 46 fichiers**,
+TypeScript/build réussis, lint zéro erreur / 16 warnings existants.
+
+| État | Élément                               | Preuve ou action exacte                                                                                                                       |
+| ---- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅   | Journal + intégrité des 21 SQL        | Contrôle automatisé et installation locale neuve                                                                                              |
+| ✅   | Backup/restauration TEST              | Datadir et pg_dump SQL, checksums, rôles, guide anonyme                                                                                       |
+| ✅   | Monitoring et garde-fous code         | Signaux sûrs, headers, mode webhook, guard frontend, tests                                                                                    |
+| ✅   | Lighthouse/réseau lent local          | Métriques conservées ; périmètre local explicite                                                                                              |
+| 🟠   | État réel des migrations hébergées    | Donner un accès sécurisé en lecture au catalogue Supabase, ou exécuter `migration-state.sql` et transmettre sa sortie                         |
+| 🟠   | Déploiement TEST des protections      | Donner accès à une preview administrable ; y valider/appliquer seulement `0020`, puis déployer le code TEST et tester les requêtes parallèles |
+| 🟠   | Backup réellement exploitable         | Donner accès lecture source DB/Storage et une cible TEST vide distincte ; choisir le lieu chiffré de conservation                             |
+| 🟠   | Alertes reçues                        | Activer les notifications Actions ; autoriser un canal gratuit de réception des erreurs serveur                                               |
+| 🟠   | Stripe/scheduler/Auth réseau          | Connecter les accès TEST via mécanisme sécurisé ; accord Stripe uniquement par l'exploitant si exigé ; boîte email sandbox et sessions A/B    |
+| ❌   | Validation opérationnelle V1 complète | Paiement/refund TEST, scheduler réel, Auth HTTP A/B et récupération Supabase restent non prouvés                                              |
+
+**NO-GO technique V1 opérationnelle.** Le code prêt et les preuves locales ne
+remplacent pas les validations externes. Aucun autre P0/P1 non corrigé n'a été
+confirmé dans les fichiers inspectés ; ceci ne garantit pas l'absence de bugs.

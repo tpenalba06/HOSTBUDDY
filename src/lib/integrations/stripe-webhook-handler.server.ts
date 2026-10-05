@@ -1,3 +1,5 @@
+import { reportOperationalEvent } from "../operational-events.server";
+
 export async function handleStripeWebhookRequest(request: Request): Promise<Response> {
   const signature = request.headers.get("stripe-signature");
   const { paymentServerEnvironment } =
@@ -29,6 +31,7 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
   try {
     stripe = stripeClient();
   } catch {
+    reportOperationalEvent("stripe_webhook_unavailable");
     return new Response("Unavailable", { status: 503 });
   }
   let event;
@@ -41,10 +44,20 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
   } catch {
     return new Response("Invalid signature", { status: 400 });
   }
+  const key = env["STRIPE_SECRET_KEY"];
+  if (
+    !key ||
+    (!key.startsWith("sk_test_") && !key.startsWith("sk_live_")) ||
+    event.livemode !== key.startsWith("sk_live_")
+  ) {
+    reportOperationalEvent("stripe_webhook_mode_mismatch");
+    return new Response("Invalid mode", { status: 400 });
+  }
   try {
     await handleStripeEvent(event);
     return Response.json({ received: true });
   } catch {
+    reportOperationalEvent("stripe_webhook_failed");
     return new Response("Retry later", { status: 503 });
   }
 }

@@ -1,0 +1,54 @@
+{
+  "tool": "Lighthouse",
+  "version": "13.5.0",
+  "scope": "local production build homepage; not hosted guide",
+  "url": "http://127.0.0.1:4175/",
+  "fetchTime": "2026-10-05T21:37:50.575Z",
+  "throttlingMethod": "devtools",
+  "throttling": {
+    "rttMs": 150,
+    "throughputKbps": 1638.4,
+    "requestLatencyMs": 562.5,
+    "downloadThroughputKbps": 1474.5600000000002,
+    "uploadThroughputKbps": 675,
+    "cpuSlowdownMultiplier": 4
+  },
+  "categories": {
+    "performance": 0.79,
+    "accessibility": 0.97,
+    "best-practices": 0.96
+  },
+  "metrics": {
+    "first-contentful-paint": {
+      "value": 2344.323,
+      "display": "2.3\u00a0s"
+    },
+    "largest-contentful-paint": {
+      "value": 2344.323,
+      "display": "2.3\u00a0s"
+    },
+    "total-blocking-time": {
+      "value": 597.1989999999987,
+      "display": "600\u00a0ms"
+    },
+    "cumulative-layout-shift": {
+      "value": 0.07132259108815729,
+      "display": "0.071"
+    },
+    "speed-index": {
+      "value": 3053,
+      "display": "3.1\u00a0s"
+    }
+  },
+  "networkErrors": [
+    {
+      "description": "Failed to load resource: net::ERR_EMPTY_RESPONSE",
+      "url": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap"
+    },
+    {
+      "description": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4175/__l5e/assets-v1/a9b5bb43-9a12-453d-ace7-99abe913d7ce/hostbuddy-arrival.jpg"
+    }
+  ],
+  "runtimeError": null
+}

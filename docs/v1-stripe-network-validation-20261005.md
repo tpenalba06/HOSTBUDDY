@@ -1,48 +1,71 @@
-# V1 Stripe sandbox network validation — 2026-10-05
+# V1 Stripe sandbox network validation — 2026-10-05 (pass 2)
 
-Base: commit `2a2968d`. No production publish, no design change, no billing-sync
-scheduler file touched, no Stripe Live, no real email, no real data changed.
+Follows `ec46b2f`. Sandbox only (`sk_test`, every object `livemode=false`). No
+production publish, no design change, no scheduler / billing-sync file touched,
+no real email (checkout email `v1-stripe-test@example.com`, reserved domain), the
+13 real properties untouched. Identity: Lovable `auth-session --self`; no JWT or
+Stripe secret printed or stored outside the sandbox.
 
-## Identity and fixture
-- Identity: Lovable `auth-session --self` (owner account of the requester). No
-  token was printed, logged or written outside the sandbox session file.
-- Fixture created (data only): organization `V1_STRIPE_TEST_20261005`
-  (`5da36510-4f76-4f36-99b6-483c1af29357`), owner = self, two **draft**
-  properties `v1-stripe-test-20261005-a` / `-b`. The real organization was not read
-  for mutation or modified.
+## Fixture
+Organization `V1_STRIPE_TEST_20261005` (`5da36510-…`), owner self, draft
+properties `v1-stripe-test-20261005-a`, `-b`, and (this pass) `-c`.
 
-## Executed
-| Check | Result |
+## Subscription — executed on the network
+| Step | Evidence |
 |---|---|
-| Server key mode | `sk_test` (sandbox); `STRIPE_LIVE_VERIFIED` unset |
-| `STRIPE_PRICE_BASE` | 999 EUR / month, `livemode=false` |
-| `STRIPE_PRICE_EXTRA` | 299 EUR / month, `livemode=false` |
-| `managePayments overview` (self, via app server function) | `mode=test, billing=true, connect=true`, quote `propertyCount=2, extraQuantity=0, monthlyCents=999` |
-| `managePayments billing` | Checkout Session `cs_test_a1wLSQ6D42ok…` created: `mode=subscription`, `livemode=false`, `status=open`, total 999 EUR, one line 999 x1, metadata `organization_id`, `property_count=2`, `pricing_version=free-plus-two-v2` |
-| Foreign organization (owner check) | rejected `not_allowed` |
-| Webhook endpoints in sandbox | 2 enabled, both `preview--host-buddy-concierge.lovable.app/api/stripe-webhook` |
-| Local webhook, bad / missing signature | HTTP 400 (rejected) |
+| Quote via app server function (3 properties) | `propertyCount=3, extraQuantity=1, monthlyCents=1298` |
+| Checkout Session `cs_test_b10RgbNA7Uvb…` | 1298 EUR, lines 999x1 + 299x1, `livemode=false` |
+| Real hosted Checkout (headless browser), test card 4242, no captcha/OTP shown | session `complete`, `paid` |
+| Stripe subscription `sub_1UN8k0PirDxaYw93L5vFruXd` | `active`, items 999x1 + 299x1, `livemode=false` |
+| Events emitted by Stripe | `checkout.session.completed`, `customer.subscription.created`, `invoice.payment_succeeded`… |
 
-## 999 + 299 extra
-Current policy (`free-plus-two-v2`): 1 property free, 2 included in 999,
-each extra +299. With the requested **two** properties the session is
-999 only (verified). 999 + 299 needs a third property; not created to respect
-the two-property limit. The 3-property amount is covered by unit tests only.
+## Webhook — BLOCKER found
+- Stripe reports `pending_webhooks=1` on the events: delivery fails.
+- Both sandbox endpoints target `https://preview--host-buddy-concierge.lovable.app/api/stripe-webhook`.
+  A test POST there returns **HTTP 401**: the preview site's access protection
+  blocks Stripe. Only `/api/public/*` passes that protection. The published site
+  returns 404 because the route isn't published.
+- Fix (not applied in this batch): expose the webhook under `/api/public/…`
+  (the signature check stays), then point the sandbox endpoints at it.
+- Processing proof: the **genuine** Stripe events (fetched from the API, not
+  invented) were re-signed with the configured webhook secret and replayed to the
+  local app, the same way the Stripe CLI forwards events. All 3 returned 200. In the
+  database the test org now has `subscription_status=active`, the subscription id,
+  and `current_period_end=2026-11-05`. This proves processing, **not** delivery by Stripe.
 
-## Not executed / blockers
-- **Checkout payment**: requires a human to open the sandbox URL and pay with
-  test card `4242 4242 4242 4242` (any future date, any CVC). Step: as owner of the
-  test org, open the Checkout URL returned by "Configurer l'abonnement" (session
-  above, valid ~24h) and submit. No payment was simulated or claimed.
-- **Real webhook delivery** (`checkout.session.completed`,
-  `customer.subscription.*`): depends on that payment, and the endpoints target the
-  preview host, not this sandbox. Not observed.
-- The app's payments page shows the first organization of the user; the test org
-  was exercised through the same server function directly, not through the page.
-- Connect onboarding, order payment links, refunds: not run (need a payment).
-- Network imports and real QR PNGs on fixtures: deferred to keep this batch scoped.
+## Archive / restore reconciliation (fixture C only)
+| Action | Overview quote | Stripe subscription items |
+|---|---|---|
+| Archive C, then open the overview | 2 properties, 999 | 999x1 (extra removed) |
+| Restore C to draft, then open the overview | 3 properties, 1298 | 999x1 + 299x1 |
+
+## Connect / 2% / refunds — BLOCKER
+- The `connect` action returns `payment_unavailable`.
+- Calling the same Accounts v2 request straight against Stripe sandbox:
+  1. A non-preview `Stripe-Version` gets 404 ("specify a .preview Stripe-Version").
+  2. With `2025-09-30.preview`, it gets 400: "identity.country is required before
+     setting configuration.merchant".
+- The fix is a code and product decision (which API version, and which country
+  source for international customers). Not applied. Nothing was created on the
+  Stripe side.
+- The 2% fee, guest payment links and refunds depend on a connected account and
+  were not run on the network.
+
+## Imports (network, read-only, no property created)
+- Text extraction (fictional text): address, arrival, departure, Wi-Fi, parking
+  and rules were found, each with confidence 0.85.
+- `importFromUrl` (authenticated server function, robots.txt respected):
+  - `https://example.com/`: `insufficient` (no invented data)
+  - `https://www.wikipedia.org/`: ok, 5 fields from a non-property page. Needs
+    review for relevance.
+  - `http://127.0.0.1/`: `invalid` (private host blocked)
+
+## QR PNG
+`generateQrAssets` for fixtures A and B produced 1024x1024 PNGs.
+`zbarimg` decodes them to `https://host-buddy-concierge.lovable.app/l/v1-stripe-test-20261005-a`
+and `-b`. Those pages aren't reachable because the fixtures are draft and
+unpublished.
 
 ## Cleanup
-Fixture deletion (when no longer needed): delete the two properties then the
-organization `V1_STRIPE_TEST_20261005`; Stripe test customer metadata
-`organization_id=5da36510-…` can be left in sandbox.
+In Stripe sandbox, cancel `sub_1UN8k0…`, then delete properties A, B, C and the
+organization `V1_STRIPE_TEST_20261005`.

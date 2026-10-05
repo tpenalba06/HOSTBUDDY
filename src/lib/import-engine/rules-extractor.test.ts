@@ -43,4 +43,19 @@ Arrivée à 15h.
 Arrivée à 17h.`);
     expect(result.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
   });
+  it("requires review for explicitly absent or nearby amenities instead of enabling sections", () => {
+    const result = extractFromText(`Logement synthétique
+Pas de piscine.
+No parking available.
+Air conditioning not available.`);
+    for (const key of ["pool", "parking", "climate"])
+      expect(result.fields.find((field) => field.key === key)?.status).toBe("to_verify");
+    const nearby = extractFromText("Villa fictive\nPiscine publique à proximité.");
+    expect(nearby.fields.find((field) => field.key === "pool")?.status).toBe("to_verify");
+  });
+  it("does not promote low-confidence web keyword matches to confirmed facts", () => {
+    const result = extractFromText("Villa fictive\nCheck-in from 16:00.\nPrivate pool.", 0.6);
+    expect(result.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
+    expect(result.fields.find((field) => field.key === "pool")?.status).toBe("to_verify");
+  });
 });

@@ -26,7 +26,12 @@ export function privateAddress(address: string): boolean {
     );
   return false;
 }
-export async function safePublicFetch(value: string, init: RequestInit, maxBytes: number) {
+export async function safePublicFetch(
+  value: string,
+  init: RequestInit,
+  maxBytes: number,
+  redirectAllowed?: (url: URL) => Promise<boolean>,
+) {
   let url = new URL(value);
   for (let hops = 0; hops < 4; hops++) {
     if (
@@ -53,7 +58,11 @@ export async function safePublicFetch(value: string, init: RequestInit, maxBytes
       const next = response.headers.get("location");
       if (!next) throw new Error("blocked");
       await response.body?.cancel();
-      url = new URL(next, url);
+      const nextUrl = new URL(next, url);
+      // Import callers verify robots.txt before following redirects as well.
+      // Never fetch a redirected page first and check its permission afterwards.
+      if (redirectAllowed && !(await redirectAllowed(nextUrl))) throw new Error("blocked");
+      url = nextUrl;
       continue;
     }
     if (Number(response.headers.get("content-length")) > maxBytes) {

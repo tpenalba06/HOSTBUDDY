@@ -1,4 +1,6 @@
 import { addTeamCopy, addMessageCopy } from "./team-copy";
+import { addQrCopy } from "./qr-copy";
+import { addImportCopy } from "./import-copy";
 import { addProviderCopy } from "./provider-copy";
 import { addPaymentCopy } from "./payment-copy";
 import { addV1Copy } from "./v1-copy";
@@ -2703,6 +2705,8 @@ for (const locale of LOCALES) {
     translations[locale][key] = consolidationCopy[locale][index]!;
   });
 }
+addQrCopy(translations);
+addImportCopy(translations);
 addProviderCopy(translations);
 addPaymentCopy(translations);
 addV1Copy(translations);

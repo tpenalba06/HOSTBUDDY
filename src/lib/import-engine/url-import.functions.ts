@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { propertyPhotoCandidates } from "./photo-candidates";
 import { safePublicFetch } from "./safe-public-fetch";
+import { robotsTextAllows } from "./robots-policy";
 import { extractFromText } from "./rules-extractor";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 
@@ -31,17 +32,7 @@ async function robotsAllows(url: URL): Promise<boolean> {
     const r = fetched.response;
     if (r.status === 404) return true;
     if (!r.ok) return false;
-    const lines = new TextDecoder().decode(fetched.buffer).split(/\r?\n/);
-    let applies = false;
-    const disallow: string[] = [];
-    for (const raw of lines) {
-      const line = raw.split("#")[0]!.trim();
-      const [k, ...rest] = line.split(":");
-      const v = rest.join(":").trim();
-      if (/^user-agent$/i.test(k ?? "")) applies = v === "*" || /hostbuddy/i.test(v);
-      else if (applies && /^disallow$/i.test(k ?? "") && v) disallow.push(v);
-    }
-    return !disallow.some((p) => url.pathname.startsWith(p));
+    return robotsTextAllows(new TextDecoder().decode(fetched.buffer), url);
   } catch {
     return false;
   }
@@ -91,7 +82,7 @@ const LODGING =
 const str = (v: unknown): string | null =>
   typeof v === "string" && v.trim() ? decode(v) : typeof v === "number" ? String(v) : null;
 
-function fromStructured(html: string, url: string) {
+export function extractStructuredFields(html: string, url: string) {
   const fields: Record<string, ExtractedField> = {};
   const put = (key: string, value: string | null, raw: string, confidence: number) => {
     if (value && !fields[key])
@@ -127,6 +118,7 @@ function fromStructured(html: string, url: string) {
     put("capacity", cap || null, `JSON-LD: ${cap}`, 0.85);
     const am = Array.isArray(n.amenityFeature)
       ? (n.amenityFeature as Record<string, unknown>[])
+          .filter((x) => x["value"] !== false && x["value"] !== "false")
           .map((x) => str(x["name"]))
           .filter(Boolean)
           .join(", ")
@@ -171,6 +163,7 @@ async function runUrlImport(data: {
   if (!(await robotsAllows(url))) return { ok: false, source, reason: "blocked" };
 
   let html: string;
+  let resolvedUrl = url.href;
   try {
     const fetched = await safePublicFetch(
       url.toString(),
@@ -180,6 +173,7 @@ async function runUrlImport(data: {
         signal: AbortSignal.timeout(12000),
       },
       1_500_000,
+      robotsAllows,
     );
     const res = fetched.response;
     if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))
@@ -187,9 +181,14 @@ async function runUrlImport(data: {
     if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html"))
       return { ok: false, source, reason: "unreachable" };
     html = new TextDecoder().decode(fetched.buffer);
+    resolvedUrl = fetched.url;
   } catch (e) {
     console.error("url import fetch failed", e);
-    return { ok: false, source, reason: "unreachable" };
+    return {
+      ok: false,
+      source,
+      reason: e instanceof Error && e.message === "blocked" ? "blocked" : "unreachable",
+    };
   }
   if (
     /(captcha|cf-challenge|are you a robot|access denied|enable javascript to continue)/i.test(
@@ -199,7 +198,7 @@ async function runUrlImport(data: {
     return { ok: false, source, reason: "blocked" };
   }
 
-  const structured = fromStructured(html, url.toString());
+  const structured = extractStructuredFields(html, resolvedUrl);
   const textual = extractFromText(visibleText(html), 0.6); // page text is never trusted blindly
   const fields = textual.fields.map((f) => structured.fields[f.key] ?? f);
   const useful = fields.filter((f) => f.status !== "missing").length;
@@ -210,7 +209,7 @@ async function runUrlImport(data: {
     result: {
       propertyName: structured.name?.slice(0, 120) ?? null,
       fields,
-      photos: propertyPhotoCandidates(html, url.href),
+      photos: propertyPhotoCandidates(html, resolvedUrl),
     },
   };
 }
@@ -261,8 +260,15 @@ export const importPropertyPhotos = createServerFn({ method: "POST" })
     const source = new URL(data.sourceUrl);
     if (!(await robotsAllows(source)))
       throw new Error("Import des photos non autorisé par la source.");
-    const page = await safePublicFetch(source.href, { headers: { "user-agent": UA } }, 1_500_000);
-    const allowed = propertyPhotoCandidates(new TextDecoder().decode(page.buffer), source.href);
+    const page = await safePublicFetch(
+      source.href,
+      { headers: { "user-agent": UA } },
+      1_500_000,
+      robotsAllows,
+    );
+    if (!page.response.ok || !(page.response.headers.get("content-type") ?? "").includes("html"))
+      throw new Error("Import des photos indisponible. Ajoutez-les manuellement.");
+    const allowed = propertyPhotoCandidates(new TextDecoder().decode(page.buffer), page.url);
     const { data: sections, error: sectionError } = await sb
       .from("guide_sections")
       .select("id")
@@ -284,6 +290,7 @@ export const importPropertyPhotos = createServerFn({ method: "POST" })
           url,
           { headers: { "user-agent": UA, accept: "image/*" } },
           5 * 1024 * 1024,
+          robotsAllows,
         );
         const mime = file.response.headers.get("content-type")?.split(";")[0];
         const ext = (

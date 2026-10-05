@@ -101,11 +101,22 @@ try {
     await rail.waitFor();
     assert.deepEqual(await order(), expected);
     // Keyboard drag moves one position; Escape and accessible fallback are separate controls.
+    await rail.evaluate((el) => {
+      el.scrollTop = 0;
+      el.scrollIntoView({ block: "center", behavior: "instant" });
+    });
     const handle = rail.locator(".section-drag-handle").first();
     await handle.focus();
     await page.keyboard.press("Space");
+    await page.waitForFunction(
+      () => !!document.querySelector(".section-organizer-row.is-dragging"),
+    );
+    // KeyboardSensor installs document listeners after activation; wait for that frame.
+    await page.waitForTimeout(100);
     await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(150);
     await page.keyboard.press("Space");
+    await page.waitForFunction(() => !document.querySelector(".section-organizer-row.is-dragging"));
     const keyboardExpected = [...expected];
     [keyboardExpected[0], keyboardExpected[1]] = [keyboardExpected[1], keyboardExpected[0]];
     await page.waitForFunction(

@@ -189,7 +189,19 @@ export function GuideView({
                         : undefined
                     }
                   >
-                    <SectionMedia section={open} />
+                    <SectionMedia
+                      section={open}
+                      wide={
+                        ![
+                          "wifi",
+                          "arrival",
+                          "departure",
+                          "house",
+                          "rules",
+                          "amenities",
+                        ].includes(sectionKind(open.key))
+                      }
+                    />
                     <div className="hb-section-information">
                       {sectionKind(open.key) === "wifi" ? (
                         <WifiTemplate

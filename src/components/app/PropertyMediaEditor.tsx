@@ -6,7 +6,7 @@ import type { GuideEditorActions, EditorProperty } from "./GuideEditor";
 import { getGuideItems } from "@/lib/data/guide-content";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import type { Json } from "@/integrations/supabase/types";
-import { friendlyMessage } from "./Friendly";
+import { mediaErrorMessage } from "@/lib/media/error-copy";
 import { ambienceFor } from "@/components/guest/visual-library";
 import { useI18n } from "@/lib/i18n";
 
@@ -29,7 +29,7 @@ export function PropertyMediaEditor({
   onPreview: () => void;
   onBusyChange: (busy: boolean) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -38,6 +38,7 @@ export function PropertyMediaEditor({
   }, [busy, onBusyChange]);
   const [error, setError] = useState("");
   const [videoProgress, setVideoProgress] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => () => abortRef.current?.abort(), []);
   const [dragged, setDragged] = useState<string | null>(null);
@@ -59,12 +60,12 @@ export function PropertyMediaEditor({
         if (live) setUrls(Object.fromEntries(entries));
       })
       .catch((e) => {
-        if (live) setError(friendlyMessage(e));
+        if (live) setError(mediaErrorMessage(e, locale));
       });
     return () => {
       live = false;
     };
-  }, [media, section?.id, actions]);
+  }, [media, section?.id, actions, locale]);
   const run = async (task: () => Promise<void>) => {
     if (busy) return;
     setBusy(true);
@@ -72,10 +73,11 @@ export function PropertyMediaEditor({
     try {
       await task();
     } catch (e) {
-      setError(e instanceof Error ? e.message : friendlyMessage(e));
+      setError(mediaErrorMessage(e, locale));
     } finally {
       setBusy(false);
       setVideoProgress("");
+      setCancelling(false);
       abortRef.current = null;
     }
   };
@@ -126,6 +128,10 @@ export function PropertyMediaEditor({
                   ),
           ),
       });
+      // Cancellation applies until the new media is completely saved. Once
+      // replacement starts, hide the control rather than promising a rollback.
+      abortRef.current = null;
+      setVideoProgress("");
       // Persist the replacement before removing the previous file; a failed upload never destroys it.
       if (primary || replacement?.id === cover?.id || (!cover && item.media_type === "image"))
         await saveConfig(current, { ...config, coverId: item.id });
@@ -189,12 +195,16 @@ export function PropertyMediaEditor({
       {videoProgress && (
         <div role="status" className="mb-3 flex items-center gap-3">
           <span>{videoProgress}</span>
-          {videoProgress !== t("manager.videoUploading") &&
-            videoProgress !== t("manager.photoUploading") && (
-              <Button variant="outline" onClick={() => abortRef.current?.abort()}>
-                {t("manager.cancel")}
-              </Button>
-            )}
+          <Button
+            variant="outline"
+            disabled={cancelling}
+            onClick={() => {
+              abortRef.current?.abort();
+              setCancelling(true);
+            }}
+          >
+            {t("manager.cancel")}
+          </Button>
         </div>
       )}
       {error && (

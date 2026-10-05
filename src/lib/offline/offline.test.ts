@@ -144,4 +144,21 @@ describe("bounded complete downloads", () => {
     controller.abort();
     await expect(boundedBlob(new Response("body"), 100, controller.signal)).rejects.toThrow();
   });
+  it("immediately cancels a stalled media stream without falsely saving a partial body", async () => {
+    const cancel = vi.fn();
+    const response = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode("partial"));
+        },
+        cancel,
+      }),
+    );
+    const controller = new AbortController();
+    const download = boundedBlob(response, 100, controller.signal);
+    await Promise.resolve();
+    controller.abort();
+    await expect(download).rejects.toThrow();
+    expect(cancel).toHaveBeenCalledOnce();
+  });
 });

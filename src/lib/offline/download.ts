@@ -18,18 +18,24 @@ export async function boundedBlob(response: Response, limit: number, signal?: Ab
   if (Number(response.headers.get("content-length")) > limit)
     throw new Error("Ce guide contient un média trop volumineux pour le hors connexion.");
   const reader = response.body.getReader();
+  // A stalled response must not leave Cancel waiting for another network chunk.
+  // Cancelling the reader also releases the body when fetch's signal is absent.
+  const abort = () => void reader.cancel(signal?.reason).catch(() => {});
+  signal?.addEventListener("abort", abort, { once: true });
   const chunks: ArrayBuffer[] = [];
   let bytes = 0;
   try {
     while (true) {
       signal?.throwIfAborted();
       const { value, done } = await reader.read();
+      signal?.throwIfAborted();
       if (done) break;
       bytes += value.byteLength;
       if (bytes > limit) throw new Error("La taille maximale du téléchargement est dépassée.");
       chunks.push(new Uint8Array(value).buffer);
     }
   } finally {
+    signal?.removeEventListener("abort", abort);
     await reader.cancel().catch(() => {});
   }
   if (!bytes) throw new Error("Un média téléchargé est vide. Réessayez.");

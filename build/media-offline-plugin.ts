@@ -27,13 +27,22 @@ export function mediaOfflinePlugin(): Plugin {
       const assets = Object.values(bundle)
         .map((item) => `/${item.fileName}`)
         .filter((path) => /\.(js|css)$/.test(path) && !path.includes("video-codec/"));
+      // Public image/font names are stable across releases. Include their bytes,
+      // otherwise a replacement keeps the old cache name and is never refreshed.
+      const contentHash = createHash("sha256");
       for (const directory of ["guide-fonts", "hostbuddy-media", "demo-guide"]) {
-        for (const name of readdirSync(resolve("public", directory))) {
-          if (/\.(ttf|woff2?|webp|jpe?g|png)$/.test(name)) assets.push(`/${directory}/${name}`);
+        for (const name of readdirSync(resolve("public", directory)).sort()) {
+          if (/\.(ttf|woff2?|webp|jpe?g|png)$/.test(name)) {
+            const path = `/${directory}/${name}`;
+            assets.push(path);
+            contentHash.update(path).update(readFileSync(resolve("public", directory, name)));
+          }
         }
       }
+      assets.sort();
       const version = createHash("sha256")
         .update(JSON.stringify(assets))
+        .update(contentHash.digest())
         .digest("hex")
         .slice(0, 20);
       this.emitFile({

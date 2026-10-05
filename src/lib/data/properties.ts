@@ -286,9 +286,16 @@ export async function uploadSectionMedia(
   file: File,
   options: UploadPreparation = {},
 ) {
+  const ensureNotCancelled = () => {
+    if (options.signal?.aborted)
+      throw new FriendlyError("Envoi annulé. Votre média précédent est conservé.");
+  };
+  ensureNotCancelled();
   file = await prepareMediaUpload(file, options);
+  ensureNotCancelled();
   await validateMediaUpload(file);
-  options.onProgress?.({ phase: "uploading", percent: 100 });
+  ensureNotCancelled();
+  options.onProgress?.({ phase: "uploading", percent: 0 });
   const isImage = file.type.startsWith("image/");
   const ext =
     file.name
@@ -301,6 +308,12 @@ export async function uploadSectionMedia(
     .from("guide-media")
     .upload(path, file, { contentType: file.type, upsert: false });
   if (uploadError) return fail(uploadError, "L’envoi du fichier a échoué. Réessayez.");
+  // The storage SDK cannot abort its upload request. If cancellation occurs
+  // during transfer, remove only this new object and never replace the old one.
+  if (options.signal?.aborted) {
+    await supabase.storage.from("guide-media").remove([path]);
+    ensureNotCancelled();
+  }
   const { data, error } = await supabase
     .from("section_media")
     .insert({
@@ -318,6 +331,13 @@ export async function uploadSectionMedia(
     await supabase.storage.from("guide-media").remove([path]);
     return fail(error);
   }
+  const removeCancelledMedia = async () => {
+    if (!options.signal?.aborted) return;
+    await supabase.from("section_media").delete().eq("id", data.id);
+    await supabase.storage.from("guide-media").remove([path]);
+    ensureNotCancelled();
+  };
+  await removeCancelledMedia();
   const video = preparedVideoMetadata(file);
   if (video) {
     const { data: latest, error: readError } = await supabase
@@ -346,6 +366,8 @@ export async function uploadSectionMedia(
       );
     }
   }
+  await removeCancelledMedia();
+  options.onProgress?.({ phase: "uploading", percent: 100 });
   return data;
 }
 

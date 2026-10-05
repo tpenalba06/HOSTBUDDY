@@ -1,3 +1,4 @@
+import { addEditorCopy } from "./editor-copy";
 import { addTeamCopy, addMessageCopy } from "./team-copy";
 import { addQrCopy } from "./qr-copy";
 import { addImportCopy } from "./import-copy";
@@ -2740,6 +2741,7 @@ addImportCopy(translations);
 addProviderCopy(translations);
 addPaymentCopy(translations);
 addV1Copy(translations);
+addEditorCopy(translations);
 addVisualPolishCopy(translations);
 addTeamCopy(translations);
 addMessageCopy(translations);

@@ -38,6 +38,8 @@ import {
 } from "./guide-model";
 
 import { homeSections, sectionVisual } from "./visual-library";
+import { PresentationVideo } from "./PresentationVideo";
+import { resolvePropertyMedia } from "./property-media";
 import { PropertyMediaGallery } from "./PropertyMediaGallery";
 
 const sectionTone = (key: string) => {
@@ -89,8 +91,7 @@ export function GuideView({
   const hasPropertyGallery = sections.some(
     (section) =>
       sectionKind(section.key) === "welcome" &&
-      ((section.media?.filter((item) => item.type === "image").length ?? 0) > 1 ||
-        section.media?.some((item) => item.type === "video")),
+      (section.media?.filter((item) => item.type === "image" && item.url).length ?? 0) > 1,
   );
   const open = sections.find(
     (item) => item.key === (sectionKey === undefined ? localKey : sectionKey),
@@ -302,19 +303,7 @@ export function GuideView({
           </section>
           <div className="hb-guide-body hb-index" ref={contentRef}>
             <div className="hb-index-content">
-              {sections
-                .find((section) => sectionKind(section.key) === "welcome")
-                ?.content.items?.some((item) => item.text) && (
-                <details className="hb-welcome-info">
-                  <summary>{t("section.welcome")}</summary>
-                  <GenericTemplate
-                    items={
-                      sections.find((section) => sectionKind(section.key) === "welcome")?.content
-                        .items ?? []
-                    }
-                  />
-                </details>
-              )}
+              <PresentationVideo video={resolvePropertyMedia(sections).video} />
               <div className="hb-index-heading">
                 <h2>{guide.name}</h2>
                 <button
@@ -362,10 +351,23 @@ export function GuideView({
                   </div>
                 </details>
               )}
+              {sections
+                .find((section) => sectionKind(section.key) === "welcome")
+                ?.content.items?.some((item) => item.text) && (
+                <details className="hb-welcome-info">
+                  <summary>{t("section.welcome")}</summary>
+                  <GenericTemplate
+                    items={
+                      sections.find((section) => sectionKind(section.key) === "welcome")?.content
+                        .items ?? []
+                    }
+                  />
+                </details>
+              )}
               {hasPropertyGallery && (
                 <details className="hb-home-media">
                   <summary>{t("media.heading")}</summary>
-                  <PropertyMediaGallery sections={sections} />
+                  <PropertyMediaGallery sections={sections} includeVideo={false} />
                 </details>
               )}
               {!sections.length && <p className="hb-empty">{t("guest.empty")}</p>}

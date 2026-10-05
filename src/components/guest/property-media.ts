@@ -15,7 +15,7 @@ export interface PropertyMediaConfig {
   version: 1;
   coverId?: string;
   galleryIds?: string[];
-  presentationVideoId?: string;
+  presentationVideoId?: string | null;
   essentialIds?: string[];
   fallback?: { assetId: string; mood: AccommodationMood };
 }
@@ -56,7 +56,10 @@ export function resolvePropertyMedia(sections: PublicSection[], catalogue: Ambie
   );
   const gallery = [...ordered, ...images.filter((item) => !ordered.includes(item))];
   const videos = media.filter((item) => item.type === "video" && item.url);
-  const presentation = videos.find((item) => item.id === config?.presentationVideoId) ?? videos[0];
+  const presentation =
+    config?.presentationVideoId === null
+      ? undefined
+      : (videos.find((item) => item.id === config?.presentationVideoId) ?? videos[0]);
   const video =
     presentation?.processingStatus && presentation.processingStatus !== "ready"
       ? undefined

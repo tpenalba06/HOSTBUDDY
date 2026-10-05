@@ -21,6 +21,8 @@ import {
 import { friendlyMessage } from "./Friendly";
 import { useI18n } from "@/lib/i18n";
 import { ManagerGuidePreview } from "./ManagerGuidePreview";
+import { SectionOrganizer } from "./SectionOrganizer";
+import { isEditorialSection, reorderEditorialSections } from "./section-order";
 import { PropertyMediaEditor } from "./PropertyMediaEditor";
 import { sectionVisual } from "@/components/guest/visual-library";
 import { getGuideItems, type GuideContentItem } from "@/lib/data/guide-content";
@@ -192,26 +194,34 @@ export function GuideEditor({
       actionLock.current = false;
     }
   };
-  const move = async (id: string, direction: -1 | 1) => {
-    const index = sorted.findIndex((item) => item.id === id);
-    const target = index + direction;
-    if (target < 0 || target >= sorted.length) return;
-    const next = [...sorted];
-    const current = next[index];
-    const replacement = next[target];
-    if (!current || !replacement) return;
-    next[index] = replacement;
-    next[target] = current;
-    const ordered = next.map((item, i) => ({ ...item, sort_order: i }));
+  const reorder = async (ordered: GuideSection[]) => {
+    if (actionLock.current || mediaBusy || transfers > 0 || saving) return;
+    actionLock.current = true;
+    const previous = sorted;
+    setSaving(true);
+    setError("");
     setSections(ordered);
     try {
       await actions.reorder(ordered);
       flash();
     } catch (e) {
-      setSections(sorted);
-      onChanged();
+      setSections(previous);
+      // Existing API writes rows separately. Compensate any partial update.
+      try {
+        await actions.reorder(previous);
+      } catch {
+        onChanged();
+      }
       setError(friendlyMessage(e));
+    } finally {
+      setSaving(false);
+      actionLock.current = false;
     }
+  };
+  const move = (id: string, direction: -1 | 1) => {
+    const editorial = sorted.filter(isEditorialSection);
+    const target = editorial[editorial.findIndex((s) => s.id === id) + direction];
+    if (target) void reorder(reorderEditorialSections(sorted, id, target.id));
   };
   const add = async (key: (typeof TEMPLATE_KEYS)[number]) => {
     const template = {
@@ -238,17 +248,27 @@ export function GuideEditor({
           <Home size={17} />
           {t("manager.general")}
         </button>
-        {sorted.map((section) => (
-          <button
-            type="button"
-            key={section.id}
-            aria-pressed={open === section.id}
-            onClick={() => setOpen(section.id)}
-          >
-            <span className="editor-rail-mark" />
-            {sectionLabel(section, t)}
-          </button>
-        ))}
+        {sorted
+          .filter((section) => ["welcome", "services"].includes(section.section_key.split("-")[0]!))
+          .map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              aria-pressed={open === section.id}
+              onClick={() => setOpen(section.id)}
+            >
+              {sectionLabel(section, t)}
+            </button>
+          ))}
+        <p className="text-xs text-muted-foreground">{t("editor.sectionsOrder")}</p>
+        <SectionOrganizer
+          sections={sorted}
+          selected={open}
+          disabled={saving || mediaBusy || transfers > 0}
+          label={(section) => sectionLabel(section, t)}
+          onSelect={setOpen}
+          onReorder={(next) => void reorder(next)}
+        />
       </nav>
       <div className="guide-editor-form space-y-4">
         <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
@@ -327,7 +347,7 @@ export function GuideEditor({
           </p>
         )}
         <div className="space-y-3">
-          {sorted.map((section, index) => (
+          {sorted.map((section) => (
             <div key={section.id} hidden={open !== section.id}>
               <SectionRow
                 section={section}
@@ -372,8 +392,15 @@ export function GuideEditor({
                 }}
                 onMoveUp={() => move(section.id, -1)}
                 onMoveDown={() => move(section.id, 1)}
-                canUp={index > 0}
-                canDown={index < sorted.length - 1}
+                canUp={
+                  isEditorialSection(section) &&
+                  sorted.filter(isEditorialSection).findIndex((s) => s.id === section.id) > 0
+                }
+                canDown={
+                  isEditorialSection(section) &&
+                  sorted.filter(isEditorialSection).findIndex((s) => s.id === section.id) <
+                    sorted.filter(isEditorialSection).length - 1
+                }
                 onDelete={async () => {
                   if (!window.confirm(`${t("common.delete")} ?`)) return;
                   try {

@@ -29,14 +29,9 @@ export function ambienceFor(text: string) {
       : "/hostbuddy-media/apartment.webp";
 }
 export function homeSections(sections: PublicSection[]) {
-  const kinds = ["wifi", "arrival", "places", "departure", "contact"];
   const services = sections.find((section) => section.key.split("-")[0] === "services");
-  const main = sections
-    .filter((section) => kinds.includes(section.key.split("-")[0]!))
-    .sort((a, b) => kinds.indexOf(a.key.split("-")[0]!) - kinds.indexOf(b.key.split("-")[0]!));
-  const extra = sections.filter(
-    (section) =>
-      !main.includes(section) && section !== services && section.key.split("-")[0] !== "welcome",
+  const main = sections.filter(
+    (section) => !["welcome", "services"].includes(section.key.split("-")[0]!),
   );
-  return { services, main, extra };
+  return { services, main, extra: [] as PublicSection[] };
 }

@@ -716,7 +716,9 @@
 }
 .hb-presentation-video video {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: min(70svh, 580px);
+  object-fit: contain;
   border-radius: var(--guide-radius);
   background: var(--guide-taupe);
 }

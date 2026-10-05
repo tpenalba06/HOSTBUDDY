@@ -32,6 +32,7 @@ export function PropertyMediaEditor({
   const { t, locale } = useI18n();
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   useEffect(() => {
     onBusyChange(busy);
     return () => onBusyChange(false);
@@ -48,6 +49,17 @@ export function PropertyMediaEditor({
   const images = own.filter((item) => item.media_type === "image");
   const raw = section?.content as { propertyMedia?: PropertyMediaConfig } | undefined;
   const config = raw?.propertyMedia ?? { version: 1 };
+  const videos = own.filter((item) => item.media_type === "video");
+  const presentation =
+    config.presentationVideoId === null
+      ? undefined
+      : (videos.find((item) => item.id === config.presentationVideoId) ?? videos[0]);
+  const metadata = (
+    section?.content as {
+      mediaMetadata?: Record<string, { durationSeconds?: number; processingStatus?: string }>;
+    }
+  )?.mediaMetadata;
+  const duration = presentation ? metadata?.[presentation.id]?.durationSeconds : undefined;
   const cover = images.find((item) => item.id === config.coverId) ?? images[0];
   useEffect(() => {
     let live = true;
@@ -67,7 +79,8 @@ export function PropertyMediaEditor({
     };
   }, [media, section?.id, actions, locale]);
   const run = async (task: () => Promise<void>) => {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setError("");
     try {
@@ -75,6 +88,7 @@ export function PropertyMediaEditor({
     } catch (e) {
       setError(mediaErrorMessage(e, locale));
     } finally {
+      busyRef.current = false;
       setBusy(false);
       setVideoProgress("");
       setCancelling(false);
@@ -97,6 +111,7 @@ export function PropertyMediaEditor({
       },
     );
     onSection(updated);
+    return updated;
   };
   const getSection = async () => {
     if (section) return section;
@@ -132,13 +147,25 @@ export function PropertyMediaEditor({
       // replacement starts, hide the control rather than promising a rollback.
       abortRef.current = null;
       setVideoProgress("");
-      // Persist the replacement before removing the previous file; a failed upload never destroys it.
-      if (primary || replacement?.id === cover?.id || (!cover && item.media_type === "image"))
-        await saveConfig(current, { ...config, coverId: item.id });
-      if (item.media_type === "video")
-        await saveConfig(current, { ...config, presentationVideoId: item.id });
-      if (replacement) await actions.removeMedia(replacement);
-      onMedia([...media.filter((m) => m.id !== replacement?.id), item]);
+      // Select only a completely saved upload; selection failure cleans up only the new file.
+      try {
+        if (item.media_type === "video")
+          await saveConfig(current, { ...config, presentationVideoId: item.id });
+        else if (primary || replacement?.id === cover?.id || !cover)
+          await saveConfig(current, { ...config, coverId: item.id });
+      } catch (e) {
+        try {
+          await actions.removeMedia(item);
+        } catch {
+          /* Retain original selection even if cleanup must be retried. */
+        }
+        throw e;
+      }
+      onMedia([...media, item]);
+      if (replacement) {
+        await actions.removeMedia(replacement);
+        onMedia([...media.filter((m) => m.id !== replacement.id), item]);
+      }
     });
   const reorder = (id: string, target: string) =>
     run(async () => {
@@ -245,6 +272,55 @@ export function PropertyMediaEditor({
           </span>
         )}
       </div>
+      <div
+        className="presentation-video-editor mb-6 rounded-2xl border p-4"
+        aria-label={t("media.presentation")}
+      >
+        <div className="mb-2 flex items-center gap-2">
+          <Video size={20} />
+          <h3 className="text-xl">{t("media.presentation")}</h3>
+          <span className="ml-auto text-xs text-muted-foreground">{t("common.optional")}</span>
+        </div>
+        <p className="mb-4 text-sm text-muted-foreground">{t("editor.videoHelp")}</p>
+        {presentation ? (
+          <>
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              src={urls[presentation.id]}
+              aria-label={t("media.presentation")}
+              className="presentation-editor-player"
+            />
+            {duration && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {Math.floor(duration / 60)}:{String(Math.round(duration % 60)).padStart(2, "0")}
+              </p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-3">
+              {input(t("manager.replaceVideo"), "video/mp4,video/webm", presentation)}
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    if (!section) return;
+                    // Explicit null prevents a legacy gallery video becoming the new main video.
+                    await saveConfig(section, { ...config, presentationVideoId: null });
+                    await actions.removeMedia(presentation);
+                    onMedia(media.filter((m) => m.id !== presentation.id));
+                  })
+                }
+              >
+                <Trash2 size={16} />
+                {t("common.delete")}
+              </Button>
+            </div>
+          </>
+        ) : (
+          input(t("manager.addVideo"), "video/mp4,video/webm")
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {images.map((item, index) => (
           <div
@@ -321,39 +397,7 @@ export function PropertyMediaEditor({
           <ImagePlus size={18} />
           {input(t("manager.addPhotos"), "image/jpeg,image/png,image/webp,image/avif")}
         </span>
-        <span className="inline-flex items-center gap-2">
-          <Video size={18} />
-          {input(t("manager.addVideo"), "video/mp4,video/webm")}
-        </span>
       </div>
-      {own
-        .filter((item) => item.media_type === "video")
-        .map((item) => (
-          <div key={item.id} className="mt-4">
-            <video
-              controls
-              playsInline
-              preload="metadata"
-              src={urls[item.id]}
-              className="aspect-video w-full rounded-xl"
-            />
-            <div className="mt-2 flex gap-2">
-              {input(t("manager.replaceVideo"), "video/mp4,video/webm", item)}
-              <Button
-                variant="ghost"
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    await actions.removeMedia(item);
-                    onMedia(media.filter((m) => m.id !== item.id));
-                  })
-                }
-              >
-                {t("common.delete")}
-              </Button>
-            </div>
-          </div>
-        ))}
       <p role="status" className="mt-3 text-sm text-muted-foreground">
         {busy ? t("common.saving") : t("manager.mediaLimits")}
       </p>

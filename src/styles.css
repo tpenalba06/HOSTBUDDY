@@ -605,7 +605,7 @@
 }
 .guide-editor-workspace {
   display: grid;
-  grid-template-columns: 155px minmax(0, 1fr);
+  grid-template-columns: 200px minmax(0, 1fr);
   gap: 20px;
   align-items: start;
   background: #fffcf8;
@@ -708,7 +708,7 @@
 }
 @container (min-width:1100px) {
   .guide-editor-workspace {
-    grid-template-columns: 150px minmax(0, 1fr) 270px;
+    grid-template-columns: 200px minmax(0, 1fr) 270px;
   }
   .guide-editor-preview {
     display: block;
@@ -896,5 +896,90 @@
   }
   .guide-editor-form > div:first-child button {
     margin-top: 10px;
+  }
+}
+
+/* Section organizer: scrolling stays native except on the explicit drag handle. */
+.section-organizer {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.section-organizer-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-radius: 8px;
+  background: #fffcf8;
+}
+.section-organizer-row.is-dragging {
+  opacity: 0.3;
+  outline: 1px dashed #756b5e;
+}
+.guide-editor-rail .section-drag-handle {
+  touch-action: none;
+  cursor: grab;
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
+.guide-editor-rail .section-select {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 4px;
+}
+.guide-editor-rail .section-menu {
+  min-width: 32px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+}
+.section-organizer-overlay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e8e1d8;
+  border-radius: 8px;
+  background: #fffcf8;
+  box-shadow: 0 8px 24px #0002;
+}
+.presentation-editor-player {
+  width: 100%;
+  height: auto;
+  max-height: min(60svh, 480px);
+  object-fit: contain;
+  border-radius: 12px;
+  background: #4b4138;
+}
+@media (max-width: 767px) {
+  .guide-editor-rail {
+    display: grid;
+    overflow-x: visible;
+  }
+  .section-organizer {
+    max-height: 320px;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+  }
+  .guide-editor-rail .section-select {
+    max-width: none;
+  }
+}
+
+@container (max-width: 720px) {
+  .guide-editor-rail {
+    display: grid;
+    overflow-x: visible;
+  }
+  .section-organizer {
+    max-height: 320px;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+  }
+  .guide-editor-rail .section-select {
+    max-width: none;
   }
 }

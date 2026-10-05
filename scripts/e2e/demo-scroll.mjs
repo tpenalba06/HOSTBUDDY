@@ -107,13 +107,45 @@ try {
           `internal scroll moves ${route} ${mode} ${width}`,
         );
         if (route === "/") {
-          await owner.evaluate((el) => {
-            el.scrollTop = el.scrollHeight;
-          });
+          // Reach the boundary with real wheel input, rather than a main-thread
+          // scrollTop jump that can race the compositor's wheel target.
+          for (let step = 0; step < 32; step++) {
+            const atBottom = await owner.evaluate(
+              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1,
+            );
+            if (atBottom) break;
+            await page.mouse.wheel(0, 300);
+            await page.waitForTimeout(100);
+          }
+          assert.ok(
+            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1),
+            "reached bottom with wheel",
+          );
           const before = await page.evaluate(() => scrollY);
           await page.mouse.wheel(0, 250);
           await page.waitForTimeout(250);
-          assert.ok((await page.evaluate(() => scrollY)) > before, "bottom chains to document");
+          console.error(
+            JSON.stringify({
+              stage: "bottom",
+              route,
+              mode,
+              width,
+              before,
+              after: await page.evaluate(() => scrollY),
+              owner: await owner.evaluate((el) => ({
+                top: el.scrollTop,
+                max: el.scrollHeight - el.clientHeight,
+              })),
+              hit: await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, {
+                x,
+                y,
+              }),
+            }),
+          );
+          assert.ok(
+            (await page.evaluate(() => scrollY)) > before,
+            `bottom chains to document ${route} ${mode} ${width}`,
+          );
           await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
           await page.waitForTimeout(150);
           await owner.evaluate((el) => {

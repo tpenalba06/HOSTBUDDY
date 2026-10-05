@@ -107,7 +107,17 @@ describe("service checkout server orchestration (mocked providers)", () => {
       { idempotencyKey: "hb-connect-org-1", apiVersion: "2025-09-30.preview" },
     );
     expect(state.createAccountLink).toHaveBeenCalledWith(
-      expect.objectContaining({ account: "acct_fixture" }),
+      {
+        account: "acct_fixture",
+        use_case: {
+          type: "account_onboarding",
+          account_onboarding: {
+            configurations: ["merchant"],
+            refresh_url: "https://example.test/app/payments",
+            return_url: "https://example.test/app/payments",
+          },
+        },
+      },
       { apiVersion: "2025-09-30.preview" },
     );
   });

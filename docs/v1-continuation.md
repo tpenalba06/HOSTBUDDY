@@ -1,5 +1,27 @@
 # HostBuddy — reprise V1, 5 octobre 2026
 
+## Dernier état autoritaire — reprise après tâche réseau
+
+Cette section remplace les statuts anciens ci-dessous pour webhook, Connect et vidéo offline. Les checkpoints historiques restent conservés comme traces.
+
+- Résultat récupéré de `umsg_01m45rzpnre3sbk60d7vcq5vfm` : terminé ; commit `8ba5eb845e1a58251d34d78a1cb4806bb4282f7b`, présent sur `feat/guest-guide-v2-lot1`. Rapport pass 2 + pass 3 conservé dans `docs/v1-stripe-network-validation-20261005.md`.
+- Deux CI du commit vérifiées réussies : `37297663946` et `37297658402`. Rapport de tâche : 207 tests, types et lint réussis ; CI exécute aussi le build.
+- Webhook TEST externe validé : seuls les deux endpoints existants ont changé d'URL vers le host `project--ad0b09fe-b134-491b-8601-9d64d6d27b86-dev.lovable.app/api/public/stripe-webhook`. Mauvaise signature refusée 400 ; événement réel `evt_1UN8wyPirDxaYw93oT7KhMJV` livré par Stripe et enregistré à `2026-10-05T10:16:54Z`. Ne pas refaire ce test acquis. L'autre host preview protégé reste inaccessible à Stripe.
+- Connect FR : création de compte TEST et lien d'onboarding réels validés. Le correctif ajoute `use_case.account_onboarding.configurations: ["merchant"]`. Onboarding non terminé, `charges_enabled=false` ; paiement voyageur, commission 2 % et remboursement toujours NON validés. Ne jamais accepter un accord réel ni envoyer une identité réelle pour ce test.
+- Vidéo offline : upload réel d'une vidéo synthétique H.264/AAC 4 s via le pipeline navigateur ; lecture et seeking validés sur build production local workerd à 390×844, après fermeture, réseau coupé ET serveur arrêté. Ce n'est pas une validation sur hébergement distant ou téléphone physique. Transcodage serveur et upload reprenable restent absents.
+- Import Wikipedia corrigé et rejoué : 0 champ, informations insuffisantes. Import photos réseau toujours à vérifier.
+- Aucun nouveau message envoyé à Lovable pendant cette reprise ; ne pas consommer de crédits pour relancer les validations acquises. DA et production inchangées.
+
+### Suite à exécuter
+
+1. Préserver les commits concurrents et ce résultat avant modification.
+2. Connect : obtenir un compte sandbox réellement opérationnel par un parcours de test permis ; tester alors paiement service, frais 2 %, webhook commande et remboursement. Si le parcours impose une acceptation juridique réelle, laisser ce point explicitement bloqué.
+3. Vidéo : provisionner et intégrer un processeur serveur de test, avec isolation tenant/file de tâches/limites/annulation, puis upload interrompu/reprise et lecture sur hébergement réel. Ne pas présenter FFmpeg/WASM navigateur comme conversion serveur.
+4. Sécurité/auth : seconde session HTTP B, signup/reset et préparation/acceptation d'accès ; scheduler preview à activer uniquement avec accès autorisé aux secrets. Imports photos et contrôles gestionnaire restent ouverts.
+5. Scan QR et offline Android/iOS nécessitent un appareil physique. Verdict reste NO-GO production tant que les blocages applicables ne sont pas levés.
+
+Accès de cette reprise : le navigateur cloud a refusé l'URL du preview avec `net::ERR_BLOCKED_BY_CLIENT`. Aucune session gestionnaire existante dans ce navigateur. Aucun secret Stripe ni accès processeur vidéo n'est exposé au workspace ; ne pas prétendre les parcours réseau restants exécutés ici.
+
 ## État et règles
 DA préservée ; source actuelle GuideView/ManagerShell. Stripe sandbox uniquement, aucune production finale, aucun paiement réel, aucune suppression réelle. Consolidation distante : d9547599722c8d7b1e0b8d904fb9a33cf049619d. Correction Lovable ensuite : 3e3103bfe0338d66258032af78cb120312087c82. Le commit contenant ce fichier est le checkpoint de reprise ; utiliser git log -1 pour son SHA local puis vérifier GitHub avant toute synchronisation.
 

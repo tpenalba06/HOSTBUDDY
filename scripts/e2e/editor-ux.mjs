@@ -200,7 +200,8 @@ try {
     await page.screenshot({ path: `/tmp/hb-editor-${width}.png`, fullPage: true });
     const videoEvidence = [];
     // Upload through the real browser preparation pipeline, then verify inline playback.
-    if (width === 390 || width === 1440) {
+    {
+      // Verify landscape, portrait, replacement and removal at every requested viewport.
       await page
         .locator(".guide-editor-rail")
         .getByRole("button", { name: "Général", exact: true })
@@ -325,7 +326,7 @@ try {
       keyboard: true,
       fallback: true,
       mobileScroll,
-      video: width === 390 || width === 1440,
+      video: true,
       videoEvidence,
     });
     await context.close();

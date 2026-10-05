@@ -128,7 +128,7 @@ try {
           );
           // End the previous wheel gesture before starting a new gesture at the boundary.
           // Chromium otherwise keeps its compositor scroll latch on the inner scroller.
-          await page.waitForTimeout(400);
+          await page.waitForTimeout(1000);
           const before = await page.evaluate(() => scrollY);
           await page.mouse.wheel(0, 250);
           await page.waitForTimeout(250);
@@ -173,6 +173,7 @@ try {
             boundaryFailures.push({ route, mode, width, edge: "bottom" });
             await page.waitForTimeout(1000);
             await page.mouse.wheel(0, 250);
+            await page.waitForTimeout(300);
             console.error(
               JSON.stringify({
                 stage: "boundary-repeat",
@@ -227,7 +228,17 @@ try {
           false,
           "no horizontal overflow",
         );
-        evidence.push({ route, mode, width, height, ...state, wheelPassed: true });
+        evidence.push({
+          route,
+          mode,
+          width,
+          height,
+          ...state,
+          wheelPassed: !boundaryFailures.some(
+            (failure) =>
+              failure.route === route && failure.mode === mode && failure.width === width,
+          ),
+        });
       }
     }
     if (width === 390) {

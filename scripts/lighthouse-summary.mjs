@@ -1,6 +1,38 @@
 import { readFileSync, writeFileSync, appendFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
+// Only numeric evidence is retained: no node snippets, URLs or request headers.
+function numericDetails(value, depth = 0) {
+  if (depth > 8 || value == null) return undefined;
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => numericDetails(item, depth + 1))
+      .filter((item) => item !== undefined);
+    return items.length ? items : undefined;
+  }
+  if (typeof value !== "object") return undefined;
+  const entries = Object.entries(value)
+    .filter(
+      ([key]) =>
+        /^[a-zA-Z][a-zA-Z0-9]*$/.test(key) && !["node", "headers", "cookies"].includes(key),
+    )
+    .map(([key, item]) => [
+      key,
+      key === "subpart" &&
+      [
+        "timeToFirstByte",
+        "resourceLoadDelay",
+        "resourceLoadDuration",
+        "elementRenderDelay",
+      ].includes(item)
+        ? item
+        : numericDetails(item, depth + 1),
+    ])
+    .filter(([, item]) => item !== undefined);
+  return entries.length ? Object.fromEntries(entries) : undefined;
+}
+
 /** Publish metrics only, never raw reports containing signed media URLs. */
 export function lighthouseSummary(report) {
   if (
@@ -27,6 +59,15 @@ export function lighthouseSummary(report) {
         "cumulative-layout-shift",
         "speed-index",
       ].map((name) => [name, report.audits[name]?.numericValue ?? null]),
+    ),
+    diagnostics: Object.fromEntries(
+      [
+        "lcp-breakdown-insight",
+        "lcp-discovery-insight",
+        "document-latency-insight",
+        "image-delivery-insight",
+        "render-blocking-insight",
+      ].map((id) => [id, numericDetails(report.audits[id]?.details) ?? null]),
     ),
     failedAuditIds: Object.values(report.audits)
       .filter((audit) => audit.score !== null && audit.score < 0.9)

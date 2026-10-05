@@ -21,9 +21,13 @@ Ces observations navigateur précèdent les nouvelles protections d'intégrité 
 
 - Test avec réseau effectivement coupé, réouverture hors réseau de l'application et lecture d'une vraie vidéo sur Android/iOS : non réalisés. La fermeture/réouverture d'onglet prouve la persistance des fichiers, pas l'intégralité du démarrage hors connexion.
 - Transcodage vidéo automatique côté serveur : infrastructure et test réel encore nécessaires.
-- Stripe Connect et paiement réel en mode test : le tableau de bord atteint l'écran de connexion ; aucun compte Stripe authentifié dans cette session. Checkout, frais de 2 %, webhooks, doublons, expiration, remboursements et isolation restent à tester avec les secrets serveur du compte concerné.
+- Stripe Connect et paiement réel en mode test : connexion au tableau de bord HOSTBUDDY confirmée après authentification Google. Le sandbox existant a été ouvert, le modèle de paiements directs configuré et un compte connecté fictif créé par Stripe. Ce compte indique encore paiements/virements suspendus. Le webhook Connect est préparé (quatre événements Checkout et charge.refunded) sans création définitive. Le coffre serveur Lovable ne contient aucun secret Stripe. Le raccordement de la clé du sandbox et du secret de signature nécessite confirmation avant de donner au backend cet accès. Checkout HostBuddy, frais de 2 %, livraisons des webhooks, doublons, expiration, remboursements et isolation restent à tester.
 - Publication/QR sur téléphone, invitations email, parcours complets de récupération de mot de passe et contrôle exhaustif des rôles/multi-tenant dans l'interface : validation restante du backlog, non présentée comme acquise par cette passe.
 - Aucun déploiement production ni certification de V1 prête à commercialiser dans cette livraison.
+
+## Synchronisation
+
+Le commit d73f0b1 est présent sur la branche GitHub reliée à Lovable ; Lovable annonce ce même SHA et le preview prêt. Les deux workflows CI ont terminé avec succès. Le formulaire de webhook cible uniquement le preview actuel /api/stripe-webhook, utilise les événements instantanés des comptes connectés et reste non enregistré. Capture complémentaire : hostbuddy-stripe-sandbox-preparation.jpg.
 
 ## Portée et retour arrière
 

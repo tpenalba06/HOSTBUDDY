@@ -111,21 +111,20 @@ try {
           (await owner.evaluate((el) => el.scrollTop)) > 0,
           `internal scroll moves ${route} ${mode} ${width}`,
         );
+        let boundaryWheelEvents;
         if (route === "/") {
           // Reach the boundary with real wheel input, rather than a main-thread
           // scrollTop jump that can race the compositor's wheel target.
           for (let step = 0; step < 32; step++) {
             const atBottom = await owner.evaluate(
-              (el) => Math.ceil(el.scrollTop) >= el.scrollHeight - el.clientHeight,
+              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1,
             );
             if (atBottom) break;
             await page.mouse.wheel(0, 300);
             await page.waitForTimeout(100);
           }
           assert.ok(
-            await owner.evaluate(
-              (el) => Math.ceil(el.scrollTop) >= el.scrollHeight - el.clientHeight,
-            ),
+            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1),
             "reached bottom with wheel",
           );
           // End the previous wheel gesture before starting a new gesture at the boundary.
@@ -136,11 +135,17 @@ try {
             top: el.scrollTop,
             max: el.scrollHeight - el.clientHeight,
           }));
-          await page.mouse.wheel(0, 250);
-          await page.waitForTimeout(250);
+          // A wheel sequence can consume its first event at the inner boundary.
+          // Require actual document motion within a bounded sequence of native events.
+          for (boundaryWheelEvents = 1; boundaryWheelEvents <= 3; boundaryWheelEvents++) {
+            await page.mouse.wheel(0, 250);
+            await page.waitForTimeout(250);
+            if ((await page.evaluate(() => scrollY)) > before) break;
+          }
           console.error(
             JSON.stringify({
               stage: "bottom",
+              boundaryWheelEvents,
               route,
               mode,
               width,
@@ -241,6 +246,7 @@ try {
           width,
           height,
           ...state,
+          boundaryWheelEvents,
           wheelPassed: !boundaryFailures.some(
             (failure) =>
               failure.route === route && failure.mode === mode && failure.width === width,

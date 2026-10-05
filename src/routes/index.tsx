@@ -43,7 +43,7 @@ const sourceLabels = ["Airbnb", "Booking", "Sunver"];
 function Landing() {
   const { t } = useI18n();
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-clip">
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
         <Logo />
         <nav className="flex min-w-0 items-center gap-1 sm:gap-2">

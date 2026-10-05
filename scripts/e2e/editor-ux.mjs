@@ -128,15 +128,28 @@ try {
         ) === JSON.stringify(expected),
       keyboardExpected,
     );
-    await rail.locator(".section-menu").first().click();
-    await page.getByRole("menuitem", { name: "Descendre" }).click();
-    assert.deepEqual(await order(), expected);
-    await rail.locator(".section-menu").nth(1).click();
-    await page.getByRole("menuitem", { name: "Monter", exact: true }).click();
-    assert.deepEqual(await order(), keyboardExpected);
-    await rail.locator(".section-menu").first().click();
-    await page.getByRole("menuitem", { name: "Descendre", exact: true }).click();
-    assert.deepEqual(await order(), expected);
+    const moveWithMenu = async (index, direction, wanted) => {
+      await page.waitForFunction(() => !document.querySelector(".section-menu[disabled]"));
+      await page.getByRole("menu").waitFor({ state: "hidden" });
+      await page.waitForTimeout(200);
+      await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+      await rail.locator(".section-menu").nth(index).click();
+      await page.getByRole("menu").waitFor({ state: "visible" });
+      await page.getByRole("menuitem", { name: direction, exact: true }).click();
+      await page.waitForFunction(
+        (wanted) =>
+          JSON.stringify(
+            [...document.querySelectorAll(".section-organizer [data-section-id]")].map(
+              (r) => r.dataset.sectionId,
+            ),
+          ) === JSON.stringify(wanted),
+        wanted,
+      );
+      await page.getByRole("menu").waitFor({ state: "hidden" });
+    };
+    await moveWithMenu(0, "Descendre", expected);
+    await moveWithMenu(1, "Monter", keyboardExpected);
+    await moveWithMenu(0, "Descendre", expected);
     let mobileScroll;
     if (width < 500) {
       await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
@@ -246,6 +259,12 @@ try {
         );
         assert.equal(await video.evaluate((v) => v.autoplay), false);
         assert.equal(await video.evaluate((v) => v.playsInline), true);
+        await video.evaluate((v) => v.play());
+        await page.waitForFunction(
+          () => document.querySelector("[data-presentation-video] video")?.currentTime > 0,
+        );
+        assert.equal(await video.evaluate((v) => v.error), null);
+        await video.evaluate((v) => v.pause());
         assert(await video.evaluate((v) => v.getBoundingClientRect().height <= innerHeight * 0.71));
         assert(
           await page.evaluate(() => {

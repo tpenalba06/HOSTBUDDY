@@ -983,3 +983,9 @@
     max-width: none;
   }
 }
+
+/* Cards clip photos without becoming intermediate scroll containers in embedded demos. */
+.manager-shell-embedded .manager-property-card,
+.manager-shell-embedded .manager-property-photo {
+  overflow: clip;
+}

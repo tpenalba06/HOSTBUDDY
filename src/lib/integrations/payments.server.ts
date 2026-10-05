@@ -377,6 +377,8 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean, 
       use_case: {
         type: "account_onboarding",
         account_onboarding: {
+          // Required by Accounts v2: onboard the configuration requested at creation.
+          configurations: ["merchant"],
           refresh_url: `${appOrigin()}/app/payments`,
           return_url: `${appOrigin()}/app/payments`,
         },

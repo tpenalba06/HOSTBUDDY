@@ -95,8 +95,10 @@ export function extractStructuredFields(html: string, url: string) {
       };
   };
   let name: string | null = null;
+  let lodging = false;
   for (const n of jsonLdNodes(html)) {
     if (!LODGING.test(String(n["@type"] ?? ""))) continue;
+    lodging = true;
     name ??= str(n.name);
     put("description", str(n.description), `JSON-LD description (${url})`, 0.85);
     const a = n.address;
@@ -132,8 +134,18 @@ export function extractStructuredFields(html: string, url: string) {
   const title = html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1];
   name ??= ogTitle ? decode(ogTitle) : title ? decode(title) : null;
   const desc = meta(html, "og:description") ?? meta(html, "description");
-  if (desc) put("description", decode(desc), `meta description: ${decode(desc)}`, 0.75);
-  return { name, fields };
+  // Without a lodging JSON-LD node the meta description stays "to verify".
+  if (desc)
+    put("description", decode(desc), `meta description: ${decode(desc)}`, lodging ? 0.75 : 0.5);
+  return { name, fields, lodging };
+}
+
+/** Rules only run on sentence-sized web snippets; keyword hits inside long link lists or menus are noise. */
+export function webTextForRules(text: string) {
+  return text
+    .split("\n")
+    .filter((line) => line.trim().length <= 300)
+    .join("\n");
 }
 
 function visibleText(html: string) {
@@ -199,9 +211,12 @@ async function runUrlImport(data: {
   }
 
   const structured = extractStructuredFields(html, resolvedUrl);
-  const textual = extractFromText(visibleText(html), 0.6); // page text is never trusted blindly
+  const textual = extractFromText(webTextForRules(visibleText(html)), 0.6); // page text is never trusted blindly
   const fields = textual.fields.map((f) => structured.fields[f.key] ?? f);
-  const useful = fields.filter((f) => f.status !== "missing").length;
+  // A generic meta description is not evidence that the page describes a property.
+  const useful = fields.filter(
+    (f) => f.status !== "missing" && !(f.key === "description" && !structured.lodging),
+  ).length;
   if (useful < 2) return { ok: false, source, reason: "insufficient" };
   return {
     ok: true,

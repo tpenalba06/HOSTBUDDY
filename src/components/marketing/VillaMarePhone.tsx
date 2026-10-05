@@ -7,14 +7,15 @@ import { useI18n } from "@/lib/i18n";
 export function VillaMarePhone() {
   const { locale, t } = useI18n();
   return (
-    <Link
-      to="/demo"
-      aria-label={t("common.demo")}
-      className="hb-marketing-phone mx-auto block w-full max-w-[290px] overflow-hidden rounded-[32px] border-[8px] border-ink bg-background text-foreground shadow-phone"
-    >
+    <div className="hb-marketing-phone relative mx-auto block w-full max-w-[290px] overflow-hidden rounded-[32px] border-[8px] border-ink bg-background text-foreground shadow-phone">
       <div inert aria-hidden="true">
         <GuideView guide={demoGuide(createVillaMare(locale))} />
       </div>
-    </Link>
+      <Link
+        to="/demo"
+        aria-label={t("common.demo")}
+        className="absolute inset-0 z-10 rounded-[24px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px]"
+      />
+    </div>
   );
 }

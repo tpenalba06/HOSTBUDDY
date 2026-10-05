@@ -1,7 +1,7 @@
 # HostBuddy — reprise V1, 5 octobre 2026
 
 ## État et règles
-DA préservée ; source actuelle GuideView/ManagerShell. Stripe sandbox uniquement, aucune production finale, aucun paiement réel, aucune suppression réelle. Dernier distant avant consolidation : 7f81db71265c960a6672f878129b59a2d7b04c47. Le commit contenant ce fichier est le checkpoint de reprise ; utiliser git log -1 pour son SHA local puis vérifier GitHub avant toute synchronisation.
+DA préservée ; source actuelle GuideView/ManagerShell. Stripe sandbox uniquement, aucune production finale, aucun paiement réel, aucune suppression réelle. Consolidation distante : d9547599722c8d7b1e0b8d904fb9a33cf049619d. Correction Lovable ensuite : 3e3103bfe0338d66258032af78cb120312087c82. Le commit contenant ce fichier est le checkpoint de reprise ; utiliser git log -1 pour son SHA local puis vérifier GitHub avant toute synchronisation.
 
 ## Livré et validé
 - Secrets Stripe lus depuis les bindings Cloudflare de chaque requête, sans mélange de tenants ni clés frontend.
@@ -15,7 +15,7 @@ DA préservée ; source actuelle GuideView/ManagerShell. Stripe sandbox uniqueme
 - npm run check terminé avec succès : 178 tests, 35 fichiers ; TypeScript et build réussis ; lint 0 erreur, 16 avertissements préexistants.
 
 ## Blocages et validations restantes
-- Lovable récupère le SHA runtime mais affiche Échec de la génération / aperçu non à jour. Build local et CI runtime passent. La cause backend Lovable n'est pas encore identifiée ; ne pas annoncer les corrections live.
+- Cause preview trouvée : types Supabase régénérés par Lovable, complete_billing_sync._error typé non-null malgré SQL nullable. Correction Lovable 3e3103b appliquée ; build et pages validés par Lovable. Types/correction récupérés localement. Lint conserve contrôles sémantiques et TypeScript mais ne reformate pas la source générée. Téléphone homepage corrigé : liens du guide séparés du lien global pour éviter les ancres imbriquées ; revalidation navigateur après synchronisation encore à faire.
 - Session gestionnaire preview expirée : vrai Checkout/Billing/Connect/SCA/remboursements/2 % non rejoués. Aucun résultat réseau simulé présenté comme paiement terminé.
 - Transcodage vidéo serveur absent (pipeline FFmpeg/WASM navigateur uniquement). Processeur externe à provisionner ; reprise upload non implémentée.
 - Fermeture/réouverture texte/images déjà vérifiée auparavant ; vraie coupure réseau et vidéo hors ligne encore non prouvées.

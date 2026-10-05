@@ -302,6 +302,8 @@ try {
             name,
           ),
         );
+        await video.scrollIntoViewIfNeeded();
+        await video.screenshot({ path: `/tmp/hb-intro-${name}-${width}-player.png` });
         await page.screenshot({ path: `/tmp/hb-intro-${name}-${width}.png`, fullPage: true });
         await demo.getByRole("tab").nth(1).click();
       }

@@ -350,8 +350,6 @@
 /* One internal scroll owner; native scroll chaining continues into the document. */
 .demo-container .demo-viewport {
   height: min(820px, 82dvh);
-  /* Keep the embedded scroll boundary on a whole CSS pixel for native wheel chaining. */
-  height: round(down, min(820px, 82dvh), 1px);
   min-height: 420px;
 }
 .demo-container .manager-shell-embedded {

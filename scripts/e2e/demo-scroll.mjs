@@ -10,6 +10,7 @@ const browser = await chromium.launch({
 });
 const origin = process.env.HOSTBUDDY_TEST_ORIGIN || "http://127.0.0.1:5173";
 const evidence = [];
+const boundaryFailures = [];
 try {
   for (const [width, height] of [
     [360, 800],
@@ -167,10 +168,45 @@ try {
               }),
             }),
           );
-          assert.ok(
-            (await page.evaluate(() => scrollY)) > before,
-            `bottom chains to document ${route} ${mode} ${width}`,
-          );
+          const chained = (await page.evaluate(() => scrollY)) > before;
+          if (!chained) {
+            boundaryFailures.push({ route, mode, width, edge: "bottom" });
+            await page.waitForTimeout(1000);
+            await page.mouse.wheel(0, 250);
+            console.error(
+              JSON.stringify({
+                stage: "boundary-repeat",
+                width,
+                mode,
+                sy: await page.evaluate(() => scrollY),
+                top: await owner.evaluate((el) => el.scrollTop),
+              }),
+            );
+            await page.waitForTimeout(300);
+            const edgeBox = await owner.boundingBox();
+            await page.mouse.move(edgeBox.x + 3, edgeBox.y + 100);
+            await page.mouse.wheel(0, 250);
+            await page.waitForTimeout(300);
+            console.error(
+              JSON.stringify({
+                stage: "boundary-padding",
+                width,
+                mode,
+                sy: await page.evaluate(() => scrollY),
+                top: await owner.evaluate((el) => el.scrollTop),
+              }),
+            );
+            const actualMax = await owner.evaluate((el) => {
+              el.scrollTop = 1e7;
+              return {
+                top: el.scrollTop,
+                max: el.scrollHeight - el.clientHeight,
+                rect: el.getBoundingClientRect().toJSON(),
+                css: getComputedStyle(el).height,
+              };
+            });
+            console.error(JSON.stringify({ stage: "boundary-actual-max", width, mode, actualMax }));
+          }
           await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
           await page.waitForTimeout(150);
           await owner.evaluate((el) => {
@@ -234,6 +270,7 @@ try {
     (process.env.RUNNER_TEMP || "/tmp") + "/demo-scroll-results.json",
     JSON.stringify(evidence, null, 2),
   );
+  assert.deepEqual(boundaryFailures, [], "Every native boundary gesture must chain");
 } finally {
   await browser.close();
 }

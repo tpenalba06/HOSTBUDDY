@@ -28,7 +28,15 @@ try {
     for (const route of ["/", "/demo"]) {
       await page.goto(origin + route);
       const demo = page.locator(".demo-container");
-      await demo.waitFor();
+      await demo.waitFor({ state: "visible" });
+      // Vite serves CSS asynchronously on a cold start; test only the rendered layout.
+      await page.waitForFunction(() => {
+        const viewport = document.querySelector(".demo-viewport");
+        return (
+          viewport && getComputedStyle(viewport).height !== "auto" && viewport.clientHeight >= 420
+        );
+      });
+      await page.waitForLoadState("networkidle");
       for (const mode of ["guest", "manager"]) {
         await demo
           .getByRole("tab")
@@ -50,6 +58,7 @@ try {
           overflow: getComputedStyle(el).overflowY,
           chain: getComputedStyle(el).overscrollBehaviorY,
         }));
+        console.error(JSON.stringify({ stage: "layout", route, mode, width, state }));
         assert.equal(state.overflow, "auto");
         assert.equal(state.chain, "auto");
         assert.ok(state.h > 0 && state.sh > state.h, `scrollable ${route} ${mode} ${width}`);

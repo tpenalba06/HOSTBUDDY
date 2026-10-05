@@ -25,14 +25,23 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
     try {
       response = await send(url.href, {
         method: "POST",
-        headers: { Authorization: `Bearer ${secret}` },
+        headers: { Authorization: `Bearer ${secret}`, "X-HostBuddy-Billing-Mode": "test" },
         redirect: "error",
         signal: AbortSignal.timeout(25_000),
       });
     } catch {
       // Network errors and temporary server failures are retried without logging secrets.
     }
-    if (response?.ok) return;
+    if (response?.status === 200) {
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error("billing_sync_test_response_invalid");
+      }
+      if (!result || result.pending !== 0) throw new Error("billing_sync_test_response_invalid");
+      return;
+    }
     if (response && response.status < 500) throw new Error("billing_sync_test_request_rejected");
     if (attempt < 3) await wait([1000, 3000, 7000][attempt]);
   }

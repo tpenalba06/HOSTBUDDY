@@ -5,11 +5,15 @@ const endpoint =
 const secret = "synthetic_scheduler_secret_not_a_real_key";
 describe("preview billing scheduler runner", () => {
   it("retries a temporary failure and succeeds without a user session", async () => {
-    const send = vi.fn().mockResolvedValueOnce({ status: 503 }).mockResolvedValue({ ok: true });
+    const send = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 503 })
+      .mockResolvedValue({ status: 200, json: async () => ({ pending: 0 }) });
     const wait = vi.fn();
     await runBillingSync({ endpoint, secret, send, wait });
     expect(send).toHaveBeenCalledTimes(2);
     expect(send.mock.calls[0][1].redirect).toBe("error");
+    expect(send.mock.calls[0][1].headers["X-HostBuddy-Billing-Mode"]).toBe("test");
     expect(wait).toHaveBeenCalledOnce();
   });
   it("rejects the session-protected old route without transmitting a secret", async () => {
@@ -23,6 +27,27 @@ describe("preview billing scheduler runner", () => {
     const send = vi.fn().mockResolvedValue({ status: 401 });
     await expect(runBillingSync({ endpoint, secret, send })).rejects.toThrow("rejected");
     expect(send).toHaveBeenCalledOnce();
+  });
+  it.each([null, {}, { pending: 1 }])(
+    "rejects a 200 without proof of an empty queue (%s)",
+    async (body) => {
+      const send = vi.fn().mockResolvedValue({ status: 200, json: async () => body });
+      await expect(runBillingSync({ endpoint, secret, send })).rejects.toThrow("response_invalid");
+      expect(send).toHaveBeenCalledOnce();
+    },
+  );
+  it("rejects an HTML success page", async () => {
+    const send = vi.fn().mockResolvedValue({
+      status: 200,
+      json: async () => {
+        throw new Error("HTML");
+      },
+    });
+    await expect(runBillingSync({ endpoint, secret, send })).rejects.toThrow("response_invalid");
+  });
+  it("does not treat accepted-but-unfinished work as success", async () => {
+    const send = vi.fn().mockResolvedValue({ status: 202, ok: true });
+    await expect(runBillingSync({ endpoint, secret, send })).rejects.toThrow("rejected");
   });
   it("bounds retries on network failure", async () => {
     const send = vi.fn().mockRejectedValue(new Error(secret));

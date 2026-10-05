@@ -36,6 +36,25 @@ describe("billing scheduler handler", () => {
     expect((await handleBillingSyncRequest(request(secret, null), sync)).status).toBe(401);
     expect(sync).not.toHaveBeenCalled();
   });
+  it.each(["sk_live_fixture", undefined])(
+    "blocks TEST scheduling against a non-test binding (%s)",
+    async (key) => {
+      const req = request();
+      req.headers.set("x-hostbuddy-billing-mode", "test");
+      Object.assign(req.runtime.cloudflare.env, { STRIPE_SECRET_KEY: key });
+      const sync = vi.fn();
+      expect((await handleBillingSyncRequest(req, sync)).status).toBe(409);
+      expect(sync).not.toHaveBeenCalled();
+    },
+  );
+  it("allows explicitly TEST scheduling using request bindings", async () => {
+    const req = request();
+    req.headers.set("x-hostbuddy-billing-mode", "test");
+    Object.assign(req.runtime.cloudflare.env, { STRIPE_SECRET_KEY: "sk_test_fixture" });
+    const sync = vi.fn().mockResolvedValue({ pending: 0 });
+    expect((await handleBillingSyncRequest(req, sync)).status).toBe(200);
+    expect(sync).toHaveBeenCalledOnce();
+  });
   it("keeps pending jobs retryable", async () => {
     const response = await handleBillingSyncRequest(request(), async () => ({ pending: 2 }));
     expect(response.status).toBe(503);

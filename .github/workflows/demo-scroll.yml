@@ -67,5 +67,5 @@ jobs:
             ${{ runner.temp }}/hb-scroll-*.png
             /tmp/hb-editor-*.png
             /tmp/hb-intro-*.png
-            /tmp/hb-editor-evidence.json
+            /tmp/hb-editor-*.json
             ${{ runner.temp }}/demo-scroll-results.json

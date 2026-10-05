@@ -6,6 +6,8 @@ const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE || "pl
 const browser = await chromium.launch({ headless: true });
 const origin = process.env.HOSTBUDDY_TEST_ORIGIN || "http://127.0.0.1:5173";
 const evidence = [];
+let currentPage;
+let currentWidth;
 try {
   for (const width of [360, 390, 430, 768, 1440]) {
     const context = await browser.newContext({
@@ -15,11 +17,14 @@ try {
       locale: "fr-FR",
     });
     const page = await context.newPage();
+    currentPage = page;
+    currentWidth = width;
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(origin + "/demo");
     await page.waitForLoadState("networkidle");
     const demo = page.locator(".demo-container");
+    const guest = demo.locator(".demo-viewport > div").first();
     await demo.getByRole("tab").nth(1).click();
     await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
     const rail = page.locator(".section-organizer");
@@ -74,7 +79,7 @@ try {
     const titles = await rail.locator(".section-select").allTextContents();
     // Same local data and renderer feed the traveler after manager edits.
     await demo.getByRole("tab").nth(0).click();
-    const guestTitles = await demo
+    const guestTitles = await guest
       .locator(".hb-section-grid .hb-section-card-label")
       .allTextContents();
     assert(guestTitles.length > 0, "Traveler cards must render");
@@ -84,7 +89,7 @@ try {
       "Traveler must follow manager order",
     );
     // No video fixture: no empty placeholder or video control.
-    assert.equal(await demo.locator("[data-presentation-video]").count(), 0);
+    assert.equal(await guest.locator("[data-presentation-video]").count(), 0);
     await demo.getByRole("tab").nth(1).click();
     assert.deepEqual(await order(), expected);
     // The demo persists plain section data in sessionStorage; no media blob is involved yet.
@@ -114,6 +119,55 @@ try {
     await rail.locator(".section-menu").first().click();
     await page.getByRole("menuitem", { name: "Descendre" }).click();
     assert.deepEqual(await order(), expected);
+    await rail.locator(".section-menu").nth(1).click();
+    await page.getByRole("menuitem", { name: "Monter", exact: true }).click();
+    assert.deepEqual(await order(), keyboardExpected);
+    await rail.locator(".section-menu").first().click();
+    await page.getByRole("menuitem", { name: "Descendre", exact: true }).click();
+    assert.deepEqual(await order(), expected);
+    let mobileScroll;
+    if (width < 500) {
+      await rail.scrollIntoViewIfNeeded();
+      await rail.evaluate((el) => (el.scrollTop = 0));
+      const cdp = await context.newCDPSession(page);
+      const touch = (type, x, y) =>
+        cdp.send("Input.dispatchTouchEvent", {
+          type,
+          touchPoints: ["touchEnd", "touchCancel"].includes(type) ? [] : [{ x, y }],
+        });
+      const box = await rail.boundingBox();
+      const grip = await rail.locator(".section-drag-handle").first().boundingBox();
+      assert(box && grip);
+      assert(
+        await rail.evaluate((el) => el.scrollHeight > el.clientHeight),
+        "Mobile organizer must have scrollable content",
+      );
+      const x = grip.x + grip.width / 2,
+        y = grip.y + grip.height / 2;
+      await touch("touchStart", x, y);
+      const edge = Math.min(box.y + box.height - 5, 950);
+      for (let i = 1; i <= 15; i++) {
+        await touch("touchMove", x, y + ((edge - y) * i) / 15);
+        await page.waitForTimeout(40);
+      }
+      await page.waitForFunction(() => document.querySelector(".section-organizer").scrollTop > 0);
+      mobileScroll = { duringDrag: await rail.evaluate((el) => el.scrollTop) };
+      await touch("touchCancel");
+      assert.deepEqual(await order(), expected, "Cancelled drag must not persist a new order");
+      await rail.evaluate((el) => (el.scrollTop = 0));
+      // Swipe on a row body: only the handle activates sorting, normal scrolling must still work.
+      const bodyX = box.x + box.width * 0.65,
+        bodyY = box.y + box.height * 0.7;
+      await touch("touchStart", bodyX, bodyY);
+      for (let i = 1; i <= 10; i++) {
+        await touch("touchMove", bodyX, bodyY - i * 10);
+        await page.waitForTimeout(25);
+      }
+      await touch("touchEnd");
+      await page.waitForFunction(() => document.querySelector(".section-organizer").scrollTop > 0);
+      mobileScroll.normalSwipe = await rail.evaluate((el) => el.scrollTop);
+      assert.deepEqual(await order(), expected, "Normal scrolling must not sort");
+    }
     assert.equal(
       await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
       false,
@@ -169,7 +223,7 @@ try {
           { timeout: 120000 },
         );
         await demo.getByRole("tab").nth(0).click();
-        const video = demo.locator("[data-presentation-video] video");
+        const video = guest.locator("[data-presentation-video] video");
         await video.waitFor();
         await page.waitForFunction(
           () => document.querySelector("[data-presentation-video] video")?.readyState >= 1,
@@ -212,10 +266,46 @@ try {
       guestTitles,
       keyboard: true,
       fallback: true,
+      mobileScroll,
       video: width === 390 || width === 1440,
     });
     await context.close();
   }
+} catch (error) {
+  if (currentPage && !currentPage.isClosed()) {
+    await currentPage.screenshot({
+      path: `/tmp/hb-editor-failure-${currentWidth}.png`,
+      fullPage: true,
+    });
+    await writeFile(
+      "/tmp/hb-editor-failure.json",
+      JSON.stringify(
+        {
+          width: currentWidth,
+          error: String(error),
+          dom: await currentPage.locator("body").innerText(),
+          layout: await currentPage.evaluate(() =>
+            [
+              ...document.querySelectorAll(
+                ".section-organizer, .section-organizer-row, .section-drag-handle",
+              ),
+            ].map((el) => ({
+              cls: el.className,
+              id: el.dataset.sectionId,
+              rect: el.getBoundingClientRect().toJSON(),
+              scrollTop: el.scrollTop,
+              height: el.clientHeight,
+              scrollHeight: el.scrollHeight,
+              touchAction: getComputedStyle(el).touchAction,
+            })),
+          ),
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  throw error;
 } finally {
   await writeFile("/tmp/hb-editor-evidence.json", JSON.stringify(evidence, null, 2));
   await browser.close();

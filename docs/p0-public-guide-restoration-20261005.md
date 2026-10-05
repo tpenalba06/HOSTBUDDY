@@ -55,3 +55,18 @@ application. A corrected HTTP/browser lifecycle (anonymous public URL, refresh,
 media URL loading, navigation, mobile and desktop) cannot honestly be reported
 as passing while the live RPC is unchanged. Complete those targeted checks
 following authorized application; do not start unrelated work.
+
+## Additional live-build blocker observed
+
+A separate anonymous visit to the already-allowed
+`/l/villa-des-oliviers-ae1863` initially renders the genuine name, cover and
+sections, then hydration fails with `Missing Supabase environment variable(s):
+SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY` in the deployed
+`/assets/client-zCH8ED5n.js`. This is distinct from the null RPC rejection.
+The local production build of the current branch, without a .env file, includes
+both public values in its client asset (`client-ChJ1R-Fb.js`); no further client
+change is needed on this branch. The first faulty deployment SHA cannot be
+established from its hashed asset alone. Restoring the live browser experience
+also requires updating that stale production build, which is explicitly not
+authorized in this task. Anonymous HTTP/browser refresh/navigation/mobile/
+desktop restoration remains unverified, not reported as successful.

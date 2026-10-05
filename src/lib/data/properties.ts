@@ -727,8 +727,19 @@ export function publishProperty(property: Property, fields: PropertyField[]): Pr
   const current = publishing.get(property.id);
   if (current) return current;
   const task = (async () => {
+    // Reconcile on the server before the authoritative DB gate. Free guides still
+    // work when Stripe is unavailable; paid publications fail closed in the DB.
+    try {
+      await reconcileBilling({ data: { organizationId: property.organization_id } });
+    } catch {
+      // The DB distinguishes an unpaid plan from a pending synchronization.
+    }
     await ensureGuideSections(property.id, fields);
     const { error } = await supabase.rpc("publish_property", { _property: property.id });
+    if (error?.message === "hb_subscription_required")
+      throw new FriendlyError("payments.subscriptionRequired");
+    if (error?.message === "hb_billing_sync_required")
+      throw new FriendlyError("payments.syncRequired");
     if (error)
       return fail(error, "La publication a échoué. Vos modifications sont conservées. Réessayez.");
   })();

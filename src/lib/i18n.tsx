@@ -57,7 +57,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit4": "Aucune application à télécharger",
     "marketing.price": "9,99 € / mois",
     "marketing.priceNote": "2 logements inclus · +2,99 € par logement supplémentaire",
-    "marketing.trial": "30 jours gratuits · Aucune carte bancaire · Aucune installation voyageur",
+    "marketing.trial": "1 logement gratuit · Sans carte bancaire · Aucune installation voyageur",
     "marketing.for": "Conçu pour",
     "marketing.operators":
       "Conciergeries · Locations saisonnières · Hôtels indépendants · Appart’hôtels · Résidences de tourisme",
@@ -76,7 +76,7 @@ export const translations: Record<Locale, Copy> = {
       "Importez un lien ou un texte. HostBuddy prépare l’essentiel et montre ce qui manque.",
     "marketing.services": "Vendez vos services simplement",
     "marketing.servicesD":
-      "Petit-déjeuner, massage, transfert ou départ tardif depuis le guide. Paiement intégré bientôt disponible.",
+      "Petit-déjeuner, massage, transfert ou départ tardif depuis le guide. Paiement en ligne lorsque le gestionnaire l’a activé.",
     "marketing.reviews": "Transformez un bon séjour en avis",
     "marketing.reviewsD":
       "Configurez vos destinations d’avis, sans filtrer les voyageurs selon leur retour.",
@@ -100,7 +100,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massage au bord d’une piscine",
     "auth.signupTitle": "Commençons",
     "auth.loginTitle": "Bon retour",
-    "auth.subtitle": "30 jours gratuits. Sans carte bancaire.",
+    "auth.subtitle": "1 logement gratuit. Sans carte bancaire.",
     "auth.google": "Continuer avec Google",
     "auth.or": "ou",
     "auth.firstName": "Votre prénom",
@@ -315,7 +315,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit4": "No app to download",
     "marketing.price": "€9.99 / month",
     "marketing.priceNote": "2 properties included · €2.99 per additional property",
-    "marketing.trial": "30 days free · No card · No guest installation",
+    "marketing.trial": "1 property free · No card · No guest installation",
     "marketing.for": "Designed for",
     "marketing.operators":
       "Concierges · Vacation rentals · Independent hotels · Aparthotels · Serviced residences",
@@ -334,7 +334,7 @@ export const translations: Record<Locale, Copy> = {
       "Import a link or text. HostBuddy prepares the essentials and shows what is missing.",
     "marketing.services": "Sell services simply",
     "marketing.servicesD":
-      "Breakfast, massage, transfer or late checkout from the guide. Integrated payment coming soon.",
+      "Breakfast, massage, transfer or late checkout from the guide. Online payment when enabled by the manager.",
     "marketing.reviews": "Turn a great stay into a review",
     "marketing.reviewsD":
       "Configure review destinations without filtering guests by their feedback.",
@@ -358,7 +358,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Poolside massage",
     "auth.signupTitle": "Let’s get started",
     "auth.loginTitle": "Welcome back",
-    "auth.subtitle": "30 days free. No card required.",
+    "auth.subtitle": "1 property free. No card required.",
     "auth.google": "Continue with Google",
     "auth.or": "or",
     "auth.firstName": "First name",
@@ -568,7 +568,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit4": "Sin aplicación que descargar",
     "marketing.price": "9,99 € / mes",
     "marketing.priceNote": "2 alojamientos incluidos · 2,99 € por alojamiento adicional",
-    "marketing.trial": "30 días gratis · Sin tarjeta · Sin instalación",
+    "marketing.trial": "1 alojamiento gratis · Sin tarjeta · Sin instalación",
     "marketing.for": "Diseñado para",
     "marketing.operators":
       "Conserjerías · Alquileres vacacionales · Hoteles independientes · Apartahoteles",
@@ -587,7 +587,7 @@ export const translations: Record<Locale, Copy> = {
       "Importe un enlace o texto. HostBuddy prepara lo esencial y muestra lo que falta.",
     "marketing.services": "Venda sus servicios fácilmente",
     "marketing.servicesD":
-      "Desayuno, masaje, traslado o salida tardía desde la guía. Pago integrado próximamente.",
+      "Desayuno, masaje, traslado o salida tardía desde la guía. Pago en línea cuando lo activa el gestor.",
     "marketing.reviews": "Convierta una gran estancia en reseña",
     "marketing.reviewsD": "Configure destinos de reseñas sin filtrar huéspedes por opinión.",
     "marketing.noGating": "Sin filtros según una opinión positiva o negativa.",
@@ -610,7 +610,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Masaje junto a la piscina",
     "auth.signupTitle": "Empecemos",
     "auth.loginTitle": "Bienvenido de nuevo",
-    "auth.subtitle": "30 días gratis. Sin tarjeta.",
+    "auth.subtitle": "1 alojamiento gratis. Sin tarjeta.",
     "auth.google": "Continuar con Google",
     "auth.or": "o",
     "auth.firstName": "Nombre",
@@ -821,7 +821,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit4": "Keine App nötig",
     "marketing.price": "9,99 € / Monat",
     "marketing.priceNote": "2 Unterkünfte inklusive · 2,99 € je weitere Unterkunft",
-    "marketing.trial": "30 Tage kostenlos · Keine Karte · Keine Installation",
+    "marketing.trial": "1 Unterkunft kostenlos · Keine Karte · Keine Installation",
     "marketing.for": "Entwickelt für",
     "marketing.operators": "Concierges · Ferienwohnungen · Unabhängige Hotels · Aparthotels",
     "marketing.importTitle": "Machen Sie aus Inhalten einen prüfbereiten Guide",
@@ -839,7 +839,7 @@ export const translations: Record<Locale, Copy> = {
       "Importieren Sie Link oder Text. HostBuddy bereitet das Wesentliche vor.",
     "marketing.services": "Services einfach verkaufen",
     "marketing.servicesD":
-      "Frühstück, Massage, Transfer oder später Check-out im Guide. Zahlung folgt bald.",
+      "Frühstück, Massage, Transfer oder später Check-out im Guide. Online-Zahlung, wenn vom Gastgeber aktiviert.",
     "marketing.reviews": "Machen Sie aus einem tollen Aufenthalt eine Bewertung",
     "marketing.reviewsD": "Bewertungsziele ohne Filterung nach Feedback konfigurieren.",
     "marketing.noGating": "Keine Filterung nach positivem oder negativem Feedback.",
@@ -862,7 +862,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massage am Pool",
     "auth.signupTitle": "Los geht’s",
     "auth.loginTitle": "Willkommen zurück",
-    "auth.subtitle": "30 Tage kostenlos. Keine Karte.",
+    "auth.subtitle": "1 Unterkunft kostenlos. Keine Karte.",
     "auth.google": "Mit Google fortfahren",
     "auth.or": "oder",
     "auth.firstName": "Vorname",
@@ -1075,7 +1075,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit4": "Nessuna app da scaricare",
     "marketing.price": "9,99 € / mese",
     "marketing.priceNote": "2 alloggi inclusi · 2,99 € per ogni alloggio aggiuntivo",
-    "marketing.trial": "30 giorni gratis · Nessuna carta · Nessuna installazione",
+    "marketing.trial": "1 alloggio gratis · Nessuna carta · Nessuna installazione",
     "marketing.for": "Pensato per",
     "marketing.operators": "Concierge · Case vacanza · Hotel indipendenti · Aparthotel",
     "marketing.importTitle": "Trasforma i contenuti in una guida pronta da verificare",
@@ -1092,7 +1092,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.creationD": "Importa un link o testo. HostBuddy prepara l’essenziale.",
     "marketing.services": "Vendi i servizi con semplicità",
     "marketing.servicesD":
-      "Colazione, massaggio, transfer o check-out posticipato dalla guida. Pagamenti in arrivo.",
+      "Colazione, massaggio, transfer o check-out posticipato dalla guida. Pagamento online quando attivato dal gestore.",
     "marketing.reviews": "Trasforma un bel soggiorno in una recensione",
     "marketing.reviewsD":
       "Configura le destinazioni senza filtrare gli ospiti in base al feedback.",
@@ -1115,7 +1115,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massaggio a bordo piscina",
     "auth.signupTitle": "Iniziamo",
     "auth.loginTitle": "Bentornato",
-    "auth.subtitle": "30 giorni gratis. Senza carta.",
+    "auth.subtitle": "1 alloggio gratis. Senza carta.",
     "auth.google": "Continua con Google",
     "auth.or": "oppure",
     "auth.firstName": "Nome",
@@ -1325,7 +1325,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit4": "Sem aplicação para descarregar",
     "marketing.price": "9,99 € / mês",
     "marketing.priceNote": "2 alojamentos incluídos · 2,99 € por alojamento adicional",
-    "marketing.trial": "30 dias grátis · Sem cartão · Sem instalação",
+    "marketing.trial": "1 alojamento grátis · Sem cartão · Sem instalação",
     "marketing.for": "Criado para",
     "marketing.operators": "Concierges · Alojamentos locais · Hotéis independentes · Aparthotéis",
     "marketing.importTitle": "Transforme o conteúdo num guia pronto a verificar",
@@ -1342,7 +1342,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.creationD": "Importe um link ou texto. A HostBuddy prepara o essencial.",
     "marketing.services": "Venda serviços facilmente",
     "marketing.servicesD":
-      "Pequeno-almoço, massagem, transfer ou saída tardia no guia. Pagamento em breve.",
+      "Pequeno-almoço, massagem, transfer ou saída tardia no guia. Pagamento online quando ativado pelo gestor.",
     "marketing.reviews": "Transforme uma ótima estadia numa avaliação",
     "marketing.reviewsD": "Configure destinos sem filtrar hóspedes pelo feedback.",
     "marketing.noGating": "Sem filtragem por feedback positivo ou negativo.",
@@ -1363,7 +1363,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massagem junto à piscina",
     "auth.signupTitle": "Vamos começar",
     "auth.loginTitle": "Bem-vindo de volta",
-    "auth.subtitle": "30 dias grátis. Sem cartão.",
+    "auth.subtitle": "1 alojamento grátis. Sem cartão.",
     "auth.google": "Continuar com Google",
     "auth.or": "ou",
     "auth.firstName": "Nome",
@@ -2743,6 +2743,139 @@ addV1Copy(translations);
 addVisualPolishCopy(translations);
 addTeamCopy(translations);
 addMessageCopy(translations);
+
+Object.assign(translations.fr, {
+  "marketing.paidTier": "2 logements",
+  "payments.subscriptionRequired":
+    "Un abonnement actif est requis à partir de 2 logements non archivés. Ouvrez Paiements pour vous abonner. Vos données sont conservées.",
+  "payments.syncRequired":
+    "La facturation doit être synchronisée avant publication. Ouvrez Paiements puis réessayez.",
+});
+Object.assign(translations.en, {
+  "marketing.paidTier": "2 properties",
+  "payments.subscriptionRequired":
+    "An active subscription is required for 2 or more non-archived properties. Open Payments to subscribe. Your data is retained.",
+  "payments.syncRequired": "Billing must sync before publishing. Open Payments, then try again.",
+});
+Object.assign(translations.es, {
+  "marketing.paidTier": "2 alojamientos",
+  "payments.subscriptionRequired":
+    "Se requiere una suscripción activa desde 2 alojamientos no archivados. Abre Pagos para suscribirte. Tus datos se conservan.",
+  "payments.syncRequired":
+    "La facturación debe sincronizarse antes de publicar. Abre Pagos y vuelve a intentarlo.",
+});
+Object.assign(translations.de, {
+  "marketing.paidTier": "2 Unterkünfte",
+  "payments.subscriptionRequired":
+    "Ab 2 nicht archivierten Unterkünften ist ein aktives Abo erforderlich. Öffne Zahlungen. Deine Daten bleiben erhalten.",
+  "payments.syncRequired":
+    "Die Abrechnung muss vor der Veröffentlichung synchronisiert werden. Öffne Zahlungen und versuche es erneut.",
+});
+Object.assign(translations.it, {
+  "marketing.paidTier": "2 alloggi",
+  "payments.subscriptionRequired":
+    "Da 2 alloggi non archiviati è richiesto un abbonamento attivo. Apri Pagamenti. I dati sono conservati.",
+  "payments.syncRequired":
+    "La fatturazione deve sincronizzarsi prima della pubblicazione. Apri Pagamenti e riprova.",
+});
+Object.assign(translations.pt, {
+  "marketing.paidTier": "2 alojamentos",
+  "payments.subscriptionRequired":
+    "É necessária uma assinatura ativa a partir de 2 alojamentos não arquivados. Abra Pagamentos. Os dados são preservados.",
+  "payments.syncRequired":
+    "A faturação deve sincronizar antes de publicar. Abra Pagamentos e tente novamente.",
+});
+
+Object.assign(translations.fr, {
+  "legal.title": "Documents légaux",
+  "legal.draft":
+    "Documents en préparation : informations de l’éditeur et conditions à compléter et valider avant commercialisation.",
+  "legal.publisher": "Éditeur et contact",
+  "legal.publisherMissing":
+    "À compléter : nom légal, statut, identifiant entreprise, adresse, contact et hébergeur.",
+  "legal.privacy": "Confidentialité",
+  "legal.privacyMissing":
+    "À compléter : responsable et contact, données et finalités, durées de conservation, prestataires et modalités d’exercice des droits.",
+  "legal.terms": "Conditions d’utilisation et d’abonnement",
+  "legal.fees": "Commission HostBuddy : 2 % sur les services payés, distincte des frais Stripe.",
+  "legal.termsMissing":
+    "À compléter : renouvellement, annulation, traitement des impayés, conditions des services et politique de remboursement.",
+});
+Object.assign(translations.en, {
+  "legal.title": "Legal documents",
+  "legal.draft":
+    "Draft documents: publisher details and terms must be completed and approved before commercial launch.",
+  "legal.publisher": "Publisher and contact",
+  "legal.publisherMissing":
+    "To complete: legal name, status, company identifier, address, contact and hosting provider.",
+  "legal.privacy": "Privacy",
+  "legal.privacyMissing":
+    "To complete: controller and contact, data and purposes, retention periods, providers and rights request process.",
+  "legal.terms": "Usage and subscription terms",
+  "legal.fees": "HostBuddy commission: 2% on paid services, separate from Stripe fees.",
+  "legal.termsMissing":
+    "To complete: renewal, cancellation, unpaid invoices, service terms and refund policy.",
+});
+Object.assign(translations.es, {
+  "legal.title": "Documentos legales",
+  "legal.draft":
+    "Documentos en preparación: completar y validar los datos del editor y las condiciones antes del lanzamiento comercial.",
+  "legal.publisher": "Editor y contacto",
+  "legal.publisherMissing":
+    "Por completar: nombre legal, forma jurídica, identificador, dirección, contacto y alojamiento web.",
+  "legal.privacy": "Privacidad",
+  "legal.privacyMissing":
+    "Por completar: responsable, contacto, datos, finalidades, conservación, proveedores y ejercicio de derechos.",
+  "legal.terms": "Condiciones de uso y suscripción",
+  "legal.fees": "Comisión HostBuddy: 2 % sobre servicios pagados, aparte de las tarifas Stripe.",
+  "legal.termsMissing":
+    "Por completar: renovación, cancelación, impagos, condiciones de servicios y reembolsos.",
+});
+Object.assign(translations.de, {
+  "legal.title": "Rechtliche Dokumente",
+  "legal.draft":
+    "Entwürfe: Anbieterangaben und Bedingungen müssen vor dem kommerziellen Start ergänzt und freigegeben werden.",
+  "legal.publisher": "Anbieter und Kontakt",
+  "legal.publisherMissing":
+    "Ergänzen: Firmenname, Rechtsform, Kennnummer, Adresse, Kontakt und Hostinganbieter.",
+  "legal.privacy": "Datenschutz",
+  "legal.privacyMissing":
+    "Ergänzen: Verantwortlicher, Kontakt, Daten, Zwecke, Speicherfristen, Anbieter und Rechteanfragen.",
+  "legal.terms": "Nutzungs- und Abobedingungen",
+  "legal.fees": "HostBuddy-Provision: 2 % auf bezahlte Services, getrennt von Stripe-Gebühren.",
+  "legal.termsMissing":
+    "Ergänzen: Verlängerung, Kündigung, Zahlungsausfälle, Servicebedingungen und Erstattungen.",
+});
+Object.assign(translations.it, {
+  "legal.title": "Documenti legali",
+  "legal.draft":
+    "Bozze: completare e approvare i dati dell’editore e le condizioni prima del lancio commerciale.",
+  "legal.publisher": "Editore e contatto",
+  "legal.publisherMissing":
+    "Da completare: ragione sociale, forma giuridica, identificativo, indirizzo, contatto e hosting.",
+  "legal.privacy": "Privacy",
+  "legal.privacyMissing":
+    "Da completare: titolare, contatto, dati, finalità, conservazione, fornitori e richieste sui diritti.",
+  "legal.terms": "Condizioni d’uso e abbonamento",
+  "legal.fees": "Commissione HostBuddy: 2 % sui servizi pagati, separata dalle tariffe Stripe.",
+  "legal.termsMissing":
+    "Da completare: rinnovo, cancellazione, mancati pagamenti, condizioni dei servizi e rimborsi.",
+});
+Object.assign(translations.pt, {
+  "legal.title": "Documentos legais",
+  "legal.draft":
+    "Documentos em preparação: completar e validar dados do editor e condições antes do lançamento comercial.",
+  "legal.publisher": "Editor e contacto",
+  "legal.publisherMissing":
+    "A completar: nome legal, forma jurídica, identificador, endereço, contacto e alojamento web.",
+  "legal.privacy": "Privacidade",
+  "legal.privacyMissing":
+    "A completar: responsável, contacto, dados, finalidades, conservação, fornecedores e exercício de direitos.",
+  "legal.terms": "Condições de uso e assinatura",
+  "legal.fees": "Comissão HostBuddy: 2 % sobre serviços pagos, separada das taxas Stripe.",
+  "legal.termsMissing":
+    "A completar: renovação, cancelamento, incumprimento, condições dos serviços e reembolsos.",
+});
 export const I18N_KEYS = Object.keys(translations.fr);
 export function missingTranslationKeys(locale: Locale) {
   return I18N_KEYS.filter((key) => !translations[locale][key]);

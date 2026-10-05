@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const backend = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: backend }));
 vi.mock("@/lib/import-engine/url-import.functions", () => ({ importPropertyPhotos: vi.fn() }));
+vi.mock("@/lib/integrations/billing.functions", () => ({
+  reconcileBilling: vi.fn().mockResolvedValue({}),
+}));
 import { publishProperty, saveGuideSection } from "./properties";
 import type { Property, GuideSection } from "./properties";
 const property = { id: "p" } as Property;
@@ -43,8 +46,7 @@ describe("publication safety", () => {
     const first = publishProperty(property, []);
     const second = publishProperty(property, []);
     expect(first).toBe(second);
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(backend.rpc).toHaveBeenCalledOnce());
     release({ data: { id: "p", status: "published" }, error: null });
     await first;
     expect(backend.rpc).toHaveBeenCalledExactlyOnceWith("publish_property", { _property: "p" });
@@ -65,6 +67,21 @@ describe("publication safety", () => {
     await expect(publishProperty(property, [])).rejects.toThrow("publication");
     expect(backend.rpc).toHaveBeenCalledTimes(2);
   });
+  it.each(["hb_subscription_required", "hb_billing_sync_required"])(
+    "preserves drafts on DB billing rejection (%s)",
+    async (message) => {
+      backend.rpc.mockResolvedValue({ error: { message } });
+      backend.from.mockImplementation(() => ({
+        select: () => ({ eq: () => ({ order: async () => ({ data: [section], error: null }) }) }),
+      }));
+      await expect(publishProperty(property, [])).rejects.toThrow(
+        message === "hb_subscription_required"
+          ? "payments.subscriptionRequired"
+          : "payments.syncRequired",
+      );
+      expect(backend.from.mock.calls.flat()).not.toContain("properties");
+    },
+  );
   it("preserves the latest gallery config when a text edit uses an older section snapshot", async () => {
     let payload: Record<string, unknown> = {};
     const latest = {

@@ -1,0 +1,61 @@
+-- Run in the same transaction as 0018 for preflight, then roll back all fixtures.
+BEGIN;
+DO $$
+DECLARE org uuid:=gen_random_uuid(); other_org uuid:=gen_random_uuid();
+ uid uuid:=gen_random_uuid(); p1 uuid:=gen_random_uuid(); p2 uuid:=gen_random_uuid();
+ p3 uuid:=gen_random_uuid(); rejected boolean; grace timestamptz;
+BEGIN
+ INSERT INTO public.organizations(id,name) VALUES(org,'HB paywall rollback fixture'),(other_org,'HB other tenant fixture');
+ INSERT INTO public.organization_members(organization_id,user_id,role) VALUES(org,uid,'owner');
+ PERFORM set_config('request.jwt.claim.sub',uid::text,true);
+ INSERT INTO public.properties(id,organization_id,name,slug) VALUES(p1,org,'HB free','hb-paywall-'||p1);
+ UPDATE public.properties SET created_at=now()-interval '1 hour' WHERE id=p1;
+ INSERT INTO public.guide_sections(property_id,section_key,title) VALUES(p1,'welcome','Hello');
+ PERFORM public.publish_property(p1);
+ IF public.get_public_guide('hb-paywall-'||p1) IS NULL THEN RAISE EXCEPTION 'free guide denied'; END IF;
+ INSERT INTO public.properties(id,organization_id,name,slug) VALUES(p2,org,'HB draft','hb-paywall-'||p2);
+ INSERT INTO public.guide_sections(property_id,section_key,title) VALUES(p2,'welcome','Hello');
+ rejected:=false;
+ BEGIN PERFORM public.publish_property(p2); EXCEPTION WHEN SQLSTATE 'P0001' THEN rejected:=SQLERRM='hb_subscription_required'; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'unpaid RPC bypass'; END IF;
+ rejected:=false;
+ BEGIN UPDATE public.properties SET status='published' WHERE id=p2; EXCEPTION WHEN SQLSTATE 'P0001' THEN rejected:=SQLERRM='hb_subscription_required'; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'direct REST bypass'; END IF;
+ INSERT INTO public.organization_payment_accounts(organization_id,stripe_subscription_id,subscription_status,current_period_end)
+ VALUES(other_org,'sub_other_fixture','active',now()+interval '1 month');
+ IF public.has_paid_publication_access(org) THEN RAISE EXCEPTION 'other tenant subscription reused'; END IF;
+ INSERT INTO public.organization_payment_accounts(organization_id,stripe_subscription_id,subscription_status,current_period_end)
+ VALUES(org,'sub_gate_fixture','incomplete',now()+interval '1 month');
+ IF public.has_paid_publication_access(org) THEN RAISE EXCEPTION 'incomplete access'; END IF;
+ UPDATE public.organization_payment_accounts SET subscription_status='active' WHERE organization_id=org;
+ rejected:=false;
+ BEGIN PERFORM public.publish_property(p2); EXCEPTION WHEN SQLSTATE 'P0001' THEN rejected:=SQLERRM='hb_billing_sync_required'; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'stale quantity bypass'; END IF;
+ UPDATE public.organization_billing_sync SET synced_revision=revision WHERE organization_id=org;
+ PERFORM public.publish_property(p2);
+ IF public.get_public_guide('hb-paywall-'||p2) IS NULL THEN RAISE EXCEPTION 'paid guide denied'; END IF;
+ rejected:=false;
+ BEGIN INSERT INTO public.properties(id,organization_id,name,slug,status) VALUES(p3,org,'HB direct','hb-paywall-'||p3,'published');
+ EXCEPTION WHEN SQLSTATE 'P0001' THEN rejected:=SQLERRM='hb_billing_sync_required'; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'direct published INSERT bypass'; END IF;
+ UPDATE public.organization_payment_accounts SET subscription_status='past_due' WHERE organization_id=org;
+ SELECT billing_grace_until INTO grace FROM public.organization_payment_accounts WHERE organization_id=org;
+ IF NOT public.has_paid_publication_access(org) OR grace IS NULL THEN RAISE EXCEPTION 'grace missing'; END IF;
+ UPDATE public.organization_payment_accounts SET subscription_status='past_due' WHERE organization_id=org;
+ IF grace<>(SELECT billing_grace_until FROM public.organization_payment_accounts WHERE organization_id=org) THEN RAISE EXCEPTION 'retry extended grace'; END IF;
+ UPDATE public.organization_payment_accounts SET billing_grace_until=now()-interval '1 second' WHERE organization_id=org;
+ IF public.get_public_guide('hb-paywall-'||p2) IS NOT NULL THEN RAISE EXCEPTION 'expired grace still serves paid guide'; END IF;
+ IF public.get_public_guide('hb-paywall-'||p1) IS NULL THEN RAISE EXCEPTION 'free fallback lost'; END IF;
+ UPDATE public.organization_payment_accounts SET subscription_status='canceled' WHERE organization_id=org;
+ IF public.has_paid_publication_access(org) THEN RAISE EXCEPTION 'canceled access'; END IF;
+ IF (SELECT count(*) FROM public.properties WHERE organization_id=org)<>2 THEN RAISE EXCEPTION 'customer data removed'; END IF;
+ UPDATE public.properties SET status='archived' WHERE id=p2;
+ PERFORM public.publish_property(p1);
+ rejected:=false;
+ BEGIN UPDATE public.properties SET status='published' WHERE id=p2; EXCEPTION WHEN SQLSTATE 'P0001' THEN rejected:=SQLERRM='hb_subscription_required'; END;
+ IF NOT rejected THEN RAISE EXCEPTION 'restore bypass'; END IF;
+ UPDATE public.properties SET status='draft' WHERE id=p2;
+ IF (SELECT count(*) FROM public.property_publications WHERE organization_id=org)<>2 THEN RAISE EXCEPTION 'snapshots deleted'; END IF;
+END $$;
+ROLLBACK;
+SELECT true AS paywall_assertions_passed, true AS fixtures_rolled_back;

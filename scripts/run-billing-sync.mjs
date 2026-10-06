@@ -5,21 +5,27 @@ import { setTimeout as delay } from "node:timers/promises";
 /** Preview-only runner. Never follow redirects with a bearer secret. */
 export async function runBillingSync({ endpoint, secret, send = fetch, wait = delay }) {
   const url = new URL(endpoint);
+  const hostAllowed =
+    /^(?:(?:id-)?preview--[a-z0-9-]+|project--[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-dev)\.lovable\.app$/.test(
+      url.hostname,
+    );
+  const secretLengthOk = typeof secret === "string" && secret.length >= 32;
   if (
     url.protocol !== "https:" ||
-    !/^(?:(?:id-)?preview--[a-z0-9-]+|project--[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-dev)\.lovable\.app$/.test(
-      url.hostname,
-    ) ||
+    !hostAllowed ||
     url.pathname !== "/api/public/billing-sync" ||
     url.search ||
     url.hash ||
     url.username ||
     url.password ||
     url.port ||
-    !secret ||
-    secret.length < 32
-  )
+    !secretLengthOk
+  ) {
+    console.error(
+      `billing_sync_test_config protocol=${url.protocol === "https:"} host=${hostAllowed} path=${url.pathname === "/api/public/billing-sync"} secret_length=${secretLengthOk}`,
+    );
     throw new Error("billing_sync_test_configuration_invalid");
+  }
   for (let attempt = 0; attempt < 4; attempt++) {
     let response;
     try {
@@ -39,7 +45,7 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
       } catch {
         throw new Error("billing_sync_test_response_invalid");
       }
-      if (!result || result.pending !== 0) throw new Error("billing_sync_test_response_invalid");
+      if (!result || result.pending !== 0) {\n        console.error(`billing_sync_test_response_pending_zero=${result?.pending === 0}`);\n        throw new Error("billing_sync_test_response_invalid");\n      }
       return;
     }
     if (response && response.status < 500) {

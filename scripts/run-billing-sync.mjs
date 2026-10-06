@@ -45,7 +45,10 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
       } catch {
         throw new Error("billing_sync_test_response_invalid");
       }
-      if (!result || result.pending !== 0) {\n        console.error(`billing_sync_test_response_pending_zero=${result?.pending === 0}`);\n        throw new Error("billing_sync_test_response_invalid");\n      }
+      if (!result || result.pending !== 0) {
+        console.error(`billing_sync_test_response_pending_zero=${result?.pending === 0}`);
+        throw new Error("billing_sync_test_response_invalid");
+      }
       return;
     }
     if (response && response.status < 500) {

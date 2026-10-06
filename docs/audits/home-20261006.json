@@ -1,0 +1,280 @@
+{
+  "version": "13.5.0",
+  "fetchTime": "2026-10-06T08:41:13.848Z",
+  "throttlingMethod": "devtools",
+  "scores": {
+    "performance": 62,
+    "accessibility": 97,
+    "best-practices": 100
+  },
+  "metrics": {
+    "first-contentful-paint": 2765.539,
+    "largest-contentful-paint": 11760.518,
+    "total-blocking-time": 240.84999999999854,
+    "cumulative-layout-shift": 0.07755885806494606,
+    "speed-index": 4388
+  },
+  "network": {
+    "Document": {
+      "count": 1,
+      "transferBytes": 12259,
+      "decodedBytes": 73955,
+      "maxNetworkMs": 652.1359999999986,
+      "failed": 0,
+      "cacheHits": 0
+    },
+    "PublicImages": {
+      "count": 9,
+      "transferBytes": 1324614,
+      "decodedBytes": 1320088,
+      "maxNetworkMs": 11115.929999999993,
+      "failed": 0,
+      "cacheHits": 0
+    },
+    "Stylesheet": {
+      "count": 2,
+      "transferBytes": 24201,
+      "decodedBytes": 137060,
+      "maxNetworkMs": 1963.5449999999837,
+      "failed": 0,
+      "cacheHits": 0
+    },
+    "Script": {
+      "count": 61,
+      "transferBytes": 384465,
+      "decodedBytes": 1155571,
+      "maxNetworkMs": 6056.695000000007,
+      "failed": 0,
+      "cacheHits": 0
+    },
+    "Font": {
+      "count": 5,
+      "transferBytes": 297429,
+      "decodedBytes": 455964,
+      "maxNetworkMs": 8003.094999999972,
+      "failed": 0,
+      "cacheHits": 0
+    },
+    "Other": {
+      "count": 1,
+      "transferBytes": 20534,
+      "decodedBytes": 20373,
+      "maxNetworkMs": 675.3180000000284,
+      "failed": 0,
+      "cacheHits": 0
+    }
+  },
+  "diagnostics": {
+    "lcp-breakdown-insight": {
+      "items": [
+        {
+          "items": [
+            {
+              "subpart": "timeToFirstByte",
+              "duration": 112.887
+            },
+            {
+              "subpart": "resourceLoadDelay",
+              "duration": 502.314
+            },
+            {
+              "subpart": "resourceLoadDuration",
+              "duration": 11117.599
+            },
+            {
+              "subpart": "elementRenderDelay",
+              "duration": 27.718
+            }
+          ]
+        },
+        {
+          "boundingRect": {
+            "top": 98,
+            "bottom": 1529,
+            "left": 13,
+            "right": 399,
+            "width": 387,
+            "height": 1431
+          }
+        }
+      ]
+    },
+    "lcp-discovery-insight": {
+      "items": [
+        {
+          "boundingRect": {
+            "top": 98,
+            "bottom": 1529,
+            "left": 13,
+            "right": 399,
+            "width": 387,
+            "height": 1431
+          }
+        }
+      ]
+    },
+    "document-latency-insight": {
+      "debugData": {
+        "redirectDuration": 0,
+        "serverResponseTime": 87,
+        "uncompressedResponseBytes": 0,
+        "wastedBytes": 0
+      }
+    },
+    "image-delivery-insight": {
+      "items": [
+        {
+          "totalBytes": 292208,
+          "wastedBytes": 287940,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 92979
+              },
+              {
+                "wastedBytes": 285948
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 241172,
+          "wastedBytes": 196478,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 196478
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 185718,
+          "wastedBytes": 177294,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 114991
+              },
+              {
+                "wastedBytes": 163598
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 162816,
+          "wastedBytes": 136120,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 74737
+              },
+              {
+                "wastedBytes": 113469
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 137156,
+          "wastedBytes": 109654,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 109654
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 89326,
+          "wastedBytes": 79722,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 53974
+              },
+              {
+                "wastedBytes": 65059
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 82626,
+          "wastedBytes": 73022,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 58855
+              },
+              {
+                "wastedBytes": 49244
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 67418,
+          "wastedBytes": 57814,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 43647
+              },
+              {
+                "wastedBytes": 40180
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 61648,
+          "wastedBytes": 52044,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 26905
+              },
+              {
+                "wastedBytes": 44607
+              }
+            ]
+          }
+        }
+      ],
+      "debugData": {
+        "wastedBytes": 1170088
+      }
+    },
+    "render-blocking-insight": {
+      "items": [
+        {
+          "totalBytes": 22750,
+          "wastedMs": 318
+        },
+        {
+          "totalBytes": 1451,
+          "wastedMs": 1521
+        }
+      ]
+    }
+  },
+  "failedAuditIds": [
+    "first-contentful-paint",
+    "largest-contentful-paint",
+    "speed-index",
+    "total-blocking-time",
+    "max-potential-fid",
+    "interactive",
+    "color-contrast",
+    "cache-insight",
+    "forced-reflow-insight",
+    "image-delivery-insight",
+    "lcp-breakdown-insight",
+    "lcp-discovery-insight",
+    "network-dependency-tree-insight",
+    "render-blocking-insight"
+  ]
+}

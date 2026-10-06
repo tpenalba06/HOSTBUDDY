@@ -1,0 +1,50 @@
+{
+  "runId": 37438007196,
+  "headSha": "cd6752596ba726a3602b4024735ece2bac666d76",
+  "proofs": [
+    {
+      "scope": "real-public-network-extraction-and-photo-only",
+      "extractedFields": 5,
+      "photoBytes": 35588,
+      "privateStorageAndPublication": "not-tested-no-manager-session"
+    },
+    {
+      "scope": "real-network-read-only-no-captcha-or-proxy-bypass",
+      "results": [
+        {
+          "source": "airbnb",
+          "url": "https://www.airbnb.fr/rooms/14749668",
+          "robots": {
+            "status": 200,
+            "allowed": true
+          },
+          "ok": true,
+          "photoCandidates": 8,
+          "privateStorageAndPublication": "not-tested-no-manager-session"
+        },
+        {
+          "source": "booking",
+          "url": "https://www.booking.com/hotel/fr/negresco.html",
+          "robots": {
+            "status": 200,
+            "allowed": true
+          },
+          "ok": false,
+          "reason": "insufficient",
+          "privateStorageAndPublication": "not-tested-no-manager-session"
+        },
+        {
+          "source": "sunver",
+          "url": "https://app.sunver.app/fr/guest/villa-dolce-vecchia",
+          "robots": {
+            "status": 404,
+            "allowed": true
+          },
+          "ok": true,
+          "photoCandidates": 1,
+          "privateStorageAndPublication": "not-tested-no-manager-session"
+        }
+      ]
+    }
+  ]
+}

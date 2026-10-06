@@ -53,6 +53,11 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
     }
     if (response && response.status < 500) {
       console.error(`billing_sync_test_http_status=${response.status}`);
+      if (response.status === 401) {
+        console.error(
+          `billing_sync_test_runtime_secret=${response.headers.get("x-hostbuddy-runtime-secret") ?? "unknown"} process_secret=${response.headers.get("x-hostbuddy-process-secret") ?? "unknown"}`,
+        );
+      }
       throw new Error("billing_sync_test_request_rejected");
     }
     if (attempt < 3) await wait([1000, 3000, 7000][attempt]);

@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { paymentServerEnvironment } from "./payment-environment.server";
 import { reportOperationalEvent } from "../operational-events.server";
 
-/** Authenticate before loading any admin client or touching billing jobs. Cloud secret rotations require a fresh preview build. */
+/** Authenticate before loading any admin client or touching billing jobs. */
 export async function handleBillingSyncRequest(
   request: Request,
   sync: () => Promise<{ pending: number }>,
@@ -16,20 +16,8 @@ export async function handleBillingSyncRequest(
     !secret ||
     Buffer.byteLength(token) !== Buffer.byteLength(secret) ||
     !timingSafeEqual(Buffer.from(token), Buffer.from(secret))
-  ) {
-    const runtimeSecret = (request as Request & {
-      runtime?: { cloudflare?: { env?: Record<string, unknown> } };
-    }).runtime?.cloudflare?.env?.["BILLING_SYNC_SECRET"];
-    return new Response(null, {
-      status: 401,
-      headers: {
-        ...headers,
-        "X-HostBuddy-Runtime-Secret": typeof runtimeSecret === "string" ? "present" : "missing",
-        "X-HostBuddy-Process-Secret":
-          typeof process.env.BILLING_SYNC_SECRET === "string" ? "present" : "missing",
-      },
-    });
-  }
+  )
+    return new Response(null, { status: 401, headers });
   const requestedMode = request.headers.get("x-hostbuddy-billing-mode");
   if (
     requestedMode &&

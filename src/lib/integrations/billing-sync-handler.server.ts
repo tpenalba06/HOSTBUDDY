@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { paymentServerEnvironment } from "./payment-environment.server";
 import { reportOperationalEvent } from "../operational-events.server";
 
-/** Authenticate before loading any admin client or touching billing jobs. */
+/** Authenticate before loading any admin client or touching billing jobs. Cloud secret rotations require a fresh preview build. */
 export async function handleBillingSyncRequest(
   request: Request,
   sync: () => Promise<{ pending: number }>,

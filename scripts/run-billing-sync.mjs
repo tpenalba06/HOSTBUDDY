@@ -5,27 +5,21 @@ import { setTimeout as delay } from "node:timers/promises";
 /** Preview-only runner. Never follow redirects with a bearer secret. */
 export async function runBillingSync({ endpoint, secret, send = fetch, wait = delay }) {
   const url = new URL(endpoint);
-  const hostAllowed =
-    /^(?:(?:id-)?preview--[a-z0-9-]+|project--[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-dev)\.lovable\.app$/.test(
-      url.hostname,
-    );
-  const secretLengthOk = typeof secret === "string" && secret.length >= 32;
   if (
     url.protocol !== "https:" ||
-    !hostAllowed ||
+    !/^(?:(?:id-)?preview--[a-z0-9-]+|project--[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-dev)\.lovable\.app$/.test(
+      url.hostname,
+    ) ||
     url.pathname !== "/api/public/billing-sync" ||
     url.search ||
     url.hash ||
     url.username ||
     url.password ||
     url.port ||
-    !secretLengthOk
-  ) {
-    console.error(
-      `billing_sync_test_config protocol=${url.protocol === "https:"} host=${hostAllowed} path=${url.pathname === "/api/public/billing-sync"} secret_length=${secretLengthOk}`,
-    );
+    !secret ||
+    secret.length < 32
+  )
     throw new Error("billing_sync_test_configuration_invalid");
-  }
   for (let attempt = 0; attempt < 4; attempt++) {
     let response;
     try {
@@ -45,19 +39,11 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
       } catch {
         throw new Error("billing_sync_test_response_invalid");
       }
-      if (!result || result.pending !== 0) {
-        console.error(`billing_sync_test_response_pending_zero=${result?.pending === 0}`);
-        throw new Error("billing_sync_test_response_invalid");
-      }
+      if (!result || result.pending !== 0) throw new Error("billing_sync_test_response_invalid");
       return;
     }
     if (response && response.status < 500) {
       console.error(`billing_sync_test_http_status=${response.status}`);
-      if (response.status === 401) {
-        console.error(
-          `billing_sync_test_runtime_secret=${response.headers.get("x-hostbuddy-runtime-secret") ?? "unknown"} process_secret=${response.headers.get("x-hostbuddy-process-secret") ?? "unknown"}`,
-        );
-      }
       throw new Error("billing_sync_test_request_rejected");
     }
     if (attempt < 3) await wait([1000, 3000, 7000][attempt]);

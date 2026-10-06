@@ -1,5 +1,9 @@
 type OperationalEvent =
   | "server_request_failed"
+  | "guide_media_signing_failed"
+  | "guide_snapshot_failed"
+  | "server_unhandled_error"
+  | "server_unhandled_rejection"
   | "stripe_webhook_unavailable"
   | "stripe_webhook_failed"
   | "stripe_webhook_mode_mismatch"

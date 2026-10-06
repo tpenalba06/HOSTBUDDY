@@ -52,7 +52,12 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return secureResponse(request, await normalizeCatastrophicSsrResponse(response));
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      // Handled SSR 5xx responses also need an operational signal. The h3
+      // normalization above already reported its replaced response.
+      if (normalized === response && response.status >= 500)
+        reportOperationalEvent("server_request_failed");
+      return secureResponse(request, normalized);
     } catch {
       reportOperationalEvent("server_request_failed");
       return secureResponse(

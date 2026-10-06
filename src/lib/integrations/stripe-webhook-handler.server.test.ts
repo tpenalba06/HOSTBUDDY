@@ -4,7 +4,9 @@ const state = vi.hoisted(() => ({
   verify: vi.fn(),
   handle: vi.fn(),
   client: vi.fn(() => ({})),
+  report: vi.fn(),
 }));
+vi.mock("../operational-events.server", () => ({ reportOperationalEvent: state.report }));
 vi.mock("./payment-environment.server", () => ({ paymentServerEnvironment: () => state.env }));
 vi.mock("./payments.server", () => ({
   stripeClient: state.client,
@@ -20,10 +22,18 @@ const request = (body: string, signature?: string) =>
   });
 beforeEach(() => {
   vi.clearAllMocks();
+  state.env.STRIPE_WEBHOOK_SECRET = "fictional-webhook-secret";
   state.verify.mockResolvedValue({ id: "fixture-event", livemode: false });
   state.handle.mockResolvedValue(undefined);
 });
 describe("public webhook uses the same authenticated handler as the legacy route", () => {
+  it("reports absent webhook configuration as retryable without processing an event", async () => {
+    state.env.STRIPE_WEBHOOK_SECRET = "";
+    expect((await handleStripeWebhookRequest(request("{}", "fixture"))).status).toBe(503);
+    expect(state.report).toHaveBeenCalledWith("stripe_webhook_unavailable");
+    expect(state.client).not.toHaveBeenCalled();
+    expect(state.handle).not.toHaveBeenCalled();
+  });
   it("rejects unsigned requests before loading Stripe or processing events", async () => {
     expect((await handleStripeWebhookRequest(request("{}"))).status).toBe(400);
     expect(state.client).not.toHaveBeenCalled();

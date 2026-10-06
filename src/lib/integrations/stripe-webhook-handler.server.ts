@@ -7,8 +7,11 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
   const env = paymentServerEnvironment(request);
   const secret = env["STRIPE_WEBHOOK_SECRET"];
   const connectSecret = env["STRIPE_CONNECT_WEBHOOK_SECRET"];
-  if (!signature || (!secret && !connectSecret))
-    return new Response("Unavailable", { status: 400 });
+  if (!signature) return new Response("Unavailable", { status: 400 });
+  if (!secret && !connectSecret) {
+    reportOperationalEvent("stripe_webhook_unavailable");
+    return new Response("Unavailable", { status: 503 });
+  }
   const reader = request.body?.getReader();
   if (!reader) return new Response("Invalid", { status: 400 });
   let raw = "";

@@ -31,7 +31,11 @@ export function mediaOfflinePlugin(): Plugin {
       // otherwise a replacement keeps the old cache name and is never refreshed.
       const contentHash = createHash("sha256");
       for (const directory of ["guide-fonts", "hostbuddy-media", "demo-guide"]) {
-        for (const name of readdirSync(resolve("public", directory)).sort()) {
+        const names = readdirSync(resolve("public", directory)).sort();
+        for (const name of names) {
+          // Keep original TTF sources available, but don't download them again
+          // when the reader uses the equivalent WOFF2 face.
+          if (name.endsWith(".ttf") && names.includes(name.replace(/\.ttf$/, ".woff2"))) continue;
           if (/\.(ttf|woff2?|webp|jpe?g|png)$/.test(name)) {
             const path = `/${directory}/${name}`;
             assets.push(path);

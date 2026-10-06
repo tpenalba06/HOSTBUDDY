@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mediaOfflinePlugin } from "./media-offline-plugin";
 
-const files = vi.hoisted(() => ({ photo: "original photo", font: "original font" }));
+const files = vi.hoisted(() => ({ photo: "original photo", font: "original font", legacy: false }));
 vi.mock("node:fs", () => ({
   readFileSync: (path: string) =>
     Buffer.from(
@@ -11,7 +11,12 @@ vi.mock("node:fs", () => ({
           ? files.font
           : "codec",
     ),
-  readdirSync: (path: string) => (path.endsWith("guide-fonts") ? ["text.woff2"] : ["cover.webp"]),
+  readdirSync: (path: string) =>
+    path.endsWith("guide-fonts")
+      ? files.legacy
+        ? ["text.ttf", "text.woff2"]
+        : ["text.woff2"]
+      : ["cover.webp"],
 }));
 
 function manifest() {
@@ -42,8 +47,14 @@ function manifest() {
 beforeEach(() => {
   files.photo = "original photo";
   files.font = "original font";
+  files.legacy = false;
 });
 describe("offline reader release cache", () => {
+  it("does not fetch both TTF and its equivalent WOFF2 in the offline shell", () => {
+    files.legacy = true;
+    expect(manifest().assets).toContain("/guide-fonts/text.woff2");
+    expect(manifest().assets).not.toContain("/guide-fonts/text.ttf");
+  });
   it("changes the release when a photo is replaced at the same public URL", () => {
     const before = manifest();
     files.photo = "replacement photo";

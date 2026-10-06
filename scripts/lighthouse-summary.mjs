@@ -33,6 +33,46 @@ function numericDetails(value, depth = 0) {
   return entries.length ? Object.fromEntries(entries) : undefined;
 }
 
+// Fixed groups only. Raw resource URLs (especially signed Storage tokens) never
+// reach an artifact; duration fields in Lighthouse 13.5 are already milliseconds.
+function networkGroups(report) {
+  const groups = {};
+  for (const request of report.audits["network-requests"]?.details?.items ?? []) {
+    let kind = ["Document", "Script", "Stylesheet", "Font"].includes(request.resourceType)
+      ? request.resourceType
+      : "Other";
+    if (request.resourceType === "Image") {
+      try {
+        kind = new URL(request.url).pathname.startsWith("/storage/v1/")
+          ? "SignedImages"
+          : "PublicImages";
+      } catch {
+        kind = "Other";
+      }
+    }
+    const item = (groups[kind] ??= {
+      count: 0,
+      transferBytes: 0,
+      decodedBytes: 0,
+      maxNetworkMs: 0,
+      failed: 0,
+      cacheHits: 0,
+    });
+    item.count++;
+    for (const [key, field] of [
+      ["transferBytes", "transferSize"],
+      ["decodedBytes", "resourceSize"],
+    ])
+      if (Number.isFinite(request[field]) && request[field] >= 0) item[key] += request[field];
+    const duration = request.networkEndTime - request.networkRequestTime;
+    if (Number.isFinite(duration) && duration >= 0)
+      item.maxNetworkMs = Math.max(item.maxNetworkMs, duration);
+    if (request.statusCode >= 400 || request.finished === false) item.failed++;
+    if (["disk", "memory", "prefetch"].includes(request.cache)) item.cacheHits++;
+  }
+  return groups;
+}
+
 /** Publish metrics only, never raw reports containing signed media URLs. */
 export function lighthouseSummary(report) {
   if (
@@ -60,6 +100,7 @@ export function lighthouseSummary(report) {
         "speed-index",
       ].map((name) => [name, report.audits[name]?.numericValue ?? null]),
     ),
+    network: networkGroups(report),
     diagnostics: Object.fromEntries(
       [
         "lcp-breakdown-insight",

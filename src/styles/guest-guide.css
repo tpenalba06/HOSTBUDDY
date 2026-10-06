@@ -3,21 +3,21 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/guide-fonts/newsreader-400.ttf") format("truetype");
+  src: url("/guide-fonts/newsreader-400.woff2") format("woff2");
 }
 @font-face {
   font-family: "HB Manrope";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/guide-fonts/manrope-400.ttf") format("truetype");
+  src: url("/guide-fonts/manrope-400.woff2") format("woff2");
 }
 @font-face {
   font-family: "HB Manrope";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/guide-fonts/manrope-600.ttf") format("truetype");
+  src: url("/guide-fonts/manrope-600.woff2") format("woff2");
 }
 /* HostBuddy V2 — editorial travel guide. Scoped so the manager remains unchanged. */
 .hb-guide,

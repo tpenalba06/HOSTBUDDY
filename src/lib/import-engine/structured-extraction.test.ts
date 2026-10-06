@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractStructuredFields } from "./url-import.functions";
+import { extractStructuredFields } from "./url-source.server";
 
 describe("structured listing evidence", () => {
   it("does not import explicitly unavailable JSON-LD amenities", () => {

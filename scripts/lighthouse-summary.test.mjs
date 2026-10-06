@@ -7,6 +7,24 @@ describe("safe Lighthouse evidence", () => {
       configSettings: { throttlingMethod: "devtools" },
       categories: { performance: { score: 0.8 } },
       audits: {
+        "network-requests": {
+          id: "network-requests",
+          score: null,
+          details: {
+            items: [
+              {
+                url: "https://storage.test/storage/v1/object/sign/file?token=PRIVATE",
+                resourceType: "Image",
+                transferSize: 123,
+                resourceSize: 456,
+                networkRequestTime: 1,
+                networkEndTime: 101,
+                statusCode: 200,
+                finished: true,
+              },
+            ],
+          },
+        },
         "lcp-breakdown-insight": {
           id: "lcp-breakdown-insight",
           score: 0,
@@ -31,6 +49,14 @@ describe("safe Lighthouse evidence", () => {
     });
     expect(output.diagnostics["lcp-breakdown-insight"]).toEqual({
       items: [{ duration: 1234, subpart: "resourceLoadDuration" }],
+    });
+    expect(output.network.SignedImages).toEqual({
+      count: 1,
+      transferBytes: 123,
+      decodedBytes: 456,
+      maxNetworkMs: 100,
+      failed: 0,
+      cacheHits: 0,
     });
     expect(output.scores.performance).toBe(80);
     expect(JSON.stringify(output)).not.toContain("PRIVATE");

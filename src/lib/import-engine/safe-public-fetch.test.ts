@@ -3,10 +3,46 @@ vi.mock("node:dns/promises", () => ({
   resolve4: vi.fn(async () => ["93.184.216.34"]),
   resolve6: vi.fn(async () => []),
 }));
+import { resolve4 } from "node:dns/promises";
 import { safePublicFetch } from "./safe-public-fetch";
 
 afterEach(() => vi.unstubAllGlobals());
 describe("public import redirect permissions", () => {
+  it("cancels a stalled DNS lookup without sending an HTTP request", async () => {
+    vi.mocked(resolve4).mockImplementationOnce(() => new Promise(() => {}));
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const controller = new AbortController();
+    const pending = safePublicFetch(
+      "https://source.example.invalid/villa",
+      { signal: controller.signal },
+      1000,
+    );
+    controller.abort();
+    await expect(pending).rejects.toThrow();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("honors caller cancellation before any DNS or network request", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    await expect(
+      safePublicFetch("https://source.example.invalid/villa", { signal: controller.signal }, 1000),
+    ).rejects.toThrow();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("keeps the same bounded signal across redirects instead of restarting its deadline", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "/next" } }))
+      .mockResolvedValueOnce(new Response("ok"));
+    vi.stubGlobal("fetch", fetch);
+    await safePublicFetch("https://source.example.invalid/villa", {}, 1000);
+    expect(fetch.mock.calls[0]![1].signal).toBe(fetch.mock.calls[1]![1].signal);
+  });
+
   it("never requests the redirect destination when its robots policy refuses access", async () => {
     const fetch = vi.fn(
       async () =>

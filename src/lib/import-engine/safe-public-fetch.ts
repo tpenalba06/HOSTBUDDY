@@ -26,6 +26,22 @@ export function privateAddress(address: string): boolean {
     );
   return false;
 }
+async function withDeadline<T>(pending: Promise<T>, signal: AbortSignal): Promise<T> {
+  signal.throwIfAborted();
+  let abort: () => void = () => {};
+  try {
+    return await Promise.race([
+      pending,
+      new Promise<never>((_, reject) => {
+        abort = () => reject(signal.reason);
+        signal.addEventListener("abort", abort, { once: true });
+      }),
+    ]);
+  } finally {
+    signal.removeEventListener("abort", abort);
+  }
+}
+
 export async function safePublicFetch(
   value: string,
   init: RequestInit,
@@ -33,7 +49,11 @@ export async function safePublicFetch(
   redirectAllowed?: (url: URL) => Promise<boolean>,
 ) {
   let url = new URL(value);
+  // One deadline across redirects; honor the shorter caller deadline (robots).
+  const timeout = AbortSignal.timeout(12000);
+  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
   for (let hops = 0; hops < 4; hops++) {
+    signal.throwIfAborted();
     if (
       !/^https?:$/.test(url.protocol) ||
       url.username ||
@@ -45,14 +65,15 @@ export async function safePublicFetch(
     const host = url.hostname.replace(/^\[|\]$/g, "");
     const addresses = isIP(host)
       ? [host]
-      : (await Promise.allSettled([resolve4(host), resolve6(host)])).flatMap((result) =>
-          result.status === "fulfilled" ? result.value : [],
+      : (await withDeadline(Promise.allSettled([resolve4(host), resolve6(host)]), signal)).flatMap(
+          (result) => (result.status === "fulfilled" ? result.value : []),
         );
     if (!addresses.length || addresses.some(privateAddress)) throw new Error("blocked");
+    signal.throwIfAborted();
     const response = await fetch(url.href, {
       ...init,
       redirect: "manual",
-      signal: AbortSignal.timeout(12000),
+      signal,
     });
     if ([301, 302, 303, 307, 308].includes(response.status)) {
       const next = response.headers.get("location");

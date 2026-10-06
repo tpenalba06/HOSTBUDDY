@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractStructuredFields, webTextForRules } from "./url-import.functions";
+import { extractStructuredFields, webTextForRules } from "./url-source.server";
 import { extractFromText } from "./rules-extractor";
 
 // Shape reproduced from https://www.wikipedia.org/ (2026-10-05): generic meta + one huge language list line.

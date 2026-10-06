@@ -42,10 +42,14 @@ export async function runBillingSync({ endpoint, secret, send = fetch, wait = de
       if (!result || result.pending !== 0) throw new Error("billing_sync_test_response_invalid");
       return;
     }
-    if (response && response.status < 500) {\n      console.error(`billing_sync_test_http_status=${response.status}`);\n      throw new Error("billing_sync_test_request_rejected");\n    }
+    if (response && response.status < 500) {
+      console.error(`billing_sync_test_http_status=${response.status}`);
+      throw new Error("billing_sync_test_request_rejected");
+    }
     if (attempt < 3) await wait([1000, 3000, 7000][attempt]);
   }
-  console.error("billing_sync_test_http_status=5xx_or_network");\n  throw new Error("billing_sync_test_retry_exhausted");
+  console.error("billing_sync_test_http_status=5xx_or_network");
+  throw new Error("billing_sync_test_retry_exhausted");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

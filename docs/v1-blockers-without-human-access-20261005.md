@@ -12,21 +12,23 @@ Les six entrées historiques sont conservées, et aucun SQL `0000`…`0019` n'a
 été changé. `meta/manifest.json` fixe leurs SHA-256 ; `npm run check` vérifie
 fichiers, journal et manifest. Cette validation n'applique aucune migration.
 
-**Le journal du dépôt est réconcilié ; le ledger de la base hébergée reste
-inconnu.** Aucun accès DB disponible sans passer par le service interdit.
-`scripts/validation/migration-state.sql` inventorie les objets, RLS, ACL,
-fonctions et triggers en lecture seule. Ne jamais marquer des migrations comme
-appliquées uniquement parce que leurs fichiers sont présents. Ne pas lancer
-aveuglément `drizzle-kit migrate` sur une base existante : les migrations
-appliquées manuellement pourraient être rejouées.
+**Le journal du dépôt ET le ledger Drizzle de la base hébergée sont maintenant réconciliés.**
+Lecture du catalogue hébergé le 6 octobre 2026 : le ledger ne contenait que `0000`…`0005`,
+alors que les objets/fonctions/triggers/policies correspondant à `0006`…`0019` étaient bien
+présents. Après vérification explicite de ces marqueurs de schéma, les hashes/horodatages exacts
+du manifest ont été enregistrés dans `drizzle.__drizzle_migrations` sans rejouer les migrations.
+Le ledger contient désormais **21 entrées (`0000`…`0020`)**. Ne jamais relancer aveuglément
+`drizzle-kit migrate` sur un autre environnement existant : toujours vérifier son catalogue avant
+réconciliation.
 
 P1 identifié dans les quotas : `count` puis `insert` sans sérialisation peuvent
 laisser passer plusieurs requêtes concurrentes. `0020_atomic_public_rate_limits`
 ajoute un verrou transactionnel par fingerprint AVANT le comptage dans cinq
 RPC de soumission. Il préserve corps, ACL, quotas et données ; réapplication
-prévue idempotente. Aucune table ou policy ajoutée. Migration préparée et
-testée localement, **non appliquée à Supabase**. Un vrai test parallèle sur
-PostgreSQL hébergé reste nécessaire ; PGlite sérialise ses requêtes.
+prévue idempotente. Aucune table ou policy ajoutée. Migration préparée, testée localement puis préflightée transactionnellement sur la base hébergée.
+`0020` a ensuite été **appliquée à Supabase** : les cinq RPC publics contiennent le verrou
+`HB_ATOMIC_RATE_LIMIT` avant le comptage et conservent leurs grants service-role-only.
+Le test de charge parallèle distribué reste non prouvé ; l'application structurelle du verrou l'est.
 
 Rollback `scripts/rollback/0020_atomic_public_rate_limits.sql` limité par opt-in
 TEST et retirant uniquement le verrou. Il réouvre la course : préférer un
@@ -195,11 +197,11 @@ TypeScript/build réussis, lint zéro erreur / 16 warnings existants.
 | ✅   | Backup/restauration TEST               | Datadir et pg_dump SQL, checksums, rôles, guide anonyme                                                                                       |
 | ✅   | Monitoring et garde-fous code          | Signaux sûrs, headers, mode webhook, guard frontend, tests                                                                                    |
 | ✅   | Lighthouse/réseau lent local et publié | Deux audits anonymes CI, métriques et décomposition LCP conservées                                                                            |
-| 🟠   | État réel des migrations hébergées     | Donner un accès sécurisé en lecture au catalogue Supabase, ou exécuter `migration-state.sql` et transmettre sa sortie                         |
-| 🟠   | Déploiement TEST des protections       | Donner accès à une preview administrable ; y valider/appliquer seulement `0020`, puis déployer le code TEST et tester les requêtes parallèles |
+| ✅   | État réel des migrations hébergées     | Catalogue lu ; `0006`…`0019` vérifiés par marqueurs réels ; ledger Drizzle réconcilié à 21 entrées                                          |
+| ✅   | Protection quotas `0020`               | Préflight transactionnel puis application hébergée ; 5 RPC verrouillés avant comptage, grants préservés                                      |
 | 🟠   | Backup réellement exploitable          | Donner accès lecture source DB/Storage et une cible TEST vide distincte ; choisir le lieu chiffré de conservation                             |
 | 🟠   | Alertes reçues                         | Activer les notifications Actions ; autoriser un canal gratuit de réception des erreurs serveur                                               |
-| 🟠   | Stripe/scheduler/Auth réseau           | Connecter les accès TEST via mécanisme sécurisé ; accord Stripe uniquement par l'exploitant si exigé ; boîte email sandbox et sessions A/B    |
+| 🟠   | Stripe/scheduler/Auth réseau           | Probe GitHub : scheduler désactivé car variable, URL et secret sont tous absents ; Connect/Auth nécessitent toujours accès TEST humain          |
 | 🟠   | Performance après correction           | Déployer uniquement une preview TEST administrable ; vérifier priorité image, timings serveur/Storage et refaire un audit borné               |
 | ❌   | Performance réseau lent publiée        | LCP 11,78 s accueil / 7,46 s guide ; priorisation préparée, lenteur restante non résolue                                                      |
 | ❌   | Validation opérationnelle V1 complète  | Paiement/refund TEST, scheduler réel, Auth HTTP A/B et récupération Supabase restent non prouvés                                              |

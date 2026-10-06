@@ -16,8 +16,20 @@ export async function handleBillingSyncRequest(
     !secret ||
     Buffer.byteLength(token) !== Buffer.byteLength(secret) ||
     !timingSafeEqual(Buffer.from(token), Buffer.from(secret))
-  )
-    return new Response(null, { status: 401, headers });
+  ) {
+    const runtimeSecret = (request as Request & {
+      runtime?: { cloudflare?: { env?: Record<string, unknown> } };
+    }).runtime?.cloudflare?.env?.["BILLING_SYNC_SECRET"];
+    return new Response(null, {
+      status: 401,
+      headers: {
+        ...headers,
+        "X-HostBuddy-Runtime-Secret": typeof runtimeSecret === "string" ? "present" : "missing",
+        "X-HostBuddy-Process-Secret":
+          typeof process.env.BILLING_SYNC_SECRET === "string" ? "present" : "missing",
+      },
+    });
+  }
   const requestedMode = request.headers.get("x-hostbuddy-billing-mode");
   if (
     requestedMode &&

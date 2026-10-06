@@ -1,4 +1,5 @@
 type OperationalEvent =
+  | "import_source_unavailable"
   | "server_request_failed"
   | "guide_media_signing_failed"
   | "guide_snapshot_failed"

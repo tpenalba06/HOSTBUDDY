@@ -21,7 +21,8 @@ network("authorized public network extraction (not authenticated Storage/publica
       image: ["https://httpbin.org/image/jpeg"],
     };
     const html = `<html><head><script type="application/ld+json">${JSON.stringify(listing)}</script></head><body>Source fictive HostBuddy</body></html>`;
-    const url = `https://httpbin.org/base64/${Buffer.from(html).toString("base64url")}`;
+    // httpbin expects padded standard Base64, not the unpadded URL-safe variant.
+    const url = `https://httpbin.org/base64/${encodeURIComponent(Buffer.from(html).toString("base64"))}`;
     const outcome = await runUrlImport({ url, source: "website" });
     if (!outcome.ok) throw Error(`network_import_${outcome.reason}`);
     expect(outcome.result.propertyName).toBe(listing.name);

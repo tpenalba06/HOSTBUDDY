@@ -26,4 +26,22 @@ describe("robots permission fail closed", () => {
     });
     expect(await robotsAllows(target)).toBe(true);
   });
+  it("reports a failed listing fetch without its private exception or URL", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.fetch.mockResolvedValueOnce({
+      response: new Response(null, { status: 404 }),
+      buffer: new Uint8Array(),
+    });
+    mocks.fetch.mockRejectedValueOnce(new Error("PRIVATE signed URL and token"));
+    expect(await runUrlImport({ url: target.href, source: "website" })).toEqual({
+      ok: false,
+      source: "website",
+      reason: "unreachable",
+    });
+    expect(log).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "import_source_unavailable" }),
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain("PRIVATE");
+    log.mockRestore();
+  });
 });

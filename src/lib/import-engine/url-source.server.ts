@@ -3,6 +3,7 @@ import { safePublicFetch } from "./safe-public-fetch";
 import { robotsTextAllows } from "./robots-policy";
 import { extractFromText } from "./rules-extractor";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
+import { reportOperationalEvent } from "@/lib/operational-events.server";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
 
@@ -192,7 +193,7 @@ export async function runUrlImport(data: {
     html = new TextDecoder().decode(fetched.buffer);
     resolvedUrl = fetched.url;
   } catch (e) {
-    console.error("url import fetch failed", e);
+    reportOperationalEvent("import_source_unavailable");
     return {
       ok: false,
       source,

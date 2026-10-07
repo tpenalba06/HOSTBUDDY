@@ -112,7 +112,8 @@ export function answerDemoField(
     fields: property.fields.map((current) => (current.id === field.id ? updated : current)),
     sections: (property.sections.some(
       (section) =>
-        section.section_key === FIELD_DEFS.find((def) => def.key === field.key)?.section.key,
+        section.section_key.split("-")[0] ===
+        FIELD_DEFS.find((def) => def.key === field.key)?.section.key,
     )
       ? property.sections
       : [
@@ -125,7 +126,8 @@ export function answerDemoField(
     ).map((section) => ({
       ...section,
       content:
-        FIELD_DEFS.find((def) => def.key === field.key)?.section.key === section.section_key
+        FIELD_DEFS.find((def) => def.key === field.key)?.section.key ===
+        section.section_key.split("-")[0]
           ? (mergeFieldIntoGuideContent(section.section_key, section.content, updated) as Json)
           : section.content,
     })),

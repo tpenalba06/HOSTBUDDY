@@ -657,13 +657,15 @@ export async function createPropertyFromExtraction(
 async function syncFieldToGuide(field: PropertyField) {
   const definition = FIELD_BY_KEY[field.key];
   if (!definition) return;
-  const { data: section, error } = await supabase
+  const { data: sections, error } = await supabase
     .from("guide_sections")
     .select("*")
     .eq("property_id", field.property_id)
-    .eq("section_key", definition.section.key)
-    .maybeSingle();
+    .order("sort_order");
   if (error) return fail(error);
+  const section =
+    sections?.find((item) => item.section_key === definition.section.key) ??
+    sections?.find((item) => item.section_key.split("-")[0] === definition.section.key);
   if (!section) {
     if (field.status !== "found" || !field.value) return;
     const { error: insertError } = await supabase.from("guide_sections").insert({

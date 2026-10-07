@@ -19,6 +19,30 @@ const products = [],
   priceIds = [],
   clocks = [];
 const results = [];
+const safeError = (error) => ({
+  name: error?.name,
+  code: error?.code,
+  message: String(error?.message ?? error)
+    .replace(/(?:sk|rk|pk)_(?:test|live)_[A-Za-z0-9]+|whsec_[A-Za-z0-9]+/g, "REDACTED")
+    .slice(0, 500),
+});
+const invoiceView = (invoice) => ({
+  id: invoice.id,
+  status: invoice.status,
+  billing_reason: invoice.billing_reason,
+  amount_due: invoice.amount_due,
+  amount_paid: invoice.amount_paid,
+  total: invoice.total,
+  currency: invoice.currency,
+  livemode: invoice.livemode,
+  auto_advance: invoice.auto_advance,
+  next_payment_attempt: invoice.next_payment_attempt,
+  finalized_at: invoice.status_transitions?.finalized_at,
+  paid_at: invoice.status_transitions?.paid_at,
+  last_finalization_error: invoice.last_finalization_error
+    ? safeError(invoice.last_finalization_error)
+    : null,
+});
 const pause = () => new Promise((resolve) => setTimeout(resolve, 1000));
 async function ready(clockId) {
   for (let attempt = 0; attempt < 180; attempt++) {
@@ -94,8 +118,113 @@ try {
     await ready(clock.id);
     const invoices = async () =>
       (await stripe.invoices.list({ customer: customer.id, limit: 100 })).data;
-    const reconcile = (count) =>
-      reconcileSubscription(stripe, subscription.id, count, ++revision, env, store);
+    const paidInvoice = async (invoiceId) => {
+      let invoice = await stripe.invoices.retrieve(invoiceId);
+      assert.equal(invoice.livemode, false);
+      const initial = invoiceView(invoice);
+      if (invoice.status === "draft" && invoice.auto_advance) {
+        const current = await ready(clock.id);
+        // Waiting in wall-clock time does not advance a Stripe Test Clock.
+        // Cross the automatic finalization/payment deadline; never manually pay.
+        const deadline = invoice.next_payment_attempt ?? current.frozen_time + 3600;
+        await stripe.testHelpers.testClocks.advance(clock.id, {
+          frozen_time: Math.max(current.frozen_time + 1, deadline + 60),
+        });
+        await ready(clock.id);
+      }
+      for (let attempt = 0; attempt < 60; attempt++) {
+        invoice = await stripe.invoices.retrieve(invoiceId);
+        assert.equal(invoice.livemode, false);
+        if (invoice.status === "paid") {
+          console.log(
+            JSON.stringify({ stage: "invoice_paid", initial, final: invoiceView(invoice) }),
+          );
+          return invoice;
+        }
+        if (["void", "uncollectible"].includes(invoice.status)) break;
+        await pause();
+      }
+      const payments = await stripe.invoicePayments.list({ invoice: invoiceId, limit: 100 });
+      const paymentStates = [];
+      for (const payment of payments.data) {
+        const intentId = payment.payment?.payment_intent;
+        const intent = intentId
+          ? await stripe.paymentIntents.retrieve(
+              typeof intentId === "string" ? intentId : intentId.id,
+            )
+          : null;
+        if (intent) assert.equal(intent.livemode, false);
+        paymentStates.push({
+          id: payment.id,
+          status: payment.status,
+          paymentIntent: intent
+            ? {
+                id: intent.id,
+                status: intent.status,
+                last_payment_error: intent.last_payment_error
+                  ? safeError(intent.last_payment_error)
+                  : null,
+              }
+            : null,
+        });
+      }
+      console.log(
+        JSON.stringify({
+          stage: "invoice_not_paid",
+          initial,
+          final: invoiceView(invoice),
+          payments: paymentStates,
+        }),
+      );
+      throw Error(`invoice_payment_timeout:${invoice.id}:${invoice.status}`);
+    };
+    const invokeReconcile = (count, requestRevision) =>
+      reconcileSubscription(stripe, subscription.id, count, requestRevision, env, store);
+    const retry = (count) => invokeReconcile(count, revision);
+    const reconcile = async (count) => {
+      const requestRevision = ++revision;
+      try {
+        return await invokeReconcile(count, requestRevision);
+      } catch (error) {
+        if (error?.message !== "billing_payment_pending" || !state || count <= state.paidCapacity)
+          throw error;
+        const unpaidCapacity = state.paidCapacity;
+        const latest = await stripe.subscriptions.retrieve(subscription.id, {
+          expand: ["latest_invoice"],
+        });
+        const invoice =
+          typeof latest.latest_invoice === "string"
+            ? await stripe.invoices.retrieve(latest.latest_invoice)
+            : latest.latest_invoice;
+        assert.ok(invoice, "upgrade invoice exists");
+        assert.equal(invoice.billing_reason, "subscription_update");
+        assert.notEqual(invoice.id, state.invoiceId, "new upgrade invoice");
+        const parent = invoice.parent?.subscription_details?.subscription;
+        assert.equal(typeof parent === "string" ? parent : parent?.id, subscription.id);
+        await paidInvoice(invoice.id);
+        assert.equal(
+          state.paidCapacity,
+          unpaidCapacity,
+          "capacity is not granted before paid reconcile",
+        );
+        const beforeRetry = (await invoices()).map(invoiceView);
+        const result = await invokeReconcile(count, requestRevision);
+        const afterRetry = (await invoices()).map(invoiceView);
+        assert.deepEqual(afterRetry, beforeRetry, "same-revision recovery must not charge twice");
+        assert.equal(state.paidCapacity, count);
+        console.log(
+          JSON.stringify({
+            stage: "paid_capacity_recovered",
+            revision: requestRevision,
+            paidCapacity: state.paidCapacity,
+            renewalQuantity: state.renewalQuantity,
+            invoice: invoice.id,
+            noSecondInvoice: true,
+          }),
+        );
+        return result;
+      }
+    };
     const advance = async () => {
       await stripe.testHelpers.testClocks.advance(clock.id, { frozen_time: end + 7200 });
       await ready(clock.id);
@@ -103,7 +232,14 @@ try {
         const latest = await stripe.subscriptions.retrieve(subscription.id, {
           expand: ["latest_invoice"],
         });
-        if (latest.status === "canceled" || latest.latest_invoice?.status === "paid") return latest;
+        if (latest.status === "canceled") return latest;
+        if (
+          latest.items.data[0].current_period_start >= end &&
+          latest.latest_invoice?.billing_reason === "subscription_cycle"
+        ) {
+          await paidInvoice(latest.latest_invoice.id);
+          return stripe.subscriptions.retrieve(subscription.id, { expand: ["latest_invoice"] });
+        }
         await pause();
       }
       throw Error("renewal_payment_timeout");
@@ -127,9 +263,46 @@ try {
       subscription,
       store,
       reconcile,
+      retry,
       invoices,
       advance,
       noCredit,
+      evidence: async () => {
+        const current = await stripe.subscriptions.retrieve(subscription.id);
+        const balance = await stripe.customers.retrieve(customer.id);
+        const schedule = current.schedule
+          ? await stripe.subscriptionSchedules.retrieve(
+              typeof current.schedule === "string" ? current.schedule : current.schedule.id,
+            )
+          : null;
+        const clockState = await stripe.testHelpers.testClocks.retrieve(clock.id);
+        return {
+          invoices: (await invoices()).map(invoiceView),
+          customerBalance: balance.balance,
+          subscriptionStatus: current.status,
+          subscriptionQuantity: current.items.data.map((item) => ({
+            price: item.price.id,
+            quantity: item.quantity,
+          })),
+          capacity: state,
+          schedule: schedule
+            ? {
+                id: schedule.id,
+                status: schedule.status,
+                end_behavior: schedule.end_behavior,
+                phases: schedule.phases.map((phase) => ({
+                  start: phase.start_date,
+                  end: phase.end_date,
+                  items: phase.items.map((item) => ({
+                    price: typeof item.price === "string" ? item.price : item.price.id,
+                    quantity: item.quantity,
+                  })),
+                })),
+              }
+            : null,
+          clock: { id: clock.id, frozen_time: clockState.frozen_time, status: clockState.status },
+        };
+      },
       state: () => state,
       end,
     };
@@ -143,6 +316,7 @@ try {
         assert.equal((await f.invoices()).length, 1);
         assert.equal(f.state().renewalQuantity, 13);
         assert.equal(f.state().paidCapacity, 14);
+        assert.equal((await f.advance()).latest_invoice.amount_paid, 999 + 11 * 299);
       },
     ],
     [
@@ -152,6 +326,7 @@ try {
         await f.reconcile(13);
         await f.reconcile(14);
         assert.equal((await f.invoices()).length, 1);
+        assert.equal((await f.advance()).latest_invoice.amount_paid, 999 + 12 * 299);
       },
     ],
     [
@@ -166,6 +341,9 @@ try {
         assert.equal(upgrade.status, "paid");
         assert.ok(Math.abs(upgrade.amount_paid - 150) <= 1, "only one extra at half-month prorata");
         assert.equal(f.state().paidCapacity, 15);
+        await f.retry(15); // Same revision: no new invoice, even after successful recovery.
+        assert.equal((await f.invoices()).length, 2);
+        assert.equal((await f.advance()).latest_invoice.amount_paid, 999 + 13 * 299);
       },
     ],
     [
@@ -179,14 +357,16 @@ try {
           11,
         );
         assert.equal(renewed.latest_invoice.amount_paid, 999 + 11 * 299);
+        const creationClock = await stripe.testHelpers.testClocks.retrieve(f.customer.test_clock);
         await f.reconcile(14);
         const all = await f.invoices();
         assert.equal(all.length, 3);
         const upgrade = all.find((invoice) => invoice.billing_reason === "subscription_update");
+        assert.equal(upgrade.status, "paid");
+        assert.equal(f.state().paidCapacity, 14);
         const start = renewed.items.data[0].current_period_start,
           end = renewed.items.data[0].current_period_end;
-        const current = await stripe.testHelpers.testClocks.retrieve(f.customer.test_clock);
-        const expected = Math.round((299 * (end - current.frozen_time)) / (end - start));
+        const expected = Math.round((299 * (end - creationClock.frozen_time)) / (end - start));
         assert.ok(
           Math.abs(upgrade.amount_paid - expected) <= 1,
           "one additional property in new period",
@@ -233,16 +413,28 @@ try {
     ],
   ];
   for (const [name, count, run] of scenarios) {
-    const f = await fixture(count);
-    await run(f);
-    await f.noCredit();
-    results.push({ scenario: name, status: "PASS", subscription: f.subscription.id });
+    let f;
+    try {
+      f = await fixture(count);
+      await run(f);
+      await f.noCredit();
+      results.push({ scenario: name, status: "PASS", noCredit: true, ...(await f.evidence()) });
+    } catch (error) {
+      let evidence = {};
+      try {
+        if (f) evidence = await f.evidence();
+      } catch (readError) {
+        evidence = { evidenceError: safeError(readError) };
+      }
+      results.push({ scenario: name, status: "FAIL", error: safeError(error), ...evidence });
+      process.exitCode = 1;
+    }
     console.log(JSON.stringify(results.at(-1)));
   }
   console.log(
     JSON.stringify({
       mode: "Stripe TEST network",
-      status: "PASS",
+      status: results.every((result) => result.status === "PASS") ? "PASS" : "FAIL",
       scenarios: results.length,
       archiveDeletion:
         "Same authoritative count verified separately in synthetic PostgreSQL; no HostBuddy TEST data mutated.",
@@ -254,11 +446,33 @@ try {
     try {
       await ready(clock);
       await stripe.testHelpers.testClocks.del(clock);
+      console.log(JSON.stringify({ cleanup: "clock_deleted", id: clock }));
     } catch {
       console.error(`test_fixture_cleanup_pending:${clock}`);
+      process.exitCode = 1;
     }
   }
-  for (const price of priceIds) await stripe.prices.update(price, { active: false });
-  for (const product of products) await stripe.products.update(product, { active: false });
+  for (const price of priceIds) {
+    const value = await stripe.prices.update(price, { active: false });
+    console.log(
+      JSON.stringify({
+        cleanup: "price",
+        id: price,
+        active: value.active,
+        livemode: value.livemode,
+      }),
+    );
+  }
+  for (const product of products) {
+    const value = await stripe.products.update(product, { active: false });
+    console.log(
+      JSON.stringify({
+        cleanup: "product",
+        id: product,
+        active: value.active,
+        livemode: value.livemode,
+      }),
+    );
+  }
   await vite.close();
 }

@@ -2,6 +2,16 @@ import { describe, it, expect } from "vitest";
 import { extractFromText } from "./rules-extractor";
 // Entirely fictional fixtures: no real addresses, contacts or Wi-Fi credentials.
 describe("rules extractor provenance", () => {
+  it("retains the smoking prohibition from the audited pasted paragraph", () => {
+    const result = extractFromText(
+      "Villa Audit à La Rochelle. Arrivée à 16h. Interdiction de fumer. Départ à 10h.",
+    );
+    expect(result.fields.find((field) => field.key === "rules")).toMatchObject({
+      status: "found",
+      value: "Interdiction de fumer.",
+      rawValue: "Interdiction de fumer.",
+    });
+  });
   it("recognizes explicit multilingual guest facts", () => {
     const result = extractFromText(`Synthetic Guest House
 Check-in from 4pm. Keys are in the lockbox next to the gate.
@@ -58,4 +68,12 @@ Air conditioning not available.`);
     expect(result.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
     expect(result.fields.find((field) => field.key === "pool")?.status).toBe("to_verify");
   });
+});
+
+it("recognizes the audited introductory property name without its location", () => {
+  expect(
+    extractFromText(
+      "Villa Audit à La Rochelle. Arrivée à 16h. Interdiction de fumer. Départ à 10h.",
+    ).propertyName,
+  ).toBe("Villa Audit");
 });

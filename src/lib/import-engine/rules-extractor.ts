@@ -23,7 +23,7 @@ const RAW_RULES: Record<string, RegExp> = {
     /(clim|climatisation|air conditioning|air conditioner|aire acondicionado|klimaanlage|aria condizionata|ar condicionado|chauffage|heating|calefacción|heizung|riscaldamento|aquecimento|thermostat)/i,
   pool: /(piscine|pool\b|swimming pool|piscina|schwimmbad|spa\b|jacuzzi|baignade)/i,
   rules:
-    /(interdit|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
+    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
   trash:
     /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?(?!\p{L})|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/iu,
   departure:
@@ -94,7 +94,14 @@ function guessName(snippets: string[]): string | null {
     return explicitNames[0]!;
   if (explicitNames.length) return null;
   const first = snippets[0];
-  if (!first || first.length > 80 || /[.:!?]$/.test(first)) return null;
+  if (!first || first.length > 80) return null;
+  // A short introductory name + location is evidence, not an amenity sentence.
+  const introduction = first.match(
+    /^(Villa|Maison|Chalet|Studio|Loft|Appartement|G[iî]te) ([A-ZÀ-Ý][\p{L}\p{N}’' -]{0,50}?) à ([A-ZÀ-Ý][\p{L}’' -]+)\.$/u,
+  );
+  if (introduction && !Object.values(RULES).some((rule) => rule.test(first)))
+    return `${introduction[1]} ${introduction[2]}`;
+  if (/[.:!?]$/.test(first)) return null;
   const looksLikeField = Object.values(RULES).some((rule) => rule.test(first));
   const looksLikePropertyName =
     /(villa|maison|house|appartement|apartment|apartamento|wohnung|chalet|studio|g[iî]te|loft|casa|ferienwohnung)/i.test(

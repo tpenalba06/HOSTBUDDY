@@ -5,7 +5,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { cents, paymentEnvironment, subscriptionQuote, serviceFeeCents } from "./payment-policy";
-import { billingPrices, reconcileSubscription, reconcileBillingCheckouts } from "./billing-sync";
+import {
+  billingPrices,
+  reconcileSubscription,
+  reconcileBillingCheckouts,
+  type BillingCapacity,
+} from "./billing-sync";
 
 type Account = {
   organization_id: string;
@@ -43,6 +48,17 @@ type PaymentDatabase = Database & {
     Tables: {
       organization_payment_accounts: Table<Account>;
       order_payments: Table<Payment>;
+      organization_billing_capacity: Table<{
+        organization_id: string;
+        subscription_id: string;
+        period_start: number;
+        period_end: number;
+        paid_capacity: number;
+        renewal_quantity: number;
+        schedule_id: string | null;
+        invoice_id: string;
+        revision: number;
+      }>;
       organization_billing_sync: Table<{
         organization_id: string;
         revision: number;
@@ -53,6 +69,11 @@ type PaymentDatabase = Database & {
       }>;
     };
     Functions: {
+      refresh_billing_sync_lease: { Args: { _org: string; _lease: string }; Returns: undefined };
+      record_billing_capacity: {
+        Args: { _org: string; _lease: string; _revision: number; _state: Json };
+        Returns: undefined;
+      };
       enqueue_billing_sync: { Args: { _org: string }; Returns: undefined };
       claim_billing_sync: { Args: { _org: string; _lease: string }; Returns: Json };
       complete_billing_sync: {
@@ -208,6 +229,43 @@ export async function syncOrganizationBilling(org: string) {
         job.propertyCount,
         job.revision,
         paymentServerEnvironment(),
+        {
+          guard: async () => {
+            checked(
+              await paymentDb.rpc("refresh_billing_sync_lease", { _org: org, _lease: lease }),
+            );
+          },
+          read: async () => {
+            const row = checked(
+              await paymentDb
+                .from("organization_billing_capacity")
+                .select("*")
+                .eq("organization_id", org)
+                .maybeSingle(),
+            );
+            return row
+              ? {
+                  subscriptionId: row.subscription_id,
+                  periodStart: row.period_start,
+                  periodEnd: row.period_end,
+                  paidCapacity: row.paid_capacity,
+                  renewalQuantity: row.renewal_quantity,
+                  scheduleId: row.schedule_id,
+                  invoiceId: row.invoice_id,
+                }
+              : null;
+          },
+          write: async (state: BillingCapacity) => {
+            checked(
+              await paymentDb.rpc("record_billing_capacity", {
+                _org: org,
+                _lease: lease,
+                _revision: job.revision,
+                _state: state as unknown as Json,
+              }),
+            );
+          },
+        },
       );
       checked(
         await paymentDb.rpc("complete_billing_sync", {

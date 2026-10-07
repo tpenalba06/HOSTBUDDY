@@ -12,6 +12,9 @@ const state = vi.hoisted(() => ({
   intent: vi.fn(),
   createAccount: vi.fn(),
   createAccountLink: vi.fn(),
+  price: vi.fn(),
+  sessions: vi.fn(),
+  propertyCount: 2,
 }));
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
@@ -21,9 +24,20 @@ vi.mock("@/integrations/supabase/client.server", () => ({
       const result = state.results.shift();
       const builder: Record<string, unknown> = {
         then: (resolve: (v: unknown) => unknown) =>
-          Promise.resolve({ data: result ?? null, error: null }).then(resolve),
+          Promise.resolve({ data: result ?? null, error: null, count: state.propertyCount }).then(
+            resolve,
+          ),
       };
-      for (const method of ["select", "eq", "is", "update", "upsert", "single", "maybeSingle"])
+      for (const method of [
+        "select",
+        "eq",
+        "neq",
+        "is",
+        "update",
+        "upsert",
+        "single",
+        "maybeSingle",
+      ])
         builder[method] = (...args: unknown[]) => {
           entry.calls.push([method, ...args]);
           return builder;
@@ -35,7 +49,10 @@ vi.mock("@/integrations/supabase/client.server", () => ({
 }));
 vi.mock("stripe", () => ({
   default: class {
-    checkout = { sessions: { create: state.create, retrieve: state.retrieve } };
+    checkout = {
+      sessions: { create: state.create, retrieve: state.retrieve, list: state.sessions },
+    };
+    prices = { retrieve: state.price };
     paymentIntents = { retrieve: state.intent };
     refunds = { create: state.refund };
     v2 = {
@@ -49,6 +66,7 @@ vi.mock("stripe", () => ({
 import {
   checkoutForToken,
   paymentSummary,
+  startBilling,
   handleStripeEvent,
   requireOwner,
   refundOrderPayment,
@@ -99,6 +117,40 @@ describe("service checkout server orchestration (mocked providers)", () => {
       expect(state.account).not.toHaveBeenCalled();
       expect(state.create).not.toHaveBeenCalled();
     }
+  });
+  it("after effective Free, adding the second property starts a fresh 9.99 subscription", async () => {
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_synthetic");
+    vi.stubEnv("STRIPE_PRICE_BASE", "price_base");
+    vi.stubEnv("STRIPE_PRICE_EXTRA", "price_extra");
+    state.propertyCount = 2;
+    state.results = [
+      null,
+      null,
+      {
+        organization_id: "org-1",
+        stripe_customer_id: "cus_synthetic",
+        stripe_subscription_id: "sub_expired",
+        subscription_status: "canceled",
+      },
+    ];
+    state.price.mockImplementation(async (id) => ({
+      id,
+      active: true,
+      currency: "eur",
+      unit_amount: id === "price_base" ? 999 : 299,
+      recurring: { interval: "month", interval_count: 1, usage_type: "licensed" },
+      billing_scheme: "per_unit",
+    }));
+    state.sessions.mockResolvedValue({ has_more: false, data: [] });
+    await startBilling("org-1");
+    expect(state.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "subscription",
+        customer: "cus_synthetic",
+        line_items: [{ price: "price_base", quantity: 1 }],
+      }),
+      expect.any(Object),
+    );
   });
   it("requires an explicit business country before any database write", async () => {
     vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "fictional-secret");

@@ -206,3 +206,53 @@ it("refuses late uploads to the deleted property while allowing another property
     `INSERT INTO storage.objects(bucket_id,name) VALUES('guide-media','${org}/${p2}/ok.jpg')`,
   );
 });
+
+// Synthetic DB verification for the independent billing migration (never run against TEST).
+it("billing capacity persists its high-water mark and rejects stale leases/period regressions", async () => {
+  const lease = "80000000-0000-4000-8000-000000000001";
+  await db.exec(`INSERT INTO organization_payment_accounts(organization_id,stripe_subscription_id) VALUES('${org}','sub_synthetic');
+    SELECT claim_billing_sync('${org}','${lease}');`);
+  const state = {
+    subscriptionId: "sub_synthetic",
+    periodStart: 100,
+    periodEnd: 200,
+    paidCapacity: 14,
+    renewalQuantity: 13,
+    scheduleId: "sched_synthetic",
+    invoiceId: "in_synthetic",
+  };
+  const record = (value = state, token = lease) =>
+    `SELECT record_billing_capacity('${org}','${token}',2,'${JSON.stringify(value)}'::jsonb)`;
+  await query(record());
+  expect(
+    await query(
+      `SELECT paid_capacity,renewal_quantity FROM organization_billing_capacity WHERE organization_id='${org}'`,
+    ),
+  ).toEqual([{ paid_capacity: 14, renewal_quantity: 13 }]);
+  await rejected(record({ ...state, paidCapacity: 13 }), "billing capacity regression");
+  await rejected(record(state, "80000000-0000-4000-8000-000000000002"), "billing lease expired");
+  await query(record({ ...state, periodStart: 200, periodEnd: 300, paidCapacity: 13 }));
+  expect(
+    await query(
+      `SELECT paid_capacity FROM organization_billing_capacity WHERE organization_id='${org}'`,
+    ),
+  ).toEqual([{ paid_capacity: 13 }]);
+  await db.exec("SET LOCAL ROLE authenticated");
+  await rejected(record(), "permission denied");
+  await rejected(`SELECT * FROM organization_billing_capacity`, "permission denied");
+  await db.exec("RESET ROLE");
+});
+it.each(["archive", "delete"])(
+  "%s produces the same authoritative billable count",
+  async (action) => {
+    await db.exec(
+      action === "archive"
+        ? `UPDATE properties SET status='archived' WHERE id='${p1}'`
+        : `DELETE FROM properties WHERE id='${p1}'`,
+    );
+    const rows = await query(
+      `SELECT claim_billing_sync('${org}','80000000-0000-4000-8000-000000000001') AS job`,
+    );
+    expect(rows[0]).toMatchObject({ job: { propertyCount: 1 } });
+  },
+);

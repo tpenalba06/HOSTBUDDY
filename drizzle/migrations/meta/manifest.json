@@ -88,6 +88,10 @@
     {
       "tag": "0021_property_deletion",
       "sha256": "44a108eb24a05d7753f02405e4b6d45ac53d106621571613f28c76bec567fb71"
+    },
+    {
+      "tag": "0022_paid_billing_capacity",
+      "sha256": "04f1140e8ea91911e2a1e140ea99354eeffb51b5355b2da843cc6f0b86de762c"
     }
   ]
 }

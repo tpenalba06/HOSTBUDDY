@@ -2950,3 +2950,13 @@ const demoMessageHint: Record<Locale, string> = {
   pt: "Demo: experimente o formulário sem enviar uma mensagem real.",
 };
 for (const locale of LOCALES) translations[locale]["demo.messageHint"] = demoMessageHint[locale];
+
+const findPlaceCopy: Record<Locale, string> = {
+  fr: "Rechercher cette adresse",
+  en: "Find this place",
+  es: "Buscar este lugar",
+  de: "Diesen Ort suchen",
+  it: "Cerca questo luogo",
+  pt: "Encontrar este lugar",
+};
+for (const locale of LOCALES) translations[locale]["guest.findPlace"] = findPlaceCopy[locale];

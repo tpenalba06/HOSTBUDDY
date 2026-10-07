@@ -158,7 +158,12 @@ export function GuideView({
         <>
           {!selected && <header className="hb-guide-header">{navigation}</header>}
           {selected ? (
-            <EntryDetail section={open} entry={selected} onBack={() => selectEntry(null)} />
+            <EntryDetail
+              section={open}
+              entry={selected}
+              location={guide.subtitle}
+              onBack={() => selectEntry(null)}
+            />
           ) : (
             <div className="hb-guide-body hb-section-page">
               <div className="hb-list-heading">
@@ -540,10 +545,12 @@ function EntryList({
 function EntryDetail({
   section,
   entry,
+  location,
   onBack,
 }: {
   section: PublicSection;
   entry: GuideEntry;
+  location: string | undefined;
   onBack: () => void;
 }) {
   const { t } = useI18n();
@@ -554,8 +561,8 @@ function EntryDetail({
   const mapUrl =
     entry.mapUrl ||
     (entry.address
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(entry.address)}`
-      : undefined);
+      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(entry.address)}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([entry.title, location].filter(Boolean).join(" "))}`);
   return (
     <article className="hb-entry-detail">
       {cover?.url && (
@@ -592,7 +599,7 @@ function EntryDetail({
         {mapUrl && (
           <a href={mapUrl} target="_blank" rel="noreferrer" className="hb-button">
             <MapPin size={18} />
-            {t("guest.route")}
+            {t(entry.mapUrl || entry.address ? "guest.route" : "guest.findPlace")}
           </a>
         )}
       </div>

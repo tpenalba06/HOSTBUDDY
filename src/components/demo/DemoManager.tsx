@@ -92,8 +92,8 @@ export function DemoManager({
         (order) =>
           order.status !== "completed" &&
           order.status !== "cancelled" &&
-          new Date(order.requested_for ?? order.created_at).toDateString() ===
-            new Date().toDateString(),
+          new Date(order.requested_for ?? order.created_at).getTime() >=
+            new Date().setHours(0, 0, 0, 0),
       ).length,
       requestTotal: orders
         .filter((order) => order.status !== "cancelled")

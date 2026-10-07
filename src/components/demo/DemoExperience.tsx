@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { GuideView } from "@/components/guest/GuideView";
 import { DemoManager } from "./DemoManager";
@@ -33,6 +34,9 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
   const [mode, setMode] = useState<"guest" | "manager">("guest");
   const [section, setSection] = useState<string | null>(null);
   const [notice, setNotice] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageSent, setMessageSent] = useState(false);
   useEffect(() => {
     let property = createVillaMare(locale);
     try {
@@ -94,7 +98,10 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
                 setNotice(false);
               }}
               onRequest={() => setNotice(true)}
-              onMessage={() => setNotice(true)}
+              onMessage={() => {
+                setMessageSent(false);
+                setMessageOpen(true);
+              }}
               onFeedback={() => setNotice(true)}
             />
           </div>
@@ -116,6 +123,39 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
           )}
         </div>
       </div>
+      <Dialog open={messageOpen} onOpenChange={setMessageOpen}>
+        <DialogContent>
+          <DialogTitle>{t("guest.sendMessage")}</DialogTitle>
+          <DialogDescription>{t("demo.messageHint")}</DialogDescription>
+          {messageSent ? (
+            <p role="status">{t("demo.messageSaved")}</p>
+          ) : (
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!message.trim()) return;
+                setMessageSent(true);
+                setMessage("");
+              }}
+            >
+              <label className="block">
+                {t("form.message")}
+                <textarea
+                  className="hb-input"
+                  required
+                  maxLength={2000}
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                />
+              </label>
+              <Button type="submit" disabled={!message.trim()}>
+                {t("common.send")}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

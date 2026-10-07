@@ -2930,3 +2930,23 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 export const useI18n = () => useContext(LocaleContext);
 export const translateStatic = (locale: Locale, key: string) =>
   translations[locale][key] ?? translations.fr[key] ?? "";
+
+const demoMessageSaved: Record<Locale, string> = {
+  fr: "Message simulé : aucun message n’a été envoyé.",
+  en: "Message simulated: no message was sent.",
+  es: "Mensaje simulado: no se ha enviado ningún mensaje.",
+  de: "Nachricht simuliert: Es wurde keine Nachricht gesendet.",
+  it: "Messaggio simulato: nessun messaggio è stato inviato.",
+  pt: "Mensagem simulada: nenhuma mensagem foi enviada.",
+};
+for (const locale of LOCALES) translations[locale]["demo.messageSaved"] = demoMessageSaved[locale];
+
+const demoMessageHint: Record<Locale, string> = {
+  fr: "Démo : essayez le formulaire, sans envoyer de message réel.",
+  en: "Demo: try the form without sending a real message.",
+  es: "Demo: pruebe el formulario sin enviar un mensaje real.",
+  de: "Demo: Testen Sie das Formular, ohne eine echte Nachricht zu senden.",
+  it: "Demo: prova il modulo senza inviare un messaggio reale.",
+  pt: "Demo: experimente o formulário sem enviar uma mensagem real.",
+};
+for (const locale of LOCALES) translations[locale]["demo.messageHint"] = demoMessageHint[locale];

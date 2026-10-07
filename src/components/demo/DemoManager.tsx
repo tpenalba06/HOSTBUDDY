@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ManagerShell, type ManagerArea } from "@/components/app/ManagerShell";
 import {
@@ -20,6 +20,7 @@ import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.function
 import { DemoPropertyEditor } from "./DemoPropertyEditor";
 import { createDemoProperty, type DemoProperty } from "./demo-property";
 import { villaMareOperations } from "./villa-mare-fixture";
+import { validStoredDemoProperty } from "./demo-storage";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
 
@@ -35,7 +36,8 @@ export function DemoManager({
   onVillaChange: (update: (current: DemoProperty) => DemoProperty) => void;
   onPreview: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const storageKey = `hostbuddy.demo.properties.v1.${locale}`;
   const [area, setArea] = useState<DemoArea>("properties");
   const [previewProperty, setPreviewProperty] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState("demo-villa-mare");
@@ -60,10 +62,40 @@ export function DemoManager({
       },
     ];
   });
+  const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const saved: unknown = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
+      if (
+        Array.isArray(saved) &&
+        saved.length &&
+        saved.every(validStoredDemoProperty) &&
+        saved.some((property) => property.id === villa.id)
+      )
+        setProperties(saved);
+    } catch {
+      /* Local storage is optional for the isolated demo. */
+    }
+    setRestoredStorageKey(storageKey);
+  }, [storageKey, villa.id]);
   const currentProperties = useMemo(
     () => properties.map((property) => (property.id === villa.id ? villa : property)),
     [properties, villa],
   );
+  useEffect(() => {
+    if (restoredStorageKey !== storageKey) return;
+    if (
+      currentProperties.some((property) =>
+        property.media.some((media) => media.storage_path.startsWith("blob:")),
+      )
+    )
+      return;
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(currentProperties));
+    } catch {
+      /* Storage limits never prevent demo editing. */
+    }
+  }, [currentProperties, storageKey, restoredStorageKey]);
   const propertyForEditor = currentProperties.find((property) => property.id === selectedProperty);
   const [initialOperations] = useState(() => villaMareOperations(villa));
   const [orders, setOrders] = useState(initialOperations.orders);

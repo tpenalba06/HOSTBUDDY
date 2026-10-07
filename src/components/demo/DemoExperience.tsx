@@ -4,27 +4,8 @@ import { Button } from "@/components/ui/button";
 import { GuideView } from "@/components/guest/GuideView";
 import { DemoManager } from "./DemoManager";
 import { createVillaMare, demoGuide } from "./villa-mare-fixture";
-import type { DemoProperty } from "./demo-property";
+import { validStoredDemoProperty } from "./demo-storage";
 import { useI18n } from "@/lib/i18n";
-
-function validStored(value: unknown): value is DemoProperty {
-  if (!value || typeof value !== "object") return false;
-  const property = value as Partial<DemoProperty>;
-  return (
-    property.id === "demo-villa-mare" &&
-    typeof property.name === "string" &&
-    Array.isArray(property.sections) &&
-    property.sections.every(
-      (section) => typeof section.section_key === "string" && !!section.content,
-    ) &&
-    Array.isArray(property.media) &&
-    property.media.every(
-      (item) => typeof item.storage_path === "string" && !item.storage_path.startsWith("blob:"),
-    ) &&
-    Array.isArray(property.services) &&
-    Array.isArray(property.fields)
-  );
-}
 
 export function DemoExperience({ compact = false }: { compact?: boolean }) {
   const { locale, t } = useI18n();
@@ -42,7 +23,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
     try {
       const raw = window.sessionStorage.getItem(storageKey);
       const stored: unknown = raw ? JSON.parse(raw) : null;
-      if (validStored(stored)) property = stored;
+      if (validStoredDemoProperty(stored) && stored.id === "demo-villa-mare") property = stored;
     } catch {
       /* Invalid local demo state never affects real data. */
     }

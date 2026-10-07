@@ -132,3 +132,69 @@ it("updates the existing added section when answering Wi-Fi instead of inserting
     content: { items: [{ fieldKey: "wifi", label: "Wi-Fi", text: "new credentials" }] },
   });
 });
+
+
+it("updates all matching Wi-Fi sections and not custom sections", async () => {
+  const field = {
+    id: "wifi-field",
+    property_id: "property-a",
+    key: "wifi",
+    label: "Wi-Fi",
+    value: "old value",
+  } as import("./properties").PropertyField;
+  const sections = [
+    {
+      id: "canonical",
+      property_id: "property-a",
+      section_key: "wifi",
+      content: { items: [{ fieldKey: "wifi", label: "Wi-Fi", text: "old value" }] },
+    },
+    {
+      id: "generated",
+      property_id: "property-a",
+      section_key: "wifi-ab12",
+      content: { items: [{ fieldKey: "wifi", label: "Wi-Fi", text: "old generated value" }] },
+    },
+    {
+      id: "custom",
+      property_id: "property-a",
+      section_key: "custom-ab12",
+      content: { items: [{ label: "Wi-Fi", text: "custom text" }] },
+    },
+  ] as unknown as GuideSection[];
+  const updatedIds: string[] = [];
+  const insert = vi.fn().mockResolvedValue({ error: null });
+
+  backend.from.mockImplementation((table: string) => {
+    if (table === "property_fields")
+      return {
+        update: (values: object) => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: { ...field, ...values }, error: null }),
+            }),
+          }),
+        }),
+      };
+    const query = {
+      eq: () => query,
+      order: async () => ({ data: sections, error: null }),
+    };
+    return {
+      select: () => query,
+      insert,
+      update: () => ({
+        eq: async (_key: string, id: string) => {
+          updatedIds.push(id);
+          return { error: null };
+        },
+      }),
+    };
+  });
+
+  await saveFieldAnswer(field, "new value");
+
+  expect(insert).not.toHaveBeenCalled();
+  expect(updatedIds).toEqual(["canonical", "generated"]);
+  expect(updatedIds).not.toContain("custom");
+});

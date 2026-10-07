@@ -663,10 +663,13 @@ async function syncFieldToGuide(field: PropertyField) {
     .eq("property_id", field.property_id)
     .order("sort_order");
   if (error) return fail(error);
-  const section =
-    sections?.find((item) => item.section_key === definition.section.key) ??
-    sections?.find((item) => item.section_key.split("-")[0] === definition.section.key);
-  if (!section) {
+  const matchingSections =
+    sections?.filter(
+      (item) =>
+        item.section_key === definition.section.key ||
+        item.section_key.split("-")[0] === definition.section.key,
+    ) ?? [];
+  if (!matchingSections.length) {
     if (field.status !== "found" || !field.value) return;
     const { error: insertError } = await supabase.from("guide_sections").insert({
       property_id: field.property_id,
@@ -682,16 +685,18 @@ async function syncFieldToGuide(field: PropertyField) {
     if (insertError) return fail(insertError);
     return;
   }
-  const content = mergeFieldIntoGuideContent(definition.section.key, section.content, {
-    key: field.key,
-    label: field.label,
-    value: field.value,
-  });
-  const { error: updateError } = await supabase
-    .from("guide_sections")
-    .update({ content: content as Json })
-    .eq("id", section.id);
-  if (updateError) return fail(updateError);
+  for (const section of matchingSections) {
+    const content = mergeFieldIntoGuideContent(section.section_key, section.content, {
+      key: field.key,
+      label: field.label,
+      value: field.value,
+    });
+    const { error: updateError } = await supabase
+      .from("guide_sections")
+      .update({ content: content as Json })
+      .eq("id", section.id);
+    if (updateError) return fail(updateError);
+  }
 }
 
 /** Human answer: always wins over imported values and keeps an existing guide in sync. */

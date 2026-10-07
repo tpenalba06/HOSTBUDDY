@@ -22,6 +22,16 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 type Copy = Record<string, string>;
 export const translations: Record<Locale, Copy> = {
   fr: {
+    "property.delete": "Supprimer définitivement",
+    "property.deleteWarning":
+      "Cette action est irréversible. Le logement, son livret et ses données seront supprimés définitivement.",
+    "property.deleteConfirm": "Saisissez le nom exact du logement pour confirmer.",
+    "property.deleteCleanup":
+      "Le logement est supprimé. Le nettoyage des fichiers reste en attente : réessayez.",
+    "property.deleteBilling":
+      "Le logement est supprimé. Le recalcul de l’abonnement reste en attente.",
+    "property.deleteRetry": "Réessayer le nettoyage",
+    "property.deleteFailed": "La suppression a échoué.",
     "media.ambience": "Image d’ambiance HostBuddy",
     "guide.servicesEyebrow": "Pour profiter du séjour",
     "guide.servicesExplore": "Découvrir les services",
@@ -280,6 +290,14 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Seules les informations confirmées seront visibles par vos voyageurs.",
   },
   en: {
+    "property.delete": "Delete permanently",
+    "property.deleteWarning":
+      "This is irreversible. The property, its guide and its data will be permanently deleted.",
+    "property.deleteConfirm": "Enter the exact property name to confirm.",
+    "property.deleteCleanup": "The property is deleted. File cleanup is pending: retry.",
+    "property.deleteBilling": "The property is deleted. Subscription recalculation is pending.",
+    "property.deleteRetry": "Retry cleanup",
+    "property.deleteFailed": "Deletion failed.",
     "media.ambience": "HostBuddy ambience image",
     "guide.servicesEyebrow": "Make the most of your stay",
     "guide.servicesExplore": "Explore services",
@@ -533,6 +551,16 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Only confirmed information is visible to guests.",
   },
   es: {
+    "property.delete": "Eliminar definitivamente",
+    "property.deleteWarning":
+      "Esta acción es irreversible. Se eliminarán el alojamiento, su guía y sus datos.",
+    "property.deleteConfirm": "Escriba el nombre exacto del alojamiento para confirmar.",
+    "property.deleteCleanup":
+      "Alojamiento eliminado. La limpieza de archivos está pendiente: reinténtelo.",
+    "property.deleteBilling":
+      "Alojamiento eliminado. El recálculo de la suscripción está pendiente.",
+    "property.deleteRetry": "Reintentar limpieza",
+    "property.deleteFailed": "No se pudo eliminar.",
     "media.ambience": "Imagen de ambiente HostBuddy",
     "guide.servicesEyebrow": "Disfruta de tu estancia",
     "guide.servicesExplore": "Descubrir servicios",
@@ -786,6 +814,15 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo la información confirmada será visible.",
   },
   de: {
+    "property.delete": "Endgültig löschen",
+    "property.deleteWarning":
+      "Dies ist unwiderruflich. Unterkunft, Reiseführer und Daten werden endgültig gelöscht.",
+    "property.deleteConfirm": "Geben Sie zur Bestätigung den genauen Namen der Unterkunft ein.",
+    "property.deleteCleanup":
+      "Unterkunft gelöscht. Die Dateibereinigung steht aus: erneut versuchen.",
+    "property.deleteBilling": "Unterkunft gelöscht. Die Neuberechnung des Abonnements steht aus.",
+    "property.deleteRetry": "Bereinigung erneut versuchen",
+    "property.deleteFailed": "Löschen fehlgeschlagen.",
     "media.ambience": "HostBuddy Stimmungsbild",
     "guide.servicesEyebrow": "Den Aufenthalt genießen",
     "guide.servicesExplore": "Services entdecken",
@@ -1040,6 +1077,14 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Nur bestätigte Informationen sind sichtbar.",
   },
   it: {
+    "property.delete": "Elimina definitivamente",
+    "property.deleteWarning":
+      "Azione irreversibile. Alloggio, guida e dati saranno eliminati definitivamente.",
+    "property.deleteConfirm": "Inserisci il nome esatto dell’alloggio per confermare.",
+    "property.deleteCleanup": "Alloggio eliminato. Pulizia dei file in attesa: riprova.",
+    "property.deleteBilling": "Alloggio eliminato. Ricalcolo dell’abbonamento in attesa.",
+    "property.deleteRetry": "Riprova pulizia",
+    "property.deleteFailed": "Eliminazione non riuscita.",
     "media.ambience": "Immagine d’atmosfera HostBuddy",
     "guide.servicesEyebrow": "Vivi il tuo soggiorno",
     "guide.servicesExplore": "Scopri i servizi",
@@ -1290,6 +1335,15 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo le informazioni confermate saranno visibili.",
   },
   pt: {
+    "property.delete": "Eliminar definitivamente",
+    "property.deleteWarning":
+      "Esta ação é irreversível. O alojamento, o guia e os dados serão eliminados.",
+    "property.deleteConfirm": "Introduza o nome exato do alojamento para confirmar.",
+    "property.deleteCleanup":
+      "Alojamento eliminado. Limpeza dos ficheiros pendente: tente novamente.",
+    "property.deleteBilling": "Alojamento eliminado. Recálculo da subscrição pendente.",
+    "property.deleteRetry": "Repetir limpeza",
+    "property.deleteFailed": "Falha ao eliminar.",
     "media.ambience": "Imagem de ambiente HostBuddy",
     "guide.servicesEyebrow": "Aproveite a estadia",
     "guide.servicesExplore": "Descobrir serviços",

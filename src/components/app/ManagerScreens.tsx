@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { ambienceFor } from "@/components/guest/visual-library";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
+import { DeletePropertyDialog } from "./DeletePropertyDialog";
 
 export type ManagerPropertySummary = {
   id: string;
@@ -138,8 +139,11 @@ export function ManagerPropertiesScreen({
   renderEdit,
   renderView,
   renderQr,
+  onDelete,
+  pendingDeletions = [],
 }: {
   properties: ManagerPropertySummary[];
+  pendingDeletions?: { property_id: string; confirmed_name: string }[];
   role?: "owner" | "admin" | "member";
   onAdd?: () => void;
   onEdit: (id: string) => void;
@@ -147,9 +151,14 @@ export function ManagerPropertiesScreen({
   renderEdit?: (property: ManagerPropertySummary, className: string, label: string) => ReactNode;
   renderView?: (property: ManagerPropertySummary, className: string, label: string) => ReactNode;
   renderQr: (property: ManagerPropertySummary) => ReactNode;
+  onDelete?: (
+    id: string,
+    name: string,
+  ) => Promise<{ cleanupPending: boolean; billingPending: boolean }>;
 }) {
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "draft" | "published">("all");
   const [sort, setSort] = useState<"az" | "za" | "newest" | "oldest">("newest");
@@ -172,6 +181,21 @@ export function ManagerPropertiesScreen({
 
   return (
     <div className="manager-properties py-4 @sm:py-6">
+      {(role === "owner" || role === "admin") &&
+        onDelete &&
+        pendingDeletions.map((job) => (
+          <div key={job.property_id} className="mb-4 rounded-xl border p-4">
+            <p>
+              {job.confirmed_name} — {t("property.deleteCleanup")}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => setDeleting({ id: job.property_id, name: job.confirmed_name })}
+            >
+              {t("property.deleteRetry")}
+            </Button>
+          </div>
+        ))}
       <div className="grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
         <PageHeading title={t("app.myProperties")} />
         <div className="manager-property-tools">
@@ -321,6 +345,16 @@ export function ManagerPropertiesScreen({
                       {t("app.publishHint")}
                     </p>
                   )}
+                  {(role === "owner" || role === "admin") && onDelete && (
+                    <Button
+                      variant="destructive"
+                      className="min-h-12"
+                      onClick={() => setDeleting(property)}
+                    >
+                      <Trash2 />
+                      {t("property.delete")}
+                    </Button>
+                  )}
                 </div>
               </details>
               {qr === property.id && (
@@ -336,6 +370,14 @@ export function ManagerPropertiesScreen({
           <Home className="mx-auto h-9 w-9 text-primary" />
           <p className="mt-3 font-semibold">{t("app.first")}</p>
         </div>
+      )}
+      {deleting && onDelete && (role === "owner" || role === "admin") && (
+        <DeletePropertyDialog
+          key={deleting.id}
+          property={deleting}
+          onDelete={onDelete}
+          onClose={() => setDeleting(null)}
+        />
       )}
     </div>
   );

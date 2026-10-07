@@ -48,6 +48,7 @@ vi.mock("stripe", () => ({
 }));
 import {
   checkoutForToken,
+  paymentSummary,
   handleStripeEvent,
   requireOwner,
   refundOrderPayment,
@@ -86,6 +87,18 @@ describe("service checkout server orchestration (mocked providers)", () => {
       url: "https://checkout.stripe.com/synthetic",
     });
     state.rpc.mockResolvedValue({ data: true, error: null });
+  });
+  it("rejects payment links detached by permanent property deletion before provider calls", async () => {
+    for (const resolveLink of [paymentSummary, checkoutForToken]) {
+      state.results = [{ ...payment, order_id: null }];
+      state.queries = [];
+      await expect(resolveLink("synthetic-deleted-property-token")).rejects.toThrow(
+        "payment_link_unavailable",
+      );
+      expect(state.queries.map((query) => query.table)).toEqual(["order_payments"]);
+      expect(state.account).not.toHaveBeenCalled();
+      expect(state.create).not.toHaveBeenCalled();
+    }
   });
   it("requires an explicit business country before any database write", async () => {
     vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "fictional-secret");

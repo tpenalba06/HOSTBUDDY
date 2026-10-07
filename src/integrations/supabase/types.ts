@@ -361,7 +361,7 @@ export type Database = {
           currency: string
           expires_at: string
           id: string
-          order_id: string
+          order_id: string | null
           organization_id: string
           payment_intent_id: string | null
           status: string
@@ -377,7 +377,7 @@ export type Database = {
           currency?: string
           expires_at?: string
           id?: string
-          order_id: string
+          order_id: string | null
           organization_id: string
           payment_intent_id?: string | null
           status?: string
@@ -393,7 +393,7 @@ export type Database = {
           currency?: string
           expires_at?: string
           id?: string
-          order_id?: string
+          order_id?: string | null
           organization_id?: string
           payment_intent_id?: string | null
           status?: string

@@ -24,7 +24,7 @@ type Account = {
 type Payment = {
   id: string;
   organization_id: string;
-  order_id: string;
+  order_id: string | null;
   stripe_account_id: string;
   checkout_session_id: string | null;
   payment_intent_id: string | null;
@@ -454,7 +454,7 @@ export async function paymentSummary(token: string) {
       .eq("token_hash", createHash("sha256").update(token).digest("hex"))
       .maybeSingle(),
   );
-  if (!payment || Date.parse(payment.expires_at) < Date.now())
+  if (!payment || !payment.order_id || Date.parse(payment.expires_at) < Date.now())
     throw new Error("payment_link_unavailable");
   const order = required(
     checked(
@@ -483,6 +483,7 @@ export async function checkoutForToken(token: string) {
   );
   if (
     !payment ||
+    !payment.order_id ||
     Date.parse(payment.expires_at) < Date.now() ||
     !["pending", "expired"].includes(payment.status)
   )

@@ -6,7 +6,7 @@ import { checkMigrations } from "./check-migrations.mjs";
 
 describe("migration inventory", () => {
   it("includes every current SQL without changing historical checksums", () => {
-    expect(checkMigrations()).toBe(21);
+    expect(checkMigrations()).toBe(22);
   });
   it("fails when a SQL is edited or missing from the journal", () => {
     const directory = mkdtempSync(`${tmpdir()}/hb-journal-`);

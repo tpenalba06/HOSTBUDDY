@@ -84,6 +84,10 @@
     {
       "tag": "0020_atomic_public_rate_limits",
       "sha256": "f5c5d2c719b1504003ca4966d0d9b82da50b75924ac0f5db2ab2105b3f715ac9"
+    },
+    {
+      "tag": "0021_property_deletion",
+      "sha256": "44a108eb24a05d7753f02405e4b6d45ac53d106621571613f28c76bec567fb71"
     }
   ]
 }

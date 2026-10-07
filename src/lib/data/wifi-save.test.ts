@@ -133,7 +133,6 @@ it("updates the existing added section when answering Wi-Fi instead of inserting
   });
 });
 
-
 it("updates all matching Wi-Fi sections and not custom sections", async () => {
   const field = {
     id: "wifi-field",

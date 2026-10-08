@@ -3,7 +3,16 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const schema = z.object({
   organizationId: z.string().uuid(),
-  action: z.enum(["overview", "billing", "portal", "connect", "payment_link", "refund"]),
+  action: z.enum([
+    "overview",
+    "billing",
+    "portal",
+    "connect",
+    "connect_status",
+    "connect_resume",
+    "payment_link",
+    "refund",
+  ]),
   id: z.string().uuid().optional(),
   feeTermsAccepted: z.boolean().optional(),
   country: z
@@ -20,6 +29,10 @@ export const managePayments = createServerFn({ method: "POST" })
     await server.requireOwner(data.organizationId, context.userId);
     try {
       switch (data.action) {
+        case "connect_status":
+          return { connect: await server.connectOverview(data.organizationId) };
+        case "connect_resume":
+          return await server.resumeConnectOnboarding(data.organizationId);
         case "overview":
           return { overview: await server.paymentOverview(data.organizationId) };
         case "billing":

@@ -71,6 +71,10 @@ import {
   requireOwner,
   refundOrderPayment,
   connectOnboarding,
+  resumeConnectOnboarding,
+  connectOverview,
+  connectAppOrigin,
+  appOrigin,
 } from "./payments.server";
 
 describe("service checkout server orchestration (mocked providers)", () => {
@@ -92,6 +96,7 @@ describe("service checkout server orchestration (mocked providers)", () => {
     state.queries = [];
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_synthetic");
     vi.stubEnv("HOSTBUDDY_APP_URL", "https://example.test");
+    vi.stubEnv("HOSTBUDDY_CONNECT_APP_URL", "https://example.test");
     state.account.mockImplementation(async (_id, _params, options) => {
       expect(options).toEqual({ apiVersion: "2025-09-30.preview" });
       return {
@@ -160,9 +165,123 @@ describe("service checkout server orchestration (mocked providers)", () => {
     expect(state.queries).toHaveLength(0);
     expect(state.createAccount).not.toHaveBeenCalled();
   });
+  it("onboarding refresh renews the same tenant account without any write or new consent", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_synthetic");
+    state.results = [
+      {
+        stripe_account_id: "acct_existing",
+        service_fee_terms_version: "services-2pct-v1",
+        service_fee_terms_accepted_at: "2026-01-01T00:00:00Z",
+      },
+    ];
+    state.createAccountLink.mockResolvedValue({ url: "https://connect.stripe.com/new-single-use" });
+    await resumeConnectOnboarding("org-1");
+    expect(state.createAccount).not.toHaveBeenCalled();
+    expect(state.queries).toEqual([
+      {
+        table: "organization_payment_accounts",
+        calls: [["select", "*"], ["eq", "organization_id", "org-1"], ["maybeSingle"]],
+      },
+    ]);
+    expect(state.createAccountLink.mock.calls[0]![0].account).toBe("acct_existing");
+  });
+  it("onboarding resume refuses an unlinked tenant or missing stored consent", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_synthetic");
+    for (const row of [
+      null,
+      { stripe_account_id: null },
+      { stripe_account_id: "acct_existing", service_fee_terms_version: null },
+    ]) {
+      state.results = [row];
+      await expect(resumeConnectOnboarding("org-other")).rejects.toThrow();
+    }
+    expect(state.createAccountLink).not.toHaveBeenCalled();
+    expect(state.createAccount).not.toHaveBeenCalled();
+  });
+  it("onboarding return synchronizes Stripe restrictions, never infers activation or calls Billing", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_synthetic");
+    state.results = [
+      { stripe_account_id: "acct_existing", charges_enabled: true, payouts_enabled: true },
+      null,
+    ];
+    state.account.mockResolvedValue({
+      configuration: {
+        merchant: {
+          capabilities: {
+            card_payments: { status: "restricted" },
+            stripe_balance: { payouts: { status: "restricted" } },
+          },
+        },
+      },
+      requirements: {
+        entries: [{ description: "external_account", awaiting_action_from: "user" }],
+      },
+    });
+    const result = await connectOverview("org-1");
+    expect(result).toMatchObject({
+      account: { charges_enabled: false, payouts_enabled: false },
+      onboarding: { status: "incomplete", requirements: ["bank"] },
+    });
+    expect(state.account).toHaveBeenCalledWith(
+      "acct_existing",
+      { include: ["configuration.merchant", "requirements"] },
+      { apiVersion: "2025-09-30.preview" },
+    );
+    expect(
+      state.queries.every(
+        (q) =>
+          q.table === "organization_payment_accounts" &&
+          q.calls.some((c) => c[0] === "eq" && c[1] === "organization_id" && c[2] === "org-1"),
+      ),
+    ).toBe(true);
+    expect(state.rpc).not.toHaveBeenCalled();
+    expect(state.create).not.toHaveBeenCalled();
+  });
+  it("onboarding rejects non-owner and cross-tenant access before any Stripe call", async () => {
+    for (const role of [undefined, "member", "admin"]) {
+      state.results = [role ? { role } : null];
+      await expect(requireOwner("org-1", "user-other")).rejects.toThrow("not_allowed");
+    }
+    expect(
+      state.queries.every((q) =>
+        q.calls.some((c) => c[0] === "eq" && c[1] === "user_id" && c[2] === "user-other"),
+      ),
+    ).toBe(true);
+    expect(state.account).not.toHaveBeenCalled();
+    expect(state.createAccountLink).not.toHaveBeenCalled();
+  });
+  it("onboarding has its own HTTPS destination without changing the Billing origin", () => {
+    vi.stubEnv("HOSTBUDDY_CONNECT_APP_URL", "https://current-preview.example.test/app/payments");
+    expect(connectAppOrigin()).toBe("https://current-preview.example.test");
+    expect(appOrigin()).toBe("https://example.test");
+    for (const url of ["http://unsafe.test", "https://name:password@unsafe.test"]) {
+      vi.stubEnv("HOSTBUDDY_CONNECT_APP_URL", url);
+      expect(() => connectAppOrigin()).toThrow();
+    }
+    vi.stubEnv("HOSTBUDDY_CONNECT_APP_URL", undefined);
+    expect(connectAppOrigin()).toBe(
+      "https://id-preview--ad0b09fe-b134-491b-8601-9d64d6d27b86.lovable.app",
+    );
+    expect(appOrigin()).toBe("https://example.test");
+  });
+  it("onboarding preserves the existing consent timestamp even for a legacy connect request", async () => {
+    vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_synthetic");
+    state.results = [
+      null,
+      {
+        stripe_account_id: "acct_existing",
+        service_fee_terms_version: "services-2pct-v1",
+        service_fee_terms_accepted_at: "2026-01-01T00:00:00Z",
+      },
+    ];
+    state.createAccountLink.mockResolvedValue({ url: "https://connect.stripe.com/renewed" });
+    await connectOnboarding("org-1", true, "FR");
+    expect(state.queries.some((q) => q.calls.some((c) => c[0] === "update"))).toBe(false);
+    expect(state.createAccount).not.toHaveBeenCalled();
+  });
   it("sends the chosen country and the proven Connect preview version, preserving billing API", async () => {
     vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "fictional-secret");
-    state.results.push(null, null, null, { stripe_account_id: null }, null);
+    state.results.push(null, { stripe_account_id: null }, null, null);
     state.createAccount.mockResolvedValue({ id: "acct_fixture" });
     state.createAccountLink.mockResolvedValue({ url: "https://connect.stripe.com/fixture" });
     await expect(connectOnboarding("org-1", true, "fr")).resolves.toEqual({
@@ -182,8 +301,8 @@ describe("service checkout server orchestration (mocked providers)", () => {
           type: "account_onboarding",
           account_onboarding: {
             configurations: ["merchant"],
-            refresh_url: "https://example.test/app/payments",
-            return_url: "https://example.test/app/payments",
+            refresh_url: "https://example.test/app/payments?connect=refresh&connectOrg=org-1",
+            return_url: "https://example.test/app/payments?connect=return&connectOrg=org-1",
           },
         },
       },

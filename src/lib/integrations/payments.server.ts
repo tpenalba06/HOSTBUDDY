@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { cents, paymentEnvironment, subscriptionQuote, serviceFeeCents } from "./payment-policy";
+import { connectStatusFromAccount } from "./connect-status";
 import {
   billingPrices,
   reconcileSubscription,
@@ -396,21 +397,20 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean, 
     throw new Error("payment_not_configured");
   if (!feeTermsAccepted) throw new Error("fee_terms_required");
   if (!country || !/^[A-Za-z]{2}$/.test(country)) throw new Error("country_required");
-  checked(
-    await paymentDb
-      .from("organization_payment_accounts")
-      .upsert({ organization_id: org }, { onConflict: "organization_id", ignoreDuplicates: true }),
-  );
-  checked(
-    await paymentDb
-      .from("organization_payment_accounts")
-      .update({
-        service_fee_terms_version: "services-2pct-v1",
-        service_fee_terms_accepted_at: new Date().toISOString(),
-      })
-      .eq("organization_id", org),
-  );
   const current = await account(org);
+  if (
+    current.service_fee_terms_version !== "services-2pct-v1" ||
+    !current.service_fee_terms_accepted_at
+  )
+    checked(
+      await paymentDb
+        .from("organization_payment_accounts")
+        .update({
+          service_fee_terms_version: "services-2pct-v1",
+          service_fee_terms_accepted_at: new Date().toISOString(),
+        })
+        .eq("organization_id", org),
+    );
   const stripe = stripeClient();
   if (!current.stripe_account_id) {
     // Modern Accounts v2 SaaS model. Stripe handles KYC, processing fees and
@@ -433,23 +433,110 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean, 
     );
     current.stripe_account_id = connected.id;
   }
-  const link = await stripe.v2.core.accountLinks.create(
+  return connectAccountLink(current.stripe_account_id, org);
+}
+
+/** Separate Connect destination so a preview fix cannot change Billing return URLs. */
+export function connectAppOrigin() {
+  const env = paymentServerEnvironment();
+  // This project's TEST preview differs from its historical APP_URL binding.
+  // Scope the preview default to development; production still uses its binding.
+  const configured =
+    env["HOSTBUDDY_CONNECT_APP_URL"] ||
+    (import.meta.env.DEV && paymentEnvironment(env).mode === "test"
+      ? "https://id-preview--ad0b09fe-b134-491b-8601-9d64d6d27b86.lovable.app"
+      : undefined);
+  if (!configured) return appOrigin();
+  const url = new URL(configured);
+  if (url.protocol !== "https:" || url.username || url.password)
+    throw new Error("payment_not_configured");
+  return url.origin;
+}
+
+async function connectAccountLink(accountId: string, org: string) {
+  const base = `${connectAppOrigin()}/app/payments`;
+  const query = `&connectOrg=${encodeURIComponent(org)}`;
+  const link = await stripeClient().v2.core.accountLinks.create(
     {
-      account: current.stripe_account_id,
+      account: accountId,
       use_case: {
         type: "account_onboarding",
         // Accounts v2 (2025-09-30.preview) requires the configurations to onboard;
         // the SDK typings lag behind, hence the widened object.
         account_onboarding: {
           configurations: ["merchant"],
-          refresh_url: `${appOrigin()}/app/payments`,
-          return_url: `${appOrigin()}/app/payments`,
+          refresh_url: `${base}?connect=refresh${query}`,
+          return_url: `${base}?connect=return${query}`,
         } as { refresh_url: string; return_url: string },
       },
     },
     { apiVersion: "2025-09-30.preview" },
   );
   return { url: link.url };
+}
+
+/** Renew single-use links for the same tenant/account, without recording new consent. */
+export async function resumeConnectOnboarding(org: string) {
+  if (!paymentEnvironment(paymentServerEnvironment()).connect)
+    throw new Error("payment_not_configured");
+  const current = required(
+    checked(
+      await paymentDb
+        .from("organization_payment_accounts")
+        .select("*")
+        .eq("organization_id", org)
+        .maybeSingle(),
+    ),
+  );
+  if (!current.stripe_account_id) throw new Error("payment_not_configured");
+  if (
+    current.service_fee_terms_version !== "services-2pct-v1" ||
+    !current.service_fee_terms_accepted_at
+  )
+    throw new Error("fee_terms_required");
+  return connectAccountLink(current.stripe_account_id, org);
+}
+
+/** This endpoint never runs Billing reconciliation or any financial operation. */
+export async function connectOverview(org: string) {
+  const config = paymentEnvironment(paymentServerEnvironment());
+  const current = checked(
+    await paymentDb
+      .from("organization_payment_accounts")
+      .select("*")
+      .eq("organization_id", org)
+      .maybeSingle(),
+  );
+  if (!config.connect || !current?.stripe_account_id)
+    return {
+      config,
+      account: current,
+      onboarding: null,
+    };
+  const connected = await stripeClient().v2.core.accounts.retrieve(
+    current.stripe_account_id,
+    { include: ["configuration.merchant", "requirements"] },
+    { apiVersion: "2025-09-30.preview" },
+  );
+  const onboarding = connectStatusFromAccount(connected);
+  checked(
+    await paymentDb
+      .from("organization_payment_accounts")
+      .update({
+        charges_enabled: onboarding.chargesEnabled,
+        payouts_enabled: onboarding.payoutsEnabled,
+      })
+      .eq("organization_id", org),
+  );
+  return {
+    config,
+    account: {
+      ...current,
+      charges_enabled: onboarding.chargesEnabled,
+      payouts_enabled: onboarding.payoutsEnabled,
+    },
+    onboarding,
+  };
 }
 export async function createOrderPaymentLink(org: string, orderId: string) {
   if (!paymentEnvironment(paymentServerEnvironment()).connect)

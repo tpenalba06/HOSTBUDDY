@@ -259,10 +259,12 @@ describe("service checkout server orchestration (mocked providers)", () => {
       expect(() => connectAppOrigin()).toThrow();
     }
     vi.stubEnv("HOSTBUDDY_CONNECT_APP_URL", undefined);
+    vi.stubEnv("DEV", false);
     expect(connectAppOrigin()).toBe(
       "https://id-preview--ad0b09fe-b134-491b-8601-9d64d6d27b86.lovable.app",
     );
     expect(appOrigin()).toBe("https://example.test");
+    vi.stubEnv("DEV", true);
   });
   it("onboarding preserves the existing consent timestamp even for a legacy connect request", async () => {
     vi.stubEnv("STRIPE_CONNECT_WEBHOOK_SECRET", "whsec_synthetic");

@@ -440,10 +440,11 @@ export async function connectOnboarding(org: string, feeTermsAccepted: boolean, 
 export function connectAppOrigin() {
   const env = paymentServerEnvironment();
   // This project's TEST preview differs from its historical APP_URL binding.
-  // Scope the preview default to development; production still uses its binding.
+  // Preview runs a compiled build too: use the Stripe TEST mode, not Vite DEV.
+  // Live destinations retain the existing binding; explicit Connect config wins.
   const configured =
     env["HOSTBUDDY_CONNECT_APP_URL"] ||
-    (import.meta.env.DEV && paymentEnvironment(env).mode === "test"
+    (paymentEnvironment(env).mode === "test"
       ? "https://id-preview--ad0b09fe-b134-491b-8601-9d64d6d27b86.lovable.app"
       : undefined);
   if (!configured) return appOrigin();

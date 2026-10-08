@@ -377,7 +377,7 @@ export type Database = {
           currency?: string
           expires_at?: string
           id?: string
-          order_id?: string | null
+          order_id: string | null
           organization_id: string
           payment_intent_id?: string | null
           status?: string
@@ -481,53 +481,6 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organization_billing_capacity: {
-        Row: {
-          invoice_id: string
-          organization_id: string
-          paid_capacity: number
-          period_end: number
-          period_start: number
-          renewal_quantity: number
-          revision: number
-          schedule_id: string | null
-          subscription_id: string
-          updated_at: string
-        }
-        Insert: {
-          invoice_id: string
-          organization_id: string
-          paid_capacity: number
-          period_end: number
-          period_start: number
-          renewal_quantity: number
-          revision: number
-          schedule_id?: string | null
-          subscription_id: string
-          updated_at?: string
-        }
-        Update: {
-          invoice_id?: string
-          organization_id?: string
-          paid_capacity?: number
-          period_end?: number
-          period_start?: number
-          renewal_quantity?: number
-          revision?: number
-          schedule_id?: string | null
-          subscription_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_billing_capacity_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: true
-            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -642,7 +595,6 @@ export type Database = {
       }
       organization_payment_accounts: {
         Row: {
-          billing_grace_until: string | null
           charges_enabled: boolean
           current_period_end: string | null
           last_event_created: number
@@ -657,7 +609,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          billing_grace_until?: string | null
           charges_enabled?: boolean
           current_period_end?: string | null
           last_event_created?: number
@@ -672,7 +623,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          billing_grace_until?: string | null
           charges_enabled?: boolean
           current_period_end?: string | null
           last_event_created?: number
@@ -822,38 +772,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "properties_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      property_deletion_cleanup: {
-        Row: {
-          confirmed_name: string
-          created_at: string
-          organization_id: string
-          paths: string[]
-          property_id: string
-        }
-        Insert: {
-          confirmed_name: string
-          created_at?: string
-          organization_id: string
-          paths: string[]
-          property_id: string
-        }
-        Update: {
-          confirmed_name?: string
-          created_at?: string
-          organization_id?: string
-          paths?: string[]
-          property_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "property_deletion_cleanup_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1333,10 +1251,6 @@ export type Database = {
         }
         Returns: string
       }
-      delete_property_permanently: {
-        Args: { _confirmed_name: string; _property: string }
-        Returns: Json
-      }
       enqueue_billing_sync: { Args: { _org: string }; Returns: undefined }
       ensure_my_organization: { Args: { _first_name: string }; Returns: string }
       get_organization_team: {
@@ -1349,7 +1263,6 @@ export type Database = {
         }[]
       }
       get_public_guide: { Args: { _slug: string }; Returns: Json }
-      has_paid_publication_access: { Args: { _org: string }; Returns: boolean }
       invite_organization_member: {
         Args: {
           _email: string
@@ -1377,14 +1290,6 @@ export type Database = {
       read_guest_thread: {
         Args: { _conversation: string; _slug: string; _token_hash: string }
         Returns: Json
-      }
-      record_billing_capacity: {
-        Args: { _lease: string; _org: string; _revision: number; _state: Json }
-        Returns: undefined
-      }
-      refresh_billing_sync_lease: {
-        Args: { _lease: string; _org: string }
-        Returns: undefined
       }
       remove_organization_member: {
         Args: { _org: string; _user: string }

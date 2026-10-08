@@ -101,6 +101,7 @@ try {
       metadata: { test_fixture: marker },
     });
     assert.equal(subscription.livemode, false);
+    const recoveries = [];
     let state = null,
       revision = 0;
     const store = {
@@ -208,20 +209,37 @@ try {
           "capacity is not granted before paid reconcile",
         );
         const beforeRetry = (await invoices()).map(invoiceView);
-        const result = await invokeReconcile(count, requestRevision);
+        // payments.server.ts enqueues a NEW billing revision for the payment event.
+        // The paid recovery is a distinct operation from the unpaid upgrade:
+        // always_invoice and none must not share the original operation's key.
+        // Keep this recovery revision stable for retries of the same operation.
+        const recoveryRevision = ++revision;
+        const result = await invokeReconcile(count, recoveryRevision);
         const afterRetry = (await invoices()).map(invoiceView);
-        assert.deepEqual(afterRetry, beforeRetry, "same-revision recovery must not charge twice");
+        assert.deepEqual(afterRetry, beforeRetry, "paid recovery must not charge twice");
         assert.equal(state.paidCapacity, count);
-        console.log(
-          JSON.stringify({
-            stage: "paid_capacity_recovered",
-            revision: requestRevision,
-            paidCapacity: state.paidCapacity,
-            renewalQuantity: state.renewalQuantity,
-            invoice: invoice.id,
-            noSecondInvoice: true,
-          }),
+        assert.equal(state.renewalQuantity, count);
+        await retry(count);
+        assert.deepEqual(
+          (await invoices()).map(invoiceView),
+          beforeRetry,
+          "stable recovery-revision retry must not charge twice",
         );
+        const recovery = {
+          stage: "paid_capacity_recovered",
+          upgradeRevision: requestRevision,
+          recoveryRevision,
+          secondReconcileSucceeded: true,
+          stableRetrySucceeded: true,
+          paidCapacity: state.paidCapacity,
+          renewalQuantity: state.renewalQuantity,
+          invoice: invoice.id,
+          invoicesBefore: beforeRetry.length,
+          invoicesAfter: afterRetry.length,
+          noSecondInvoice: true,
+        };
+        recoveries.push(recovery);
+        console.log(JSON.stringify(recovery));
         return result;
       }
     };
@@ -250,6 +268,16 @@ try {
       for (const invoice of await invoices()) {
         assert.equal(invoice.livemode, false);
         assert.ok(invoice.total >= 0, "negative invoice");
+        assert.equal(
+          (await stripe.creditNotes.list({ invoice: invoice.id, limit: 100 })).data.length,
+          0,
+          "unexpected credit note",
+        );
+      }
+      for (const charge of (await stripe.charges.list({ customer: customer.id, limit: 100 }))
+        .data) {
+        assert.equal(charge.livemode, false);
+        assert.equal(charge.amount_refunded, 0, "unexpected refund");
       }
       assert.equal(
         (await stripe.invoiceItems.list({ customer: customer.id, pending: true, limit: 100 })).data
@@ -276,8 +304,14 @@ try {
             )
           : null;
         const clockState = await stripe.testHelpers.testClocks.retrieve(clock.id);
+        const allInvoices = (await invoices()).map(invoiceView);
         return {
-          invoices: (await invoices()).map(invoiceView),
+          invoices: allInvoices,
+          invoiceCount: allInvoices.length,
+          prorationInvoiceCount: allInvoices.filter(
+            (invoice) => invoice.billing_reason === "subscription_update",
+          ).length,
+          recoveries,
           customerBalance: balance.balance,
           subscriptionStatus: current.status,
           subscriptionQuantity: current.items.data.map((item) => ({
@@ -316,6 +350,7 @@ try {
         assert.equal((await f.invoices()).length, 1);
         assert.equal(f.state().renewalQuantity, 13);
         assert.equal(f.state().paidCapacity, 14);
+        await f.noCredit();
         assert.equal((await f.advance()).latest_invoice.amount_paid, 999 + 11 * 299);
       },
     ],
@@ -324,6 +359,8 @@ try {
       14,
       async (f) => {
         await f.reconcile(13);
+        assert.equal(f.state().paidCapacity, 14);
+        await f.noCredit();
         await f.reconcile(14);
         assert.equal((await f.invoices()).length, 1);
         assert.equal((await f.advance()).latest_invoice.amount_paid, 999 + 12 * 299);
@@ -334,6 +371,8 @@ try {
       14,
       async (f) => {
         await f.reconcile(13);
+        assert.equal(f.state().paidCapacity, 14);
+        await f.noCredit();
         await f.reconcile(15);
         const all = await f.invoices();
         assert.equal(all.length, 2);
@@ -351,6 +390,8 @@ try {
       14,
       async (f) => {
         await f.reconcile(13);
+        assert.equal(f.state().paidCapacity, 14);
+        await f.noCredit();
         const renewed = await f.advance();
         assert.equal(
           renewed.items.data.find((item) => item.price.id === env.STRIPE_PRICE_EXTRA).quantity,
@@ -371,6 +412,9 @@ try {
           Math.abs(upgrade.amount_paid - expected) <= 1,
           "one additional property in new period",
         );
+        await f.retry(14);
+        assert.equal((await f.invoices()).length, 3);
+        assert.equal(f.state().renewalQuantity, 14);
       },
     ],
     [
@@ -378,6 +422,8 @@ try {
       2,
       async (f) => {
         await f.reconcile(1);
+        assert.equal(f.state().paidCapacity, 2);
+        await f.noCredit();
         assert.equal((await f.invoices()).length, 1);
         assert.equal((await stripe.subscriptions.retrieve(f.subscription.id)).status, "active");
         assert.equal((await f.advance()).status, "canceled");
@@ -389,6 +435,8 @@ try {
       2,
       async (f) => {
         await f.reconcile(1);
+        assert.equal(f.state().paidCapacity, 2);
+        await f.noCredit();
         await f.reconcile(2);
         assert.equal((await f.invoices()).length, 1);
         assert.equal((await f.advance()).latest_invoice.amount_paid, 999);
@@ -399,6 +447,8 @@ try {
       2,
       async (f) => {
         await f.reconcile(1);
+        assert.equal(f.state().paidCapacity, 2);
+        await f.noCredit();
         assert.equal((await f.advance()).status, "canceled");
         const fresh = await stripe.subscriptions.create({
           customer: f.customer.id,
@@ -430,6 +480,32 @@ try {
       process.exitCode = 1;
     }
     console.log(JSON.stringify(results.at(-1)));
+    const result = results.at(-1);
+    console.log(
+      JSON.stringify({
+        stage: "scenario_summary",
+        scenario: name,
+        status: result.status,
+        error: result.error,
+        noCredit: result.noCredit,
+        noRefund: result.noCredit,
+        customerBalance: result.customerBalance,
+        paidCapacity: result.capacity?.paidCapacity,
+        renewalQuantity: result.capacity?.renewalQuantity,
+        invoiceCount: result.invoiceCount,
+        prorationInvoiceCount: result.prorationInvoiceCount,
+        invoices: result.invoices?.map((invoice) => ({
+          id: invoice.id,
+          status: invoice.status,
+          reason: invoice.billing_reason,
+          due: invoice.amount_due,
+          paid: invoice.amount_paid,
+          currency: invoice.currency,
+          livemode: invoice.livemode,
+        })),
+        recoveries: result.recoveries,
+      }),
+    );
   }
   console.log(
     JSON.stringify({
@@ -442,11 +518,14 @@ try {
   );
 } finally {
   // Delete only clocks created by THIS run; never existing Stripe/HostBuddy fixtures.
+  let deletedClocks = 0;
   for (const clock of clocks) {
     try {
       await ready(clock);
-      await stripe.testHelpers.testClocks.del(clock);
-      console.log(JSON.stringify({ cleanup: "clock_deleted", id: clock }));
+      const deleted = await stripe.testHelpers.testClocks.del(clock);
+      assert.equal(deleted.deleted, true);
+      deletedClocks++;
+      console.log(JSON.stringify({ cleanup: "clock_deleted", id: clock, deleted: true }));
     } catch {
       console.error(`test_fixture_cleanup_pending:${clock}`);
       process.exitCode = 1;
@@ -454,6 +533,8 @@ try {
   }
   for (const price of priceIds) {
     const value = await stripe.prices.update(price, { active: false });
+    assert.equal(value.active, false);
+    assert.equal(value.livemode, false);
     console.log(
       JSON.stringify({
         cleanup: "price",
@@ -465,6 +546,8 @@ try {
   }
   for (const product of products) {
     const value = await stripe.products.update(product, { active: false });
+    assert.equal(value.active, false);
+    assert.equal(value.livemode, false);
     console.log(
       JSON.stringify({
         cleanup: "product",
@@ -474,5 +557,16 @@ try {
       }),
     );
   }
+  console.log(
+    JSON.stringify({
+      stage: "cleanup_summary",
+      status: deletedClocks === clocks.length ? "PASS" : "FAIL",
+      clocksCreated: clocks.length,
+      clocksDeleted: deletedClocks,
+      pricesDeactivated: priceIds.length,
+      productsDeactivated: products.length,
+      hostbuddyDbFixturesCreated: 0,
+    }),
+  );
   await vite.close();
 }

@@ -4,7 +4,7 @@ Version du 9 octobre 2026. **Document de préparation, non accepté et non défi
 
 ## Parties et périmètre
 
-- Éditeur juridique exploitant le nom commercial Nona : identité et coordonnées à compléter.
+- Éditeur juridique exploitant le nom commercial Nona : **Tristan Penalba, entrepreneur individuel (EI), SIREN 992856641, SIRET du siège 99285664100012**. Identité reprise des documents professionnels du 24 juin 2026 et de la confirmation du titulaire ; entreprise individuelle et établissement actifs à Nice vérifiés via l’API officielle le 9 octobre 2026. Les coordonnées historiques sont retrouvées dans le dossier privé de reprise ; leur actualité et leur utilisation pour Nona restent à confirmer avant contractualisation. La non-diffusion publique de l’adresse ne supprime pas l’obligation de renseigner les mentions légales du site commercialisé.
 - Client : entité, représentant habilité et contact données personnelles à compléter.
 - Responsable du traitement : identifier l’exploitant/gestionnaire qui décide de l’usage des données des voyageurs. Si la conciergerie agit elle-même pour le compte d’un propriétaire/exploitant, documenter les instructions et l’autorisation de recourir à Nona comme sous-traitant ultérieur. Ne pas qualifier toutes les conciergeries automatiquement de responsables.
 - Nona : sous-traitant des données confiées pour les guides et opérations voyageurs, dans le périmètre documenté. Ses traitements propres de compte, facturation, commission, support et sécurité restent distincts.

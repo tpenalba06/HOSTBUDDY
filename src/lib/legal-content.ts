@@ -9,13 +9,13 @@ export type LegalDocument = {
 export const legalRevision = "9 octobre 2026 — version de travail Nona en français";
 
 export const legalPublicationGaps = [
-  "Nona est le nom commercial retenu ; identité légale de l’éditeur, statut, SIREN, immatriculation et adresse professionnelle à compléter.",
+  "Éditeur identifié : Tristan Penalba, entrepreneur individuel, SIREN 992856641 / SIRET 99285664100012. Actualité de l’adresse professionnelle historique à confirmer avant publication définitive.",
   "Disponibilité du nom Nona et droits de propriété intellectuelle à vérifier avant lancement.",
-  "E-mail et téléphone professionnels, responsable de publication et contact pour les données personnelles.",
+  "Actualité de l’e-mail et du téléphone professionnels historiques et utilisation de ce contact pour les données personnelles à confirmer.",
   "Identité, adresse et téléphone de l’hébergeur du site commercialisé.",
-  "Régime de TVA et qualification HT ou TTC des prix affichés.",
+  "Franchise de TVA mentionnée dans les documents de juin 2026 (article 293 B du CGI) : maintien du régime à confirmer pour l’abonnement et la commission, sans modifier les tarifs actés.",
   "Durées de conservation, procédure d’effacement, prestataires, pays d’hébergement et garanties de transfert.",
-  "Périmètre des clients, conditions commerciales, information des voyageurs avant collecte et avant paiement, et accord de sous-traitance RGPD à valider.",
+  "Conditions commerciales des gestionnaires professionnels, information des voyageurs avant collecte et avant paiement, et accord de sous-traitance RGPD à valider.",
 ];
 
 export const legalDocuments: LegalDocument[] = [
@@ -23,14 +23,15 @@ export const legalDocuments: LegalDocument[] = [
     id: "mentions-legales",
     title: "Mentions légales",
     intro:
-      "Nona est le nom commercial retenu pour l’application de guides d’accueil numériques anciennement appelée HostBuddy. Ce nom ne désigne pas, à lui seul, l’identité juridique de son éditeur. Les informations ci-dessous doivent être complétées avant commercialisation.",
+      "Nona est le nom commercial retenu pour l’application de guides d’accueil numériques anciennement appelée HostBuddy, éditée par Tristan Penalba, entrepreneur individuel. La disponibilité juridique du nom Nona reste à vérifier. Cette version de travail doit être complétée et validée avant commercialisation.",
     sections: [
       {
         title: "Éditeur et responsable de publication",
         paragraphs: [
-          "Nom légal ou dénomination : à compléter. Forme juridique : à compléter. Pour une entreprise individuelle, faire figurer les nom et prénom de l’entrepreneur avec la mention « entrepreneur individuel » ou « EI ».",
-          "Adresse professionnelle, SIREN, immatriculation applicable et numéro de TVA ou régime d’exonération : à compléter. Capital social uniquement si la forme juridique l’exige.",
-          "Responsable de publication, e-mail et téléphone professionnels : à compléter. Aucun contact fictif n’est présenté comme un contact opérationnel.",
+          "Éditeur : Tristan Penalba, entrepreneur individuel (EI). Nona est son nom commercial pour cette application ; une organisation cliente de conciergerie n’est pas l’éditeur du logiciel.",
+          "SIREN : 992856641. SIRET du siège : 99285664100012. L’API publique officielle confirme une entreprise individuelle active et un établissement actif à Nice au 9 octobre 2026 ; le nom et l’adresse détaillée sont non diffusibles dans cette réponse. L’identité de l’éditeur est reprise des documents professionnels et de sa confirmation.",
+          "Directeur de publication : Tristan Penalba. Les coordonnées professionnelles historiques ont été retrouvées ; leur actualité et leur utilisation pour Nona doivent être confirmées avant publication définitive. Adresse, e-mail et téléphone opérationnels ne sont pas encore publiés dans ce brouillon.",
+          "Les documents professionnels de juin 2026 portent la mention « TVA non applicable, article 293 B du CGI ». Cette mention historique ne confirme pas le régime fiscal actuel ; ne pas la présenter comme définitive sans vérification.",
           "Le choix du nom Nona ne vaut ni dépôt ni confirmation de disponibilité d’une marque. Les droits antérieurs doivent être examinés séparément de l’immatriculation de l’éditeur.",
         ],
       },
@@ -58,7 +59,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Qui traite les données ?",
         paragraphs: [
-          "L’éditeur Nona, dont l’identité et le contact sont à compléter dans les mentions légales, détermine les finalités de la gestion des comptes, de son abonnement, du support et de la sécurité du service.",
+          "Tristan Penalba, entrepreneur individuel, éditeur de Nona identifié dans les mentions légales, détermine les finalités de la gestion des comptes, de son abonnement, du support et de la sécurité du service. L’actualité du contact professionnel pour exercer vos droits reste à confirmer avant publication définitive.",
           "Pour les messages, demandes de services et retours de voyageurs gérés pour un établissement, le responsable du traitement peut être le gestionnaire ou l’exploitant pour lequel il agit. Nona traite ces données pour leur compte dans le périmètre convenu. Cette répartition doit être confirmée dans un accord de sous-traitance RGPD ; le gestionnaire doit fournir sa propre information aux voyageurs.",
         ],
       },
@@ -104,7 +105,7 @@ export const legalDocuments: LegalDocument[] = [
     id: "conditions",
     title: "Conditions d’utilisation et d’abonnement",
     intro:
-      "Projet de conditions pour les gestionnaires professionnels. Ce document ne constitue pas encore des conditions contractuelles définitives ; le périmètre des clients et les points signalés doivent être validés avant commercialisation.",
+      "Projet de conditions entre Tristan Penalba, entrepreneur individuel, éditeur de Nona, et les gestionnaires professionnels utilisateurs du service. Ce document ne constitue pas encore des conditions contractuelles définitives ; les points signalés doivent être validés avant commercialisation.",
     sections: [
       {
         title: "Service, compte et responsabilité des contenus",
@@ -116,7 +117,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Offre et prix de l’abonnement",
         paragraphs: [
-          "Un logement est gratuit, sans carte bancaire. L’offre payante affiche 9,99 € par mois pour deux logements, puis 2,99 € par mois par logement supplémentaire. La qualification HT ou TTC et le régime de TVA doivent être précisés avant commercialisation.",
+          "Un logement est gratuit, sans carte bancaire. L’offre payante affiche 9,99 € par mois pour deux logements, puis 2,99 € par mois par logement supplémentaire. Ces montants sont les tarifs retenus. Le maintien de la franchise de TVA historique et la mention fiscale applicable restent à confirmer avant commercialisation ; ce brouillon n’ajoute aucune TVA aux montants annoncés.",
           "Les logements en brouillon et publiés sont comptés ; les logements archivés sont exclus. Au-delà de la capacité déjà payée pour la période, une augmentation donne lieu à une facturation au prorata et la capacité supplémentaire exige son paiement. Une diminution prépare le prochain renouvellement : elle ne déclenche pas de crédit automatique pour la période en cours. Le retour à un logement ou moins programme l’arrêt de l’offre payante à l’échéance, sous réserve de la synchronisation effective.",
           "Ces règles décrivent le fonctionnement examiné. Les prix, taxes et conséquences d’un changement doivent être communiqués avant l’engagement ; les modalités commerciales définitives restent à approuver.",
         ],

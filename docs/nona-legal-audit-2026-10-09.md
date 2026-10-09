@@ -1,10 +1,10 @@
 # Nona — audit juridique avant lancement
 
-9 octobre 2026. Base examinée : `bc46790b4cdc6e6698db00076bdfd71642b71d88`, branche `feat/guest-guide-v2-lot1`.
+9 octobre 2026. Reprise des informations de l’éditeur sur la base `002d072a639e124da8c7619d3f888efa4e2adb53`, branche `feat/guest-guide-v2-lot1`. Les constats fonctionnels antérieurs sont conservés sans réexécuter Billing ni Stripe.
 
 **État : textes corrigés et dossier de finalisation préparé ; publication définitive bloquée par les informations et décisions ci-dessous.** Les documents de `/legal` restent des versions de travail françaises, avec avertissement et `noindex`. Ce dernier limite l’indexation, pas l’accès public. Aucun contrat, accord de sous-traitance ou accord Stripe n’a été accepté dans ce chantier.
 
-Nona est le nom commercial retenu par le titulaire pour l’application anciennement HostBuddy. Ce choix ne fournit ni l’identité de son éditeur juridique, ni une confirmation de disponibilité de marque. L’organisation de conciergerie reliée à Stripe n’est pas réputée être l’éditeur du logiciel.
+Nona est le nom commercial retenu pour l’application anciennement HostBuddy. **L’éditeur identifié par le titulaire est Tristan Penalba, entrepreneur individuel (EI), SIREN 992856641, SIRET 99285664100012.** Cette identification ne confirme pas la disponibilité de marque. Une organisation cliente de conciergerie et son compte Stripe ne sont pas l’éditeur du logiciel.
 
 ## Corrections réalisées
 
@@ -27,9 +27,30 @@ Aucun changement du moteur Billing, des paiements, des tarifs calculés, du sch�
 
 ## Recherche d’informations professionnelles
 
-Les sources et documents du projet ne fournissent pas d’identifiant professionnel confirmé permettant d’attribuer une entreprise à l’éditeur. La recherche du nom commercial n’établit pas cette attribution : le site HostBuddy.com concerne un hébergeur homonyme ; d’autres services portent Nona. Le contexte professionnel consulté n’a apporté aucune identité confirmée exploitable. Aucun nom, adresse, SIREN, contact, régime fiscal ou hébergeur contractuel n’a donc été rempli par rapprochement.
+Les anciens documents ont été retrouvés et leurs en-têtes lus : `Devis_Primo_Conciergerie_24_06_2026.pdf` et `Facture_Primo_Conciergerie_Final_1400EUR.pdf`, datés du 24 juin 2026. Ils identifient Tristan Penalba comme **prestataire entrepreneur individuel**, avec le SIRET 99285664100012 ; la conciergerie est le **client**. Le titulaire confirme aujourd’hui cette identité comme celle de l’éditeur Nona. Les coordonnées complètes historiques sont reprises dans le dossier privé de vérification ; elles ne sont pas exposées dans ce dépôt public en attendant confirmation de leur actualité.
 
-**Minimum pour une vérification officielle de l’éditeur : SIREN/SIRET, ou dénomination/nom légal exact et commune d’immatriculation ; si non immatriculé, le préciser.** À réception, vérifier RNE/DATA INPI et Annuaire des entreprises, puis relever les mentions nécessaires. La validité publique d’un numéro ne prouve pas, à elle seule, que cette entreprise exploite Nona : le titulaire doit identifier le bon éditeur.
+L’API publique officielle de recherche d’entreprises a été interrogée directement le 9 octobre 2026 avec le SIREN exact, réponse HTTP 200, un résultat. Un extrait limité aux données nécessaires est conservé dans `docs/nona-publisher-verification-2026-10-09.json`.
+
+| Information                     | Résultat / provenance                                                                                         | Utilisation dans les documents                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Nom de l’éditeur                | Tristan Penalba, documents historiques et confirmation explicite du titulaire ; nom non diffusible dans l’API | Éditeur et directeur de publication renseignés ; ne pas attribuer la confirmation du nom au registre public |
+| SIREN / SIRET du siège          | 992856641 / 99285664100012, correspondance officielle exacte                                                  | Renseignés dans les mentions et l’annexe RGPD                                                               |
+| Forme / activité administrative | Nature juridique 1000, `est_entrepreneur_individuel=true`, unité et siège en état A, un établissement ouvert  | Entreprise individuelle active ; ni capital social fictif ni qualité de société ajoutés                     |
+| Commune / création              | Nice ; création le 17 octobre 2025                                                                            | Faits officiels vérifiés ; pas de confusion avec une conciergerie cliente                                   |
+| Adresse détaillée               | Non diffusible dans la réponse publique ; adresse historique disponible dans les pièces                       | Actualité à confirmer, pas de reconstitution de donnée masquée                                              |
+| E-mail / téléphone              | Disponibles dans les pièces historiques, pas de confirmation d’actualité officielle                           | Proposition prête dans le dossier privé, à confirmer avant utilisation publique                             |
+| TVA                             | Documents de juin 2026 : article 293 B du CGI ; champ API `tva=null`                                          | Régime historique établi, régime actuel non démontré ; `null` n’est pas une attestation de franchise        |
+| APE                             | 59.12Z, post-production de films/vidéo                                                                        | Valeur statistique uniquement ; pas de conclusion que Nona est interdit ni de modification automatique      |
+
+La non-diffusion du nom et de l’adresse n’empêche pas leur obligation d’information sur le futur site professionnel. Elle limite seulement cette vérification publique. La direction de publication est renseignée au nom de la personne physique éditrice, conformément à l’article 93-2 de la loi du 29 juillet 1982. Une recherche homonyme n’a pas servi à compléter l’identité.
+
+L’APE observé diffère de l’activité de logiciel Nona. Selon l’Insee, le code APE n’a pas de valeur juridique et ne décrit pas nécessairement toutes les activités exercées. La déclaration des activités au RNE doit être contrôlée dans l’extrait détenu par l’entrepreneur avant commercialisation ; la réponse publique ne permet pas de conclure qu’une adjonction d’activité est nécessaire. Aucun changement de registre demandé ou effectué.
+
+### Fiscalité et tarifs déjà actés
+
+Les montants restent : un logement gratuit sans carte, 9,99 €/mois pour deux logements, +2,99 €/mois par logement supplémentaire ; commission de 2 % du total de la commande, arrondie au centime et retenue sur l’encaissement. Le périmètre de préparation contractuelle reste celui des gestionnaires professionnels. Ces décisions ne sont pas redemandées.
+
+Si le maintien de la franchise en base est confirmé, la mention préparée est « TVA non applicable, article 293 B du CGI » pour les prestations qui en relèvent : aucune TVA supplémentaire à inventer sur les prix actés ou la commission. Si le régime a changé ou si une option pour la TVA a été exercée, adapter les mentions et la ventilation fiscale avec le comptable/SIE avant commercialisation ; ne pas transformer les 2 % en « 2 % HT + TVA » par simple rédaction. Le registre public et un ancien document ne permettent pas de trancher ce choix fiscal non public.
 
 ### Nom Nona : point de vigilance concret
 
@@ -82,15 +103,12 @@ Lecture gratuite de la région du backend existant : Lovable → More → Cloud 
 
 Ces points sont identifiés et préparés, pas déclarés conformes par le seul enrichissement des pages. Aucun parcours produit refondu dans ce lot ; intégration des notices et versions approuvées à prévoir une fois les informations déterminées.
 
-## Informations uniquement demandées au titulaire
+## Seules confirmations actuelles indispensables au titulaire
 
-A. **Bon éditeur** : son SIREN/SIRET (ou identité exacte et commune si nécessaire / non immatriculé), adresse professionnelle utilisable si non publique, responsable de publication et e-mail/téléphone professionnels ; contact données personnelles s’il est distinct.
+1. **Actualité des coordonnées déjà retrouvées** : l’adresse, l’e-mail et le téléphone historiques peuvent-ils être utilisés dans les documents Nona, l’e-mail servant aussi aux demandes RGPD ? Si tout est inchangé, une confirmation suffit ; sinon fournir uniquement les éléments modifiés. Les valeurs sont proposées dans le dossier privé, sans demander de ressaisir l’identité ou les identifiants.
+2. **Maintien du régime fiscal** : la franchise en base de TVA mentionnée en juin 2026 est-elle toujours applicable, sans changement ni option pour la TVA ? Si non, faire confirmer le régime et la présentation fiscale par le comptable/SIE. Aucun chiffre d’affaires, justificatif d’identité ou document fiscal complet demandé pour cette reprise.
 
-B. **Choix commercial/fiscal** : clients gestionnaires exclusivement professionnels ou particuliers également ; pays de lancement ; TVA/exonération et qualification HT/TTC des 9,99 €, 2,99 € et 2 % ; politique voulue de remboursement d’abonnement (la résiliation technique est déjà en fin de période).
-
-C. **Choix et justificatifs non publics** : domaine/hébergement de lancement si différent de la preview, entité facturante et région du service choisi ; existence d’un contrat/devis de sous-traitance ou d’une politique de conservation déjà retenue. Les informations absentes seront préparées comme propositions à approuver avec le juriste, pas inventées comme des pratiques existantes.
-
-Aucun justificatif d’identité, clé secrète, mot de passe ou donnée de voyageur demandé. Ne pas redemander les tarifs ou la commission déjà établis dans le code.
+L’hébergement contractuel, les durées/procédures, les notices voyageurs et les modalités contractuelles non encore validées restent des travaux de finalisation documentés, pas un nouveau questionnaire au titulaire. Leur absence de preuve est conservée ; elle n’est pas remplacée par une promesse fictive. L’identité, le statut, le SIREN/SIRET, le nom commercial, la cible gestionnaires professionnels et les tarifs disponibles ne sont plus demandés.
 
 ## À faire examiner par un juriste
 
@@ -103,7 +121,7 @@ Aucun justificatif d’identité, clé secrète, mot de passe ou donnée de voya
 
 ## Validation technique de ce lot
 
-Contrôles exécutés avec succès : ESLint ciblé sur les deux sources modifiées, `npm run typecheck`, `npm run build` et `git diff --check`. Le build présente les avertissements de dépréciation déjà connus, sans erreur bloquante. Aucun test financier ni appel Lovable génératif. Les validations antérieures Billing/Connect sont conservées sans réexécution. Pas de publication production ni merge main.
+Contrôles exécutés avec succès pour cette reprise : ESLint ciblé sur `src/lib/legal-content.ts`, `npm run typecheck`, `npm run build` et `git diff --check`. Les sources de `/legal` conservent l’avertissement de brouillon et `noindex`. Le build présente les avertissements de dépréciation déjà connus, sans erreur bloquante. Aucun test financier ni appel Lovable génératif. Les validations antérieures Billing/Connect sont conservées sans réexécution. Pas de publication production ni merge main.
 
 ## Sources officielles et sources primaires
 
@@ -112,7 +130,11 @@ Consultées le 9 octobre 2026 :
 - Identification et CGV : https://entreprendre.service-public.gouv.fr/vosdroits/F31228 ; https://entreprendre.service-public.gouv.fr/vosdroits/F37351 ; https://entreprendre.service-public.gouv.fr/vosdroits/F33527 ; https://entreprendre.service-public.gouv.fr/vosdroits/F23455
 - Médiation : https://entreprendre.service-public.gouv.fr/vosdroits/F33338
 - Nom commercial et antériorités : https://www.inpi.fr/disponibilite-dune-marque-dun-logo-dun-nom-de-societe-dun-nom-de-domaine ; https://www.inpi.fr/realiser-demarches/propriete-intellectuelle/conditions-de-validite-dune-marque
-- RNE / identification future : https://data.inpi.fr/ ; https://annuaire-entreprises.data.gouv.fr/
+- Entreprise exacte, réponse API officielle : https://recherche-entreprises.api.gouv.fr/search?q=992856641 ; extrait de réponse dans `docs/nona-publisher-verification-2026-10-09.json`
+- Non-diffusion / extrait RNE : https://www.service-public.gouv.fr/particuliers/vosdroits/R60912 ; https://entreprendre.service-public.gouv.fr/vosdroits/R19859
+- Directeur de publication personne physique : https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033971722/2024-04-14
+- APE et valeur statistique : https://www.insee.fr/fr/metadonnees/nafr2/sousClasse/59.12Z ; https://www.insee.fr/fr/information/6790269?question=quelle-est-la-valeur-legale-d-un-code-ape
+- Franchise de TVA / option : https://www.impots.gouv.fr/professionnel/les-regimes-dimposition-la-tva ; https://bofip.impots.gouv.fr/bofip/1079-PGP.html/identifiant%3DBOI-TVA-DECLA-40-10-20-20260701
 - Usage Nona constaté (pas conclusion de droit) : https://www.nona.fr/ ; https://www.thenona.co/legal/mentions-legales
 - RGPD information : https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre3
 - Sous-traitance : https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre4 ; https://www.cnil.fr/fr/clauses-contractuelles-types-entre-responsable-de-traitement-et-sous-traitant

@@ -21,10 +21,13 @@ Correction technique : `build/build-identity.mjs` lit le Git checkout réellemen
 
 - `nona-build-revision` : SHA Git complet, ou `unknown` si indisponible.
 - `nona-build-state` : `clean`, `modified` ou `unknown`.
+- `nona-build-source` : empreinte SHA-256 des 312 fichiers déclarés dans `build/source-manifest.json` (sources, assets, configuration et dépendances déclarées/verrouillées). Aucune variable secrète ni sortie générée incluse. Elle permet une comparaison du code compilé avec le checkout propre du HEAD même lorsque Git est absent du builder. Les fichiers manquants donnent `unknown`.
 
 Aucun écran, parcours, donnée personnelle, clé ou endpoint métier ajouté. Les modifications staged, unstaged et nouveaux fichiers empêchent l'attestation `clean`. Si le builder n'a pas Git, la valeur reste `unknown` : aucune version n'est devinée à partir de l'URL ou des métadonnées fournisseur.
 
-Cinq tests spécifiques passent : checkout propre, source modifiée, source staged, nouveau fichier, absence de Git. Lint et TypeScript ciblés et build sont vérifiés. Les recettes navigateur ne devront compter comme preuve du HEAD que si les métadonnées du document servi correspondent au HEAD distant et à l'état `clean`.
+Huit tests spécifiques passent : checkout propre, source modifiée, source staged, nouveau fichier, absence de Git, empreintes identiques/différentes, fichier manquant et refus de chemins hors checkout. Lint et TypeScript ciblés et build sont vérifiés. Les recettes navigateur ne devront compter comme preuve des sources du HEAD que si le document servi indique le HEAD propre, ou si son empreinte de sources égale celle du checkout propre vérifié de ce HEAD. Cela atteste les fichiers déclarés ; les secrets et configurations externes restent une vérification distincte.
+
+Observation intermédiaire après premier push : les métadonnées du runtime servi sont présentes mais revision/state valent `unknown`, bien que le fournisseur annonce le SHA synchronisé et `ready`. Pas de recette de permissions déclarée représentative sur cette seule base. L'empreinte source est ajoutée pour résoudre cette absence de Git sans deviner le commit.
 
 ## Restauration : conditions de départ
 

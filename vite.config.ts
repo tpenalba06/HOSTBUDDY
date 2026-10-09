@@ -7,10 +7,11 @@
 import { mediaOfflinePlugin } from "./build/media-offline-plugin";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { assertPublicEnvironment } from "./build/public-config.mjs";
-import { buildIdentity } from "./build/build-identity.mjs";
+import { buildIdentity, buildSourceFingerprint } from "./build/build-identity.mjs";
 
 assertPublicEnvironment(process.env);
 const compiledIdentity = buildIdentity();
+const compiledSourceFingerprint = buildSourceFingerprint();
 
 // Public (publishable) backend config. Fallback so published builds work even when
 // the untracked .env file is not present at build time. Never put secret keys here.
@@ -35,6 +36,7 @@ export default defineConfig({
     define: {
       "import.meta.env.VITE_NONA_BUILD_REVISION": JSON.stringify(compiledIdentity.revision),
       "import.meta.env.VITE_NONA_BUILD_STATE": JSON.stringify(compiledIdentity.state),
+      "import.meta.env.VITE_NONA_BUILD_SOURCE": JSON.stringify(compiledSourceFingerprint),
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(PUBLIC_SUPABASE_URL),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(PUBLIC_SUPABASE_KEY),
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(PUBLIC_SUPABASE_PROJECT_ID),

@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { buildIdentity } from "./build-identity.mjs";
+import { buildIdentity, buildSourceFingerprint } from "./build-identity.mjs";
 
 const folders: string[] = [];
 function checkout() {
@@ -53,5 +53,34 @@ describe("compiled checkout identity", () => {
     const { cwd } = checkout();
     writeFileSync(join(cwd, "new-source.txt"), "new\n");
     expect(buildIdentity(cwd).state).toBe("modified");
+  });
+});
+
+describe("source bytes on builders without Git", () => {
+  function source() {
+    const cwd = mkdtempSync(join(tmpdir(), "nona-source-"));
+    folders.push(cwd);
+    mkdirSync(join(cwd, "build"));
+    writeFileSync(join(cwd, "source.txt"), "original\n");
+    writeFileSync(join(cwd, "build/source-manifest.json"), JSON.stringify(["source.txt"]));
+    return cwd;
+  }
+  it("matches identical inputs and changes when any declared source changes", () => {
+    const a = source(),
+      b = source();
+    expect(buildSourceFingerprint(a)).toMatch(/^[a-f0-9]{64}$/);
+    expect(buildSourceFingerprint(a)).toBe(buildSourceFingerprint(b));
+    writeFileSync(join(b, "source.txt"), "changed\n");
+    expect(buildSourceFingerprint(a)).not.toBe(buildSourceFingerprint(b));
+  });
+  it("reports unknown rather than attesting missing inputs", () => {
+    const cwd = source();
+    rmSync(join(cwd, "source.txt"));
+    expect(buildSourceFingerprint(cwd)).toBe("unknown");
+  });
+  it("refuses paths outside the declared checkout", () => {
+    const cwd = source();
+    writeFileSync(join(cwd, "build/source-manifest.json"), JSON.stringify(["../source.txt"]));
+    expect(buildSourceFingerprint(cwd)).toBe("unknown");
   });
 });

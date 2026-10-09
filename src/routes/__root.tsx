@@ -80,6 +80,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "nona-build-revision", content: import.meta.env["VITE_NONA_BUILD_REVISION"] },
+      { name: "nona-build-state", content: import.meta.env["VITE_NONA_BUILD_STATE"] },
       { title: "HostBuddy" },
       { name: "theme-color", content: "#e9d9c4" },
     ],

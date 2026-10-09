@@ -1,5 +1,7 @@
 # HostBuddy — pages légales, 8 octobre 2026
 
+> Mise à jour du 9 octobre : le nom commercial retenu est **Nona**. Le présent document conserve l’historique du lot initial ; l’audit courant et les corrections sont décrits dans `docs/nona-legal-audit-2026-10-09.md`.
+
 ## État
 
 Les quatre documents de travail sont disponibles dans `/legal`, avec un sommaire à ancres : mentions légales, confidentialité, conditions d’utilisation et d’abonnement, cookies et stockage local. La structure visuelle existante est conservée, ainsi que le lien depuis le footer marketing et l’authentification. Documents français explicitement marqués comme tels, même si l’interface est dans une autre langue. Aucun contrat n’est accepté ni recueilli par cette page ; le badge de préparation et `noindex` restent présents.

@@ -3,7 +3,12 @@ import { useI18n } from "@/lib/i18n";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { legalDocuments, legalPublicationGaps, legalRevision } from "@/lib/legal-content";
 export const Route = createFileRoute("/legal")({
-  head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Nona — documents légaux en préparation" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: LegalPreparation,
 });
 function LegalPreparation() {

@@ -6,15 +6,16 @@ export type LegalDocument = {
   sections: { title: string; paragraphs: string[] }[];
 };
 
-export const legalRevision = "8 octobre 2026 — version de travail en français";
+export const legalRevision = "9 octobre 2026 — version de travail Nona en français";
 
 export const legalPublicationGaps = [
-  "Identité légale de l’éditeur, statut, SIREN, immatriculation et adresse professionnelle.",
+  "Nona est le nom commercial retenu ; identité légale de l’éditeur, statut, SIREN, immatriculation et adresse professionnelle à compléter.",
+  "Disponibilité du nom Nona et droits de propriété intellectuelle à vérifier avant lancement.",
   "E-mail et téléphone professionnels, responsable de publication et contact pour les données personnelles.",
   "Identité, adresse et téléphone de l’hébergeur du site commercialisé.",
   "Régime de TVA et qualification HT ou TTC des prix affichés.",
   "Durées de conservation, procédure d’effacement, prestataires, pays d’hébergement et garanties de transfert.",
-  "Périmètre des clients professionnels, modalités de résiliation et de remboursement, traitement des litiges et accord de sous-traitance RGPD.",
+  "Périmètre des clients, conditions commerciales, information des voyageurs avant collecte et avant paiement, et accord de sous-traitance RGPD à valider.",
 ];
 
 export const legalDocuments: LegalDocument[] = [
@@ -22,7 +23,7 @@ export const legalDocuments: LegalDocument[] = [
     id: "mentions-legales",
     title: "Mentions légales",
     intro:
-      "HostBuddy est un service de création et de diffusion de guides d’accueil numériques, exploité par l’éditeur identifié ci-dessous. Les informations manquantes doivent être renseignées avant commercialisation.",
+      "Nona est le nom commercial retenu pour l’application de guides d’accueil numériques anciennement appelée HostBuddy. Ce nom ne désigne pas, à lui seul, l’identité juridique de son éditeur. Les informations ci-dessous doivent être complétées avant commercialisation.",
     sections: [
       {
         title: "Éditeur et responsable de publication",
@@ -30,6 +31,7 @@ export const legalDocuments: LegalDocument[] = [
           "Nom légal ou dénomination : à compléter. Forme juridique : à compléter. Pour une entreprise individuelle, faire figurer les nom et prénom de l’entrepreneur avec la mention « entrepreneur individuel » ou « EI ».",
           "Adresse professionnelle, SIREN, immatriculation applicable et numéro de TVA ou régime d’exonération : à compléter. Capital social uniquement si la forme juridique l’exige.",
           "Responsable de publication, e-mail et téléphone professionnels : à compléter. Aucun contact fictif n’est présenté comme un contact opérationnel.",
+          "Le choix du nom Nona ne vaut ni dépôt ni confirmation de disponibilité d’une marque. Les droits antérieurs doivent être examinés séparément de l’immatriculation de l’éditeur.",
         ],
       },
       {
@@ -56,8 +58,8 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Qui traite les données ?",
         paragraphs: [
-          "L’éditeur HostBuddy, dont l’identité et le contact sont à compléter dans les mentions légales, détermine les finalités de la gestion des comptes, de son abonnement, du support et de la sécurité du service.",
-          "Pour les messages, demandes de services et retours de voyageurs gérés pour un établissement, le gestionnaire détermine en principe les finalités du traitement et HostBuddy intervient pour son compte. Cette répartition doit être confirmée dans un accord de sous-traitance RGPD ; le gestionnaire doit fournir sa propre information aux voyageurs.",
+          "L’éditeur Nona, dont l’identité et le contact sont à compléter dans les mentions légales, détermine les finalités de la gestion des comptes, de son abonnement, du support et de la sécurité du service.",
+          "Pour les messages, demandes de services et retours de voyageurs gérés pour un établissement, le responsable du traitement peut être le gestionnaire ou l’exploitant pour lequel il agit. Nona traite ces données pour leur compte dans le périmètre convenu. Cette répartition doit être confirmée dans un accord de sous-traitance RGPD ; le gestionnaire doit fournir sa propre information aux voyageurs.",
         ],
       },
       {
@@ -65,23 +67,25 @@ export const legalDocuments: LegalDocument[] = [
         paragraphs: [
           "Comptes et équipes : identité de compte, e-mail, organisation, rôle et données de connexion permettent l’accès au service et la gestion des invitations. L’exécution du contrat constitue la base envisagée pour le titulaire ; la gestion des membres d’équipe doit être documentée au titre de l’intérêt légitime de l’organisation et de l’éditeur.",
           "Guides et médias : contenu du logement, coordonnées de contact et médias fournis par le gestionnaire servent à créer et publier son guide. Le gestionnaire doit éviter de publier des données personnelles ou des codes d’accès qui ne doivent pas être accessibles aux détenteurs du lien.",
-          "Messages, services et retours : nom d’affichage, contact renseigné, contenu du message, demande, montant, date et retour privé servent au traitement de la demande par l’établissement. Le gestionnaire fixe et documente la base légale applicable ; HostBuddy traite ces données selon ses instructions.",
-          "Paiements : les données de carte sont saisies auprès de Stripe. HostBuddy conserve les identifiants utiles, montants, devises et statuts des abonnements et paiements pour le suivi du contrat, des demandes et des obligations comptables. Stripe traite également les informations nécessaires à la vérification du compte du gestionnaire.",
-          "Sécurité : des données techniques de connexion et de limitation des abus sont utilisées pour protéger le service. La portée, la durée et la mise en balance de cet intérêt légitime doivent être précisées avant commercialisation. Aucun profilage publicitaire ou décision automatisée produisant des effets juridiques n’est décrit dans cette version.",
+          "Messages et demandes de services : nom d’affichage requis, contact facultatif, contenu du message ou service, quantité et montant servent au traitement de la demande. Retours privés : note requise, nom et commentaire facultatifs servent au retour adressé au gestionnaire. Celui-ci doit identifier le responsable du traitement, sa base légale et les informations fournies au moment de chaque collecte ; Nona traite ces données selon les instructions convenues.",
+          "Paiements : les données de carte sont saisies auprès de Stripe. Nona conserve les identifiants utiles, montants, devises et statuts des abonnements et paiements pour le suivi du contrat, des demandes et des obligations comptables. Stripe traite également les informations nécessaires à la vérification du compte du gestionnaire.",
+          "Sécurité : l’adresse IP transmise au serveur et les informations de navigateur contribuent notamment à une empreinte hachée pour limiter les abus des formulaires publics. Cette empreinte est pseudonymisée, pas réputée anonyme. Des données techniques de connexion sont également utilisées pour protéger le service. La portée, la durée et la mise en balance de cet intérêt légitime doivent être précisées avant commercialisation. Aucun profilage publicitaire ou décision automatisée produisant des effets juridiques n’est décrit dans cette version.",
         ],
       },
       {
         title: "Destinataires et transferts",
         paragraphs: [
           "Les membres autorisés de l’organisation accèdent aux informations nécessaires à leur rôle. Les visiteurs d’un guide accèdent aux contenus que son gestionnaire a publiés. Les conversations et retours privés ne constituent pas des contenus publics du guide.",
-          "Des prestataires assurent l’hébergement, la base de données, l’authentification, le stockage des médias et les paiements. Stripe intervient pour les paiements ; Google intervient si la connexion Google est choisie. La liste contractuelle complète, les entités, pays, fonctions et garanties de transfert restent à compléter.",
+          "Des prestataires assurent l’hébergement, la base de données, l’authentification, le stockage des médias et les paiements. Stripe intervient pour les paiements et peut être responsable de traitement ou sous-traitant selon l’opération. Google intervient si la connexion Google est choisie, mais aussi lors du chargement des polices Google Fonts actuellement utilisées par les pages, indépendamment de cette connexion. La liste contractuelle complète, les entités, pays, fonctions et garanties de transfert restent à compléter.",
+          "Les liens vers Google Maps, WhatsApp, les sites d’avis et d’autres sites externes conduisent vers les services choisis par le visiteur. Leurs traitements et informations s’appliquent alors ; un lien externe ne constitue pas à lui seul un traceur chargé sur la page Nona.",
           "Aucune localisation exclusivement européenne n’est garantie par ce brouillon. Les éventuels transferts hors de l’Espace économique européen et les moyens d’obtenir leurs garanties doivent être identifiés avant publication.",
         ],
       },
       {
         title: "Conservation et suppression",
         paragraphs: [
-          "Les durées ou critères précis de conservation des comptes, contenus, messages, demandes, journaux, sauvegardes et pièces de facturation restent à valider. La fermeture d’un compte et les obligations de conservation doivent être distinguées.",
+          "Les durées ou critères précis de conservation des comptes, contenus, messages, demandes, journaux et sauvegardes restent à valider et à mettre en œuvre. Pour les pièces comptables relevant du droit français, la conservation légale de dix ans doit être organisée séparément des données utilisées au quotidien ; elle ne justifie pas de conserver tous les messages ou contenus pendant dix ans.",
+          "La suppression définitive d’un logement supprime ses contenus et échanges liés dans la base applicative et demande le nettoyage des médias ; ce nettoyage peut rester en attente en cas d’échec. Le registre financier est conservé séparément. Cette fonction ne démontre pas l’effacement de toutes les données d’un compte, des journaux et des sauvegardes.",
           "L’expiration de l’accès à une conversation ne signifie pas que ses messages ont été supprimés. L’archivage d’un logement ne constitue pas son effacement. Les copies hors ligne enregistrées sur l’appareil du voyageur restent locales jusqu’à leur suppression ou à l’effacement du stockage du navigateur.",
         ],
       },
@@ -89,7 +93,8 @@ export const legalDocuments: LegalDocument[] = [
         title: "Vos droits et vos demandes",
         paragraphs: [
           "Selon la base légale et les conditions prévues par le RGPD, vous disposez de droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité. Si un traitement repose sur votre consentement, vous pouvez le retirer sans remettre en cause les traitements antérieurs.",
-          "Pour une demande concernant un compte HostBuddy, le contact de l’éditeur doit être complété avant commercialisation. Pour des données adressées à un établissement, contactez d’abord son gestionnaire via les coordonnées de son guide ; HostBuddy l’assiste dans le traitement de la demande.",
+          "Pour une demande concernant un compte Nona, le contact de l’éditeur doit être complété avant commercialisation. Pour des données adressées à un établissement, contactez d’abord son gestionnaire via les coordonnées de son guide ; Nona l’assiste dans le traitement de la demande.",
+          "Une demande de droits reçoit une réponse dans le délai légal d’un mois ; une prolongation motivée de deux mois est possible dans les cas prévus par le RGPD. Le responsable du traitement doit informer la personne de cette prolongation dans le premier mois. Ce délai légal ne constitue pas une promesse d’effacement immédiat.",
           "Vous pouvez introduire une réclamation auprès de la CNIL. Les données nécessaires au compte ou à une demande sont signalées dans les formulaires ; leur absence peut empêcher le traitement de la demande. Ne transmettez pas de document d’identité ou de donnée sensible dans un message ordinaire.",
         ],
       },
@@ -104,7 +109,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Service, compte et responsabilité des contenus",
         paragraphs: [
-          "HostBuddy permet de créer un guide, d’y publier des informations et médias, de recevoir des messages et demandes de services et de gérer une équipe. Le gestionnaire conserve la responsabilité de ses informations, droits de publication, offres et obligations envers ses voyageurs.",
+          "Nona permet de créer un guide, d’y publier des informations et médias, de recevoir des messages et demandes de services et de gérer une équipe. Le gestionnaire conserve la responsabilité de ses informations, droits de publication, offres et obligations envers ses voyageurs.",
           "Le propriétaire de l’organisation gère les accès de son équipe et les fonctions financières. Chaque utilisateur doit protéger son accès, respecter les droits des tiers et s’abstenir d’importer des contenus sans autorisation. Les fonctions disponibles dépendent de leur activation ; aucun connecteur annoncé ne vaut connexion opérationnelle.",
         ],
       },
@@ -112,22 +117,25 @@ export const legalDocuments: LegalDocument[] = [
         title: "Offre et prix de l’abonnement",
         paragraphs: [
           "Un logement est gratuit, sans carte bancaire. L’offre payante affiche 9,99 € par mois pour deux logements, puis 2,99 € par mois par logement supplémentaire. La qualification HT ou TTC et le régime de TVA doivent être précisés avant commercialisation.",
-          "L’abonnement et sa période de facturation sont présentés au moment de la souscription. Le nombre de logements non archivés intervient dans le calcul. Toute variation de prix, proratisation ou promotion applicable doit être annoncée avant confirmation ; ce brouillon ne crée pas de remise ni de garantie de prix supplémentaire.",
+          "Les logements en brouillon et publiés sont comptés ; les logements archivés sont exclus. Au-delà de la capacité déjà payée pour la période, une augmentation donne lieu à une facturation au prorata et la capacité supplémentaire exige son paiement. Une diminution prépare le prochain renouvellement : elle ne déclenche pas de crédit automatique pour la période en cours. Le retour à un logement ou moins programme l’arrêt de l’offre payante à l’échéance, sous réserve de la synchronisation effective.",
+          "Ces règles décrivent le fonctionnement examiné. Les prix, taxes et conséquences d’un changement doivent être communiqués avant l’engagement ; les modalités commerciales définitives restent à approuver.",
         ],
       },
       {
         title: "Renouvellement, résiliation et impayés",
         paragraphs: [
-          "La gestion de l’abonnement passe par le portail de facturation accessible depuis l’espace gestionnaire. La période, le renouvellement et la date d’effet d’une résiliation doivent correspondre aux informations affichées dans ce portail. Les règles définitives de résiliation, changement d’offre et remboursement restent à compléter.",
+          "Le portail de facturation accessible depuis l’espace gestionnaire est configuré pour une résiliation à la fin de la période en cours. Il permet de consulter les factures et de gérer les coordonnées de facturation et le moyen de paiement. Les conditions commerciales définitives, notamment les éventuels remboursements de l’abonnement et le sort des guides après la fin du contrat, restent à valider.",
           "Un abonnement non autorisé pour le nombre de logements peut empêcher leur publication. Les données du gestionnaire ne sont pas supprimées du seul fait de cette restriction. Les délais de régularisation, pénalités de retard et éventuelle indemnité forfaitaire applicables aux professionnels doivent être fixés avant commercialisation.",
         ],
       },
       {
         title: "Services voyageurs, Stripe et commission",
         paragraphs: [
-          "Le gestionnaire définit et fournit les services proposés dans son guide. Une demande ne garantit pas à elle seule la réservation ou l’exécution du service. Le gestionnaire doit informer le voyageur du prix, des modalités d’exécution, de l’annulation, du remboursement et des droits applicables avant un engagement payant.",
+          "Le gestionnaire publie les services proposés dans son guide et organise le traitement des demandes avec le vendeur concerné. Une demande ne garantit pas à elle seule la réservation ou l’exécution du service. Le gestionnaire doit informer le voyageur du prix, des modalités d’exécution, de l’annulation, du remboursement et des droits applicables avant un engagement payant.",
+          "L’identité du vendeur du service doit être fournie au voyageur. Selon les offres et contrats, ce vendeur peut être le gestionnaire, l’exploitant ou un prestataire ; Nona ne doit pas être présenté automatiquement comme ce vendeur. Les droits du consommateur, les éventuelles exceptions à la rétractation pour des services à date déterminée et la médiation doivent être vérifiés pour chaque catégorie de prestation.",
           "Les encaissements nécessitent un compte Stripe relié à l’organisation et autorisé par Stripe. Un retour de l’onboarding ne suffit pas à autoriser l’encaissement. Stripe assure le traitement du paiement selon ses propres conditions et exigences.",
-          "La commission HostBuddy est de 2 % du montant des services payés, distincte des frais Stripe et de l’abonnement HostBuddy. Le gestionnaire conserve ses obligations fiscales et commerciales. La politique définitive de remboursement du service, de la commission et des frais Stripe doit être publiée ; aucune gratuité ou remboursement automatique n’est promis par ce brouillon.",
+          "La commission Nona est calculée à 2 % du montant total de chaque commande payée, arrondie au centime par commande. Elle est prélevée sur l’encaissement du compte connecté, séparément des frais Stripe et de l’abonnement Nona ; l’application ne l’ajoute pas comme supplément au prix payé par le voyageur. Le régime de TVA de cette commission et les documents de facturation restent à confirmer.",
+          "La fonction de remboursement Nona demande actuellement un remboursement intégral du paiement et de sa commission applicative. Les frais de traitement Stripe restent distincts et soumis aux conditions Stripe applicables. Les remboursements partiels effectués hors de cette fonction doivent être encadrés séparément ; l’affichage d’un statut partiellement remboursé ne prouve pas que Nona propose cette action. Les règles d’annulation et les droits du voyageur doivent être fixés avant la vente.",
         ],
       },
       {
@@ -153,16 +161,17 @@ export const legalDocuments: LegalDocument[] = [
         ],
       },
       {
-        title: "Conversations et guides hors ligne",
+        title: "Conversations, favoris et guides hors ligne",
         paragraphs: [
           "Lorsque vous ouvrez une conversation, un accès privé est conservé dans le navigateur pour retrouver vos échanges. Cet accès est valable trente jours ; l’expiration de l’accès n’efface pas automatiquement les messages ni la copie locale de l’accès.",
+          "Les lieux ajoutés aux favoris sont mémorisés sur votre appareil. La session de connexion, la langue, les favoris et les copies hors ligne n’ont pas de durée maximale propre fixée dans le code examiné ; ils peuvent rester jusqu’à leur suppression, leur remplacement, la déconnexion pour la session ou l’effacement du stockage par le navigateur. L’expiration du droit d’accès côté serveur n’est pas une suppression automatique de ces copies locales.",
           "Si vous demandez l’enregistrement hors ligne d’un guide, son texte et les médias téléchargés sont conservés sur votre appareil. Supprimez la copie depuis les fonctions hors ligne du guide ou les réglages du navigateur, notamment sur un appareil partagé. Une copie déjà téléchargée ne disparaît pas automatiquement lorsque le gestionnaire modifie son guide.",
         ],
       },
       {
         title: "Services tiers et traceurs facultatifs",
         paragraphs: [
-          "Les pages de connexion Google et de paiement Stripe peuvent utiliser leurs propres cookies et technologies ; leurs informations s’appliquent à ces pages. La liste des traceurs et durées du domaine définitif HostBuddy reste à confirmer avant publication.",
+          "Les pages de connexion Google et de paiement Stripe peuvent utiliser leurs propres cookies et technologies ; leurs informations s’appliquent à ces pages. Le chargement de Google Fonts crée également des requêtes vers Google depuis les pages Nona : ce flux doit figurer dans l’examen des données et transferts, même sans cookie publicitaire. La liste des traceurs, stockages et durées du domaine définitif reste à confirmer avant publication.",
           "L’ajout éventuel de traceurs d’audience non exemptés, publicitaires ou de contenus tiers soumis au consentement doit être précédé d’un choix permettant de refuser aussi facilement que d’accepter et de retirer son consentement. Aucun consentement à de tels traceurs n’est recueilli ni présumé sur cette page.",
         ],
       },

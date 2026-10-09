@@ -1,77 +1,97 @@
-# Nona — reprise Supabase et sessions réelles, continuation du 9 octobre 2026
+# Nona — reprise Supabase isolée et permissions réelles
 
-Base de travail : `508b935d6d3a0e956eb4c23fac768b6c29b92483`. Les preuves DB 65 tables / 1 017 lignes / 46 politiques et neuf médias intacts ne sont pas répétées et ne valent pas restauration de services Supabase. Aucun Stripe, Billing, déploiement, merge main, suppression ou mutation de la source.
+9 octobre 2026 — **PASS pour la reprise DB/Auth/Storage sur Supabase TEST et les permissions réelles.** Ces résultats remplacent l'état « cible inaccessible / matrice non exécutée » du rapport précédent. Aucun besoin d'intervention supplémentaire pour ce périmètre. Ils ne constituent pas une autorisation de lancement commercial.
 
-## Cible recherchée et obstacle vérifié
+## Cible et sécurité de la restauration
 
-- Inventaire Lovable : quatre projets, aucune cible dédiée Nona de reprise. Les autres projets sont des applications indépendantes ; aucun n'est réaffecté ou modifié.
-- Aucun accès Supabase Management / URL DB de cible dans les variables disponibles. Pas de Docker/Podman ni socket Docker dans l'environnement.
-- Une alternative officielle récente permet PostgreSQL 17, Auth, REST et Storage comme processus natifs, sans Docker. CLI officiel 2.120.0 installé dans un dossier séparé, configuration locale privée préparée : aucun projet distant lié, confirmation e-mail activée, SMTP local, Functions/Analytics exclus.
-- Tentative unique de `supabase stack start --runtime native --preparation on-demand` : échec **avant préparation/démarrage de PostgreSQL**, car les deux hôtes officiels d'archives sont inaccessibles (`getaddrinfo ETIMEOUT github.com` et `getaddrinfo ETIMEOUT supabase-cli-artifacts.s3.us-east-1.amazonaws.com`). Aucune restauration effectuée. Pas de contournement réseau, pas de boucle ni d'escalade.
-- Tableau de bord Supabase atteint, redirection vers une page de connexion : aucune organisation, cible libre ou place gratuite attestée. Ne pas confondre connexion Lovable et accès Supabase.
-- Le plan Supabase Free permet deux projets actifs sous réserve du quota du compte ; un nouveau projet dans une organisation Pro serait payant. Aucun projet créé, remix Lovable, ressource payante ou prompt génératif.
+| Contrôle | Preuve / résultat |
+| --- | --- |
+| Cible | `nona-recovery-test-20261009`, project ref `mhhtnqfdkyudwyqlmnce` |
+| Isolation | Nouveau projet indépendant de la source ; avant import : zéro table publique, zéro utilisateur Auth, zéro objet et bucket Storage |
+| Infrastructure | Organisation LOULOU, plan Free, compute Nano, Ireland ; PostgreSQL 17.11 |
+| Source | Aucune restauration, suppression, modification de rôle ou écriture sur la base source |
+| Émissions avant import | Inscriptions et providers désactivés ; aucun job, Function, webhook applicatif, secret OAuth/Vault ou paiement installé |
+| État Auth après recette | Inscription publique et connexion anonyme désactivées, confirmation d'adresse activée ; connexion e-mail/mot de passe des seules fixtures permise ; SMS/SAML/Web3/OAuth désactivés |
+| E-mail | Hook Postgres privé `nona_recovery_private.block_email` activé ; appel réel à la récupération de mot de passe d'une fixture : HTTP 403, `External email disabled on isolated recovery TEST` ; aucun relais SMTP exécuté |
+| Secrets | Clés propres à la cible, accessibles uniquement dans les fichiers privés ; aucun mot de passe, JWT, hash source, clé de production ou lien signé complet dans les preuves diffusées |
+| Coûts | Aucun upgrade, service payant, nouveau projet supplémentaire ou prompt Lovable |
 
-Une stack locale avec les services réels aurait permis de prouver la reprise HTTP sans confondre le résultat avec PGlite. Elle reste une solution gratuite documentée, mais ne peut pas télécharger ses composants ici. La prochaine option est un projet Supabase Free dédié après accès au compte et vérification du plan/quota. Ne pas inventer un quota disponible ni demander la création d'un projet payant.
+Le badge Supabase « main PRODUCTION » désigne la branche par défaut de ce **nouveau projet TEST indépendant**. Il ne désigne ni la production Nona ni la branche Git main, qui n'ont pas été modifiées.
 
-## Provenance du runtime
+## Reprise des services : preuves
 
-Le fournisseur annonce le HEAD de base synchronisé et `ready`. Ces métadonnées décrivent le projet ; elles ne prouvent pas à elles seules le commit exécuté par la preview.
+Le schéma applicatif, les fonctions, contraintes, index, grants explicites et politiques sont restaurés sur PostgreSQL réel. Les schémas Auth et Storage restent ceux du service Supabase cible ; les données compatibles et personnalisations nécessaires y sont importées. La restauration des données est transactionnelle, puis les contraintes sont remises en place et validées.
 
-Correction technique : `build/build-identity.mjs` lit le Git checkout réellement compilé et injecte deux métadonnées HTML globales :
+| Composant | Résultat prouvé |
+| --- | --- |
+| Données restaurées | **815 lignes** issues de l'archive, avant ajout des fixtures TEST ; 202 lignes de sessions/tokens/historiques de migrations gérées volontairement exclues |
+| Données applicatives | 30 tables public/drizzle : tous les nombres de lignes originales concordent ; 29 empreintes concordent exactement, la 30e diffère seulement du traitement volontaire des sessions voyageur |
+| Auth restauré | 8 utilisateurs et 10 identités conservés avec leurs UUID et relations ; mots de passe et tokens source neutralisés ; contrôle SQL : aucun ancien hash de mot de passe présent |
+| Auth opérationnel | 5 identités synthétiques `example.invalid` créées par API administrative sans émission ; vrais logins, vérification d'identité et renouvellement de session via Auth Supabase |
+| RLS | **46 politiques** public/Storage identiques après normalisation des espaces SQL ; aucune table publique avec RLS désactivé |
+| Storage restauré | 2 buckets et métadonnées ; **9/9 fichiers**, **4 347 660 octets**, téléversés puis téléchargés depuis la cible ; SHA-256 identiques à la sauvegarde |
+| Accès privé | Bucket guide-media privé ; accès propres autorisés, accès inter-organisations et anonymes refusés |
+| Lien signé | Durée demandée 15 s ; téléchargement anonyme exact avant échéance ; HTTP 400 après échéance, `InvalidJWT`, `"exp" claim timestamp check failed` |
+| Propriétaires existants | Les 9 rattachements/roles restaurés restent identiques ; seules les organisations et identités synthétiques servent aux essais |
 
-- `nona-build-revision` : SHA Git complet, ou `unknown` si indisponible.
-- `nona-build-state` : `clean`, `modified` ou `unknown`.
-- `nona-build-source` : empreinte SHA-256 des 312 fichiers déclarés dans `build/source-manifest.json` (sources, assets, configuration et dépendances déclarées/verrouillées). Aucune variable secrète ni sortie générée incluse. Elle permet une comparaison du code compilé avec le checkout propre du HEAD même lorsque Git est absent du builder. Les fichiers manquants donnent `unknown`.
+Ce résultat est une **reprise Supabase réelle des services nécessaires**, distincte du précédent test PostgreSQL local 65 tables / 1 017 lignes. Ce n'est pas un clone de credentials ou une remise en service des intégrations externes de production.
 
-Aucun écran, parcours, donnée personnelle, clé ou endpoint métier ajouté. Les modifications staged, unstaged et nouveaux fichiers empêchent l'attestation `clean`. Si le builder n'a pas Git, la valeur reste `unknown` : aucune version n'est devinée à partir de l'URL ou des métadonnées fournisseur.
+Les 202 exclusions sont : sessions Auth 10, refresh tokens 26, one-time token 1, MFA AMR 10, versions internes Auth 82 et Storage 73. Les 8 anciens mots de passe/tokens et les 2 secrets de sessions voyageur sont neutralisés ; les sessions voyageur sont expirées. Aucune donnée n'est supprimée de la source. Les schémas/services gérés utilisent leurs versions cible, au lieu de recopier leur historique de migrations source.
 
-Huit tests spécifiques passent : checkout propre, source modifiée, source staged, nouveau fichier, absence de Git, empreintes identiques/différentes, fichier manquant et refus de chemins hors checkout. Lint et TypeScript ciblés et build sont vérifiés. Les recettes navigateur ne devront compter comme preuve des sources du HEAD que si le document servi indique le HEAD propre, ou si son empreinte de sources égale celle du checkout propre vérifié de ce HEAD. Cela atteste les fichiers déclarés ; les secrets et configurations externes restent une vérification distincte.
+Adaptations de privilèges : absence du rôle Lovable `sandbox_exec`, donc aucun rôle agent recréé ; grants explicites applicatifs restaurés ; `ALTER DEFAULT PRIVILEGES` source non importés pour conserver les protections natives et l'absence d'exposition automatique des nouvelles tables. Le schéma drizzle est créé explicitement et protégé par RLS.
 
-Observation intermédiaire après premier push : les métadonnées du runtime servi sont présentes mais revision/state valent `unknown`, bien que le fournisseur annonce le SHA synchronisé et `ready`. Pas de recette de permissions déclarée représentative sur cette seule base. L'empreinte source est ajoutée pour résoudre cette absence de Git sans deviner le commit.
+## Permissions et invitations avec de vraies sessions
 
-## Restauration : conditions de départ
+**147/147 contrôles actifs PASS :** 41 Auth/invitations, 75 rôles/REST/RPC, 25 Storage/liens signés et 6 appels du helper applicatif `src/lib/team-access.ts` avec les JWT réels de la cible. Les accès métier utilisent les sessions utilisateur, et non la clé administrative utilisée uniquement pour l'installation des fixtures et les contrôles de conservation.
 
-1. Cible différente du projet source, nommée comme TEST/reprise, plan Free attesté et cible vide ou dédiée. Ne pas toucher aux autres applications. Vérifier son project ref par rapport à la source avant chaque action sensible.
-2. Neutraliser les e-mails/SMS/OAuth externes, hooks, Functions, cron et webhooks avant tout import. N'installer ni secrets Stripe/Billing ni tâches financières. Sur stack locale : SMTP de capture sans relais. Sur cible hébergée : vérifier la configuration réellement utilisée, pas simplement omettre SMTP.
-3. Conserver le dump et sa clé privés. Utiliser les canaux sécurisés du fournisseur pour accès et secrets ; aucune clé dans le dépôt public, sorties de tests, CI ou rapport.
-4. Restaurer DB avec rôles/propriétaires adaptés au serveur cible et compatibilité des extensions/services vérifiée. Les exclusions du précédent test PGlite ne sont pas une recette de restauration complète Supabase.
-5. Restaurer les tables Auth et vérifier un compte TEST par une session Auth émise par le service. Préférer de nouvelles clés JWT locales/cibles : ne pas recopier les secrets de signature ou sessions valides de la source. Les anciens JWT ne doivent pas être acceptés sur la cible.
-6. Restaurer les neuf octets Storage par l'API / outil officiel vers le bucket privé et les chemins exacts ; gérer la cohérence métadonnées/octet sans créer des doublons. Vérifier les SHA-256 après téléchargement depuis la cible.
-7. Vérifier Auth et Storage via HTTP, politiques, refus anon/autre organisation, URLs signées et expiration. Ne pas déclarer PASS sur la seule présence de tables ou fichiers.
+| Scénario | Résultat |
+| --- | --- |
+| Invitation avant existence du compte | Owner A prépare admin/member ; invitation pending ; création de l'identité TEST puis première entrée `ensure_my_organization` : A, bon rôle, invitation acceptée, aucun doublon |
+| Identité existante sans organisation | Admission immédiate dans A ; pas de faux pending |
+| Identité déjà dans B | Invitation dans A refusée ; aucun déplacement entre organisations |
+| Owner protégé | Invitation/changement de rôle/retrait ne modifient pas son rôle ni son rattachement |
+| Owner | Gestion d'équipe permise dans son organisation, refusée dans l'autre |
+| Admin | Lecture/édition/création de contenus A permises ; gestion d'équipe et contenu B refusés |
+| Member | Lecture A et conversation/message avec son propre sender permises ; création/édition de contenu, upload et gestion d'équipe refusés ; auto-promotion impossible |
+| Isolation A/B | Lectures de données étrangères vides ; écritures, références croisées et signatures de médias étrangers refusées |
+| Anonyme | Sept tables privées et téléchargements directs privés/publics/signatures de médias refusés |
+| Changement de rôle | Le même JWT reflète immédiatement promotion puis rétrogradation ; après retrait du membre TEST, son accès au contenu disparaît |
+| Handler applicatif | Helper du HEAD : owner A→A et B→B HTTP 200 ; admin/member sur équipe et owners sur équipe étrangère HTTP 403 |
 
-## Matrice préparée pour les sessions TEST
+Un premier assert du harnais attendait HTTP 200 pour une RPC `void` : Supabase renvoie normalement **204**. L'assert a été corrigé, puis l'état de l'invitation et son acceptation vérifiés. Cette entrée reste marquée comme remplacée dans le journal privé et n'est pas comptée comme un échec applicatif. Deux interruptions réseau ont été reprises seulement aux contrôles Storage manquants ; aucune requête interrompue n'a été assimilée à un refus RLS. Les cinq dernières réponses, dont l'expiration, proviennent réellement du service cible.
 
-État : **NON EXÉCUTÉE**, faute de cible accessible. Les tests SQL antérieurs ne sont pas relancés et ne sont pas présentés comme cette preuve HTTP.
+## Configuration et limites volontaires
 
-Préparer owner A et owner B ainsi que admin A et member A sur la cible isolée. Les propriétaires restaurés existants ne sont ni déplacés ni rétrogradés. Créer uniquement des identités synthétiques dédiées à la recette ; pas d'identité réelle, de JWT fabriqué ou de rôle Auth global utilisé comme rôle d'organisation.
+- URL Auth cible `http://localhost:3000`, liste de redirections vide : aucune redirection vers Nona/source installée. La preview existante n'est pas repointée vers la cible.
+- Google/OAuth et leurs secrets ne sont pas copiés. La protection de mots de passe divulgués n'est pas activée sur le plan Free ; cet écart est consigné, aucun upgrade réalisé.
+- Ni Functions financières, ni jobs, ni alertes/e-mails externes réactivés. La recette ne prouve pas le redéploiement de ces intégrations de production.
+- Les identités synthétiques sont confirmées administrativement uniquement sur TEST. Le mécanisme d'invitation/consommation et les droits sont prouvés ; la livraison d'un e-mail de confirmation ou d'invitation ne l'est pas et reste volontairement désactivée.
 
-| Scénario                                        | Session réelle / opération                                                                                                               | Attendu                                                                                                                            |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Auth                                            | Connexion et renouvellement de session par Auth cible                                                                                    | JWT émis et vérifié par Auth cible, identité correcte, aucune émission externe                                                     |
-| Invitation nouvelle identité                    | Owner A prépare admin/member pour adresse synthétique avant création ; identité vérifiée sur cible puis première entrée app / RPC ensure | Même organisation A, bon rôle, invitation marquée acceptée, aucune organisation supplémentaire                                     |
-| Invitation identité existante sans organisation | Owner A prépare l'accès                                                                                                                  | Ajout immédiat à A, aucun faux statut pending                                                                                      |
-| Propriétaire protégé                            | Invitation, changement de rôle ou retrait ciblant owner existant                                                                         | Refus, owner et organisation inchangés                                                                                             |
-| Identité déjà dans B                            | Owner A tente de l'inviter                                                                                                               | Refus, aucun déplacement B→A                                                                                                       |
-| Owner                                           | Lecture et commandes équipe dans A                                                                                                       | Autorisées ; jamais dans B                                                                                                         |
-| Admin                                           | Lecture/édition/publication des contenus A                                                                                               | Autorisées ; gestion équipe refusée                                                                                                |
-| Member                                          | Lecture A et opérations prévues (messages/commandes/retours)                                                                             | Autorisées selon politiques ; création/édition/publication/équipe refusées                                                         |
-| Isolation A→B / B→A                             | REST, RPC et handlers app pour ID explicite de l'autre organisation                                                                      | Lecture vide/refus et mutations refusées, aucune donnée étrangère ni modification                                                  |
-| Anonyme                                         | Tables privées, bucket privé et téléchargement direct                                                                                    | Refus ; seules RPC publiques prévues pour guide publié restent accessibles                                                         |
-| Médias privés                                   | JWT A sur fichiers A/B, JWT B sur fichiers A/B                                                                                           | Accès de son organisation seulement ; contrôler le refus d'écriture et de signature étrangère                                      |
-| Liens signés                                    | Signature autorisée, téléchargement avant/après échéance courte                                                                          | Fichier exact avant expiration ; refus après expiration. Un lien signé est volontairement utilisable sans session jusqu'à échéance |
-| Configuration                                   | Domaines/redirects, confirmation e-mail, providers et clés cible                                                                         | Cible isolée, absence de secret source et de relais externe ; éventuels écarts consignés                                           |
-| Preview                                         | Document servi avant recette                                                                                                             | SHA distant actuel + `clean`, sinon résultats non représentatifs du HEAD                                                           |
+**Invitations V1 :** la fonctionnalité prépare l'accès par adresse et le consomme à la première entrée du compte correspondant ; elle n'envoie pas d'e-mail automatique. Solution existante la plus simple : owner prépare l'accès puis partage manuellement le lien d'inscription Nona ; le membre utilise exactement l'adresse invitée. Ne pas promettre un lien d'acceptation à usage unique ou une migration entre organisations.
 
-Collecter codes HTTP, actions et verdicts sans mots de passe, JWT, liens signés complets, e-mails réels ou détails du bundle. La preuve d'accès par JWT utilisateurs est distincte des opérations d'administration nécessaires à l'installation des fixtures.
+## Preview, corrections et Git
 
-## Invitations V1 : limite distincte des permissions
+Code validé : **`126f863a778ab98d02e52ec2fe2f0c6c400419c5`**, branche `feat/guest-guide-v2-lot1`.
 
-Le système n'envoie aucun e-mail d'invitation. Il prépare une invitation par adresse et consomme celle-ci à la première entrée d'un compte correspondant ; pour un compte existant sans organisation, il ajoute immédiatement l'accès. La formulation actuelle annonce cette limite.
+Empreinte du runtime HTML observée : `3267de3fed9336eee86ff6d832c0d4dc6927eb09065361b29085627b2dda55cc`, identique aux 312 entrées du manifeste du checkout propre. Les champs revision/state restent `unknown` car Git n'est pas exposé au builder. La correspondance des fichiers compilés est donc prouvée ; la configuration extérieure et les données ne sont pas incluses dans cette empreinte.
 
-Solution V1 la plus simple : owner prépare l'accès, partage manuellement le lien d'inscription de Nona et demande au membre d'utiliser exactement l'adresse invitée. Ne pas promettre une livraison e-mail, une acceptation explicite par lien à usage unique ou un changement d'organisation qui ne sont pas implémentés. La validité des permissions peut être prouvée indépendamment de l'envoi e-mail.
+Les essais de cette passe sont des appels Auth/REST/Storage réels et l'exécution du helper applicatif sur la cible isolée. **Aucune recette complète de l'interface authentifiée de la preview reliée à la source n'est revendiquée.** Aucune nouvelle correction applicative n'est nécessaire : aucun bug démontré. Les corrections d'affichage d'équipe et de provenance de build déjà acquises sont conservées, sans relancer leurs audits ni les tests financiers.
 
-## Une seule intervention nécessaire maintenant
+La mise à jour Git de cette passe porte uniquement sur ce rapport et les résultats anonymisés. Elle conserve la même empreinte des sources et utilise `[skip ci]` afin de ne pas déclencher les anciens tests financiers exclus par la demande. Aucun merge main ni déploiement production.
 
-Se connecter au tableau de bord Supabase dans la session sécurisée afin de vérifier les organisations, le quota Free et une cible TEST dédiée. La page de connexion annonce des conditions contractuelles : aucune acceptation automatique n'est effectuée. Après cet accès, vérifier ou préparer la cible gratuitement avant toute restauration ; ne pas demander au propriétaire de manipuler SQL, bundle ou clés.
+## Obstacles restants et prochaine priorité
 
-Sources officielles : [runtimes Docker/natif](https://supabase.com/docs/guides/local-development/docker-and-native-runtimes), [stack isolée et CLI minimale 2.119](https://supabase.com/docs/guides/local-development/running-multiple-local-projects), [quota Free et coûts par organisation](https://supabase.com/docs/guides/platform/billing-on-supabase).
+**Aucun blocage restant pour cette restauration TEST et la matrice de permissions exécutée. Aucune action humaine supplémentaire n'est nécessaire pour les clore.**
+
+Le verdict global de lancement demeure **NO-GO**, sur les éléments déjà recensés et non réaudités ici : automatisation des sauvegardes médias/configuration et objectif de délai de reprise ; réception d'une alerte critique inoffensive ; recette mobile authentifiée (publication/médias/QR) et mesure mobile du runtime courant ; validation des brouillons légaux et configurations de production. L'activation Connect TEST reste un blocage externe documenté, sans nouvelle tentative. Les paiements et Billing TEST acquis ne sont pas retestés.
+
+**Prochaine priorité technique : terminer la preuve de réception d'une alerte critique et la sauvegarde récurrente des médias/configuration ; puis recette mobile authentifiée sur environnement isolé.** Le canal/responsable d'alerte reste la décision opérationnelle déjà manquante, pas une condition ajoutée à cette reprise. Les confirmations juridiques antérieures restent à traiter avant commercialisation. Ne pas demander à nouveau l'identité de l'éditeur ou les tarifs déjà fournis.
+
+## Références officielles consultées
+
+- [Restauration d'un backup Dashboard](https://supabase.com/docs/guides/platform/migrating-within-supabase/dashboard-restore).
+- [Restauration logique vers un autre projet Supabase](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore).
+- [Send Email Hook](https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook) : un hook activé remplace l'envoi SMTP lorsque le provider Email est activé.
+- [Privilèges des Auth Hooks](https://supabase.com/docs/guides/auth/auth-hooks) : autorisation de la fonction limitée à `supabase_auth_admin`.
+
+Les relevés diffusés ne contiennent ni bundle, ni clé, ni credentials, ni adresse réelle, ni données client. Les captures montrent uniquement la cible TEST et les résultats/configurations non sensibles.

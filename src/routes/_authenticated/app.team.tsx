@@ -31,6 +31,17 @@ function TeamPage() {
   });
   const refresh = () => qc.invalidateQueries({ queryKey: ["team", org.id] });
 
+  if (query.isPending) return <p role="status">{t("common.loading")}</p>;
+  if (query.isError)
+    return (
+      <div role="alert" className="space-y-3">
+        <p>{t("team.loadFailed")}</p>
+        <button type="button" className="btn-secondary" onClick={() => void query.refetch()}>
+          {t("common.retry")}
+        </button>
+      </div>
+    );
+
   return (
     <ManagerTeamScreen
       members={query.data ?? []}

@@ -12,6 +12,7 @@ const keys = [
   "team.notice",
   "team.error",
   "team.removeConfirm",
+  "team.loadFailed",
 ] as const;
 const copy: Record<Locale, readonly string[]> = {
   fr: [
@@ -27,6 +28,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Accès enregistré. Aucun e-mail n’a été envoyé : partagez le lien d’inscription avec le membre.",
     "La modification a échoué. Réessayez.",
     "Retirer ce membre de l’équipe ?",
+    "Impossible de charger l’équipe. Actualisez avant de modifier les accès.",
   ],
   en: [
     "Role",
@@ -41,6 +43,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Access saved. No email was sent: share the signup link with the member.",
     "The change failed. Please try again.",
     "Remove this team member?",
+    "Unable to load the team. Refresh before changing access.",
   ],
   es: [
     "Rol",
@@ -55,6 +58,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Acceso guardado. No se envió ningún correo: comparte el enlace de registro.",
     "No se pudo guardar el cambio. Reintenta.",
     "¿Retirar a este miembro?",
+    "No se pudo cargar el equipo. Actualiza antes de modificar los accesos.",
   ],
   de: [
     "Rolle",
@@ -69,6 +73,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Zugang gespeichert. Es wurde keine E-Mail gesendet: Teile den Registrierungslink.",
     "Änderung fehlgeschlagen. Versuche es erneut.",
     "Dieses Teammitglied entfernen?",
+    "Das Team konnte nicht geladen werden. Aktualisiere vor einer Zugangsänderung.",
   ],
   it: [
     "Ruolo",
@@ -83,6 +88,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Accesso salvato. Nessuna e-mail inviata: condividi il link di registrazione.",
     "Modifica non riuscita. Riprova.",
     "Rimuovere questo membro?",
+    "Impossibile caricare il team. Aggiorna prima di modificare gli accessi.",
   ],
   pt: [
     "Função",
@@ -97,6 +103,7 @@ const copy: Record<Locale, readonly string[]> = {
     "Acesso guardado. Nenhum e-mail enviado: partilhe o link de registo.",
     "A alteração falhou. Tente novamente.",
     "Remover este membro?",
+    "Não foi possível carregar a equipa. Atualize antes de alterar os acessos.",
   ],
 };
 export function addTeamCopy(translations: Record<Locale, Record<string, string>>) {

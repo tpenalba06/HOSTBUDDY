@@ -24,3 +24,14 @@ Checkpoint pour la reprise à 8 h. Base applicative : `e9d12a589ccd02554a5ecea84
 Relire ce checkpoint et le rapport d'exploitation avant toute mutation. Si accessible, constater les cycles planifiés en lecture seule ; ne pas relancer les trois anciennes recettes sauvegarde ou les deux runs santé. Puis avancer sur le prochain travail indépendant : recette mobile authentifiée et performance d'une preview dont le HEAD est confirmé, sans UX/DA. Une mutation distante concurrente exige une vérification du HEAD et un fast-forward avec garde, jamais un force push. Maintenir le NO-GO commercial jusqu'à couverture des blocages déjà identifiés : logs hébergés/indisponibilité HTTP, sauvegarde récurrente DB/Auth, recette mobile, documents légaux et configuration de lancement.
 
 Preuves : https://github.com/tpenalba06/NONA-OPS/actions/runs/38009854953/job/114087091907 ; https://github.com/tpenalba06/NONA-OPS/actions/runs/38009592762.
+
+
+## Reprise active — 10 octobre 2026, 19:17 Paris
+
+L'historique GitHub privé est accessible en lecture seule et affiche huit runs : deux contrôles santé planifiés réussis et une sauvegarde planifiée réussie. Dernier contrôle santé : 38054244084, schedule, succès, 15:03 Paris ; sauvegarde : 38045846944, schedule, succès, 12:42 Paris. Aucun nouveau passage n'est visible à 19:17. Le contrôle santé a donc plus de quatre heures : absence de surveillance récente, sans preuve d'une panne Supabase. Aucun run relancé et aucun artifact/secret consulté.
+
+La tâche Work existante `Reprendre Nona TEST` a été mise à jour avec un contrôle indépendant du planificateur GitHub, sans ajouter de service ni de credential : signaler un nouveau run échoué, plus de trois heures sans contrôle santé automatique terminé, ou plus de 36 heures sans sauvegarde automatique réussie. Les runs manuels n'effacent pas ce retard. Session inaccessible : état non vérifiable, jamais un PASS. Les alertes sont limitées aux changements d'état ; retour à la normale signalé après un nouveau succès récent. La tâche conserve la poursuite du chantier et les gardes contre les modifications concurrentes.
+
+**Prouvé maintenant :** lecture réelle et détection du retard santé ; enregistrement confirmé de la consigne de surveillance Work. **Non prouvé :** exécution future et réception automatique de cette nouvelle alerte. Work dépend de sa propre planification et d'une session GitHub disponible ; ce filet ne constitue pas une surveillance garantie ni un service de production.
+
+Les acquis restauration/147 permissions/Stripe TEST ne sont pas répétés. Aucun nouveau bug applicatif démontré. Restent ouverts : accès aux logs hébergés, disponibilité HTTP du site, preview TEST accessible pour la recette mobile authentifiée, sauvegarde récurrente DB/identités Auth, validation juridique et configuration de lancement. Aucun accès Vercel ni dépense. NONA-OPS inchangé à `5e4ab265f649e6b3e83ccb40e9b1140e249a50e3`.

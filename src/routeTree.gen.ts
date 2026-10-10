@@ -13,24 +13,36 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as GuidePreviewRouteImport } from './routes/guide-preview'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as ApiBillingSyncRouteImport } from './routes/api/billing-sync'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
+import { Route as PayTokenRouteImport } from './routes/pay.$token'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authenticated/app.connections'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppFeedbackRouteImport } from './routes/_authenticated/app.feedback'
+import { Route as AuthenticatedAppImportGuestyRouteImport } from './routes/_authenticated/app.import-guesty'
 import { Route as AuthenticatedAppImportTextRouteImport } from './routes/_authenticated/app.import-text'
 import { Route as AuthenticatedAppImportUrlRouteImport } from './routes/_authenticated/app.import-url'
 import { Route as AuthenticatedAppManualRouteImport } from './routes/_authenticated/app.manual'
 import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/app.messages'
 import { Route as AuthenticatedAppNewRouteImport } from './routes/_authenticated/app.new'
 import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/app.orders'
+import { Route as AuthenticatedAppPaymentsRouteImport } from './routes/_authenticated/app.payments'
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
+import { Route as ApiPublicBillingSyncRouteImport } from './routes/api/public/billing-sync'
+import { Route as ApiPublicCheckoutRouteImport } from './routes/api/public/checkout'
 import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
 import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
-import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages.$id'
+import { Route as ApiPublicPaymentInfoRouteImport } from './routes/api/public/payment-info'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages_.$id'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -52,9 +64,24 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidePreviewRoute = GuidePreviewRouteImport.update({
+  id: '/guide-preview',
+  path: '/guide-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntegrationsRoute = IntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfflineRoute = OfflineRouteImport.update({
+  id: '/offline',
+  path: '/offline',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
@@ -62,9 +89,24 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiBillingSyncRoute = ApiBillingSyncRouteImport.update({
+  id: '/api/billing-sync',
+  path: '/api/billing-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LSlugRoute = LSlugRouteImport.update({
   id: '/l/$slug',
   path: '/l/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayTokenRoute = PayTokenRouteImport.update({
+  id: '/pay/$token',
+  path: '/pay/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
@@ -88,6 +130,12 @@ const AuthenticatedAppFeedbackRoute =
   AuthenticatedAppFeedbackRouteImport.update({
     id: '/feedback',
     path: '/feedback',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppImportGuestyRoute =
+  AuthenticatedAppImportGuestyRouteImport.update({
+    id: '/import-guesty',
+    path: '/import-guesty',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppImportTextRoute =
@@ -123,10 +171,26 @@ const AuthenticatedAppOrdersRoute = AuthenticatedAppOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppPaymentsRoute =
+  AuthenticatedAppPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
   id: '/team',
   path: '/team',
   getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const ApiPublicBillingSyncRoute = ApiPublicBillingSyncRouteImport.update({
+  id: '/api/public/billing-sync',
+  path: '/api/public/billing-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCheckoutRoute = ApiPublicCheckoutRouteImport.update({
+  id: '/api/public/checkout',
+  path: '/api/public/checkout',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicFeedbackRoute = ApiPublicFeedbackRouteImport.update({
   id: '/api/public/feedback',
@@ -143,11 +207,21 @@ const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
   path: '/api/public/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentInfoRoute = ApiPublicPaymentInfoRouteImport.update({
+  id: '/api/public/payment-info',
+  path: '/api/public/payment-info',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppMessagesIdRoute =
   AuthenticatedAppMessagesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAppMessagesRoute,
+    id: '/messages_/$id',
+    path: '/messages/$id',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppPIdRoute = AuthenticatedAppPIdRouteImport.update({
   id: '/p/$id',
@@ -159,22 +233,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/legal': typeof LegalRoute
+  '/offline': typeof OfflineRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/api/billing-sync': typeof ApiBillingSyncRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
+  '/pay/$token': typeof PayTokenRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/feedback': typeof AuthenticatedAppFeedbackRoute
+  '/app/import-guesty': typeof AuthenticatedAppImportGuestyRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
-  '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
+  '/app/messages': typeof AuthenticatedAppMessagesRoute
   '/app/new': typeof AuthenticatedAppNewRoute
   '/app/orders': typeof AuthenticatedAppOrdersRoute
+  '/app/payments': typeof AuthenticatedAppPaymentsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
+  '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
+  '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -183,21 +269,33 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/legal': typeof LegalRoute
+  '/offline': typeof OfflineRoute
+  '/api/billing-sync': typeof ApiBillingSyncRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
+  '/pay/$token': typeof PayTokenRoute
   '/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/feedback': typeof AuthenticatedAppFeedbackRoute
+  '/app/import-guesty': typeof AuthenticatedAppImportGuestyRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
-  '/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
+  '/app/messages': typeof AuthenticatedAppMessagesRoute
   '/app/new': typeof AuthenticatedAppNewRoute
   '/app/orders': typeof AuthenticatedAppOrdersRoute
+  '/app/payments': typeof AuthenticatedAppPaymentsRoute
   '/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
+  '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
+  '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
   '/app/p/$id': typeof AuthenticatedAppPIdRoute
@@ -208,24 +306,36 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/guide-preview': typeof GuidePreviewRoute
   '/integrations': typeof IntegrationsRoute
+  '/legal': typeof LegalRoute
+  '/offline': typeof OfflineRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/api/billing-sync': typeof ApiBillingSyncRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
+  '/pay/$token': typeof PayTokenRoute
   '/_authenticated/app/connections': typeof AuthenticatedAppConnectionsRoute
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/feedback': typeof AuthenticatedAppFeedbackRoute
+  '/_authenticated/app/import-guesty': typeof AuthenticatedAppImportGuestyRoute
   '/_authenticated/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/_authenticated/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
-  '/_authenticated/app/messages': typeof AuthenticatedAppMessagesRouteWithChildren
+  '/_authenticated/app/messages': typeof AuthenticatedAppMessagesRoute
   '/_authenticated/app/new': typeof AuthenticatedAppNewRoute
   '/_authenticated/app/orders': typeof AuthenticatedAppOrdersRoute
+  '/_authenticated/app/payments': typeof AuthenticatedAppPaymentsRoute
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
+  '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
+  '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
+  '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
-  '/_authenticated/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
+  '/_authenticated/app/messages_/$id': typeof AuthenticatedAppMessagesIdRoute
   '/_authenticated/app/p/$id': typeof AuthenticatedAppPIdRoute
 }
 export interface FileRouteTypes {
@@ -234,22 +344,34 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/guide-preview'
     | '/integrations'
+    | '/legal'
+    | '/offline'
     | '/app'
+    | '/api/billing-sync'
+    | '/api/stripe-webhook'
     | '/l/$slug'
+    | '/pay/$token'
     | '/app/connections'
     | '/app/dashboard'
     | '/app/feedback'
+    | '/app/import-guesty'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
     | '/app/messages'
     | '/app/new'
     | '/app/orders'
+    | '/app/payments'
     | '/app/team'
+    | '/api/public/billing-sync'
+    | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
     | '/api/public/orders'
+    | '/api/public/payment-info'
+    | '/api/public/stripe-webhook'
     | '/app/'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -258,21 +380,33 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/guide-preview'
     | '/integrations'
+    | '/legal'
+    | '/offline'
+    | '/api/billing-sync'
+    | '/api/stripe-webhook'
     | '/l/$slug'
+    | '/pay/$token'
     | '/app/connections'
     | '/app/dashboard'
     | '/app/feedback'
+    | '/app/import-guesty'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
     | '/app/messages'
     | '/app/new'
     | '/app/orders'
+    | '/app/payments'
     | '/app/team'
+    | '/api/public/billing-sync'
+    | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
     | '/api/public/orders'
+    | '/api/public/payment-info'
+    | '/api/public/stripe-webhook'
     | '/app'
     | '/app/messages/$id'
     | '/app/p/$id'
@@ -282,24 +416,36 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/demo'
+    | '/guide-preview'
     | '/integrations'
+    | '/legal'
+    | '/offline'
     | '/_authenticated/app'
+    | '/api/billing-sync'
+    | '/api/stripe-webhook'
     | '/l/$slug'
+    | '/pay/$token'
     | '/_authenticated/app/connections'
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/feedback'
+    | '/_authenticated/app/import-guesty'
     | '/_authenticated/app/import-text'
     | '/_authenticated/app/import-url'
     | '/_authenticated/app/manual'
     | '/_authenticated/app/messages'
     | '/_authenticated/app/new'
     | '/_authenticated/app/orders'
+    | '/_authenticated/app/payments'
     | '/_authenticated/app/team'
+    | '/api/public/billing-sync'
+    | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
     | '/api/public/orders'
+    | '/api/public/payment-info'
+    | '/api/public/stripe-webhook'
     | '/_authenticated/app/'
-    | '/_authenticated/app/messages/$id'
+    | '/_authenticated/app/messages_/$id'
     | '/_authenticated/app/p/$id'
   fileRoutesById: FileRoutesById
 }
@@ -308,11 +454,21 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
+  GuidePreviewRoute: typeof GuidePreviewRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  LegalRoute: typeof LegalRoute
+  OfflineRoute: typeof OfflineRoute
+  ApiBillingSyncRoute: typeof ApiBillingSyncRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LSlugRoute: typeof LSlugRoute
+  PayTokenRoute: typeof PayTokenRoute
+  ApiPublicBillingSyncRoute: typeof ApiPublicBillingSyncRoute
+  ApiPublicCheckoutRoute: typeof ApiPublicCheckoutRoute
   ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
   ApiPublicOrdersRoute: typeof ApiPublicOrdersRoute
+  ApiPublicPaymentInfoRoute: typeof ApiPublicPaymentInfoRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -345,11 +501,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guide-preview': {
+      id: '/guide-preview'
+      path: '/guide-preview'
+      fullPath: '/guide-preview'
+      preLoaderRoute: typeof GuidePreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/integrations': {
       id: '/integrations'
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offline': {
+      id: '/offline'
+      path: '/offline'
+      fullPath: '/offline'
+      preLoaderRoute: typeof OfflineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app': {
@@ -359,11 +536,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/billing-sync': {
+      id: '/api/billing-sync'
+      path: '/api/billing-sync'
+      fullPath: '/api/billing-sync'
+      preLoaderRoute: typeof ApiBillingSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/l/$slug': {
       id: '/l/$slug'
       path: '/l/$slug'
       fullPath: '/l/$slug'
       preLoaderRoute: typeof LSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$token': {
+      id: '/pay/$token'
+      path: '/pay/$token'
+      fullPath: '/pay/$token'
+      preLoaderRoute: typeof PayTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/': {
@@ -392,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/feedback'
       fullPath: '/app/feedback'
       preLoaderRoute: typeof AuthenticatedAppFeedbackRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/import-guesty': {
+      id: '/_authenticated/app/import-guesty'
+      path: '/import-guesty'
+      fullPath: '/app/import-guesty'
+      preLoaderRoute: typeof AuthenticatedAppImportGuestyRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/import-text': {
@@ -436,12 +641,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOrdersRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/payments': {
+      id: '/_authenticated/app/payments'
+      path: '/payments'
+      fullPath: '/app/payments'
+      preLoaderRoute: typeof AuthenticatedAppPaymentsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/team': {
       id: '/_authenticated/app/team'
       path: '/team'
       fullPath: '/app/team'
       preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
       parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/billing-sync': {
+      id: '/api/public/billing-sync'
+      path: '/api/public/billing-sync'
+      fullPath: '/api/public/billing-sync'
+      preLoaderRoute: typeof ApiPublicBillingSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/checkout': {
+      id: '/api/public/checkout'
+      path: '/api/public/checkout'
+      fullPath: '/api/public/checkout'
+      preLoaderRoute: typeof ApiPublicCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/feedback': {
       id: '/api/public/feedback'
@@ -464,12 +690,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/app/messages/$id': {
-      id: '/_authenticated/app/messages/$id'
-      path: '/$id'
+    '/api/public/payment-info': {
+      id: '/api/public/payment-info'
+      path: '/api/public/payment-info'
+      fullPath: '/api/public/payment-info'
+      preLoaderRoute: typeof ApiPublicPaymentInfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app/messages_/$id': {
+      id: '/_authenticated/app/messages_/$id'
+      path: '/messages/$id'
       fullPath: '/app/messages/$id'
       preLoaderRoute: typeof AuthenticatedAppMessagesIdRouteImport
-      parentRoute: typeof AuthenticatedAppMessagesRoute
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/p/$id': {
       id: '/_authenticated/app/p/$id'
@@ -481,32 +721,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAppMessagesRouteChildren {
-  AuthenticatedAppMessagesIdRoute: typeof AuthenticatedAppMessagesIdRoute
-}
-
-const AuthenticatedAppMessagesRouteChildren: AuthenticatedAppMessagesRouteChildren =
-  {
-    AuthenticatedAppMessagesIdRoute: AuthenticatedAppMessagesIdRoute,
-  }
-
-const AuthenticatedAppMessagesRouteWithChildren =
-  AuthenticatedAppMessagesRoute._addFileChildren(
-    AuthenticatedAppMessagesRouteChildren,
-  )
-
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppConnectionsRoute: typeof AuthenticatedAppConnectionsRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppFeedbackRoute: typeof AuthenticatedAppFeedbackRoute
+  AuthenticatedAppImportGuestyRoute: typeof AuthenticatedAppImportGuestyRoute
   AuthenticatedAppImportTextRoute: typeof AuthenticatedAppImportTextRoute
   AuthenticatedAppImportUrlRoute: typeof AuthenticatedAppImportUrlRoute
   AuthenticatedAppManualRoute: typeof AuthenticatedAppManualRoute
-  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRouteWithChildren
+  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
   AuthenticatedAppNewRoute: typeof AuthenticatedAppNewRoute
   AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
+  AuthenticatedAppPaymentsRoute: typeof AuthenticatedAppPaymentsRoute
   AuthenticatedAppTeamRoute: typeof AuthenticatedAppTeamRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppMessagesIdRoute: typeof AuthenticatedAppMessagesIdRoute
   AuthenticatedAppPIdRoute: typeof AuthenticatedAppPIdRoute
 }
 
@@ -514,14 +743,17 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppConnectionsRoute: AuthenticatedAppConnectionsRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppFeedbackRoute: AuthenticatedAppFeedbackRoute,
+  AuthenticatedAppImportGuestyRoute: AuthenticatedAppImportGuestyRoute,
   AuthenticatedAppImportTextRoute: AuthenticatedAppImportTextRoute,
   AuthenticatedAppImportUrlRoute: AuthenticatedAppImportUrlRoute,
   AuthenticatedAppManualRoute: AuthenticatedAppManualRoute,
-  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRouteWithChildren,
+  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
   AuthenticatedAppNewRoute: AuthenticatedAppNewRoute,
   AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
+  AuthenticatedAppPaymentsRoute: AuthenticatedAppPaymentsRoute,
   AuthenticatedAppTeamRoute: AuthenticatedAppTeamRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppMessagesIdRoute: AuthenticatedAppMessagesIdRoute,
   AuthenticatedAppPIdRoute: AuthenticatedAppPIdRoute,
 }
 
@@ -544,11 +776,21 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
+  GuidePreviewRoute: GuidePreviewRoute,
   IntegrationsRoute: IntegrationsRoute,
+  LegalRoute: LegalRoute,
+  OfflineRoute: OfflineRoute,
+  ApiBillingSyncRoute: ApiBillingSyncRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LSlugRoute: LSlugRoute,
+  PayTokenRoute: PayTokenRoute,
+  ApiPublicBillingSyncRoute: ApiPublicBillingSyncRoute,
+  ApiPublicCheckoutRoute: ApiPublicCheckoutRoute,
   ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,
   ApiPublicOrdersRoute: ApiPublicOrdersRoute,
+  ApiPublicPaymentInfoRoute: ApiPublicPaymentInfoRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

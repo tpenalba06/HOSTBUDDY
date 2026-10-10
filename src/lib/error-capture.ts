@@ -1,3 +1,5 @@
+import { reportOperationalEvent } from "./operational-events.server";
+
 // Captures the original Error out-of-band so server.ts can recover the stack
 // when h3 has already swallowed the throw into a generic 500 Response.
 
@@ -8,41 +10,45 @@ function record(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
 }
 
-// h3's HTTPError serializes to {"status":500,"unhandled":true,"message":"HTTPError"} —
-// no stack, no cause — so a plain console.error(error) reaches the log pipeline with
-// the failure detail stripped. Expand Error-like args into a string that keeps the
-// message, stack, and the full cause chain.
-const CAUSE_DEPTH_LIMIT = 5;
-const DESCRIPTION_LENGTH_LIMIT = 8_000;
-
+// Error messages, stacks and causes can contain bearer tokens, DSNs and guest
+// content. Keep the error class/status, never serialize arbitrary exception text.
 export function describeError(error: unknown): string {
-  const parts: string[] = [];
-  let current: unknown = error;
-  for (let depth = 0; depth < CAUSE_DEPTH_LIMIT && current != null; depth++) {
-    if (!(current instanceof Error)) {
-      parts.push(typeof current === "string" ? current : safeStringify(current));
-      break;
-    }
-    const label = depth === 0 ? "" : "caused by: ";
-    const status = describeStatus(current);
-    parts.push(`${label}${current.stack ?? `${current.name}: ${current.message}`}${status}`);
-    current = current.cause;
-  }
-  return parts.join("\n").slice(0, DESCRIPTION_LENGTH_LIMIT);
-}
-
-function describeStatus(error: Error): string {
+  if (!(error instanceof Error)) return "[exception details omitted]";
+  const name = ["Error", "TypeError", "RangeError", "SyntaxError", "URIError"].includes(error.name)
+    ? error.name
+    : "Error";
   const { status, statusCode } = error as { status?: unknown; statusCode?: unknown };
-  const value = status ?? statusCode;
-  return typeof value === "number" ? ` (status ${value})` : "";
+  const code = status ?? statusCode;
+  return `${name} [details omitted]${typeof code === "number" && Number.isInteger(code) && code >= 100 && code <= 599 ? ` (status ${code})` : ""}`;
 }
 
-function safeStringify(value: unknown): string {
-  try {
-    return JSON.stringify(value) ?? String(value);
-  } catch {
-    return String(value);
+export function safeLogArgument(value: unknown): unknown {
+  if (
+    value &&
+    typeof value === "object" &&
+    "schema" in value &&
+    value.schema === "hostbuddy.operations.v1"
+  ) {
+    const item = value as Record<string, unknown>;
+    return {
+      schema: "hostbuddy.operations.v1",
+      event:
+        typeof item["event"] === "string" && /^[a-z_]{1,80}$/.test(item["event"])
+          ? item["event"]
+          : "unknown",
+      level: "error",
+      at:
+        typeof item["at"] === "string" && /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(item["at"])
+          ? item["at"]
+          : undefined,
+      ...(typeof item["pending"] === "number" &&
+      Number.isSafeInteger(item["pending"]) &&
+      item["pending"] >= 0
+        ? { pending: item["pending"] }
+        : {}),
+    };
   }
+  return "[log details omitted]";
 }
 
 function isErrorLike(value: unknown): value is Error {
@@ -55,7 +61,7 @@ function isErrorLike(value: unknown): value is Error {
 const originalConsoleError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
   const expanded = args.map((arg) => {
-    if (!isErrorLike(arg)) return arg;
+    if (!isErrorLike(arg)) return safeLogArgument(arg);
     record(arg);
     return describeError(arg);
   });
@@ -63,10 +69,14 @@ console.error = (...args: unknown[]) => {
 };
 
 if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
+  globalThis.addEventListener("error", (event) => {
+    record((event as ErrorEvent).error ?? event);
+    reportOperationalEvent("server_unhandled_error");
+  });
+  globalThis.addEventListener("unhandledrejection", (event) => {
+    record((event as PromiseRejectionEvent).reason);
+    reportOperationalEvent("server_unhandled_rejection");
+  });
 }
 
 export function consumeLastCapturedError(): unknown {

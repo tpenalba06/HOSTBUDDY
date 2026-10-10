@@ -15,6 +15,8 @@ import {
   Home,
   MailPlus,
   MapPin,
+  MoreHorizontal,
+  Search,
   MessageCircle,
   PackageCheck,
   Pencil,
@@ -26,7 +28,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { ambienceFor } from "@/components/guest/visual-library";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
+import { DeletePropertyDialog } from "./DeletePropertyDialog";
 
 export type ManagerPropertySummary = {
   id: string;
@@ -34,6 +38,8 @@ export type ManagerPropertySummary = {
   slug: string;
   status: "draft" | "published" | "archived";
   location?: string | null;
+  coverUrl?: string | null;
+  created_at?: string;
 };
 
 export type ManagerMetrics = {
@@ -133,8 +139,11 @@ export function ManagerPropertiesScreen({
   renderEdit,
   renderView,
   renderQr,
+  onDelete,
+  pendingDeletions = [],
 }: {
   properties: ManagerPropertySummary[];
+  pendingDeletions?: { property_id: string; confirmed_name: string }[];
   role?: "owner" | "admin" | "member";
   onAdd?: () => void;
   onEdit: (id: string) => void;
@@ -142,18 +151,76 @@ export function ManagerPropertiesScreen({
   renderEdit?: (property: ManagerPropertySummary, className: string, label: string) => ReactNode;
   renderView?: (property: ManagerPropertySummary, className: string, label: string) => ReactNode;
   renderQr: (property: ManagerPropertySummary) => ReactNode;
+  onDelete?: (
+    id: string,
+    name: string,
+  ) => Promise<{ cleanupPending: boolean; billingPending: boolean }>;
 }) {
   const { t } = useI18n();
   const [qr, setQr] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"all" | "draft" | "published">("all");
+  const [sort, setSort] = useState<"az" | "za" | "newest" | "oldest">("newest");
+  const shown = properties
+    .filter(
+      (property) =>
+        (status === "all" || property.status === status) &&
+        `${property.name} ${property.location ?? ""}`
+          .toLocaleLowerCase()
+          .includes(search.toLocaleLowerCase().trim()),
+    )
+    .sort((a, b) => {
+      if (sort === "az" || sort === "za") {
+        const result = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+        return sort === "az" ? result : -result;
+      }
+      const result = new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
+      return sort === "oldest" ? result : -result;
+    });
 
   return (
-    <div className="py-4 @sm:py-6">
+    <div className="manager-properties py-4 @sm:py-6">
+      {(role === "owner" || role === "admin") &&
+        onDelete &&
+        pendingDeletions.map((job) => (
+          <div key={job.property_id} className="mb-4 rounded-xl border p-4">
+            <p>
+              {job.confirmed_name} — {t("property.deleteCleanup")}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => setDeleting({ id: job.property_id, name: job.confirmed_name })}
+            >
+              {t("property.deleteRetry")}
+            </Button>
+          </div>
+        ))}
       <div className="grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
-        <PageHeading
-          eyebrow={t("demo.ownerSpace")}
-          title={t("app.myProperties")}
-          description={t("demo.propertiesHint")}
-        />
+        <PageHeading title={t("app.myProperties")} />
+        <div className="manager-property-tools">
+          <label className="manager-property-search">
+            <Search size={16} />
+            <input
+              type="search"
+              aria-label={t("manager.searchProperties")}
+              placeholder={t("manager.searchProperties")}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <select
+            className="manager-property-sort"
+            aria-label={t("manager.sortLabel")}
+            value={sort}
+            onChange={(event) => setSort(event.target.value as typeof sort)}
+          >
+            <option value="az">{t("manager.sortAZ")}</option>
+            <option value="za">{t("manager.sortZA")}</option>
+            <option value="newest">{t("manager.sortNewest")}</option>
+            <option value="oldest">{t("manager.sortOldest")}</option>
+          </select>
+        </div>
         {role !== "member" && onAdd && (
           <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
             <Plus />
@@ -162,77 +229,134 @@ export function ManagerPropertiesScreen({
         )}
       </div>
 
-      {properties.length ? (
-        <div className="mt-6 grid gap-4 @lg:grid-cols-2">
-          {properties.map((property) => (
-            <article key={property.id} className="surface min-w-0 overflow-hidden">
-              <div className="bg-warm p-4 @sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p
-                      className={`text-sm font-bold ${
-                        property.status === "published" ? "text-success" : "text-warning"
-                      }`}
-                    >
-                      {property.status === "published" ? t("app.published") : t("app.draft")}
-                    </p>
-                    <h2 className="mt-1 truncate text-xl font-semibold @sm:text-2xl">
-                      {property.name}
-                    </h2>
-                    {property.location && (
-                      <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{property.location}</span>
-                      </p>
-                    )}
-                  </div>
-                  <Home className="h-6 w-6 shrink-0 text-primary" />
-                </div>
-              </div>
+      <div className="manager-property-filters" role="group" aria-label={t("app.myProperties")}>
+        {(["all", "published", "draft"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={status === value}
+            onClick={() => {
+              setStatus(value);
+              setQr(null);
+            }}
+            className={`min-h-12 rounded-full px-5 text-sm font-semibold ${status === value ? "bg-card text-primary shadow-sm" : "text-muted-foreground"}`}
+          >
+            {t(
+              value === "all"
+                ? "guide.all"
+                : value === "draft"
+                  ? "manager.drafts"
+                  : "manager.published",
+            )}{" "}
+            <span className="ml-2 opacity-60">
+              {properties.filter((p) => value === "all" || p.status === value).length}
+            </span>
+          </button>
+        ))}
+      </div>
 
-              <div className="grid gap-2 p-4 @sm:grid-cols-3">
-                {renderEdit ? (
-                  renderEdit(
-                    property,
-                    "btn btn-primary min-h-12",
-                    role === "member" ? t("common.view") : t("common.edit"),
-                  )
-                ) : (
-                  <Button className="min-h-12" onClick={() => onEdit(property.id)}>
-                    <Pencil />
-                    {role === "member" ? t("common.view") : t("common.edit")}
-                  </Button>
-                )}
-                {property.status === "published" ? (
-                  <>
-                    {renderView ? (
-                      renderView(property, "btn btn-secondary min-h-12", t("common.view"))
-                    ) : (
-                      <Button
-                        variant="outline"
-                        className="min-h-12"
-                        onClick={() => onView(property.slug)}
-                      >
-                        <Eye />
-                        {t("common.view")}
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      className="min-h-12"
-                      onClick={() => setQr(qr === property.id ? null : property.id)}
-                    >
-                      <QrCode />
-                      QR
-                    </Button>
-                  </>
-                ) : (
-                  <p className="self-center text-sm text-muted-foreground @sm:col-span-2">
-                    {t("app.publishHint")}
+      {properties.length ? (
+        <div className="manager-property-grid">
+          {!shown.length && <p className="text-muted-foreground">{t("manager.noResults")}</p>}
+          {shown.map((property) => (
+            <article
+              key={property.id}
+              className="manager-property-card surface min-w-0 overflow-hidden"
+            >
+              <button
+                type="button"
+                onClick={() => onEdit(property.id)}
+                aria-label={`${t(role === "member" ? "common.view" : "common.edit")} ${property.name}`}
+                className="manager-property-photo relative block w-full overflow-hidden bg-warm"
+              >
+                <img
+                  src={property.coverUrl || ambienceFor(property.name)}
+                  alt={property.coverUrl ? property.name : t("media.ambience")}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                  onError={(event) => {
+                    const image = event.currentTarget;
+                    if (image.dataset["fallback"]) return;
+                    image.dataset["fallback"] = "true";
+                    image.src = ambienceFor(property.name);
+                  }}
+                />
+              </button>
+              <div className="px-4 pt-4 @sm:px-5">
+                <h2 className="break-words text-2xl font-semibold leading-tight">
+                  {property.name}
+                </h2>
+                {property.location && (
+                  <p className="mt-2 flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{property.location}</span>
                   </p>
                 )}
               </div>
 
+              <span
+                className={`manager-property-status ${property.status === "published" ? "is-published" : "is-draft"}`}
+              >
+                {property.status === "published" ? t("app.published") : t("app.draft")}
+              </span>
+              <details className="manager-property-menu">
+                <summary aria-label={t(role === "member" ? "common.view" : "common.edit")}>
+                  <MoreHorizontal size={19} />
+                </summary>
+                <div className="manager-property-actions grid gap-2 p-3">
+                  {renderEdit ? (
+                    renderEdit(
+                      property,
+                      "btn btn-primary min-h-12",
+                      role === "member" ? t("common.view") : t("common.edit"),
+                    )
+                  ) : (
+                    <Button className="min-h-12" onClick={() => onEdit(property.id)}>
+                      <Pencil />
+                      {role === "member" ? t("common.view") : t("common.edit")}
+                    </Button>
+                  )}
+                  {property.status === "published" ? (
+                    <>
+                      {renderView ? (
+                        renderView(property, "btn btn-secondary min-h-12", t("common.view"))
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="min-h-12"
+                          onClick={() => onView(property.slug)}
+                        >
+                          <Eye />
+                          {t("common.view")}
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        className="min-h-12"
+                        onClick={() => setQr(qr === property.id ? null : property.id)}
+                      >
+                        <QrCode />
+                        QR
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="self-center text-sm text-muted-foreground @sm:col-span-2">
+                      {t("app.publishHint")}
+                    </p>
+                  )}
+                  {(role === "owner" || role === "admin") && onDelete && (
+                    <Button
+                      variant="destructive"
+                      className="min-h-12"
+                      onClick={() => setDeleting(property)}
+                    >
+                      <Trash2 />
+                      {t("property.delete")}
+                    </Button>
+                  )}
+                </div>
+              </details>
               {qr === property.id && (
                 <div className="mx-4 mb-4 rounded-xl border bg-muted p-4 text-center">
                   {renderQr(property)}
@@ -246,6 +370,14 @@ export function ManagerPropertiesScreen({
           <Home className="mx-auto h-9 w-9 text-primary" />
           <p className="mt-3 font-semibold">{t("app.first")}</p>
         </div>
+      )}
+      {deleting && onDelete && (role === "owner" || role === "admin") && (
+        <DeletePropertyDialog
+          key={deleting.id}
+          property={deleting}
+          onDelete={onDelete}
+          onClose={() => setDeleting(null)}
+        />
       )}
     </div>
   );
@@ -625,9 +757,19 @@ export function ManagerFeedbackScreen({
   );
 }
 
-export function ManagerConnectionsScreen({ onBack }: { onBack?: () => void }) {
+export function ManagerConnectionsScreen({
+  onBack,
+  guestyAction,
+  guestyConnected = false,
+}: {
+  onBack?: () => void;
+  guestyAction?: ReactNode;
+  guestyConnected?: boolean;
+}) {
   const { t } = useI18n();
-  const priorities = INTEGRATIONS.filter((item) => item.category === "pms").slice(0, 4);
+  const priorities = INTEGRATIONS.filter(
+    (item) => item.category === "pms" && item.id !== "guesty",
+  ).slice(0, 3);
   return (
     <div className="py-4 @sm:py-6">
       <BackButton label={t("common.back")} onBack={onBack} />
@@ -637,7 +779,10 @@ export function ManagerConnectionsScreen({ onBack }: { onBack?: () => void }) {
       <section className="mt-7">
         <h2 className="text-xl font-semibold @sm:text-2xl">{t("connections.connected")}</h2>
         <div className="mt-4 rounded-xl border border-dashed bg-card p-6 text-center">
-          <p className="font-semibold">{t("connections.none")}</p>
+          <p className="font-semibold">
+            Guesty · {t(guestyConnected ? "provider.connected" : "provider.notConnected")}
+          </p>
+          {guestyAction}
           <p className="mt-1 text-sm text-muted-foreground">{t("connections.importHint")}</p>
         </div>
       </section>
@@ -676,32 +821,47 @@ export function ManagerTeamScreen({
   onRoleChange: (userId: string, role: "admin" | "member") => void | Promise<void>;
   onRemove: (userId: string) => void | Promise<void>;
 }) {
+  const { t } = useI18n();
+  const [error, setError] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "member">("member");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const change = async (task: () => void | Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await task();
+    } catch {
+      setError(t("team.error"));
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="py-4 @sm:py-6">
-      <BackButton label="Hébergements" onBack={onBack} />
+      <BackButton label={t("nav.properties")} onBack={onBack} />
       <PageHeading
-        eyebrow="Administration"
-        title="Équipe"
-        description="Des rôles simples, sans réglages techniques."
+        eyebrow={t("demo.ownerSpace")}
+        title={t("nav.team")}
+        description={t("demo.teamHint")}
       />
       <form
         className="surface mt-6 grid gap-3 p-4 @sm:p-5 @lg:grid-cols-[minmax(0,1fr)_180px_auto]"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (!email.trim()) return;
+          if (busy || !email.trim()) return;
           setBusy(true);
           setNotice("");
+          setError("");
           try {
             await onInvite(email.trim(), role);
             setEmail("");
-            setNotice(
-              "Invitation enregistrée. Le membre rejoindra l’équipe avec son compte HostBuddy.",
-            );
+            setNotice(t("team.notice"));
+          } catch {
+            setError(t("team.error"));
           } finally {
             setBusy(false);
           }
@@ -719,25 +879,30 @@ export function ManagerTeamScreen({
           />
         </label>
         <label>
-          <span className="mb-1 block font-semibold">Rôle</span>
+          <span className="mb-1 block font-semibold">{t("team.role")}</span>
           <select
             className="field"
             value={role}
             onChange={(event) => setRole(event.target.value as typeof role)}
           >
-            <option value="admin">Responsable</option>
-            <option value="member">Employé</option>
+            <option value="admin">{t("team.admin")}</option>
+            <option value="member">{t("team.member")}</option>
           </select>
         </label>
         <Button className="min-h-12 self-end" disabled={busy}>
           <MailPlus />
-          {busy ? "Ajout…" : "Inviter"}
+          {busy ? t("team.adding") : t("team.add")}
         </Button>
       </form>
+      {error && (
+        <p role="alert" className="mt-3 rounded-xl bg-warning-soft p-3">
+          {error}
+        </p>
+      )}
       {notice && <p className="mt-3 rounded-xl bg-success-soft p-3 text-success">{notice}</p>}
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold @sm:text-2xl">Membres actifs</h2>
+        <h2 className="text-xl font-semibold @sm:text-2xl">{t("team.active")}</h2>
         <div className="mt-3 space-y-3">
           {members.map((member) => (
             <article
@@ -749,32 +914,36 @@ export function ManagerTeamScreen({
                 <p className="truncate font-bold">{member.email}</p>
                 <p className="text-sm text-muted-foreground">
                   {member.role === "owner"
-                    ? "Patron"
+                    ? t("team.owner")
                     : member.role === "admin"
-                      ? "Responsable"
-                      : "Employé"}
+                      ? t("team.admin")
+                      : t("team.member")}
                 </p>
               </div>
               {member.role !== "owner" && (
                 <>
                   <select
-                    aria-label="Modifier le rôle"
+                    aria-label={t("team.change")}
                     className="field"
+                    disabled={busy}
                     value={member.role}
                     onChange={(event) =>
-                      void onRoleChange(member.user_id, event.target.value as "admin" | "member")
+                      void change(() =>
+                        onRoleChange(member.user_id, event.target.value as "admin" | "member"),
+                      )
                     }
                   >
-                    <option value="admin">Responsable</option>
-                    <option value="member">Employé</option>
+                    <option value="admin">{t("team.admin")}</option>
+                    <option value="member">{t("team.member")}</option>
                   </select>
                   <Button
                     variant="ghost"
                     className="min-h-12 text-destructive"
-                    onClick={() => void onRemove(member.user_id)}
+                    disabled={busy}
+                    onClick={() => void change(() => onRemove(member.user_id))}
                   >
                     <Trash2 />
-                    Retirer
+                    {t("team.remove")}
                   </Button>
                 </>
               )}

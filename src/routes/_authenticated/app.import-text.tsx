@@ -11,17 +11,11 @@ import {
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
 import { ImportReview } from "@/components/app/ImportReview";
 import { useOrg } from "@/components/app/useOrg";
-import { friendlyMessage } from "@/components/app/Friendly";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/app/import-text")({ component: ImportText });
 
-const STAGES = [
-  { id: "read", label: "Lecture de votre texte" },
-  { id: "sort", label: "Tri par thème" },
-  { id: "verify", label: "Détection des informations incertaines" },
-  { id: "review", label: "Préparation de la vérification" },
-];
+const STAGE_KEYS = ["readText", "sort", "uncertain", "review"] as const;
 
 const EXAMPLE = `Villa des Oliviers
 Bienvenue dans notre maison lumineuse avec vue mer, 12 chemin des Pins 06160 Antibes.
@@ -41,6 +35,7 @@ Petit-déjeuner livré possible sur demande.`;
 
 function ImportText() {
   const { t } = useI18n();
+  const stages = STAGE_KEYS.map((key) => ({ id: key, label: t(`importFlow.${key}`) }));
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -55,7 +50,7 @@ function ImportText() {
   const go = async () => {
     setError("");
     setCandidate(null);
-    const stop = tick(setStage, STAGES.length, 500);
+    const stop = tick(setStage, stages.length, 500);
     let currentRunId: string | null = null;
 
     try {
@@ -70,20 +65,18 @@ function ImportText() {
       if (!result.propertyName && useful === 0) {
         await finishImportRun(currentRunId, "insufficient", { error: "no_fields_detected" });
         setRunId(null);
-        setError(
-          "Nous n’avons pas trouvé assez d’informations. Ajoutez davantage de texte ou créez le logement manuellement.",
-        );
+        setError(t("importFlow.notEnough"));
         return;
       }
 
       setCandidate(result);
-    } catch (e) {
+    } catch {
       if (currentRunId)
         await finishImportRun(currentRunId, "failed", { error: "client" }).catch(() => {});
       stop();
       setStage(null);
       setRunId(null);
-      setError(friendlyMessage(e));
+      setError(t("errors.body"));
     }
   };
 
@@ -96,10 +89,10 @@ function ImportText() {
       if (runId) await finishImportRun(runId, "succeeded", { propertyId: property.id });
       qc.invalidateQueries({ queryKey: ["properties"] });
       nav({ to: "/app/p/$id", params: { id: property.id } });
-    } catch (e) {
+    } catch {
       if (runId)
         await finishImportRun(runId, "failed", { error: "create_property" }).catch(() => {});
-      setError(friendlyMessage(e));
+      setError(t("errors.body"));
       setBusy(false);
     }
   };
@@ -138,12 +131,13 @@ function ImportText() {
       <h1 className="text-3xl font-semibold">{t("import.textTitle")}</h1>
       <p className="mt-2 text-lg text-muted-foreground">{t("import.textHelp")}</p>
       {stage !== null ? (
-        <ImportProgress stages={STAGES} current={stage} />
+        <ImportProgress stages={stages} current={stage} />
       ) : (
         <div className="mt-6 space-y-4">
           <textarea
             className="field min-h-72 text-lg"
-            placeholder="Vos notes, un message WhatsApp, un e-mail, le texte de votre annonce…"
+            placeholder={t("importFlow.placeholder")}
+            aria-label={t("import.textTitle")}
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
@@ -151,7 +145,7 @@ function ImportText() {
             className="min-h-12 font-semibold text-primary underline"
             onClick={() => setText(EXAMPLE)}
           >
-            Essayer avec un exemple
+            {t("importFlow.example")}
           </button>
           {error && (
             <p role="alert" className="rounded-xl bg-warning-soft p-3">
@@ -161,9 +155,7 @@ function ImportText() {
           <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>
             {t("import.textAction")}
           </button>
-          <p className="text-center text-sm text-muted-foreground">
-            Français, anglais, espagnol, allemand, italien et portugais sont reconnus.
-          </p>
+          <p className="text-center text-sm text-muted-foreground">{t("importFlow.languages")}</p>
         </div>
       )}
     </div>

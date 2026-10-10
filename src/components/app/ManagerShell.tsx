@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
+  CreditCard,
   Cable,
   ClipboardList,
   Home,
@@ -11,16 +12,24 @@ import {
   Plus,
   Star,
   Users,
-  X,
   type LucideIcon,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/Logo";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 
 export type ManagerArea =
-  "properties" | "messages" | "orders" | "feedback" | "connections" | "dashboard" | "team" | "new";
+  | "properties"
+  | "messages"
+  | "orders"
+  | "feedback"
+  | "connections"
+  | "dashboard"
+  | "team"
+  | "new"
+  | "payments";
 type Role = "owner" | "admin" | "member";
 type ManagerPath =
   | "/app"
@@ -29,6 +38,7 @@ type ManagerPath =
   | "/app/feedback"
   | "/app/connections"
   | "/app/dashboard"
+  | "/app/payments"
   | "/app/team"
   | "/app/new";
 type NavItem = { id: ManagerArea; to: ManagerPath; label: string; icon: LucideIcon };
@@ -80,6 +90,12 @@ export function ManagerShell({
             label: t("nav.dashboard"),
             icon: BarChart3,
           },
+          {
+            id: "payments" as const,
+            to: "/app/payments" as const,
+            label: t("nav.payments"),
+            icon: CreditCard,
+          },
           { id: "team" as const, to: "/app/team" as const, label: t("nav.team"), icon: Users },
         ]
       : []),
@@ -90,21 +106,23 @@ export function ManagerShell({
     label: t("nav.properties"),
     icon: Home,
   };
-  const routeArea: ManagerArea = pathname.startsWith("/app/messages")
-    ? "messages"
-    : pathname.startsWith("/app/orders")
-      ? "orders"
-      : pathname.startsWith("/app/feedback")
-        ? "feedback"
-        : pathname.startsWith("/app/connections")
-          ? "connections"
-          : pathname.startsWith("/app/dashboard")
-            ? "dashboard"
-            : pathname.startsWith("/app/team")
-              ? "team"
-              : pathname.startsWith("/app/new")
-                ? "new"
-                : "properties";
+  const routeArea: ManagerArea = pathname.startsWith("/app/payments")
+    ? "payments"
+    : pathname.startsWith("/app/messages")
+      ? "messages"
+      : pathname.startsWith("/app/orders")
+        ? "orders"
+        : pathname.startsWith("/app/feedback")
+          ? "feedback"
+          : pathname.startsWith("/app/connections")
+            ? "connections"
+            : pathname.startsWith("/app/dashboard")
+              ? "dashboard"
+              : pathname.startsWith("/app/team")
+                ? "team"
+                : pathname.startsWith("/app/new")
+                  ? "new"
+                  : "properties";
   const current = onNavigate ? active : routeArea;
   useEffect(() => {
     if (embedded) contentRef.current?.scrollTo({ top: 0 });
@@ -115,7 +133,7 @@ export function ManagerShell({
   };
   return (
     <div
-      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-hidden" : "min-h-screen"}`}
+      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-visible" : "min-h-screen"}`}
     >
       <header
         className={`${embedded ? "absolute" : "sticky"} inset-x-0 top-0 z-30 border-b bg-background/95 backdrop-blur`}
@@ -153,6 +171,7 @@ export function ManagerShell({
         className={`manager-shell-grid ${embedded ? "h-full pt-[69px]" : "mx-auto w-full max-w-7xl"}`}
       >
         <aside className="manager-shell-sidebar min-h-0 overflow-y-auto border-r bg-card/60 p-4">
+          <div className="manager-sidebar-wordmark">HostBuddy</div>
           <nav className="space-y-1" aria-label={t("demo.manager")}>
             <ShellItem
               item={properties}
@@ -218,53 +237,39 @@ export function ManagerShell({
           <span className="truncate">{t("nav.more")}</span>
         </Button>
       </nav>
-      {more && (
-        <div
-          className={`${embedded ? "absolute" : "fixed"} inset-0 z-50 flex items-end bg-ink/55`}
-          role="dialog"
-          aria-modal="true"
+      <Dialog open={more} onOpenChange={setMore}>
+        <DialogContent
+          className="top-auto bottom-0 translate-y-0 rounded-t-2xl p-5"
+          aria-describedby={undefined}
         >
-          <div className="w-full rounded-t-2xl bg-background p-5">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center">
-              <h2 className="text-2xl font-semibold">{t("nav.more")}</h2>
+          <DialogTitle className="font-display text-2xl">{t("nav.more")}</DialogTitle>
+          <div className="mt-4 grid gap-2" onClick={() => setMore(false)}>
+            {role !== "member" && (
+              <DrawerItem
+                item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
+                onNavigate={onNavigate ? navigate : undefined}
+              />
+            )}{" "}
+            {management.map((item) => (
+              <DrawerItem
+                key={item.id}
+                item={item}
+                onNavigate={onNavigate ? navigate : undefined}
+              />
+            ))}
+            {onSignOut && (
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-12 w-12"
-                onClick={() => setMore(false)}
-                aria-label={t("common.close")}
+                className="min-h-14 justify-start gap-3 px-4"
+                onClick={onSignOut}
               >
-                <X />
+                <LogOut />
+                {t("app.signOut")}
               </Button>
-            </div>
-            <div className="mt-4 grid gap-2">
-              {role !== "member" && (
-                <DrawerItem
-                  item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
-                  onNavigate={onNavigate ? navigate : undefined}
-                />
-              )}{" "}
-              {management.map((item) => (
-                <DrawerItem
-                  key={item.id}
-                  item={item}
-                  onNavigate={onNavigate ? navigate : undefined}
-                />
-              ))}
-              {onSignOut && (
-                <Button
-                  variant="ghost"
-                  className="min-h-14 justify-start gap-3 px-4"
-                  onClick={onSignOut}
-                >
-                  <LogOut />
-                  {t("app.signOut")}
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

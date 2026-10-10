@@ -80,6 +80,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "nona-build-revision", content: import.meta.env["VITE_NONA_BUILD_REVISION"] },
+      { name: "nona-build-state", content: import.meta.env["VITE_NONA_BUILD_STATE"] },
+      { name: "nona-build-source", content: import.meta.env["VITE_NONA_BUILD_SOURCE"] },
       { title: "HostBuddy" },
       { name: "theme-color", content: "#e9d9c4" },
     ],
@@ -88,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap",
       },
       {
         rel: "stylesheet",

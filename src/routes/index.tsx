@@ -1,3 +1,4 @@
+import { VillaMarePhone } from "@/components/marketing/VillaMarePhone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -42,13 +43,13 @@ const sourceLabels = ["Airbnb", "Booking", "Sunver"];
 function Landing() {
   const { t } = useI18n();
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-clip">
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
         <Logo />
         <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
           <Link
             to="/integrations"
-            className="inline-flex min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:px-2 sm:text-base"
+            className="hidden min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:inline-flex sm:px-2 sm:text-base"
           >
             {t("marketing.integrations")}
           </Link>
@@ -56,7 +57,7 @@ function Landing() {
           <Link
             to="/auth"
             search={{ mode: "login" }}
-            className="btn btn-secondary hidden md:inline-flex"
+            className="btn btn-secondary min-h-12 px-3 text-sm sm:px-5"
           >
             {t("common.login")}
           </Link>
@@ -67,13 +68,14 @@ function Landing() {
         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
           <img
             src={arrivalAsset.url}
+            fetchPriority="high"
             alt={t("marketing.arrivalAlt")}
             width={1536}
             height={1024}
             className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover object-center sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]"
           />
           <div className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] rounded-xl bg-gradient-to-r from-ink/95 via-ink/70 to-ink/20 sm:inset-x-5 lg:inset-x-8" />
-          <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-7rem)] max-w-6xl items-center px-4 py-8 sm:px-10 sm:py-14 lg:px-16">
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-10 sm:py-14 lg:grid-cols-[1.3fr_0.7fr] lg:px-12">
             <div className="max-w-2xl text-ink-foreground">
               <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-card/95 px-4 py-2 text-sm font-bold text-foreground shadow-soft">
                 <WandSparkles className="h-4 w-4 text-primary" />
@@ -100,12 +102,6 @@ function Landing() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <strong className="font-display text-4xl font-semibold">
-                  {t("marketing.price")}
-                </strong>
-                <span className="text-ink-foreground/80">{t("marketing.priceNote")}</span>
-              </div>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">
                   {t("common.try")}
@@ -118,10 +114,17 @@ function Landing() {
                   {t("common.demo")}
                 </Link>
               </div>
-              <p className="mt-4 text-sm font-semibold text-ink-foreground/80">
+              <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
+                {t("marketing.paidTier")} ·{" "}
+                <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
+                  {t("marketing.price")}
+                </span>
+              </p>
+              <p className="mt-2 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.trial")}
               </p>
             </div>
+            <VillaMarePhone />
           </div>
         </section>
 
@@ -286,6 +289,8 @@ function Landing() {
             </div>
             <div className="surface p-8">
               <h3 className="text-3xl font-semibold">{t("marketing.pricing")}</h3>
+              <p className="mt-4 font-semibold">{t("payments.free")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("payments.freeNote")}</p>
               <p className="mt-6 font-display text-5xl font-semibold">{t("marketing.price")}</p>
               <p className="mt-2 text-muted-foreground">{t("marketing.priceNote")}</p>
               <Link
@@ -309,6 +314,9 @@ function Landing() {
           <Link to="/integrations" className="font-semibold text-primary hover:underline">
             {t("marketing.integrations")}
           </Link>
+          <a href="/legal" className="min-h-12 py-3 text-primary underline">
+            {t("legal.title")}
+          </a>
           <p className="text-sm text-muted-foreground">
             © 2026 HostBuddy · {t("marketing.footer")}
           </p>

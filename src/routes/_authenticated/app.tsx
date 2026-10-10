@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { reconcileBilling } from "@/lib/integrations/billing.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { orgQuery, useOrg } from "@/components/app/useOrg";
 import { FriendlyError, Loading } from "@/components/app/Friendly";
@@ -23,6 +24,13 @@ function AppLayout() {
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
+  useQuery({
+    queryKey: ["billing-sync", org.id],
+    enabled: org.role !== "member",
+    queryFn: () => reconcileBilling({ data: { organizationId: org.id } }),
+    refetchInterval: 60_000,
+    retry: 2,
+  });
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();

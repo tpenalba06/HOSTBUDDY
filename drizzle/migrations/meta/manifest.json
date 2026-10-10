@@ -1,0 +1,97 @@
+{
+  "format": 1,
+  "migrations": [
+    {
+      "tag": "0000_multi_tenant_foundation",
+      "sha256": "4d7ea10c97976611262aeea0beb01dc59c6534658f8dcc74464dce73a5d2102c"
+    },
+    {
+      "tag": "0001_phase3_international_reviews",
+      "sha256": "2e8fe72899bd530f858271b889afdffd9f3965cead661a219edeb4ef61dac034"
+    },
+    {
+      "tag": "0002_phase4_editor_media_messaging",
+      "sha256": "1981fa5a9269a66004a7656a04293d01009f74aeaaa04016016ceede2e5a9b25"
+    },
+    {
+      "tag": "0003_harden_phase4_tenant_media_messaging",
+      "sha256": "1be1bba1dc686f7672616dece9bc9ced2fba4334895a4d26a00edde24b0d17cd"
+    },
+    {
+      "tag": "0004_phase5_operations_roles_services_feedback",
+      "sha256": "ca6b23902ca722d70465ee286234952f65a87d39e56f27821524357d7ca0dc83"
+    },
+    {
+      "tag": "0005_phase5_team_rpc",
+      "sha256": "63423755383aa1132c54b3e789c9a8f01ba8bf33ef047457d8fb633a18ad1d2d"
+    },
+    {
+      "tag": "0006_default_guest_contact",
+      "sha256": "9832be0a3320aae4ae77ce398821e7909cb7ac418e7671fbab16ef9b163407c3"
+    },
+    {
+      "tag": "0007_translation_roles",
+      "sha256": "8feff79076f1534f5f3f10a1cdde06b5ddb72411d4b54078b08deedc20ce8508"
+    },
+    {
+      "tag": "0008_guest_conversation_sessions",
+      "sha256": "418d39ccb9644c970462295895e7d1d8d089ad9e6c42c6e1bca4cb267e5d7662"
+    },
+    {
+      "tag": "0009_public_submissions_server_only",
+      "sha256": "f6d4cd21296411283da889003bfbc007ea4558e01f499d12e66fa3482a1e007a"
+    },
+    {
+      "tag": "0010_publication_snapshots",
+      "sha256": "a9607558d39ef45dc6f47ba967d12e60e6ab85bcadf1928645d34697182d6813"
+    },
+    {
+      "tag": "0011_payment_infrastructure",
+      "sha256": "6e793d2eb5573705b5ccb957212d3d4908abc11b7d1feeae638bcd3c4cde7119"
+    },
+    {
+      "tag": "0012_pms_imports",
+      "sha256": "6c278682b5378e18d7340773c81106685bfc1facec23c0171132c4f3f1635e65"
+    },
+    {
+      "tag": "0013_published_service_quotes",
+      "sha256": "9454ec30e16a5fd8b8c79cc6e4f515d9ba2a902c4888e0fa116be0586ef796e8"
+    },
+    {
+      "tag": "0014_order_payment_integrity",
+      "sha256": "36916ce60ea8fcb7d5c1d1daeb5896e859b249ee3b201cc247601ae0eca76dee"
+    },
+    {
+      "tag": "0015_team_email_result_type",
+      "sha256": "e9ba2695101baaf11716626055a36493faf0e6048b5f27f9577c514c12c96709"
+    },
+    {
+      "tag": "0016_billing_sync_service_fee",
+      "sha256": "3023d6343425ac960a9c11f4c58e281b212ce3a21ca5a3a5b8fa7f0e9feb81e4"
+    },
+    {
+      "tag": "0017_team_invitation_guards",
+      "sha256": "10ba62b8d6bd9f3cce6f273e9b58d0f38de42c470515585afc88a4bdd6c5b41c"
+    },
+    {
+      "tag": "0018_publication_billing_gate",
+      "sha256": "ea0476d283e3f206038b7fc9e87402536477349178eaaee9cb9d31664198baad"
+    },
+    {
+      "tag": "0019_published_guide_availability",
+      "sha256": "bcb3319d23925c407ff80859714280da87f220e4f660ec6ebcae969bd9cee6ff"
+    },
+    {
+      "tag": "0020_atomic_public_rate_limits",
+      "sha256": "f5c5d2c719b1504003ca4966d0d9b82da50b75924ac0f5db2ab2105b3f715ac9"
+    },
+    {
+      "tag": "0021_property_deletion",
+      "sha256": "44a108eb24a05d7753f02405e4b6d45ac53d106621571613f28c76bec567fb71"
+    },
+    {
+      "tag": "0022_paid_billing_capacity",
+      "sha256": "04f1140e8ea91911e2a1e140ea99354eeffb51b5355b2da843cc6f0b86de762c"
+    }
+  ]
+}

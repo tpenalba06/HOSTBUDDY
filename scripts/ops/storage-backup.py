@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import tempfile
 import time
 import urllib.error
@@ -30,9 +31,17 @@ class BackupError(Exception):
 
 def private_file(path):
     p = Path(path)
-    if not p.is_file() or p.stat().st_mode & 0o077:
-        raise BackupError('private_file_permissions_required')
-    return p.read_bytes()
+    try:
+        # Validate the opened file itself; never follow a credential symlink or
+        # let a replacement between stat() and read() bypass the permission check.
+        fd = os.open(p, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, 'rb') as stream:
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_mode & 0o077:
+                raise BackupError('private_file_permissions_required')
+            return stream.read()
+    except OSError:
+        raise BackupError('private_file_permissions_required') from None
 
 
 def key_bytes(path):

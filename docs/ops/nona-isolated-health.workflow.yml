@@ -1,0 +1,73 @@
+# Inert copy for the approved PRIVATE NONA-OPS repository only.
+name: Nona isolated TEST service health
+on:
+  schedule:
+    - cron: '47 * * * *'
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        type: boolean
+        default: false
+        description: Synthetic failure, no Supabase call
+      check_public_demo:
+        type: boolean
+        default: false
+        description: Diagnostic only; preview access is restricted
+permissions:
+  contents: read
+concurrency:
+  group: isolated-test-service-health
+  cancel-in-progress: false
+jobs:
+  health:
+    if: github.event.repository.private == true && vars.NONA_ISOLATED_OPS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Safe synthetic alert
+        if: inputs.simulate_failure == true
+        run: |
+          echo '{"schema":"nona.health.v1","environment":"isolated-test","status":"FAIL","code":"synthetic_health_failure"}'
+          exit 1
+      - uses: actions/checkout@v4
+      - name: Private TEST input
+        env:
+          NONA_TEST_API_KEY: ${{ secrets.NONA_TEST_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib
+          p = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nona-health.key'
+          value = os.environ['NONA_TEST_API_KEY']
+          if not value: raise SystemExit('Missing TEST input')
+          fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(fd, 'w') as f: f.write(value)
+          PY
+      - name: Auth Storage and database read-only probes
+        run: python3 health-check.py --expected-ref mhhtnqfdkyudwyqlmnce --api-key-file "$RUNNER_TEMP/nona-health.key"
+      - name: Public demo HTTP availability only (no credentials)
+        if: inputs.check_public_demo == true
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.error
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args): raise ValueError('redirect_refused')
+          ok = False; http = None
+          try:
+              req = urllib.request.Request('https://id-preview--ad0b09fe-b134-491b-8601-9d64d6d27b86.lovable.app/demo?device=mobile', method='GET')
+              with urllib.request.build_opener(NoRedirect()).open(req, timeout=15) as r:
+                  http = r.status
+                  body = r.read(2097153)
+                  ok = r.status == 200 and len(body) <= 2097152 and b'Villa Mare' in body and b'<html' in body
+          except urllib.error.HTTPError as e: http = e.code
+          except Exception: pass
+          print(json.dumps({'schema':'nona.health.v1','check':'public_demo_http','status':'PASS' if ok else 'FAIL','http':http}))
+          raise SystemExit(0 if ok else 1)
+          PY
+      - name: Remove only this job temporary key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/nona-health.key"
+# No package install, new secret, artifact, source or production access.
+# Fixed health report only. Failure uses existing GitHub-only notifications.
+# Scheduled runs may be delayed/dropped: this is not an independent heartbeat.
+
+# Public demo diagnostic is opt-in only: external access is not validated.

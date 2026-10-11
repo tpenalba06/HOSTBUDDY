@@ -46,3 +46,11 @@ Les acquis restauration/147 permissions/Stripe TEST ne sont pas répétés. Aucu
 - Voie Sites examinée sans création ni publication : les outils de publication sont explicitement des déploiements de production ; la preview locale gérée exige `$control-browser`, absent des capacités disponibles. Aucune publication Sites ni nouvelle ressource effectuée. Le build Cloudflare existant n'est pas à lui seul une preuve de preview accessible. Aucune nouvelle tentative Vercel.
 
 Limites inchangées : preview TEST privée accessible et recette mobile réelle, logs hébergés/disponibilité HTTP, sauvegarde récurrente DB/identités Auth, juridique/configuration de lancement. Aucun Stripe/Billing, production, suppression source, crédit Lovable ou dépense. Aucun service de surveillance garanti. Lancement NO-GO.
+
+
+## Retour à la normale observé — 10 octobre 2026, 20:57 Paris
+
+- Nouveau run santé automatique **38074067776**, déclenché par `schedule`, terminé avec succès à **18:01:08 UTC (20:01:08 Paris)** en 13 secondes sur le HEAD NONA-OPS attendu **cc321065e2eb6e061b6ac5037f386a0b1772fd00**. Aucun artifact ni secret consulté ; aucun run relancé.
+- Le relevé GitHub complet et frais contient dix runs. Appliqué à `scripts/ops/cycle-freshness.py` à **18:56:59 UTC**, il retourne `RECENT` : santé à 3 351 secondes, sous le seuil de 10 800 secondes ; sauvegarde automatique à 29 626 secondes, sous le seuil de 129 600 secondes.
+- Il s'agit d'un **retour à la normale du suivi des cycles**, pas d'une preuve de cadence horaire garantie. L'intervalle entre les deux derniers cycles santé reste proche de cinq heures. Les limites de preview mobile authentifiée, logs hébergés/disponibilité HTTP et sauvegarde DB/identités Auth restent ouvertes.
+- HEAD HOSTBUDDY vérifié avant cette mise à jour documentaire : `05633fcfe2b2bfa64570b8dbbcb0c75f5180f40c`, identique au distant et sans changement applicatif.

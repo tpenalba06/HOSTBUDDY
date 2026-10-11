@@ -15,7 +15,7 @@ const navigateOffline=async(page,url,engine)=>{
  try { await page.goto(url); }
  catch(error){
   const message=error?.message||'';
-  if(engine!=='webkit'||!/ERR_INTERNET_DISCONNECTED|internet disconnected/i.test(message))throw error;
+  if(engine!=='webkit'||!/ERR_INTERNET_DISCONNECTED|internet disconnected|offline/i.test(message))throw error;
  }
 };
 try {

@@ -12,6 +12,13 @@ import {
 } from "./store";
 const SHELL_LIMIT = 12 * 1024 * 1024;
 export const OFFLINE_TOTAL_LIMIT = 150 * 1024 * 1024;
+export function offlineMediaBudget(used: number, quota?: number, usage = 0) {
+  const available = quota && Number.isFinite(quota) ? Math.max(0, quota - usage) : Infinity;
+  return Math.max(
+    0,
+    Math.min(MEDIA_LIMITS.guideOfflineBytes, OFFLINE_TOTAL_LIMIT - used, available),
+  );
+}
 export async function boundedBlob(response: Response, limit: number, signal?: AbortSignal) {
   if (!response.ok || !response.body || response.type === "opaque")
     throw new Error("Un média n’a pas pu être téléchargé. Réessayez avec une connexion.");
@@ -149,15 +156,19 @@ async function performSaveGuideOffline(
   const used = previous
     .filter((item) => item.slug !== slug)
     .reduce((sum, item) => sum + item.bytes, 0);
-  if (used + MEDIA_LIMITS.guideOfflineBytes > OFFLINE_TOTAL_LIMIT)
+  if (used >= OFFLINE_TOTAL_LIMIT)
     throw new Error("Supprimez un ancien guide enregistré pour libérer de l’espace.");
-  const estimate = await navigator.storage?.estimate?.();
-  if (
-    estimate?.quota &&
-    estimate.quota - (estimate.usage ?? 0) < MEDIA_LIMITS.guideOfflineBytes + SHELL_LIMIT
-  )
-    throw new Error("L’espace disponible est insuffisant. Libérez de l’espace puis réessayez.");
   const shellCache = await prepareShell(signal);
+  // Estimate after caching the shell; reserve actual guide metadata, not the
+  // maximum size of every permitted media file before seeing its bytes.
+  const estimate = await navigator.storage?.estimate?.();
+  const metadataBytes = new TextEncoder().encode(JSON.stringify(guide)).byteLength + 4096;
+  const mediaBudget = Math.max(
+    0,
+    offlineMediaBudget(used, estimate?.quota, estimate?.usage) - metadataBytes,
+  );
+  if (!mediaBudget)
+    throw new Error("L’espace disponible est insuffisant. Libérez de l’espace puis réessayez.");
   const media: SavedMedia[] = [];
   let bytes = 0;
   const sources = guide.sections.flatMap((section) =>
@@ -184,7 +195,7 @@ async function performSaveGuideOffline(
     });
     const limit = Math.min(
       item.video ? MEDIA_LIMITS.videoOfflineBytes : 10 * 1024 * 1024,
-      MEDIA_LIMITS.guideOfflineBytes - bytes,
+      mediaBudget - bytes,
     );
     const blob = await boundedBlob(response, limit, signal);
     if (item.video) await validateMediaUpload(new File([blob], "video", { type: blob.type }));

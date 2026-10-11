@@ -6,6 +6,9 @@ import { randomUUID, randomBytes } from 'node:crypto';
 import { spawn, execFileSync } from 'node:child_process';
 import { loadCredentials, verifyTarget, TEST_URL, TEST_REF } from './isolated-preview.mjs';
 
+// Valid 32px RGB PNG: checked chunk CRCs and decompressed pixels in the recipe test.
+export const TEST_PHOTO_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAALElEQVR4nO3NMQEAMAjAsDHLmOBGMSbgSwU0kV3vsn96BwAAAAAAAAAAAIsNW70BzcVQo9cAAAAASUVORK5CYII=', 'base64');
+
 export function allowedBrowserUrl(value, billingId) {
   try {
     const u = new URL(value);
@@ -120,7 +123,7 @@ async function main() {
         await page.goto(`http://127.0.0.1:8787/app/p/${propertyId}?step=review`);
         // Upload a synthetic image through the real authenticated UI and Storage API.
         stage = 'photo_upload';
-        const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aVZkAAAAASUVORK5CYII=', 'base64');
+        const png = TEST_PHOTO_PNG;
         await page.locator('section.property-media-editor input[type=file]').first().setInputFiles({ name: 'nona-test.png', mimeType: 'image/png', buffer: png });
         await page.waitForFunction(() => document.querySelector('section.property-media-editor img')?.getAttribute('src')?.includes('/storage/v1/object/sign/'), null, { timeout: 60000 });
         record('authenticated_photo_upload');

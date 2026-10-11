@@ -28,7 +28,7 @@ try {
   await new Promise(r=>setTimeout(r,1000));
  }
  assert(html?.includes(result.head)&&!html.includes(keys.serverKey)); check('compiled_head');
- for(const engine of ['chromium','webkit']){
+ for(const engine of (process.argv[4]==='webkit'?['webkit']:['chromium','webkit'])){
   stage=engine+'_online';
   if(engine==='webkit'){await browser.close();browser=await pw.webkit.launch({headless:true});}
   const context=await browser.newContext({viewport:{width:390,height:844},locale:'fr-FR'});
@@ -37,9 +37,13 @@ try {
   const page=await context.newPage(); let errors=0;const pageError=e=>{errors++;result.pageErrors=(result.pageErrors||0)+1;const m=e.message||'';const reactCode=m.match(/Minified React error #(\d{3})/)?.[1];if(reactCode)result.reactErrorCode=reactCode;result.errorCategory=/hydrati/i.test(m)?'hydration':/dynamically imported module|module script|Failed to fetch/i.test(m)?'module_load':'uncategorized';};page.on('pageerror',pageError);
   await page.goto('http://127.0.0.1:8787'+path); await page.waitForLoadState('networkidle');
   await page.getByText(fixture.name,{exact:true}).first().waitFor();
+  result[engine+'Capabilities']=await page.evaluate(()=>({secureContext:isSecureContext,serviceWorker:!!navigator.serviceWorker,caches:!!globalThis.caches,indexedDB:!!globalThis.indexedDB}));
   stage=engine+'_save';
   await page.getByRole('button',{name:'Enregistrer hors connexion',exact:true}).click();
-  const copy=page.getByRole('link',{name:'Ouvrir la copie enregistrée',exact:true}); await copy.waitFor({timeout:90000});
+  const copy=page.getByRole('link',{name:'Ouvrir la copie enregistrée',exact:true});
+  const alert=page.locator('.hb-offline-save [role=alert]');
+  await Promise.race([copy.waitFor({timeout:90000}),alert.waitFor({timeout:90000})]);
+  if(await alert.isVisible()){const message=await alert.innerText();result.saveErrorCategory=/disponible dans ce navigateur/.test(message)?'unsupported_browser':/espace/.test(message)?'storage_space':/média|photo/.test(message)?'media':/lecteur|téléchargement|mode hors connexion/.test(message)?'shell':'unclassified';throw new Error('save');}
   const offlinePath=await copy.getAttribute('href'); assert(offlinePath?.startsWith('/offline?slug='));
   check(engine+'_saved_text_and_photo');
   stage=engine+'_network_off'; await context.setOffline(true);

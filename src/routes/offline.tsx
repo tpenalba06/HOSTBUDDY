@@ -24,6 +24,8 @@ export const Route = createFileRoute("/offline")({
 function OfflinePage() {
   const { t, locale } = useI18n();
   const { slug } = Route.useSearch();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const [guide, setGuide] = useState<GuideViewData | null>(null);
   const [copies, setCopies] = useState<OfflineSnapshot[]>([]);
   const [error, setError] = useState("");
@@ -66,6 +68,16 @@ function OfflinePage() {
     for (const name of await caches.keys())
       if (name.startsWith("hb-guest-shell-") && !retained.has(name)) await caches.delete(name);
   };
+  // The service worker caches /offline once and serves it for any saved slug.
+  // Keep SSR and the first client render independent of the current query.
+  if (!hydrated)
+    return (
+      <div className="hb-guide">
+        <div className="hb-offline-banner">
+          <span>{t("offline.savedGuides")}</span>
+        </div>
+      </div>
+    );
   return (
     <div className="hb-guide">
       <div className="hb-offline-banner">

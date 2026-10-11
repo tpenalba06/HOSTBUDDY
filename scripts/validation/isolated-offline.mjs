@@ -34,7 +34,7 @@ try {
   const context=await browser.newContext({viewport:{width:390,height:844},locale:'fr-FR'});
   await context.addInitScript(()=>{localStorage.setItem('hostbuddy.locale','fr');});
   await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL||['blob:','data:'].includes(u.protocol))return route.continue();return route.abort();});
-  const page=await context.newPage(); let errors=0;const pageError=e=>{errors++;result.pageErrors=(result.pageErrors||0)+1;const m=e.message||'';result.errorCategory=/hydrati/i.test(m)?'hydration':/dynamically imported module|module script|Failed to fetch/i.test(m)?'module_load':'uncategorized';};page.on('pageerror',pageError);
+  const page=await context.newPage(); let errors=0;const pageError=e=>{errors++;result.pageErrors=(result.pageErrors||0)+1;const m=e.message||'';const reactCode=m.match(/Minified React error #(\d{3})/)?.[1];if(reactCode)result.reactErrorCode=reactCode;result.errorCategory=/hydrati/i.test(m)?'hydration':/dynamically imported module|module script|Failed to fetch/i.test(m)?'module_load':'uncategorized';};page.on('pageerror',pageError);
   await page.goto('http://127.0.0.1:8787'+path); await page.waitForLoadState('networkidle');
   await page.getByText(fixture.name,{exact:true}).first().waitFor();
   stage=engine+'_save';

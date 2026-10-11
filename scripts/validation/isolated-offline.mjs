@@ -11,6 +11,13 @@ const result={target:TEST_REF,status:'INCOMPLETE',checks:[]};
 let stage='preflight',server,browser,profile,context;
 const check=(name,details={})=>{result.checks.push({name,pass:true,...details}); console.log(JSON.stringify({check:name,pass:true}));};
 const assert=(v)=>{if(!v)throw new Error('assertion');};
+const navigateOffline=async(page,url,engine)=>{
+ try { await page.goto(url); }
+ catch(error){
+  const message=error?.message||'';
+  if(engine!=='webkit'||!/ERR_INTERNET_DISCONNECTED|internet disconnected/i.test(message))throw error;
+ }
+};
 try {
  const keys=loadCredentials(directory); await verifyTarget(keys);
  result.head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
@@ -52,7 +59,7 @@ try {
   result[engine+'OfflineReady']=await page.evaluate(async()=>({controlled:!!navigator.serviceWorker.controller,shellCached:(await Promise.all((await caches.keys()).filter(n=>n.startsWith('hb-guest-shell-')).map(async n=>!!await(await caches.open(n)).match('/offline')))).some(Boolean)}));
   stage=engine+'_network_off'; await context.setOffline(true);
   stage=engine+'_offline_navigation';
-  await page.goto('http://127.0.0.1:8787'+offlinePath);
+  await navigateOffline(page,'http://127.0.0.1:8787'+offlinePath,engine);
   stage=engine+'_offline_text';
   await page.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
   stage=engine+'_offline_photo';
@@ -61,7 +68,7 @@ try {
   assert(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1));
   check(engine+'_offline_start_and_blob_photo');
   stage=engine+'_offline_reopen_navigation';await page.close();const reopened=await context.newPage();reopened.on('pageerror',pageError);
-  await reopened.goto('http://127.0.0.1:8787'+offlinePath);
+  await navigateOffline(reopened,'http://127.0.0.1:8787'+offlinePath,engine);
   stage=engine+'_offline_reopen_text';
   await reopened.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
   stage=engine+'_offline_reopen_photo';

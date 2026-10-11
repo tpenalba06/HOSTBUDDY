@@ -62,6 +62,14 @@ try {
   await navigateOffline(page,'http://127.0.0.1:8787'+offlinePath,engine);
   stage=engine+'_offline_text';
   await page.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
+  result[engine+'OfflineDocument']=await page.evaluate(()=>({
+   offlinePath:location.pathname==='/offline',
+   offlineBanner:!!document.querySelector('.hb-offline-banner'),
+   images:[...document.images].slice(0,12).map(img=>({
+    sourceKind:img.currentSrc.startsWith('blob:')?'blob':img.currentSrc.startsWith('data:')?'data':img.currentSrc.startsWith('http')?'network':'empty',
+    complete:img.complete,width:img.naturalWidth,height:img.naturalHeight,
+   })),
+  }));
   stage=engine+'_offline_photo';
   await page.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0),null,{timeout:30000});
   stage=engine+'_offline_overflow';

@@ -77,7 +77,7 @@ async function main() {
     const propertyName = `Nona navigateur TEST ${randomUUID().slice(0, 8)}`;
     let propertyId;
     const visit = async (engine, width, create = false) => {
-      stage = `${engine}_${width}`;
+      stage = `${engine}_${width}_browser`;
       browser = await pw[engine].launch({ headless: true });
       const context = await browser.newContext({ viewport: { width, height: 844 }, acceptDownloads: true, locale: 'fr-FR' });
       await context.addInitScript(() => { localStorage.setItem('hostbuddy.locale', 'fr'); });
@@ -93,13 +93,22 @@ async function main() {
       const page = await context.newPage();
       let pageErrors = 0;
       page.on('pageerror', () => { pageErrors++; });
+      page.on('response', response => {
+        const u = new URL(response.url());
+        if (u.origin === TEST_URL && response.status() >= 400) {
+          results.lastProviderFailure = { service: u.pathname.startsWith('/auth/') ? 'auth' : u.pathname.startsWith('/storage/') ? 'storage' : 'data', status: response.status() };
+        }
+      });
+      stage = `${engine}_${width}_login_page`;
       await page.goto('http://127.0.0.1:8787/auth?mode=login');
       await page.locator('input[type=email]').fill(account.email);
       await page.locator('input[type=password]').fill(account.password);
+      stage = `${engine}_${width}_login_submit`;
       await page.locator('form button.btn-primary').click();
-      await page.waitForURL(/\/app\/?$/, { timeout: 60000 });
+      await page.waitForURL(/\/app(?:\/|$)/, { timeout: 60000 });
       record(`login_${engine}_${width}`);
       if (create) {
+        stage = 'manual_property';
         await page.goto('http://127.0.0.1:8787/app/manual');
         await page.getByPlaceholder('Ex. : Villa des Oliviers').fill(propertyName);
         await page.getByRole('button', { name: 'Continuer', exact: true }).click();
@@ -108,20 +117,24 @@ async function main() {
         requireTrue(/^[a-f0-9-]{36}$/.test(propertyId));
         await page.goto(`http://127.0.0.1:8787/app/p/${propertyId}?step=review`);
         // Upload a synthetic image through the real authenticated UI and Storage API.
+        stage = 'photo_upload';
         const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aVZkAAAAASUVORK5CYII=', 'base64');
         await page.locator('section.property-media-editor input[type=file]').first().setInputFiles({ name: 'nona-test.png', mimeType: 'image/png', buffer: png });
         await page.waitForFunction(() => document.querySelector('section.property-media-editor img')?.getAttribute('src')?.includes('/storage/v1/object/sign/'), null, { timeout: 60000 });
         record('authenticated_photo_upload');
+        stage = 'publication';
         await page.getByRole('button', { name: 'Publier mon guide', exact: true }).click();
         await page.waitForFunction(() => document.body.textContent.includes('Publier les modifications'), null, { timeout: 60000 });
         record('authenticated_publication');
       }
+      stage = `${engine}_${width}_ready`;
       await page.goto(`http://127.0.0.1:8787/app/p/${propertyId}?step=ready`);
       await page.getByRole('heading', { name: 'Votre guide est prêt', exact: true }).waitFor({ timeout: 60000 });
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
       requireTrue(!overflow);
       record(`published_reload_and_width_${engine}_${width}`);
       for (const extension of ['PNG', 'SVG']) {
+        stage = `${engine}_${width}_qr_${extension.toLowerCase()}`;
         const downloadPromise = page.waitForEvent('download', { timeout: 20000 });
         await page.getByRole('link', { name: extension, exact: true }).click();
         const download = await downloadPromise;
@@ -131,6 +144,7 @@ async function main() {
         requireTrue(extension === 'PNG' ? bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) : bytes.toString().includes('<svg'));
         record(`qr_download_${extension.toLowerCase()}_${engine}_${width}`, { bytes: bytes.length });
       }
+      stage = `${engine}_${width}_public`;
       const guide = await page.getByRole('link', { name: /Voir.*guide|Ouvrir.*guide/i }).getAttribute('href');
       requireTrue(guide?.startsWith('/l/'));
       await page.goto('http://127.0.0.1:8787' + guide);

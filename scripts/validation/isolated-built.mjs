@@ -28,8 +28,9 @@ try {
   for (const key of Object.keys(process.env)) delete process.env[key];
   Object.assign(process.env,env); process.chdir(checkout);
   mark('build');
-  const { build } = await import('vite');
-  await build({ root:checkout, configFile:join(checkout,'vite.config.ts'), mode:'nona-isolated-test', logLevel:'silent' });
+  const { createBuilder } = await import('vite');
+  const builder = await createBuilder({ root:checkout, configFile:join(checkout,'vite.config.ts'), mode:'nona-isolated-test', logLevel:'silent' });
+  await builder.buildApp();
   mark('worker_import');
   const worker = (await import(pathToFileURL(join(checkout,'.output/server/index.mjs')).href)).default;
   if (typeof worker.fetch !== 'function') throw new Error('worker');

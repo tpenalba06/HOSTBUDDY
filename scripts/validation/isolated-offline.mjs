@@ -40,8 +40,24 @@ try {
   profile=mkdtempSync(join(tmpdir(),'nona-guest-profile-'));
   context=await pw[engine].launchPersistentContext(profile,{headless:true,viewport:{width:390,height:844},locale:'fr-FR'});
   await context.addInitScript(()=>{localStorage.setItem('hostbuddy.locale','fr');});
-  let networkDisconnected=false,uncontrolledResponses=0;
-  context.on('response',response=>{if(networkDisconnected&&/^https?:/.test(response.url())&&!response.fromServiceWorker())uncontrolledResponses++;});
+  let networkDisconnected=false,uncontrolledResponses=0,runtimeStopped=false;
+  const requestBeforeCut=new WeakMap(),responseGroups=new Map();
+  const networkDiagnostic={nonServiceWorkerResponses:0,groups:[],pageErrors:0};
+  result[engine+'NetworkDiagnostic']=networkDiagnostic;
+  context.on('request',request=>requestBeforeCut.set(request,!networkDisconnected));
+  context.on('response',response=>{
+   if(!networkDisconnected||!/^https?:/.test(response.url()))return;
+   const fromServiceWorker=response.fromServiceWorker();
+   if(!fromServiceWorker)uncontrolledResponses++;
+   const origin=new URL(response.url()).origin;
+   const group={originClass:origin==='http://127.0.0.1:8787'?'loopback':origin===TEST_URL?'test':'other',
+    status:response.status(),fromServiceWorker,startedBeforeCut:requestBeforeCut.get(response.request())??null,
+    runtimeStopped};
+   const key=JSON.stringify(group),previous=responseGroups.get(key);
+   if(previous)previous.count++;else responseGroups.set(key,{...group,count:1});
+   networkDiagnostic.nonServiceWorkerResponses=uncontrolledResponses;
+   networkDiagnostic.groups=[...responseGroups.values()];
+  });
   await context.route('**/*',route=>{
    const u=new URL(route.request().url());
    if(['blob:','data:'].includes(u.protocol))return route.continue();
@@ -72,7 +88,7 @@ try {
    // WebKit's browser offline toggle rejects navigation before this runner's SW.
    // Stop the only HTTP runtime and deny every routed network request instead.
    const exited=new Promise(resolve=>server.once('exit',resolve));
-   server.kill('SIGTERM'); await exited;
+   server.kill('SIGTERM'); await exited;runtimeStopped=true;
    let reachable=false;
    try { await fetch('http://127.0.0.1:8787/offline',{signal:AbortSignal.timeout(2000)});reachable=true; }catch{}
    assert(!reachable);
@@ -104,7 +120,10 @@ try {
   await reopened.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
   stage=engine+'_offline_reopen_photo';
   await reopened.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0));
-  check(engine+'_offline_new_tab');assert(uncontrolledResponses===0);check(engine+'_no_uncached_network_responses');stage=engine+'_no_page_errors';assert(errors===0);check(engine+'_no_page_errors');
+  check(engine+'_offline_new_tab');
+  networkDiagnostic.pageErrors=errors;
+  stage=engine+'_offline_network_provenance';assert(uncontrolledResponses===0);check(engine+'_no_uncached_network_responses');
+  stage=engine+'_no_page_errors';assert(errors===0);check(engine+'_no_page_errors');
   await context.close();context=undefined;rmSync(profile,{recursive:true,force:true});profile=undefined;
  }
  result.status='PASS';

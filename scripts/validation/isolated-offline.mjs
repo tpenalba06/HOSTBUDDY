@@ -11,12 +11,10 @@ const result={target:TEST_REF,status:'INCOMPLETE',checks:[]};
 let stage='preflight',server,browser,profile,context;
 const check=(name,details={})=>{result.checks.push({name,pass:true,...details}); console.log(JSON.stringify({check:name,pass:true}));};
 const assert=(v)=>{if(!v)throw new Error('assertion');};
-const navigateOffline=async(page,url,engine)=>{
- try { await page.goto(url); }
- catch(error){
-  const message=error?.message||'';
-  if(engine!=='webkit'||!/ERR_INTERNET_DISCONNECTED|internet disconnected|offline/i.test(message))throw error;
- }
+const navigateOffline=async(page,url)=>{
+ await page.goto(url);
+ await page.locator('.hb-offline-banner').waitFor({timeout:30000});
+ assert(new URL(page.url()).pathname==='/offline');
 };
 try {
  const keys=loadCredentials(directory); await verifyTarget(keys);
@@ -42,7 +40,15 @@ try {
   profile=mkdtempSync(join(tmpdir(),'nona-guest-profile-'));
   context=await pw[engine].launchPersistentContext(profile,{headless:true,viewport:{width:390,height:844},locale:'fr-FR'});
   await context.addInitScript(()=>{localStorage.setItem('hostbuddy.locale','fr');});
-  await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL||['blob:','data:'].includes(u.protocol))return route.continue();return route.abort();});
+  let networkDisconnected=false,uncontrolledResponses=0;
+  context.on('response',response=>{if(networkDisconnected&&/^https?:/.test(response.url())&&!response.fromServiceWorker())uncontrolledResponses++;});
+  await context.route('**/*',route=>{
+   const u=new URL(route.request().url());
+   if(['blob:','data:'].includes(u.protocol))return route.continue();
+   if(networkDisconnected)return route.abort();
+   if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL)return route.continue();
+   return route.abort();
+  });
   const page=await context.newPage(); let errors=0;const pageError=e=>{errors++;result.pageErrors=(result.pageErrors||0)+1;const m=e.message||'';const reactCode=m.match(/Minified React error #(\d{3})/)?.[1];if(reactCode)result.reactErrorCode=reactCode;result.errorCategory=/hydrati/i.test(m)?'hydration':/dynamically imported module|module script|Failed to fetch/i.test(m)?'module_load':'uncategorized';};page.on('pageerror',pageError);
   await page.goto('http://127.0.0.1:8787'+path); await page.waitForLoadState('networkidle');
   await page.getByText(fixture.name,{exact:true}).first().waitFor();
@@ -57,7 +63,21 @@ try {
   const offlinePath=await copy.getAttribute('href'); assert(offlinePath?.startsWith('/offline?slug='));
   check(engine+'_saved_text_and_photo');
   result[engine+'OfflineReady']=await page.evaluate(async()=>({controlled:!!navigator.serviceWorker.controller,shellCached:(await Promise.all((await caches.keys()).filter(n=>n.startsWith('hb-guest-shell-')).map(async n=>!!await(await caches.open(n)).match('/offline')))).some(Boolean)}));
-  stage=engine+'_network_off'; await context.setOffline(true);
+  stage=engine+'_network_off';
+  networkDisconnected=true;
+  if(engine==='webkit'){
+   // WebKit's browser offline toggle rejects navigation before this runner's SW.
+   // Stop the only HTTP runtime and deny every routed network request instead.
+   const exited=new Promise(resolve=>server.once('exit',resolve));
+   server.kill('SIGTERM'); await exited;
+   let reachable=false;
+   try { await fetch('http://127.0.0.1:8787/offline',{signal:AbortSignal.timeout(2000)});reachable=true; }catch{}
+   assert(!reachable);
+   result[engine+'Disconnection']={runtimeStopped:true,networkRequestsDenied:true,browserOfflineToggle:false};
+  }else{
+   await context.setOffline(true);
+   result[engine+'Disconnection']={networkRequestsDenied:true,browserOfflineToggle:true};
+  }
   stage=engine+'_offline_navigation';
   await navigateOffline(page,'http://127.0.0.1:8787'+offlinePath,engine);
   stage=engine+'_offline_text';
@@ -81,7 +101,7 @@ try {
   await reopened.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
   stage=engine+'_offline_reopen_photo';
   await reopened.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0));
-  check(engine+'_offline_new_tab');stage=engine+'_no_page_errors';assert(errors===0);check(engine+'_no_page_errors');
+  check(engine+'_offline_new_tab');assert(uncontrolledResponses===0);check(engine+'_no_uncached_network_responses');stage=engine+'_no_page_errors';assert(errors===0);check(engine+'_no_page_errors');
   await context.close();context=undefined;rmSync(profile,{recursive:true,force:true});profile=undefined;
  }
  result.status='PASS';

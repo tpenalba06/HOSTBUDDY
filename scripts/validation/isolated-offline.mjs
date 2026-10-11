@@ -34,7 +34,7 @@ try {
   const context=await browser.newContext({viewport:{width:390,height:844},locale:'fr-FR'});
   await context.addInitScript(()=>{localStorage.setItem('hostbuddy.locale','fr');});
   await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL||['blob:','data:'].includes(u.protocol))return route.continue();return route.abort();});
-  const page=await context.newPage(); let errors=0;page.on('pageerror',()=>errors++);
+  const page=await context.newPage(); let errors=0;const pageError=e=>{errors++;result.pageErrors=(result.pageErrors||0)+1;const m=e.message||'';result.errorCategory=/hydrati/i.test(m)?'hydration':/dynamically imported module|module script|Failed to fetch/i.test(m)?'module_load':'uncategorized';};page.on('pageerror',pageError);
   await page.goto('http://127.0.0.1:8787'+path); await page.waitForLoadState('networkidle');
   await page.getByText(fixture.name,{exact:true}).first().waitFor();
   stage=engine+'_save';
@@ -48,11 +48,13 @@ try {
   await page.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0),null,{timeout:30000});
   assert(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1));
   check(engine+'_offline_start_and_blob_photo');
-  stage=engine+'_offline_reopen';await page.close();const reopened=await context.newPage();
+  stage=engine+'_offline_reopen_navigation';await page.close();const reopened=await context.newPage();reopened.on('pageerror',pageError);
   await reopened.goto('http://127.0.0.1:8787'+offlinePath);
+  stage=engine+'_offline_reopen_text';
   await reopened.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
+  stage=engine+'_offline_reopen_photo';
   await reopened.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0));
-  assert(errors===0);check(engine+'_offline_new_tab');
+  check(engine+'_offline_new_tab');stage=engine+'_no_page_errors';assert(errors===0);check(engine+'_no_page_errors');
   await context.close();
  }
  result.status='PASS';

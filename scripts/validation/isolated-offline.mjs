@@ -45,6 +45,9 @@ try {
   await context.route('**/*',route=>{
    const u=new URL(route.request().url());
    if(['blob:','data:'].includes(u.protocol))return route.continue();
+   // The stopped loopback server cannot serve anything. Let WebKit consult its
+   // SW instead of aborting navigation in Playwright before cache interception.
+   if(networkDisconnected&&engine==='webkit'&&u.origin==='http://127.0.0.1:8787'&&server.exitCode!==null)return route.continue();
    if(networkDisconnected)return route.abort();
    if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL)return route.continue();
    return route.abort();
@@ -73,7 +76,7 @@ try {
    let reachable=false;
    try { await fetch('http://127.0.0.1:8787/offline',{signal:AbortSignal.timeout(2000)});reachable=true; }catch{}
    assert(!reachable);
-   result[engine+'Disconnection']={runtimeStopped:true,networkRequestsDenied:true,browserOfflineToggle:false};
+   result[engine+'Disconnection']={runtimeStopped:true,upstreamRequestsDenied:true,browserOfflineToggle:false};
   }else{
    await context.setOffline(true);
    result[engine+'Disconnection']={networkRequestsDenied:true,browserOfflineToggle:true};

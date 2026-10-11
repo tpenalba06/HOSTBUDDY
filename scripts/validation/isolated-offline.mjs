@@ -1,13 +1,14 @@
 // Read-only published synthetic guide, compiled build, actual offline navigation.
 import { loadCredentials, verifyTarget, TEST_URL, TEST_REF } from './isolated-preview.mjs';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 const directory=resolve(process.argv[2]), output=resolve(process.argv[3]);
 mkdirSync(output,{recursive:true,mode:0o700});
 const result={target:TEST_REF,status:'INCOMPLETE',checks:[]};
-let stage='preflight',server,browser;
+let stage='preflight',server,browser,profile,context;
 const check=(name,details={})=>{result.checks.push({name,pass:true,...details}); console.log(JSON.stringify({check:name,pass:true}));};
 const assert=(v)=>{if(!v)throw new Error('assertion');};
 try {
@@ -30,20 +31,22 @@ try {
  assert(html?.includes(result.head)&&!html.includes(keys.serverKey)); check('compiled_head');
  for(const engine of (process.argv[4]==='webkit'?['webkit']:['chromium','webkit'])){
   stage=engine+'_online';
-  if(engine==='webkit'){await browser.close();browser=await pw.webkit.launch({headless:true});}
-  const context=await browser.newContext({viewport:{width:390,height:844},locale:'fr-FR'});
+  if(browser){await browser.close();browser=undefined;}
+  profile=mkdtempSync(join(tmpdir(),'nona-guest-profile-'));
+  context=await pw[engine].launchPersistentContext(profile,{headless:true,viewport:{width:390,height:844},locale:'fr-FR'});
   await context.addInitScript(()=>{localStorage.setItem('hostbuddy.locale','fr');});
   await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL||['blob:','data:'].includes(u.protocol))return route.continue();return route.abort();});
   const page=await context.newPage(); let errors=0;const pageError=e=>{errors++;result.pageErrors=(result.pageErrors||0)+1;const m=e.message||'';const reactCode=m.match(/Minified React error #(\d{3})/)?.[1];if(reactCode)result.reactErrorCode=reactCode;result.errorCategory=/hydrati/i.test(m)?'hydration':/dynamically imported module|module script|Failed to fetch/i.test(m)?'module_load':'uncategorized';};page.on('pageerror',pageError);
   await page.goto('http://127.0.0.1:8787'+path); await page.waitForLoadState('networkidle');
   await page.getByText(fixture.name,{exact:true}).first().waitFor();
   result[engine+'Capabilities']=await page.evaluate(()=>({secureContext:isSecureContext,serviceWorker:!!navigator.serviceWorker,caches:!!globalThis.caches,indexedDB:!!globalThis.indexedDB}));
+  result[engine+'StorageBeforeSave']=await page.evaluate(async()=>{const e=await navigator.storage?.estimate?.();return {quota:e?.quota,usage:e?.usage};});
   stage=engine+'_save';
   await page.getByRole('button',{name:'Enregistrer hors connexion',exact:true}).click();
   const copy=page.getByRole('link',{name:'Ouvrir la copie enregistrée',exact:true});
   const alert=page.locator('.hb-offline-save [role=alert]');
   await Promise.race([copy.waitFor({timeout:90000}),alert.waitFor({timeout:90000})]);
-  if(await alert.isVisible()){const message=await alert.innerText();result.saveErrorCategory=/disponible dans ce navigateur/.test(message)?'unsupported_browser':/espace/.test(message)?'storage_space':/média|photo/.test(message)?'media':/lecteur|téléchargement|mode hors connexion/.test(message)?'shell':'unclassified';throw new Error('save');}
+  if(await alert.isVisible()){result[engine+'StorageAfterSave']=await page.evaluate(async()=>{const e=await navigator.storage?.estimate?.();return {quota:e?.quota,usage:e?.usage};});const message=await alert.innerText();result.saveErrorCategory=/disponible dans ce navigateur/.test(message)?'unsupported_browser':/espace/.test(message)?'storage_space':/média|photo/.test(message)?'media':/lecteur|téléchargement|mode hors connexion/.test(message)?'shell':'unclassified';throw new Error('save');}
   const offlinePath=await copy.getAttribute('href'); assert(offlinePath?.startsWith('/offline?slug='));
   check(engine+'_saved_text_and_photo');
   stage=engine+'_network_off'; await context.setOffline(true);
@@ -59,8 +62,8 @@ try {
   stage=engine+'_offline_reopen_photo';
   await reopened.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0));
   check(engine+'_offline_new_tab');stage=engine+'_no_page_errors';assert(errors===0);check(engine+'_no_page_errors');
-  await context.close();
+  await context.close();context=undefined;rmSync(profile,{recursive:true,force:true});profile=undefined;
  }
  result.status='PASS';
 }catch{try{const diagnostic=JSON.parse(readFileSync(join(directory,'built-status.json'),'utf8'));if(['checkout','build','worker_import','client_audit','http_start','ready'].includes(diagnostic.phase))result.runtimePhase=diagnostic.phase;if(['ENOENT','ERR_MODULE_NOT_FOUND','ERR_INVALID_ARG_TYPE','ERR_INVALID_ARG_VALUE','unspecified'].includes(diagnostic.code))result.runtimeCode=diagnostic.code;}catch{} result.status='FAIL';result.failedStage=stage;process.exitCode=1;}
-finally{if(browser)await browser.close().catch(()=>{});if(server)server.kill('SIGTERM');writeFileSync(join(output,'results.json'),JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({status:result.status,stage:result.failedStage||'complete',checks:result.checks.length}));}
+finally{if(context)await context.close().catch(()=>{});if(profile)rmSync(profile,{recursive:true,force:true});if(browser)await browser.close().catch(()=>{});if(server)server.kill('SIGTERM');writeFileSync(join(output,'results.json'),JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({status:result.status,stage:result.failedStage||'complete',checks:result.checks.length}));}

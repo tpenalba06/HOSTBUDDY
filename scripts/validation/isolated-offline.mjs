@@ -49,10 +49,15 @@ try {
   if(await alert.isVisible()){result[engine+'StorageAfterSave']=await page.evaluate(async()=>{const e=await navigator.storage?.estimate?.();return {quota:e?.quota,usage:e?.usage};});const message=await alert.innerText();result.saveErrorCategory=/disponible dans ce navigateur/.test(message)?'unsupported_browser':/espace/.test(message)?'storage_space':/média|photo/.test(message)?'media':/lecteur|téléchargement|mode hors connexion/.test(message)?'shell':'unclassified';throw new Error('save');}
   const offlinePath=await copy.getAttribute('href'); assert(offlinePath?.startsWith('/offline?slug='));
   check(engine+'_saved_text_and_photo');
+  result[engine+'OfflineReady']=await page.evaluate(async()=>({controlled:!!navigator.serviceWorker.controller,shellCached:(await Promise.all((await caches.keys()).filter(n=>n.startsWith('hb-guest-shell-')).map(async n=>!!await(await caches.open(n)).match('/offline')))).some(Boolean)}));
   stage=engine+'_network_off'; await context.setOffline(true);
+  stage=engine+'_offline_navigation';
   await page.goto('http://127.0.0.1:8787'+offlinePath);
+  stage=engine+'_offline_text';
   await page.getByText(fixture.name,{exact:true}).first().waitFor({timeout:30000});
+  stage=engine+'_offline_photo';
   await page.waitForFunction(()=>[...document.images].some(img=>img.currentSrc.startsWith('blob:')&&img.complete&&img.naturalWidth>0),null,{timeout:30000});
+  stage=engine+'_offline_overflow';
   assert(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1));
   check(engine+'_offline_start_and_blob_photo');
   stage=engine+'_offline_reopen_navigation';await page.close();const reopened=await context.newPage();reopened.on('pageerror',pageError);
@@ -65,5 +70,5 @@ try {
   await context.close();context=undefined;rmSync(profile,{recursive:true,force:true});profile=undefined;
  }
  result.status='PASS';
-}catch{try{const diagnostic=JSON.parse(readFileSync(join(directory,'built-status.json'),'utf8'));if(['checkout','build','worker_import','client_audit','http_start','ready'].includes(diagnostic.phase))result.runtimePhase=diagnostic.phase;if(['ENOENT','ERR_MODULE_NOT_FOUND','ERR_INVALID_ARG_TYPE','ERR_INVALID_ARG_VALUE','unspecified'].includes(diagnostic.code))result.runtimeCode=diagnostic.code;}catch{} result.status='FAIL';result.failedStage=stage;process.exitCode=1;}
+}catch(e){const message=e?.message||'';result.failureCategory=/not supported|unsupported/i.test(message)?'unsupported_operation':/ERR_INTERNET_DISCONNECTED|internet disconnected|offline/i.test(message)?'network_disconnected':/Timeout|timed out/i.test(message)?'timeout':/assertion/.test(message)?'assertion':'unclassified';try{const diagnostic=JSON.parse(readFileSync(join(directory,'built-status.json'),'utf8'));if(['checkout','build','worker_import','client_audit','http_start','ready'].includes(diagnostic.phase))result.runtimePhase=diagnostic.phase;if(['ENOENT','ERR_MODULE_NOT_FOUND','ERR_INVALID_ARG_TYPE','ERR_INVALID_ARG_VALUE','unspecified'].includes(diagnostic.code))result.runtimeCode=diagnostic.code;}catch{} result.status='FAIL';result.failedStage=stage;process.exitCode=1;}
 finally{if(context)await context.close().catch(()=>{});if(profile)rmSync(profile,{recursive:true,force:true});if(browser)await browser.close().catch(()=>{});if(server)server.kill('SIGTERM');writeFileSync(join(output,'results.json'),JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({status:result.status,stage:result.failedStage||'complete',checks:result.checks.length}));}

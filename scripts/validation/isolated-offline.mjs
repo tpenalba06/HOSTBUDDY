@@ -56,5 +56,5 @@ try {
   await context.close();
  }
  result.status='PASS';
-}catch{result.status='FAIL';result.failedStage=stage;process.exitCode=1;}
+}catch{try{const diagnostic=JSON.parse(readFileSync(join(directory,'built-status.json'),'utf8'));if(['checkout','build','worker_import','client_audit','http_start','ready'].includes(diagnostic.phase))result.runtimePhase=diagnostic.phase;if(['ENOENT','ERR_MODULE_NOT_FOUND','ERR_INVALID_ARG_TYPE','ERR_INVALID_ARG_VALUE','unspecified'].includes(diagnostic.code))result.runtimeCode=diagnostic.code;}catch{} result.status='FAIL';result.failedStage=stage;process.exitCode=1;}
 finally{if(browser)await browser.close().catch(()=>{});if(server)server.kill('SIGTERM');writeFileSync(join(output,'results.json'),JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({status:result.status,stage:result.failedStage||'complete',checks:result.checks.length}));}

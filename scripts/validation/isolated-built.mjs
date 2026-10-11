@@ -1,7 +1,7 @@
 // Compiled TEST runtime. No .env files, production connection or deployment.
 import { loadCredentials, verifyTarget, isolatedEnvironment } from './isolated-preview.mjs';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, symlinkSync, rmSync, readFileSync, statSync, readdirSync } from 'node:fs';
+import { mkdtempSync, symlinkSync, rmSync, readFileSync, statSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve, join, extname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
@@ -10,12 +10,16 @@ import { Readable } from 'node:stream';
 const repo = process.cwd();
 const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: ['ignore','pipe','pipe'] }).trim();
 let server, directory, checkout;
+let phase='preflight';
+const statusFile=join(resolve(process.argv[2]),'built-status.json');
+const mark=value=>{phase=value;writeFileSync(statusFile,JSON.stringify({phase}),{mode:0o600});};
 try {
   const keys = loadCredentials(resolve(process.argv[2]));
   await verifyTarget(keys);
   if (git('status','--porcelain','--untracked-files=no')) throw new Error('checkout');
   const head = git('rev-parse','HEAD');
   if (git('ls-tree','-r','--name-only',head).split('\n').some(p => /^\.env(?:$|\.)/.test(p) && !/\.(example|sample)$/.test(p))) throw new Error('env');
+  mark('checkout');
   directory = mkdtempSync(join(tmpdir(),'nona-built-test-'));
   checkout = join(directory,'checkout');
   git('worktree','add','--detach',checkout,head);
@@ -23,14 +27,18 @@ try {
   const env = { ...isolatedEnvironment(process.env,keys), NODE_ENV:'production' };
   for (const key of Object.keys(process.env)) delete process.env[key];
   Object.assign(process.env,env); process.chdir(checkout);
+  mark('build');
   const { build } = await import('vite');
   await build({ root:checkout, configFile:join(checkout,'vite.config.ts'), mode:'nona-isolated-test', logLevel:'silent' });
+  mark('worker_import');
   const worker = (await import(pathToFileURL(join(checkout,'.output/server/index.mjs')).href)).default;
   if (typeof worker.fetch !== 'function') throw new Error('worker');
   const publicRoot = join(checkout,'.output/public');
   const audit = dir => { for(const e of readdirSync(dir,{withFileTypes:true})) { const p=join(dir,e.name); if(e.isDirectory())audit(p); else if(/\.(js|html|json)$/.test(p)){const text=readFileSync(p,'utf8');if(text.includes(keys.serverKey)||text.includes('jzbjpaucgckggumhowns'))throw new Error('client_configuration');} } };
+  mark('client_audit');
   audit(publicRoot);
   const mime = { '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.html':'text/html', '.woff2':'font/woff2', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.svg':'image/svg+xml', '.mp4':'video/mp4' };
+  mark('http_start');
   server = createServer(async (req,res) => {
     try {
       const url = new URL(req.url,'http://127.0.0.1:8787');
@@ -45,9 +53,12 @@ try {
     } catch { res.writeHead(500); res.end('TEST runtime error'); }
   });
   await new Promise(done => server.listen(8787,'127.0.0.1',done));
+  mark('ready');
   const cleanup = () => { server.close(); process.chdir(repo); git('worktree','remove','--force',checkout); rmSync(directory,{recursive:true,force:true}); process.exit(0); };
   process.once('SIGTERM',cleanup); process.once('SIGINT',cleanup);
-} catch {
+} catch(error) {
+  const code=['ENOENT','ERR_MODULE_NOT_FOUND','ERR_INVALID_ARG_TYPE','ERR_INVALID_ARG_VALUE'].includes(error.code)?error.code:'unspecified';
+  try {writeFileSync(statusFile,JSON.stringify({phase,code}),{mode:0o600});}catch{}
   if (server) server.close();
   process.chdir(repo);
   if (checkout) { try { git('worktree','remove','--force',checkout); } catch {} }

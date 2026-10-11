@@ -1,7 +1,8 @@
 // Universal Import Engine — shared types.
 // Every field keeps provenance so human corrections win over future syncs.
 
-export type ImportSource = "airbnb" | "booking" | "sunver" | "website" | "text" | "document" | "pms" | "manual";
+export type ImportSource =
+  "airbnb" | "booking" | "sunver" | "website" | "text" | "document" | "pms" | "manual";
 export type FieldStatus = "found" | "to_verify" | "missing";
 
 export interface ExtractedField {
@@ -25,7 +26,11 @@ export interface Extractor {
 
 export type UrlImportOutcome =
   | { ok: true; source: ImportSource; result: ExtractionResult }
-  | { ok: false; source: ImportSource; reason: "blocked" | "insufficient" | "unreachable" | "invalid" };
+  | {
+      ok: false;
+      source: ImportSource;
+      reason: "blocked" | "insufficient" | "unreachable" | "invalid";
+    };
 
 /** One adapter per source; official APIs/OAuth can replace an implementation without UI changes. */
 export interface UrlSourceAdapter {

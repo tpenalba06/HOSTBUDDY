@@ -50,3 +50,8 @@
 - [x] Replace the homepage phone mockup with a large container-responsive preview
 - [x] Preserve the full demo and traveler/editor handoff
 - [x] Verify all requested preview widths and production app health
+
+## Demo stability and presentation rescue
+- [x] Prevent broken or older local demo data from crashing homepage and /demo
+- [x] Polish shared traveler preview and responsive manager presentation
+- [x] Verify language selection, interactions, lint, tests, types and preview build

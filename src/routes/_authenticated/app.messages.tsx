@@ -7,7 +7,100 @@ import { orgQuery, useOrg } from "@/components/app/useOrg";
 import { useI18n } from "@/lib/i18n";
 import { listConversations } from "@/lib/data/messages";
 
-const conversationsQuery = (orgId: string) => queryOptions({ queryKey: ["conversations", orgId], queryFn: () => listConversations(orgId) });
-export const Route = createFileRoute("/_authenticated/app/messages")({ head: () => ({ meta: [{ title: "Messages — HostBuddy" }, { name: "description", content: "Messages reçus depuis vos guides voyageurs." }, { property: "og:title", content: "Messages — HostBuddy" }, { property: "og:description", content: "Messages reçus depuis vos guides voyageurs." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }), loader: async ({ context }) => { const org = await context.queryClient.ensureQueryData(orgQuery); await context.queryClient.ensureQueryData(conversationsQuery(org.id)); }, pendingComponent: Loading, errorComponent: FriendlyError, component: MessagesPage });
+const conversationsQuery = (orgId: string) =>
+  queryOptions({ queryKey: ["conversations", orgId], queryFn: () => listConversations(orgId) });
+export const Route = createFileRoute("/_authenticated/app/messages")({
+  head: () => ({
+    meta: [
+      { title: "Messages — HostBuddy" },
+      { name: "description", content: "Messages reçus depuis vos guides voyageurs." },
+      { property: "og:title", content: "Messages — HostBuddy" },
+      { property: "og:description", content: "Messages reçus depuis vos guides voyageurs." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  loader: async ({ context }) => {
+    const org = await context.queryClient.ensureQueryData(orgQuery);
+    await context.queryClient.ensureQueryData(conversationsQuery(org.id));
+  },
+  pendingComponent: Loading,
+  errorComponent: FriendlyError,
+  component: MessagesPage,
+});
 
-function MessagesPage(){ const { t }=useI18n(); const org=useOrg(); const {data}=useSuspenseQuery(conversationsQuery(org.id)); return <div className="mt-4 sm:mt-7"><Link to="/app" className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary"><ArrowLeft/>{t("messages.back")}</Link><div className="mt-4 flex items-end justify-between"><div><p className="font-bold text-primary">{t("messages.eyebrow")}</p><h1 className="mt-1 text-4xl font-semibold">{t("nav.messages")}</h1></div><span className="rounded-full bg-accent px-3 py-1 text-sm font-bold text-accent-foreground">{data.filter((c)=>c.messages.some((m)=>m.sender_type==="guest"&&!m.read_at)).length} {t("messages.unread")}</span></div>{data.length===0?<div className="mt-8 rounded-lg border border-dashed bg-card p-8 text-center"><MessageCircle className="mx-auto h-9 w-9 text-success"/><h2 className="mt-3 text-xl font-semibold">{t("messages.empty")}</h2><p className="mt-2 text-muted-foreground">{t("messages.emptyDesc")}</p></div>:<div className="mt-6 divide-y rounded-lg border bg-card">{data.map((conversation)=>{const latest=[...conversation.messages].sort((a,b)=>b.created_at.localeCompare(a.created_at))[0];const unread=conversation.messages.some((m)=>m.sender_type==="guest"&&!m.read_at);return <Link key={conversation.id} to="/app/messages/$id" params={{id:conversation.id}} className="flex min-h-24 items-center gap-3 p-4 hover:bg-muted"><span className={`h-3 w-3 shrink-0 rounded-full ${unread?"bg-primary":"bg-border"}`}/><span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><strong className="truncate">{conversation.guest_display_name}</strong><span className="shrink-0 text-xs text-muted-foreground">{new Date(conversation.last_message_at).toLocaleDateString()}</span></span><span className="block text-sm font-semibold text-success">{conversation.properties?.name}</span><span className="mt-1 block truncate text-sm text-muted-foreground">{latest?.body}</span></span>{conversation.status==="resolved"&&<CheckCircle2 className="text-success"/>}</Link>})}</div>}</div> }
+function MessagesPage() {
+  const { t } = useI18n();
+  const org = useOrg();
+  const { data } = useSuspenseQuery(conversationsQuery(org.id));
+  return (
+    <div className="mt-4 sm:mt-7">
+      <Link
+        to="/app"
+        className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary"
+      >
+        <ArrowLeft />
+        {t("messages.back")}
+      </Link>
+      <div className="mt-4 flex items-end justify-between">
+        <div>
+          <p className="font-bold text-primary">{t("messages.eyebrow")}</p>
+          <h1 className="mt-1 text-4xl font-semibold">{t("nav.messages")}</h1>
+        </div>
+        <span className="rounded-full bg-accent px-3 py-1 text-sm font-bold text-accent-foreground">
+          {
+            data.filter((c) => c.messages.some((m) => m.sender_type === "guest" && !m.read_at))
+              .length
+          }{" "}
+          {t("messages.unread")}
+        </span>
+      </div>
+      {data.length === 0 ? (
+        <div className="mt-8 rounded-lg border border-dashed bg-card p-8 text-center">
+          <MessageCircle className="mx-auto h-9 w-9 text-success" />
+          <h2 className="mt-3 text-xl font-semibold">{t("messages.empty")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("messages.emptyDesc")}</p>
+        </div>
+      ) : (
+        <div className="mt-6 divide-y rounded-lg border bg-card">
+          {data.map((conversation) => {
+            const latest = [...conversation.messages].sort((a, b) =>
+              b.created_at.localeCompare(a.created_at),
+            )[0];
+            const unread = conversation.messages.some(
+              (m) => m.sender_type === "guest" && !m.read_at,
+            );
+            return (
+              <Link
+                key={conversation.id}
+                to="/app/messages/$id"
+                params={{ id: conversation.id }}
+                className="flex min-h-24 items-center gap-3 p-4 hover:bg-muted"
+              >
+                <span
+                  className={`h-3 w-3 shrink-0 rounded-full ${unread ? "bg-primary" : "bg-border"}`}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <strong className="truncate">{conversation.guest_display_name}</strong>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {new Date(conversation.last_message_at).toLocaleDateString()}
+                    </span>
+                  </span>
+                  <span className="block text-sm font-semibold text-success">
+                    {conversation.properties?.name}
+                  </span>
+                  <span className="mt-1 block truncate text-sm text-muted-foreground">
+                    {latest?.body}
+                  </span>
+                </span>
+                {conversation.status === "resolved" && <CheckCircle2 className="text-success" />}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

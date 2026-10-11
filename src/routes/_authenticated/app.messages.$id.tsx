@@ -7,6 +7,138 @@ import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friend
 import { useI18n } from "@/lib/i18n";
 import { getConversation, sendManagerReply, setConversationStatus } from "@/lib/data/messages";
 
-const threadQuery=(id:string)=>queryOptions({queryKey:["conversation",id],queryFn:()=>getConversation(id)});
-export const Route=createFileRoute("/_authenticated/app/messages/$id")({head:()=>({meta:[{title:"Conversation — HostBuddy"},{name:"description",content:"Répondre à un voyageur."},{property:"og:title",content:"Conversation — HostBuddy"},{property:"og:description",content:"Répondre à un voyageur."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"},{name:"robots",content:"noindex"}]}),loader:async({context,params})=>{const d=await context.queryClient.ensureQueryData(threadQuery(params.id));if(!d)throw notFound()},pendingComponent:Loading,errorComponent:FriendlyError,notFoundComponent:()=> <FriendlyError message="Cette conversation est introuvable."/>,component:ThreadPage});
-function ThreadPage(){const{t}=useI18n();const{id}=Route.useParams();const qc=useQueryClient();const{data}=useSuspenseQuery(threadQuery(id));const[body,setBody]=useState("");const[busy,setBusy]=useState(false);const[error,setError]=useState("");if(!data)return null;const refresh=async()=>{await qc.invalidateQueries({queryKey:["conversation",id]});await qc.invalidateQueries({queryKey:["conversations"]})};return <div className="mt-4 flex min-h-[calc(100dvh-180px)] flex-col"><Link to="/app/messages" className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary"><ArrowLeft/>{t("nav.messages")}</Link><header className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b pb-4"><div><h1 className="text-2xl font-semibold">{data.conversation.guest_display_name}</h1><p className="text-sm font-semibold text-success">{data.conversation.properties?.name}</p>{data.conversation.guest_contact&&<p className="text-sm text-muted-foreground">{data.conversation.guest_contact}</p>}</div><Button variant="outline" className="min-h-12 rounded-full" onClick={async()=>{await setConversationStatus(id,data.conversation.status==="open"?"resolved":"open");await refresh()}}>{data.conversation.status==="open"?<><CheckCircle2/>{t("messages.resolve")}</>:<><RotateCcw/>{t("messages.reopen")}</>}</Button></header><div className="flex-1 space-y-3 py-5">{data.messages.map((message)=><div key={message.id} className={`max-w-[85%] rounded-lg p-4 ${message.sender_type==="manager"?"ml-auto bg-primary text-primary-foreground":"bg-card border"}`}><p className="whitespace-pre-wrap">{message.body}</p><p className={`mt-1 text-xs ${message.sender_type==="manager"?"text-primary-foreground/80":"text-muted-foreground"}`}>{new Date(message.created_at).toLocaleString()}</p></div>)}</div><form className="sticky bottom-16 grid gap-2 border-t bg-background py-3 sm:bottom-0 sm:grid-cols-[1fr_auto]" onSubmit={async(e)=>{e.preventDefault();if(!body.trim())return;setBusy(true);setError("");try{await sendManagerReply(id,body);setBody("");await refresh()}catch(err){setError(friendlyMessage(err))}finally{setBusy(false)}}}><label className="sr-only" htmlFor="reply">{t("messages.reply")}</label><textarea id="reply" className="field min-h-14 resize-none" rows={2} maxLength={2000} placeholder={t("messages.placeholder")} value={body} onChange={(e)=>setBody(e.target.value)}/><Button className="min-h-14 rounded-full px-6" disabled={busy||!body.trim()}><Send/>{t("common.send")}</Button>{error&&<p role="alert" className="text-sm text-destructive sm:col-span-2">{error}</p>}</form></div>}
+const threadQuery = (id: string) =>
+  queryOptions({ queryKey: ["conversation", id], queryFn: () => getConversation(id) });
+export const Route = createFileRoute("/_authenticated/app/messages/$id")({
+  head: () => ({
+    meta: [
+      { title: "Conversation — HostBuddy" },
+      { name: "description", content: "Répondre à un voyageur." },
+      { property: "og:title", content: "Conversation — HostBuddy" },
+      { property: "og:description", content: "Répondre à un voyageur." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  loader: async ({ context, params }) => {
+    const d = await context.queryClient.ensureQueryData(threadQuery(params.id));
+    if (!d) throw notFound();
+  },
+  pendingComponent: Loading,
+  errorComponent: FriendlyError,
+  notFoundComponent: () => <FriendlyError message="Cette conversation est introuvable." />,
+  component: ThreadPage,
+});
+function ThreadPage() {
+  const { t } = useI18n();
+  const { id } = Route.useParams();
+  const qc = useQueryClient();
+  const { data } = useSuspenseQuery(threadQuery(id));
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!data) return null;
+  const refresh = async () => {
+    await qc.invalidateQueries({ queryKey: ["conversation", id] });
+    await qc.invalidateQueries({ queryKey: ["conversations"] });
+  };
+  return (
+    <div className="mt-4 flex min-h-[calc(100dvh-180px)] flex-col">
+      <Link
+        to="/app/messages"
+        className="inline-flex min-h-12 items-center gap-2 font-semibold text-primary"
+      >
+        <ArrowLeft />
+        {t("nav.messages")}
+      </Link>
+      <header className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{data.conversation.guest_display_name}</h1>
+          <p className="text-sm font-semibold text-success">{data.conversation.properties?.name}</p>
+          {data.conversation.guest_contact && (
+            <p className="text-sm text-muted-foreground">{data.conversation.guest_contact}</p>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          className="min-h-12 rounded-full"
+          onClick={async () => {
+            await setConversationStatus(
+              id,
+              data.conversation.status === "open" ? "resolved" : "open",
+            );
+            await refresh();
+          }}
+        >
+          {data.conversation.status === "open" ? (
+            <>
+              <CheckCircle2 />
+              {t("messages.resolve")}
+            </>
+          ) : (
+            <>
+              <RotateCcw />
+              {t("messages.reopen")}
+            </>
+          )}
+        </Button>
+      </header>
+      <div className="flex-1 space-y-3 py-5">
+        {data.messages.map((message) => (
+          <div
+            key={message.id}
+            className={`max-w-[85%] rounded-lg p-4 ${message.sender_type === "manager" ? "ml-auto bg-primary text-primary-foreground" : "bg-card border"}`}
+          >
+            <p className="whitespace-pre-wrap">{message.body}</p>
+            <p
+              className={`mt-1 text-xs ${message.sender_type === "manager" ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+            >
+              {new Date(message.created_at).toLocaleString()}
+            </p>
+          </div>
+        ))}
+      </div>
+      <form
+        className="sticky bottom-16 grid gap-2 border-t bg-background py-3 sm:bottom-0 sm:grid-cols-[1fr_auto]"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!body.trim()) return;
+          setBusy(true);
+          setError("");
+          try {
+            await sendManagerReply(id, body);
+            setBody("");
+            await refresh();
+          } catch (err) {
+            setError(friendlyMessage(err));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label className="sr-only" htmlFor="reply">
+          {t("messages.reply")}
+        </label>
+        <textarea
+          id="reply"
+          className="field min-h-14 resize-none"
+          rows={2}
+          maxLength={2000}
+          placeholder={t("messages.placeholder")}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
+        <Button className="min-h-14 rounded-full px-6" disabled={busy || !body.trim()}>
+          <Send />
+          {t("common.send")}
+        </Button>
+        {error && (
+          <p role="alert" className="text-sm text-destructive sm:col-span-2">
+            {error}
+          </p>
+        )}
+      </form>
+    </div>
+  );
+}

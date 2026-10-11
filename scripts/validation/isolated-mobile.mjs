@@ -20,7 +20,7 @@ async function main() {
   const directory = resolve(process.argv[2] || '../nona-target-private');
   const output = resolve(process.argv[3] || '../nona-mobile-results');
   mkdirSync(output, { recursive: true, mode: 0o700 });
-  const results = { target: TEST_REF, status: 'INCOMPLETE', checks: [], financialRequestsBlocked: 0 };
+  const results = { target: TEST_REF, status: 'INCOMPLETE', checks: [], financialRequestsBlocked: 0, authRequests: 0, pageErrors: 0 };
   let stage = 'preflight', server, browser;
   const record = (name, details = {}) => {
     results.checks.push({ name, pass: true, ...details });
@@ -92,7 +92,8 @@ async function main() {
       });
       const page = await context.newPage();
       let pageErrors = 0;
-      page.on('pageerror', () => { pageErrors++; });
+      page.on('pageerror', () => { pageErrors++; results.pageErrors++; });
+      page.on('request', request => { const u = new URL(request.url()); if (u.origin === TEST_URL && u.pathname.startsWith('/auth/')) results.authRequests++; });
       page.on('response', response => {
         const u = new URL(response.url());
         if (u.origin === TEST_URL && response.status() >= 400) {
@@ -101,6 +102,7 @@ async function main() {
       });
       stage = `${engine}_${width}_login_page`;
       await page.goto('http://127.0.0.1:8787/auth?mode=login');
+      await page.waitForLoadState('networkidle');
       await page.locator('input[type=email]').fill(account.email);
       await page.locator('input[type=password]').fill(account.password);
       stage = `${engine}_${width}_login_submit`;

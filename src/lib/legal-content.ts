@@ -6,13 +6,13 @@ export type LegalDocument = {
   sections: { title: string; paragraphs: string[] }[];
 };
 
-export const legalRevision = "9 octobre 2026 — version de travail Nona en français";
+export const legalRevision = "12 octobre 2026 — version de travail Nona en français";
 
 export const legalPublicationGaps = [
   "Éditeur identifié : Tristan Penalba, entrepreneur individuel, SIREN 992856641 / SIRET 99285664100012. Actualité de l’adresse professionnelle historique à confirmer avant publication définitive.",
   "Disponibilité du nom Nona et droits de propriété intellectuelle à vérifier avant lancement.",
   "Actualité de l’e-mail et du téléphone professionnels historiques et utilisation de ce contact pour les données personnelles à confirmer.",
-  "Identité, adresse et téléphone de l’hébergeur du site commercialisé.",
+  "Entité contractuelle, adresse et téléphone de Lovable Cloud à confirmer sur le contrat d’hébergement avant la publication définitive des mentions.",
   "Franchise de TVA mentionnée dans les documents de juin 2026 (article 293 B du CGI) : maintien du régime à confirmer pour l’abonnement et la commission, sans modifier les tarifs actés.",
   "Durées de conservation, procédure d’effacement, prestataires, pays d’hébergement et garanties de transfert.",
   "Conditions commerciales des gestionnaires professionnels, information des voyageurs avant collecte et avant paiement, et accord de sous-traitance RGPD à valider.",
@@ -38,7 +38,7 @@ export const legalDocuments: LegalDocument[] = [
       {
         title: "Hébergement",
         paragraphs: [
-          "Nom ou dénomination de l’hébergeur du site commercialisé, adresse et téléphone : à compléter. L’hébergement de la préversion ne permet pas de présumer celui du site définitif.",
+          "L’hébergement actuel de l’application, de son authentification, de sa base de données et de ses médias est fourni par Lovable Cloud, qui utilise notamment l’infrastructure Supabase. La base applicative est actuellement située en Irlande. Le maintien de cet hébergement pour la commercialisation, l’entité contractuelle du fournisseur, son adresse et son téléphone doivent être confirmés avant la publication définitive. La localisation de la base ne garantit pas celle du CDN, des journaux ou du support.",
         ],
       },
       {
@@ -77,7 +77,7 @@ export const legalDocuments: LegalDocument[] = [
         title: "Destinataires et transferts",
         paragraphs: [
           "Les membres autorisés de l’organisation accèdent aux informations nécessaires à leur rôle. Les visiteurs d’un guide accèdent aux contenus que son gestionnaire a publiés. Les conversations et retours privés ne constituent pas des contenus publics du guide.",
-          "Des prestataires assurent l’hébergement, la base de données, l’authentification, le stockage des médias et les paiements. Stripe intervient pour les paiements et peut être responsable de traitement ou sous-traitant selon l’opération. Google intervient si la connexion Google est choisie, mais aussi lors du chargement des polices Google Fonts actuellement utilisées par les pages, indépendamment de cette connexion. La liste contractuelle complète, les entités, pays, fonctions et garanties de transfert restent à compléter.",
+          "Lovable Cloud fournit actuellement l’hébergement applicatif, l’authentification, la base de données et le stockage des médias, notamment au moyen de l’infrastructure Supabase ; la base applicative est située en Irlande. Stripe intervient pour les paiements et les vérifications des vendeurs, avec un rôle de responsable de traitement ou de sous-traitant selon l’opération. Google intervient si la connexion Google est choisie, mais aussi lors du chargement des polices Google Fonts, indépendamment de cette connexion. Les entités contractuelles, autres sous-traitants, pays, fonctions et garanties de transfert doivent être complétés à partir des contrats applicables avant la publication définitive.",
           "Les liens vers Google Maps, WhatsApp, les sites d’avis et d’autres sites externes conduisent vers les services choisis par le visiteur. Leurs traitements et informations s’appliquent alors ; un lien externe ne constitue pas à lui seul un traceur chargé sur la page Nona.",
           "Aucune localisation exclusivement européenne n’est garantie par ce brouillon. Les éventuels transferts hors de l’Espace économique européen et les moyens d’obtenir leurs garanties doivent être identifiés avant publication.",
         ],

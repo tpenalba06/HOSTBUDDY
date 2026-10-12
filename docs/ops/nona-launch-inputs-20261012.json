@@ -1,0 +1,73 @@
+{
+  "schema": "nona.launch-preparation.v1",
+  "state": "PREPARED_NOT_GO",
+  "application_head": "fcd4e6be3fff3b2f702486aadb6bf8de48b8b126",
+  "offer": {
+    "free_properties": 1,
+    "base_properties": 2,
+    "base_monthly_eur": 9.99,
+    "extra_property_monthly_eur": 2.99,
+    "service_commission_percent": 2,
+    "subscriptions_and_guest_services_required": true
+  },
+  "proposed_origin": "https://host-buddy-concierge.lovable.app",
+  "isolated_recovery_ref": "mhhtnqfdkyudwyqlmnce",
+  "existing_cloud_ref": "jzbjpaucgckggumhowns",
+  "observations": {
+    "cloud_region": "Europe (Ireland)",
+    "database_version": "17.11.0.002",
+    "database_storage_display": "0.29 GB / 2 GB",
+    "auth_site_url": "https://host-buddy-concierge.lovable.app",
+    "email_enabled": true,
+    "google_enabled": true,
+    "disable_signup": false,
+    "anonymous_auth": false,
+    "auto_confirm_email": false,
+    "secure_email_change": true,
+    "password_hibp_check": true,
+    "current_password_for_signed_in_change": true,
+    "auth_email_sender": "managed default available; branded domain not configured",
+    "sandbox_backend_client_server_same": true,
+    "sandbox_stripe_test": true,
+    "sandbox_stripe_live": false,
+    "sandbox_live_verified": false,
+    "sandbox_missing_optional_until_live": [
+      "HOSTBUDDY_CONNECT_APP_URL",
+      "STRIPE_LIVE_VERIFIED"
+    ],
+    "http_external_result": "200 / UP after explicit honest monitor identifier",
+    "http_hourly_enabled": true,
+    "http_failure_notification_received": true,
+    "published_launch_build_verified": false
+  },
+  "required_before_launch": {
+    "publication": "explicit approved release and production authorization",
+    "stripe_platform": "holder completes real verification and agrees; explicit Live authorization",
+    "first_merchant": "legitimate holder completes own Live onboarding and receives active payment/payout capabilities",
+    "legal": "current publisher contact and VAT, approved contracts and seller service notices",
+    "operations": "backup/alert coverage of commercial backend; external HTTP probe usable and first automatic TEST DB cycle observed"
+  },
+  "apply_after_approval": {
+    "HOSTBUDDY_APP_URL": "canonical approved origin",
+    "HOSTBUDDY_CONNECT_APP_URL": "same canonical origin",
+    "STRIPE_LIVE_VERIFIED": "keep false through preparation; true only after explicit Live approval and verification",
+    "stripe_prices": "Live 999/299 cent prices with distinct identifiers, verified mode and tax presentation",
+    "stripe_webhooks": "distinct Live Billing/Connect destinations and signing secrets, successful delivery",
+    "auth_redirects": [
+      "/app",
+      "/auth",
+      "/auth?mode=reset"
+    ],
+    "commercial_backup": "commercial ref only in a separately authorized configuration; never reuse recovery TEST credentials"
+  },
+  "not_executed": [
+    "production publication",
+    "main merge",
+    "Live activation",
+    "real purchase",
+    "new restoration",
+    "new financial/mobile/performance recipe",
+    "legal agreement acceptance",
+    "new subscription or domain purchase"
+  ]
+}

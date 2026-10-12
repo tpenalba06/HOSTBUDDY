@@ -1,5 +1,6 @@
 """Synthetic safety/integrity checks. No database connection or restoration."""
 import contextlib
+import datetime as dt
 import importlib.util
 import io
 import json
@@ -10,6 +11,9 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 spec = importlib.util.spec_from_file_location('database_backup', Path(__file__).with_name('database-backup.py'))
 b = importlib.util.module_from_spec(spec)
@@ -81,6 +85,25 @@ class SafetyTests(unittest.TestCase):
             self.assertNotIn(name, env)
         self.assertEqual(env['PGSSLROOTCERT'], 'system')
         self.assertNotIn(CANARY, json.dumps(env))
+
+    def test_explicit_ca_is_parsed_private_and_never_disables_verification(self):
+        private_key = ec.generate_private_key(ec.SECP256R1())
+        name = x509.Name([x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, 'Synthetic TEST CA')])
+        now = dt.datetime.now(dt.timezone.utc)
+        certificate = (x509.CertificateBuilder().subject_name(name).issuer_name(name)
+                       .public_key(private_key.public_key()).serial_number(1)
+                       .not_valid_before(now - dt.timedelta(days=1))
+                       .not_valid_after(now + dt.timedelta(days=1))
+                       .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+                       .sign(private_key, hashes.SHA256()))
+        ca = certificate.public_bytes(serialization.Encoding.PEM)
+        env = b.pg_environment(self.config, self.root, ca)
+        self.assertEqual(env['PGSSLMODE'], 'verify-full')
+        certfile = Path(env['PGSSLROOTCERT'])
+        self.assertEqual(certfile.read_bytes(), ca)
+        self.assertEqual(certfile.stat().st_mode & 0o777, 0o600)
+        with self.assertRaises(b.BackupError):
+            b.validate_ca(b'not a certificate ' + CANARY.encode())
 
     def test_encrypted_roundtrip_wrong_key_tamper_and_no_overwrite(self):
         output = self.root / 'result.nonaenc'

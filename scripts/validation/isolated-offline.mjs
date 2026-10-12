@@ -34,6 +34,11 @@ try {
   await new Promise(r=>setTimeout(r,1000));
  }
  assert(html?.includes(result.head)&&!html.includes(keys.serverKey)); check('compiled_head');
+ const shellResponse=await fetch('http://127.0.0.1:8787/offline',{signal:AbortSignal.timeout(10000)});
+ assert(shellResponse.ok);
+ const shellHTML=await shellResponse.text();
+ assert(!shellHTML.includes('fonts.googleapis.com')&&!shellHTML.includes('fonts.gstatic.com'));
+ check('offline_shell_no_external_fonts');
  for(const engine of (process.argv[4]==='webkit'?['webkit']:['chromium','webkit'])){
   stage=engine+'_online';
   if(browser){await browser.close();browser=undefined;}

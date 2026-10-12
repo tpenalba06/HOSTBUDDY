@@ -76,7 +76,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -87,12 +87,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#e9d9c4" },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap",
-      },
+      // The saved reader already has local guest fonts in its cached CSS.
+      // Keep its shell independent of third-party font stylesheets and files.
+      ...(matches.some((match) => match.pathname === "/offline")
+        ? []
+        : [
+            { rel: "preconnect", href: "https://fonts.googleapis.com" },
+            {
+              rel: "preconnect",
+              href: "https://fonts.gstatic.com",
+              crossOrigin: "anonymous" as const,
+            },
+            {
+              rel: "stylesheet",
+              href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap",
+            },
+          ]),
       {
         rel: "stylesheet",
         href: appCss,

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tpenalba06/HOSTBUDDY
-          ref: 33789ae11603d603c8b93d0b7eb21ef5359ea81e
+          ref: e3951c2dbd7dab6ed124f6515624dc6679c49dbd
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:

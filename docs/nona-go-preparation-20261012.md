@@ -32,6 +32,8 @@ Préparer une décision de conservation plutôt que lancer une suppression : dur
 
 ## Passage direct à GO
 
+Suite exécutée : transport d’alertes SSR HTTPS préparé et raccordé aux réponses 5xx, désactivé faute de destination autorisée. Attente bornée, aucune donnée voyageur ou exception transmise, pas de retry, plafond par worker et échec de livraison journalisé sans détail privé. Voir `docs/ops/nona-server-alert-preparation.md`. Cinq vérifications ciblées nouvelles passent ; aucune recette acquise rejouée. Le canal effectif et la couverture des fonctions Supabase restent ouverts. Lors de la lecture suivante du workflow HTTP, seuls les deux passages manuels étaient visibles : aucun cycle automatique supplémentaire n’est annoncé comme acquis.
+
 1. Terminer les preuves opérationnelles qui peuvent être acquises en TEST et rendre utilisable la sonde externe.
 2. Confirmer uniquement les coordonnées historiques encore actuelles et le régime TVA ; valider les contrats et l’identité de chaque vendeur. Activer Stripe plateforme personnellement, puis faire onboarder un vrai premier gestionnaire Live ; ne pas revenir au KYC sandbox bloqué.
 3. Autoriser explicitement la publication/configuration commerciale et Live, avec l’origine, la version et les bindings concrets. Appliquer les configurations préparées, les sauvegardes de la cible commerciale et les destinations de monitoring autorisées.

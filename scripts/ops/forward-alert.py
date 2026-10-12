@@ -13,7 +13,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-EVENTS = {'import_source_unavailable', 'server_request_failed', 'guide_media_signing_failed',
+EVENTS = {'operational_alert_failed', 'import_source_unavailable', 'server_request_failed', 'guide_media_signing_failed',
     'guide_snapshot_failed', 'server_unhandled_error', 'server_unhandled_rejection',
     'stripe_webhook_unavailable', 'stripe_webhook_failed', 'stripe_webhook_mode_mismatch',
     'billing_sync_failed', 'billing_sync_pending'}

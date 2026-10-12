@@ -3,6 +3,10 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { reportOperationalEvent } from "./lib/operational-events.server";
+import {
+  deliverServerFailureAlert,
+  serverAlertConfiguration,
+} from "./lib/operational-alert.server";
 import { secureResponse } from "./lib/security-headers";
 
 type ServerEntry = {
@@ -10,6 +14,12 @@ type ServerEntry = {
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
+
+async function alertServerFailure(env: unknown) {
+  const delivery = await deliverServerFailureAlert(serverAlertConfiguration(env));
+  if (delivery === "FAILED" || delivery === "INVALID_CONFIGURATION")
+    reportOperationalEvent("operational_alert_failed");
+}
 
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
@@ -57,9 +67,11 @@ export default {
       // normalization above already reported its replaced response.
       if (normalized === response && response.status >= 500)
         reportOperationalEvent("server_request_failed");
+      if (normalized.status >= 500) await alertServerFailure(env);
       return secureResponse(request, normalized);
     } catch {
       reportOperationalEvent("server_request_failed");
+      await alertServerFailure(env);
       return secureResponse(
         request,
         new Response(renderErrorPage(), {

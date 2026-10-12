@@ -42,7 +42,7 @@ try {
   await context.addInitScript(()=>{localStorage.setItem('hostbuddy.locale','fr');});
   let networkDisconnected=false,uncontrolledResponses=0,runtimeStopped=false;
   const requestBeforeCut=new WeakMap(),responseGroups=new Map();
-  const networkDiagnostic={nonServiceWorkerResponses:0,groups:[],pageErrors:0};
+  const networkDiagnostic={nonServiceWorkerResponses:0,groups:[],pageErrors:0,deniedUpstreamRequests:0};
   result[engine+'NetworkDiagnostic']=networkDiagnostic;
   context.on('request',request=>requestBeforeCut.set(request,!networkDisconnected));
   context.on('response',response=>{
@@ -50,7 +50,10 @@ try {
    const fromServiceWorker=response.fromServiceWorker();
    if(!fromServiceWorker)uncontrolledResponses++;
    const origin=new URL(response.url()).origin;
-   const group={originClass:origin==='http://127.0.0.1:8787'?'loopback':origin===TEST_URL?'test':'other',
+   const resourceType=response.request().resourceType();
+   const group={originClass:origin==='http://127.0.0.1:8787'?'loopback':origin===TEST_URL?'test':origin==='https://fonts.googleapis.com'?'public_font_css':origin==='https://fonts.gstatic.com'?'public_font_file':'other',
+    resourceType:['document','stylesheet','image','font','script','fetch','xhr'].includes(resourceType)?resourceType:'other',
+    responseOriginMatchesRequest:origin===new URL(response.request().url()).origin,
     status:response.status(),fromServiceWorker,startedBeforeCut:requestBeforeCut.get(response.request())??null,
     runtimeStopped};
    const key=JSON.stringify(group),previous=responseGroups.get(key);
@@ -64,7 +67,7 @@ try {
    // The stopped loopback server cannot serve anything. Let WebKit consult its
    // SW instead of aborting navigation in Playwright before cache interception.
    if(networkDisconnected&&engine==='webkit'&&u.origin==='http://127.0.0.1:8787'&&server.exitCode!==null)return route.continue();
-   if(networkDisconnected)return route.abort();
+   if(networkDisconnected){networkDiagnostic.deniedUpstreamRequests++;return route.abort();}
    if(u.origin==='http://127.0.0.1:8787'||u.origin===TEST_URL)return route.continue();
    return route.abort();
   });

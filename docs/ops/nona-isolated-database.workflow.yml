@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tpenalba06/HOSTBUDDY
-          ref: e3951c2dbd7dab6ed124f6515624dc6679c49dbd
+          ref: a8db699914c3c61a947f3e8fc9cdfce63061d70b
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -44,12 +44,13 @@ jobs:
         env:
           NONA_TEST_DATABASE_JSON: ${{ secrets.NONA_TEST_DATABASE_JSON }}
           NONA_TEST_BACKUP_KEY_HEX: ${{ secrets.NONA_TEST_BACKUP_KEY_HEX }}
+          NONA_TEST_DATABASE_CA_PEM: ${{ vars.NONA_TEST_DATABASE_CA_PEM }}
         run: |
           python - <<'PY'
           import os, pathlib
           private = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nona-database-private'
           private.mkdir(mode=0o700)
-          for name, variable in [('database.json','NONA_TEST_DATABASE_JSON'), ('backup.key','NONA_TEST_BACKUP_KEY_HEX')]:
+          for name, variable in [('database.json','NONA_TEST_DATABASE_JSON'), ('backup.key','NONA_TEST_BACKUP_KEY_HEX'), ('database-ca.crt','NONA_TEST_DATABASE_CA_PEM')]:
               value = os.environ.get(variable, '')
               if not value: raise SystemExit('Missing approved TEST input')
               fd = os.open(private / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -57,7 +58,7 @@ jobs:
           PY
       - name: Read-only logical export and authenticated recheck
         run: |
-          python scripts/ops/database-backup.py backup --expected-ref mhhtnqfdkyudwyqlmnce --connection-file "$RUNNER_TEMP/nona-database-private/database.json" --key-file "$RUNNER_TEMP/nona-database-private/backup.key" --output "$RUNNER_TEMP/nona-database-private/database.nonaenc" --max-bytes 67108864
+          python scripts/ops/database-backup.py backup --expected-ref mhhtnqfdkyudwyqlmnce --connection-file "$RUNNER_TEMP/nona-database-private/database.json" --ca-file "$RUNNER_TEMP/nona-database-private/database-ca.crt" --key-file "$RUNNER_TEMP/nona-database-private/backup.key" --output "$RUNNER_TEMP/nona-database-private/database.nonaenc" --max-bytes 67108864
           python scripts/ops/database-backup.py verify --expected-ref mhhtnqfdkyudwyqlmnce --key-file "$RUNNER_TEMP/nona-database-private/backup.key" --output "$RUNNER_TEMP/nona-database-private/database.nonaenc"
       - uses: actions/upload-artifact@v4
         with:
@@ -71,7 +72,7 @@ jobs:
           python - <<'PY'
           import os, pathlib
           private = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nona-database-private'
-          for name in ['database.json', 'backup.key']:
+          for name in ['database.json', 'backup.key', 'database-ca.crt']:
               (private / name).unlink(missing_ok=True)
           PY
 # Only ciphertext is uploaded, after successful export and separate verification.

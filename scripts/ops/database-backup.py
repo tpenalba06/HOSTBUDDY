@@ -65,7 +65,7 @@ def connection(value, expected_ref):
     if set(value) != {'project_ref', 'host', 'port', 'database', 'user', 'password'}:
         raise BackupError('connection_fields_invalid')
     host, user = value['host'], value['user']
-    direct = host == f'db.{TEST_REF}.supabase.co' and user == 'postgres'
+    direct = host == f'db.{TEST_REF}.supabase.co' and user in {'postgres', 'backup_reader'}
     pooler = (isinstance(host, str) and
               re.fullmatch(r'aws-[0-9]+-[a-z0-9-]+\.pooler\.supabase\.com', host) and
               user in {f'postgres.{TEST_REF}', f'backup_reader.{TEST_REF}'})
@@ -144,6 +144,10 @@ def unseal(encrypted, key, expected_ref):
         with zipfile.ZipFile(io.BytesIO(plain)) as archive:
             if sorted(archive.namelist()) != ['database.dump', 'manifest.json']:
                 raise ValueError()
+            for info in archive.infolist():
+                bound = 4096 if info.filename == 'manifest.json' else LIMIT
+                if info.compress_type != zipfile.ZIP_STORED or info.file_size > bound:
+                    raise ValueError()
             manifest = json.loads(archive.read('manifest.json'))
             dump = archive.read('database.dump')
         if (manifest['format'] != 1 or manifest['project_ref'] != TEST_REF or
@@ -174,7 +178,8 @@ def backup(config, key, expected_ref, output, max_bytes, binaries):
         raise BackupError('backup_limit_invalid')
     output = Path(output).absolute()
     parent = output.parent.resolve()
-    if parent.is_relative_to(REPO) or parent.stat().st_mode & 0o077 or output.exists() or output.is_symlink():
+    in_git = any((ancestor / '.git').exists() for ancestor in [parent, *parent.parents])
+    if in_git or parent.is_relative_to(REPO) or parent.stat().st_mode & 0o077 or output.exists() or output.is_symlink():
         raise BackupError('private_new_output_required')
     with tempfile.TemporaryDirectory(prefix='nona-db-export-') as temp:
         directory = Path(temp)

@@ -1,5 +1,5 @@
 # INERT TEMPLATE. Do not install in the public application repository.
-# Requires separate approval/access in PRIVATE NONA-OPS and a hard $0 budget.
+# Install only after SQL TEST input/CA and free-quota protection are available.
 name: Nona isolated TEST database and Auth backup
 on:
   schedule:
@@ -25,10 +25,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install official PostgreSQL 17 clients before private inputs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main\n' | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client-17
       - name: Validate tools before private inputs
         run: |
           python -m pip install -r scripts/ops/requirements.txt
-          python scripts/ops/test-database-backup.py
           python - <<'PY'
           import importlib.util
           s = importlib.util.spec_from_file_location('database_backup', 'scripts/ops/database-backup.py')
@@ -66,6 +74,14 @@ jobs:
           path: ${{ runner.temp }}/nona-database-private/database.nonaenc
           retention-days: 7
           if-no-files-found: error
+      - name: Retrieve this run ciphertext
+        uses: actions/download-artifact@v4
+        with:
+          name: isolated-test-database-${{ github.run_id }}
+          path: ${{ runner.temp }}/nona-database-retrieved
+      - name: Verify retrieved ciphertext without a database connection
+        run: |
+          python scripts/ops/database-backup.py verify --expected-ref mhhtnqfdkyudwyqlmnce --key-file "$RUNNER_TEMP/nona-database-private/backup.key" --output "$RUNNER_TEMP/nona-database-retrieved/database.nonaenc"
       - name: Remove only this job private inputs
         if: always()
         run: |

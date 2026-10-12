@@ -44,6 +44,9 @@ class SafetyTests(unittest.TestCase):
         return SimpleNamespace(returncode=0, stdout=TOC, stderr=b'')
 
     def test_target_and_connection_reject_before_export(self):
+        for value in [self.config, {**self.config, 'user': 'backup_reader'},
+                      {**self.config, 'host': 'aws-0-eu-west-1.pooler.supabase.com', 'user': f'backup_reader.{b.TEST_REF}'}]:
+            self.assertEqual(b.connection(value, b.TEST_REF), value)
         changes = [{'project_ref': 'other'}, {'host': 'db.jzbjpaucgckggumhowns.supabase.co'},
                    {'host': 'attacker.example'}, {'port': 6543}, {'database': 'other'},
                    {'host': 'aws-0-eu-west-1.pooler.supabase.com', 'user': 'postgres.other'},
@@ -106,9 +109,13 @@ class SafetyTests(unittest.TestCase):
         with patch.object(b.subprocess, 'run', side_effect=incomplete), self.assertRaises(b.BackupError):
             b.backup(self.config, KEY, b.TEST_REF, output, 1024, BINARIES)
         self.assertFalse(output.exists())
-        with patch.object(b.subprocess, 'run', side_effect=self.fake_pg), self.assertRaises(b.BackupError):
+        with patch.object(b.subprocess, 'run', side_effect=self.fake_pg), self.assertRaisesRegex(b.BackupError, '^database_export_failed$'):
             b.backup(self.config, KEY, b.TEST_REF, output, 4, BINARIES)
         self.assertFalse(output.exists())
+        (self.root / '.git').mkdir()
+        with patch.object(b.subprocess, 'run') as run, self.assertRaises(b.BackupError):
+            b.backup(self.config, KEY, b.TEST_REF, output, 1024, BINARIES)
+        run.assert_not_called()
 
     def test_client_error_does_not_publish_or_expose_stderr(self):
         with patch.object(b.subprocess, 'run', return_value=SimpleNamespace(returncode=1, stdout=CANARY.encode(), stderr=CANARY.encode())):

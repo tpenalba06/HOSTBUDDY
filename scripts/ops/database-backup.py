@@ -18,6 +18,7 @@ import subprocess
 import tempfile
 import zipfile
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography import x509
 
 TEST_REF = 'mhhtnqfdkyudwyqlmnce'
 MAGIC = b'NONAPG01'
@@ -94,19 +95,40 @@ def clients():
     return found
 
 
-def pg_environment(value, directory):
+def validate_ca(raw):
+    if raw is None:
+        return
+    try:
+        certificates = x509.load_pem_x509_certificates(raw)
+        if not certificates or len(raw) > 20480 or not all(
+                c.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+                for c in certificates):
+            raise ValueError()
+    except Exception:
+        raise BackupError('approved_database_ca_required') from None
+
+
+def pg_environment(value, directory, ca=None):
+    validate_ca(ca)
     def escape(v):
         return str(v).replace('\\', '\\\\').replace(':', '\\:')
     passfile = directory / 'pgpass'
     fd = os.open(passfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     with os.fdopen(fd, 'w') as f:
         f.write(':'.join(escape(value[k]) for k in ['host', 'port', 'database', 'user', 'password']) + '\n')
+    rootcert = 'system'
+    if ca is not None:
+        certfile = directory / 'database-ca.crt'
+        fd = os.open(certfile, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(fd, 'wb') as f:
+            f.write(ca)
+        rootcert = str(certfile)
     # No inherited PG*, TLS overrides, credentials or service files.
     return {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8', 'HOME': str(directory),
             'PGHOST': value['host'], 'PGPORT': '5432', 'PGDATABASE': 'postgres',
             'PGUSER': value['user'], 'PGPASSFILE': str(passfile),
             'PGCONNECT_TIMEOUT': '15', 'PGSSLMODE': 'verify-full',
-            'PGSSLROOTCERT': 'system', 'PGAPPNAME': 'nona-isolated-backup',
+            'PGSSLROOTCERT': rootcert, 'PGAPPNAME': 'nona-isolated-backup',
             'PGOPTIONS': '-c default_transaction_read_only=on -c statement_timeout=300000'}
 
 
@@ -172,8 +194,9 @@ def verify(path, key, expected_ref, binaries):
             'bytes': len(dump), 'data_tables': count, 'restoration_proven': False}
 
 
-def backup(config, key, expected_ref, output, max_bytes, binaries):
+def backup(config, key, expected_ref, output, max_bytes, binaries, ca=None):
     value = connection(config, expected_ref)
+    validate_ca(ca)
     if type(max_bytes) is not int or not 1 <= max_bytes <= LIMIT:
         raise BackupError('backup_limit_invalid')
     output = Path(output).absolute()
@@ -183,7 +206,7 @@ def backup(config, key, expected_ref, output, max_bytes, binaries):
         raise BackupError('private_new_output_required')
     with tempfile.TemporaryDirectory(prefix='nona-db-export-') as temp:
         directory = Path(temp)
-        env = pg_environment(value, directory)
+        env = pg_environment(value, directory, ca)
         dumpfile = directory / 'database.dump'
         def bound_file():
             resource.setrlimit(resource.RLIMIT_FSIZE, (max_bytes, max_bytes))
@@ -215,6 +238,7 @@ def main():
     parser.add_argument('--key-file', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--connection-file')
+    parser.add_argument('--ca-file')
     parser.add_argument('--max-bytes', type=int, default=64 * 1024 * 1024)
     args = parser.parse_args()
     try:
@@ -224,7 +248,9 @@ def main():
         if args.action == 'backup':
             config = json.loads(private_read(args.connection_file, 4096))
             connection(config, args.expected_ref)  # Reject target before any client invocation.
-            result = backup(config, key, args.expected_ref, args.output, args.max_bytes, clients())
+            ca = private_read(args.ca_file, 20480) if args.ca_file else None
+            validate_ca(ca)
+            result = backup(config, key, args.expected_ref, args.output, args.max_bytes, clients(), ca)
         else:
             result = verify(args.output, key, args.expected_ref, clients())
         print(json.dumps({'schema': 'nona.database-backup.v1', 'environment': 'isolated-test', **result}))

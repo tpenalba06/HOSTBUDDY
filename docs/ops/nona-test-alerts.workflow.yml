@@ -3,6 +3,10 @@ name: Nona isolated TEST operational alerts
 on:
   workflow_dispatch:
     inputs:
+      check_notification_channel:
+        type: boolean
+        default: false
+        description: One expected failure to verify owner email channel; no backend calls
       setup_receiver:
         type: boolean
         default: false
@@ -19,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   alerts:
-    if: github.event.repository.private == true && vars.NONA_ISOLATED_OPS_ENABLED == 'true'
+    if: github.event.repository.private == true && vars.NONA_ISOLATED_OPS_ENABLED == 'true' && inputs.check_notification_channel != true
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -80,3 +84,13 @@ jobs:
               (root / name).unlink(missing_ok=True)
           PY
 # One event proof, no public debug endpoint, guest data, Stripe, restore or app deployment.
+  notification_channel:
+    if: github.event.repository.private == true && inputs.check_notification_channel == true
+    permissions: {}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Expected owner notification proof; no backend or financial calls
+        run: |
+          echo '::error title=Nona notification channel proof::Expected notification check only. No application, DB, Auth, Storage or Stripe call. No incident.'
+          exit 1

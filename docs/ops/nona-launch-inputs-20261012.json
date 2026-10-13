@@ -45,7 +45,9 @@
     "test_alert_inbox_count": 1,
     "test_alert_owner_notification_received": true,
     "first_test_database_schedule_observed": false,
-    "lovable_workspace_plan": "pro"
+    "lovable_workspace_plan": "pro",
+    "test_health_scheduled_run": 38369249144,
+    "test_health_alert_inbox_result": "PASS / count=0"
   },
   "required_before_launch": {
     "publication": "explicit approved release and production authorization",
@@ -77,16 +79,31 @@
     "legal agreement acceptance",
     "new subscription or domain purchase"
   ],
-  "commercial_operations_prepared_not_installed": {
-    "workflow": "docs/ops/nona-commercial.workflow.yml",
-    "backup_approval": "authorized=false",
-    "alert_approval": "authorized=false",
-    "live_approval": "false",
-    "source_export_performed": false,
-    "configured_production_secrets": false
-  },
   "verified_starting_head": "ed93345962a14738624e875077739aab8daf60af",
   "receiver_proof_code_head": "40f47a74e9057e35aca1a378e77edfdec22cd8c8",
   "operational_reader_code_head": "afca9eec04fc5081776b02331cf807a06f9d56e4",
-  "private_ops_head": "0359bd787bfb63bcb9e268d5e17031184ff3d6ed"
+  "private_ops_head": "ca24c9991da23e893f19ec6b5e14997330ca5c2d",
+  "commercial_operations": {
+    "authorization": "explicit ops-only 2026-10-13; targeted SQL confirmation received",
+    "workflow_installed": true,
+    "workflow_repository": "tpenalba06/NONA-OPS",
+    "workflow_path": ".github/workflows/commercial.yml",
+    "workflow_checkout": "4073664055727460bea5bc65b672398842ac486e",
+    "scheduled": false,
+    "billing_step": false,
+    "receiver_installed": true,
+    "receiver_rls": true,
+    "receiver_execute_grantees": [
+      "postgres",
+      "service_role"
+    ],
+    "anon_authenticated_denied": true,
+    "synthetic_events_received": 1,
+    "synthetic_receipt_utc": "2026-10-13T11:01:52.181069+00:00",
+    "transport_notification_proven": false,
+    "published_worker_updated": false,
+    "source_export_performed": false,
+    "source_access_blocker": "Lovable Cloud standard interface exposes neither external SQL connection nor service key",
+    "configured_production_secrets": false
+  }
 }

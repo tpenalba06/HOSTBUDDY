@@ -119,5 +119,26 @@
     "manual_exports_on_owner_pc": "owner-reported, not inspected",
     "stripe_live_holder_finalization_after_online": true,
     "production_publication_authorized": false
+  },
+  "native_project_monitoring": {
+    "project_id": "ad0b09fe-b134-491b-8601-9d64d6d27b86",
+    "authorized_on": "2026-10-13",
+    "enabled": true,
+    "frequency": "daily",
+    "local_time": "06:00",
+    "timezone": "Europe/Paris",
+    "runs": "every_time",
+    "first_run_observed": false,
+    "first_expected_local": "2026-10-14T06:00:00+02:00",
+    "schedule_time_is_approximate": true,
+    "credits": "existing_included_credits_authorized_for_monitoring_only",
+    "observed_workspace_balance": 66.9,
+    "observed_daily_build_credits_remaining": 5,
+    "auto_top_up_activated": false,
+    "purchase_or_recharge_performed": false,
+    "manual_check_started": false,
+    "native_alert_receipt_observed": false,
+    "commercial_http_relay_connected": false,
+    "auto_fix_security_issues": false
   }
 }

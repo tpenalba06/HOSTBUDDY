@@ -39,3 +39,11 @@ Une seule preuve du nouveau canal a été lancée via une option dédiée de ale
 Le monitoring intégré Lovable a été examiné dans sa documentation officielle : https://docs.lovable.dev/features/project-monitoring . Il consomme des crédits à chaque contrôle achevé ; il n’a pas été activé. Le transport/lecteur commercial reste non raccordé ; cette preuve du canal ne démontre pas une notification d’erreur du worker commercial.
 
 Décision utilisateur actualisée : notifications et exploitation avant UX/DA ; UX/DA dernière étape avant lancement. Sauvegardes commerciales automatiques et activation Stripe Live reportées après mise en ligne ; exports téléchargés sur son PC déclarés disponibles, contenu non inspecté par l’agent. Aucun GO d’exploitation complet déduit de ces exports. L’interdiction de publier ou d’engager une dépense reste en vigueur.
+
+## Monitoring natif activé — 13 octobre 2026
+
+Après autorisation explicite ciblée des crédits inclus, le monitoring du projet Lovable `ad0b09fe-b134-491b-8601-9d64d6d27b86` a été activé. Configuration enregistrée puis rouverte : **Daily at 6:00**, **Every time**, fuseau **Europe/Paris**. Il contrôle aussi les jours sans changement de code. L’interface indique **No checks run yet** ; première exécution attendue autour du 14 octobre à 6 h Paris, sans garantie d’heure exacte. Aucune exécution manuelle ni panne synthétique supplémentaire.
+
+Solde observé avant activation : 66,9 crédits de workspace et 5 crédits quotidiens disponibles. Usage limité à ce monitoring avec les crédits inclus ; aucun achat, recharge ou changement de plan. La recharge automatique n’était pas activée (interface proposant son activation) ; ce parcours a été fermé sans validation. Auto-fix security issues reste désactivé. Aucun message à l’agent Lovable, déploiement, publication, modification UX/DA ou Stripe.
+
+Cette activation remplace l’état historique « monitoring non activé » ci-dessus. Elle ne prouve encore ni le premier contrôle ni la réception d’une alerte Lovable. Elle ne raccorde pas le transport HTTP/lecteur du récepteur commercial privé. La notification GitHub déjà reçue reste une preuve distincte. Ne pas rejouer les tests acquis : constater le premier cycle planifié et ses résultats lorsque disponibles.

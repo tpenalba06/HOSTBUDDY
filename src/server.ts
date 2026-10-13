@@ -15,8 +15,8 @@ type ServerEntry = {
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
-async function alertServerFailure(env: unknown) {
-  const delivery = await deliverServerFailureAlert(serverAlertConfiguration(env));
+async function alertServerFailure(env: unknown, request: Request) {
+  const delivery = await deliverServerFailureAlert(serverAlertConfiguration(env, request));
   if (delivery === "FAILED" || delivery === "INVALID_CONFIGURATION")
     reportOperationalEvent("operational_alert_failed");
 }
@@ -67,11 +67,11 @@ export default {
       // normalization above already reported its replaced response.
       if (normalized === response && response.status >= 500)
         reportOperationalEvent("server_request_failed");
-      if (normalized.status >= 500) await alertServerFailure(env);
+      if (normalized.status >= 500) await alertServerFailure(env, request);
       return secureResponse(request, normalized);
     } catch {
       reportOperationalEvent("server_request_failed");
-      await alertServerFailure(env);
+      await alertServerFailure(env, request);
       return secureResponse(
         request,
         new Response(renderErrorPage(), {

@@ -13,6 +13,7 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
         : {};
     const destination = config["NONA_OPS_ALERT_URL"];
     const token = config["NONA_OPS_ALERT_TOKEN"];
+    const testRpc = config["NONA_OPS_ALERT_TRANSPORT"] === "supabase-test-rpc";
     if (!destination && !token) return "DISABLED";
     if (
       typeof destination !== "string" ||
@@ -36,6 +37,13 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
     } catch {
       return "INVALID_CONFIGURATION";
     }
+    if (
+      testRpc &&
+      (destination !==
+        "https://mhhtnqfdkyudwyqlmnce.supabase.co/rest/v1/rpc/nona_report_operational_alert" ||
+        !/^sb_secret_[A-Za-z0-9_-]{1,250}$/.test(token))
+    )
+      return "INVALID_CONFIGURATION";
 
     // Bound incident traffic, including failed attempts. This is per worker;
     // the receiver must also enforce a global quota across workers.
@@ -57,13 +65,24 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
             method: "POST",
             redirect: "error",
             signal: abort.signal,
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({
-              schema: "hostbuddy.operations.v1",
-              event: "server_request_failed",
-              level: "error",
-              at: new Date(now).toISOString(),
-            }),
+            headers: testRpc
+              ? { "Content-Type": "application/json", apikey: token }
+              : { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify(
+              testRpc
+                ? {
+                    _schema: "hostbuddy.operations.v1",
+                    _event: "server_request_failed",
+                    _level: "error",
+                    _at: new Date(now).toISOString(),
+                  }
+                : {
+                    schema: "hostbuddy.operations.v1",
+                    event: "server_request_failed",
+                    level: "error",
+                    at: new Date(now).toISOString(),
+                  },
+            ),
           });
           // Never read or log the receiver's body, URL, headers or exception.
           if (response.body) void response.body.cancel().catch(() => {});
@@ -81,7 +100,12 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
 
 export const deliverServerFailureAlert = createServerFailureAlert();
 
-export function serverAlertConfiguration(env: unknown): unknown {
+export function serverAlertConfiguration(env: unknown, request?: Request): unknown {
+  const runtime = (
+    request as
+      (Request & { runtime?: { name?: string; cloudflare?: { env?: unknown } } }) | undefined
+  )?.runtime;
+  if (runtime?.cloudflare || runtime?.name === "cloudflare") return runtime.cloudflare?.env ?? {};
   // Worker bindings take precedence. Never use import.meta.env/VITE values.
   if (
     env &&

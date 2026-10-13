@@ -44,7 +44,8 @@
     "test_alert_transport": "ACKNOWLEDGED",
     "test_alert_inbox_count": 1,
     "test_alert_owner_notification_received": true,
-    "first_test_database_schedule_observed": false
+    "first_test_database_schedule_observed": false,
+    "lovable_workspace_plan": "pro"
   },
   "required_before_launch": {
     "publication": "explicit approved release and production authorization",
@@ -85,5 +86,7 @@
     "configured_production_secrets": false
   },
   "verified_starting_head": "ed93345962a14738624e875077739aab8daf60af",
-  "receiver_proof_code_head": "40f47a74e9057e35aca1a378e77edfdec22cd8c8"
+  "receiver_proof_code_head": "40f47a74e9057e35aca1a378e77edfdec22cd8c8",
+  "operational_reader_code_head": "afca9eec04fc5081776b02331cf807a06f9d56e4",
+  "private_ops_head": "0359bd787bfb63bcb9e268d5e17031184ff3d6ed"
 }

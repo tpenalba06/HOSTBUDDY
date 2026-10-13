@@ -42,6 +42,16 @@ Suite exécutée : transport d’alertes SSR HTTPS préparé et raccordé aux r�
 
 GO n’est pas acquis par un build OK, une sauvegarde TEST ou des variables présentes. Acquis clos : cœur, Billing TEST 7/7, moteur Connect TEST, restauration isolée/147 permissions, mobile 23/23, WebKit 7/7, performance.
 
+## Sortie technique préparée le 13 octobre
+
+HEAD distant de reprise vérifié : ed93345962a14738624e875077739aab8daf60af. Premier cycle HTTP automatique **38323116379** observé à 01:37 Paris, Success/12 s, HTTP 200/UP/BUILD_UNVERIFIED. Nouveau raccordement d’erreurs TEST installé et reçu : run **38326178218**, un seul événement, ACK transport + lecture réelle + notification reçue à 02:14 Paris. La récurrence partage le job santé, sans rejouer sa recette. Budget avant preuve : 83/2000 min, affichage 0/0,5 Go, facturable 0 dollar, arrêt dépenses Yes. Aucun appel génératif Lovable.
+
+Le premier quotidien DB/Auth est prévu le 13 à 06:11 Paris ; au moment de ces travaux, ce créneau n’est pas passé. Pas de nouveau dump manuel pour le simuler. Un calendrier ou un succès manuel ne valent pas ce cycle automatique. L’export chiffré et la récupération acquis restent clos.
+
+Fichiers de sortie : `docs/nona-release-config-20261013.md`, `docs/nona-contract-annex-20261013.md`, `docs/ops/nona-commercial-backup-preparation.md` et `docs/ops/nona-commercial.workflow.yml`. Commandes commerciales séparées et bloquées sans approbations privées ; aucun workflow commercial installé ni secret/source exporté. La seule modification du worker est préparée sur la branche : lecture correcte des bindings hébergés, alertes protégées et désactivées commercialement.
+
+Les décisions humaines restantes sont groupées : accord et accès commerciaux pour sauvegardes/alertes ; vérification Stripe du titulaire et autorisation Live ; KYC du premier vendeur ; validation des coordonnées/TVA/contrats et du DPA effectivement applicable ; enfin autorisation de la version publiée après finition UX/DA. Les choix techniques sont préparés, pas renvoyés à l’utilisateur comme une liste d’implémentation.
+
 Sources officielles utilisées :
 - https://docs.lovable.dev/features/email-auth
 - https://docs.lovable.dev/features/custom-emails

@@ -14,6 +14,7 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
     const destination = config["NONA_OPS_ALERT_URL"];
     const token = config["NONA_OPS_ALERT_TOKEN"];
     const testRpc = config["NONA_OPS_ALERT_TRANSPORT"] === "supabase-test-rpc";
+    const commercialRpc = config["NONA_OPS_ALERT_TRANSPORT"] === "supabase-commercial-rpc";
     if (!destination && !token) return "DISABLED";
     if (
       typeof destination !== "string" ||
@@ -45,6 +46,15 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
     )
       return "INVALID_CONFIGURATION";
 
+    if (
+      commercialRpc &&
+      (config["NONA_COMMERCIAL_OPS_APPROVED"] !== "true" ||
+        destination !==
+          "https://jzbjpaucgckggumhowns.supabase.co/rest/v1/rpc/nona_report_operational_alert" ||
+        !/^sb_secret_[A-Za-z0-9_-]{1,250}$/.test(token))
+    )
+      return "INVALID_CONFIGURATION";
+
     // Bound incident traffic, including failed attempts. This is per worker;
     // the receiver must also enforce a global quota across workers.
     const now = Date.now();
@@ -65,11 +75,12 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
             method: "POST",
             redirect: "error",
             signal: abort.signal,
-            headers: testRpc
-              ? { "Content-Type": "application/json", apikey: token }
-              : { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            headers:
+              testRpc || commercialRpc
+                ? { "Content-Type": "application/json", apikey: token }
+                : { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
             body: JSON.stringify(
-              testRpc
+              testRpc || commercialRpc
                 ? {
                     _schema: "hostbuddy.operations.v1",
                     _event: "server_request_failed",

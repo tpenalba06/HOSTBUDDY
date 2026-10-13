@@ -1,7 +1,6 @@
 {
   "schema": "nona.launch-preparation.v1",
   "state": "PREPARED_NOT_GO",
-  "application_head": "fcd4e6be3fff3b2f702486aadb6bf8de48b8b126",
   "offer": {
     "free_properties": 1,
     "base_properties": 2,
@@ -38,7 +37,14 @@
     "http_external_result": "200 / UP after explicit honest monitor identifier",
     "http_hourly_enabled": true,
     "http_failure_notification_received": true,
-    "published_launch_build_verified": false
+    "published_launch_build_verified": false,
+    "http_scheduled_run": 38323116379,
+    "http_scheduled_result": "Success / 200 / UP / BUILD_UNVERIFIED",
+    "test_alert_delivery_run": 38326178218,
+    "test_alert_transport": "ACKNOWLEDGED",
+    "test_alert_inbox_count": 1,
+    "test_alert_owner_notification_received": true,
+    "first_test_database_schedule_observed": false
   },
   "required_before_launch": {
     "publication": "explicit approved release and production authorization",
@@ -69,5 +75,15 @@
     "new financial/mobile/performance recipe",
     "legal agreement acceptance",
     "new subscription or domain purchase"
-  ]
+  ],
+  "commercial_operations_prepared_not_installed": {
+    "workflow": "docs/ops/nona-commercial.workflow.yml",
+    "backup_approval": "authorized=false",
+    "alert_approval": "authorized=false",
+    "live_approval": "false",
+    "source_export_performed": false,
+    "configured_production_secrets": false
+  },
+  "verified_starting_head": "ed93345962a14738624e875077739aab8daf60af",
+  "receiver_proof_code_head": "40f47a74e9057e35aca1a378e77edfdec22cd8c8"
 }

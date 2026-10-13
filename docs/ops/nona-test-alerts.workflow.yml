@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: tpenalba06/HOSTBUDDY
-          ref: REPLACE_WITH_APPROVED_ALERT_HEAD
+          ref: 40f47a74e9057e35aca1a378e77edfdec22cd8c8
           persist-credentials: false
       - name: Install setup dependency before secrets
         if: inputs.setup_receiver == true

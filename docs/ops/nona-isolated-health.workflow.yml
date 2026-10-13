@@ -15,6 +15,7 @@ on:
         description: Diagnostic only; preview access is restricted
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: isolated-test-service-health
   cancel-in-progress: false
@@ -30,6 +31,12 @@ jobs:
           echo '{"schema":"nona.health.v1","environment":"isolated-test","status":"FAIL","code":"synthetic_health_failure"}'
           exit 1
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: tpenalba06/HOSTBUDDY
+          ref: 40f47a74e9057e35aca1a378e77edfdec22cd8c8
+          path: app
+          persist-credentials: false
       - name: Private TEST input
         env:
           NONA_TEST_API_KEY: ${{ secrets.NONA_TEST_API_KEY }}
@@ -63,6 +70,10 @@ jobs:
           print(json.dumps({'schema':'nona.health.v1','check':'public_demo_http','status':'PASS' if ok else 'FAIL','http':http}))
           raise SystemExit(0 if ok else 1)
           PY
+      - name: Read received TEST operational alerts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 app/scripts/ops/test-alert-inbox.py --api-key-file "$RUNNER_TEMP/nona-health.key"
       - name: Remove only this job temporary key
         if: always()
         run: rm -f "$RUNNER_TEMP/nona-health.key"

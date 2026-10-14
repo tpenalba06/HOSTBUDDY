@@ -6,14 +6,14 @@ export type LegalDocument = {
   sections: { title: string; paragraphs: string[] }[];
 };
 
-export const legalRevision = "12 octobre 2026 — version de travail Nona en français";
+export const legalRevision = "14 octobre 2026 — brouillons à approuver ; dossier privé complété";
 
 export const legalPublicationGaps = [
-  "Éditeur identifié : Tristan Penalba, entrepreneur individuel, SIREN 992856641 / SIRET 99285664100012. Actualité de l’adresse professionnelle historique à confirmer avant publication définitive.",
+  "Éditeur identifié : Tristan Penalba, entrepreneur individuel, SIREN 992856641 / SIRET 99285664100012. Adresse professionnelle confirmée ; intégration depuis le dossier privé après approbation des textes.",
   "Disponibilité du nom Nona et droits de propriété intellectuelle à vérifier avant lancement.",
-  "Actualité de l’e-mail et du téléphone professionnels historiques et utilisation de ce contact pour les données personnelles à confirmer.",
+  "Coordonnées professionnelles reprises des pièces connues dans le dossier privé ; aucune nouvelle confirmation demandée. Publication des textes soumise à approbation.",
   "Entité contractuelle, adresse et téléphone de Lovable Cloud à confirmer sur le contrat d’hébergement avant la publication définitive des mentions.",
-  "Franchise de TVA mentionnée dans les documents de juin 2026 (article 293 B du CGI) : maintien du régime à confirmer pour l’abonnement et la commission, sans modifier les tarifs actés.",
+  "Franchise en base probable sur les faits confirmés : deuxième année, chiffre d’affaires déclaré nul, aucune option volontaire. Vérification fiscale internationale nécessaire pour abonnements et commission ; prix inchangés.",
   "Durées de conservation, procédure d’effacement, prestataires, pays d’hébergement et garanties de transfert.",
   "Conditions commerciales des gestionnaires professionnels, information des voyageurs avant collecte et avant paiement, et accord de sous-traitance RGPD à valider.",
 ];
@@ -30,7 +30,7 @@ export const legalDocuments: LegalDocument[] = [
         paragraphs: [
           "Éditeur : Tristan Penalba, entrepreneur individuel (EI). Nona est son nom commercial pour cette application ; une organisation cliente de conciergerie n’est pas l’éditeur du logiciel.",
           "SIREN : 992856641. SIRET du siège : 99285664100012. L’API publique officielle confirme une entreprise individuelle active et un établissement actif à Nice au 9 octobre 2026 ; le nom et l’adresse détaillée sont non diffusibles dans cette réponse. L’identité de l’éditeur est reprise des documents professionnels et de sa confirmation.",
-          "Directeur de publication : Tristan Penalba. Les coordonnées professionnelles historiques ont été retrouvées ; leur actualité et leur utilisation pour Nona doivent être confirmées avant publication définitive. Adresse, e-mail et téléphone opérationnels ne sont pas encore publiés dans ce brouillon.",
+          "Directeur de publication : Tristan Penalba. Les coordonnées professionnelles ont été établies dans le dossier privé, avec adresse confirmée par l’éditeur. Leur intégration publique attend l’approbation du texte ; aucune nouvelle collecte d’identité n’est nécessaire.",
           "Les documents professionnels de juin 2026 portent la mention « TVA non applicable, article 293 B du CGI ». Cette mention historique ne confirme pas le régime fiscal actuel ; ne pas la présenter comme définitive sans vérification.",
           "Le choix du nom Nona ne vaut ni dépôt ni confirmation de disponibilité d’une marque. Les droits antérieurs doivent être examinés séparément de l’immatriculation de l’éditeur.",
         ],

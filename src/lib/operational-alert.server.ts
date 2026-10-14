@@ -12,9 +12,17 @@ export function createServerFailureAlert(fetcher: typeof fetch = fetch) {
         ? (configuration as Record<string, unknown>)
         : {};
     const destination = config["NONA_OPS_ALERT_URL"];
-    const token = config["NONA_OPS_ALERT_TOKEN"];
     const testRpc = config["NONA_OPS_ALERT_TRANSPORT"] === "supabase-test-rpc";
     const commercialRpc = config["NONA_OPS_ALERT_TRANSPORT"] === "supabase-commercial-rpc";
+    // Reuse the existing server credential only for its own approved backend.
+    // Never derive a destination or use a client/public key as a credential.
+    const token =
+      config["NONA_OPS_ALERT_TOKEN"] ??
+      (commercialRpc &&
+      config["NONA_COMMERCIAL_OPS_APPROVED"] === "true" &&
+      config["SUPABASE_URL"] === "https://jzbjpaucgckggumhowns.supabase.co"
+        ? config["SUPABASE_SERVICE_ROLE_KEY"]
+        : undefined);
     if (!destination && !token) return "DISABLED";
     if (
       typeof destination !== "string" ||

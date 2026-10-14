@@ -47,3 +47,13 @@ Après autorisation explicite ciblée des crédits inclus, le monitoring du proj
 Solde observé avant activation : 66,9 crédits de workspace et 5 crédits quotidiens disponibles. Usage limité à ce monitoring avec les crédits inclus ; aucun achat, recharge ou changement de plan. La recharge automatique n’était pas activée (interface proposant son activation) ; ce parcours a été fermé sans validation. Auto-fix security issues reste désactivé. Aucun message à l’agent Lovable, déploiement, publication, modification UX/DA ou Stripe.
 
 Cette activation remplace l’état historique « monitoring non activé » ci-dessus. Elle ne prouve encore ni le premier contrôle ni la réception d’une alerte Lovable. Elle ne raccorde pas le transport HTTP/lecteur du récepteur commercial privé. La notification GitHub déjà reçue reste une preuve distincte. Ne pas rejouer les tests acquis : constater le premier cycle planifié et ses résultats lorsque disponibles.
+
+## Raccordement préparé avant DA — 14 octobre
+
+Les trois réglages `NONA_OPS_ALERT_TRANSPORT=supabase-commercial-rpc`, URL RPC commerciale exacte, et `NONA_COMMERCIAL_OPS_APPROVED=true` ont été enregistrés dans Cloud > Secrets. L’interface confirme que ces réglages s’appliquent immédiatement à la preview et nécessitent une publication pour la version Live. Aucun secret existant lu, remplacé ou extrait ; aucune nouvelle clé créée. La garde concerne uniquement l’exploitation, jamais Stripe Live.
+
+Le transport peut désormais réutiliser `SUPABASE_SERVICE_ROLE_KEY` du serveur seulement si `SUPABASE_URL` désigne exactement `jzbjpaucgckggumhowns`, le transport commercial est sélectionné et l’accord exploitation est true. L’URL RPC doit aussi correspondre exactement. Un token explicitement vide n’est pas remplacé ; aucune clé publique ni cible TEST ne peut servir de fallback. Deux nouvelles régressions locales passent ; le worker publié n’a pas été mis à jour. Aucun événement synthétique supplémentaire.
+
+Le lecteur GitHub commercial reste inaccessible sans clé commerciale fournie par un mécanisme officiel : cette préparation du serveur ne vaut pas drainage externe ni réception de notification commerciale. Ne pas confondre le monitoring natif quotidien et une alerte serveur temps réel. Monitoring natif toujours activé, No checks run yet avant son premier créneau du 14 octobre vers 6 h Paris.
+
+Premier cycle DB/Auth TEST désormais constaté : run planifié 38391941441, Success, export chiffré puis vérification du ciphertext récupéré sans reconnexion SQL ; durée 1 min 12 s. Archive 623 KB. Cycle médias 38393895951 Success ; HTTP 38464846204 Success ; santé 38471489450 Success. Aucune relance manuelle de ces acquis.

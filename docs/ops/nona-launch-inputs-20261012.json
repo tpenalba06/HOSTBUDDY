@@ -44,7 +44,7 @@
     "test_alert_transport": "ACKNOWLEDGED",
     "test_alert_inbox_count": 1,
     "test_alert_owner_notification_received": true,
-    "first_test_database_schedule_observed": false,
+    "first_test_database_schedule_observed": true,
     "lovable_workspace_plan": "pro",
     "test_health_scheduled_run": 38369249144,
     "test_health_alert_inbox_result": "PASS / count=0",
@@ -53,14 +53,20 @@
     "notification_channel_proof_run": 38395628783,
     "notification_channel_backend_job": "SKIPPED",
     "notification_channel_github_receipt_observed": true,
-    "notification_channel_email_receipt_observed": false
+    "notification_channel_email_receipt_observed": false,
+    "test_database_scheduled_run": 38391941441,
+    "test_database_retrieved_ciphertext_verification": "PASS",
+    "test_media_scheduled_run": 38393895951,
+    "http_latest_scheduled_run": 38464846204,
+    "http_latest_scheduled_result": "Success",
+    "test_health_latest_scheduled_run": 38471489450
   },
   "required_before_launch": {
     "publication": "explicit approved release and production authorization",
     "stripe_platform": "holder completes real verification and agrees; explicit Live authorization",
     "first_merchant": "legitimate holder completes own Live onboarding and receives active payment/payout capabilities",
-    "legal": "current publisher contact and VAT, approved contracts and seller service notices",
-    "operations": "backup/alert coverage of commercial backend; external HTTP probe usable and first automatic TEST DB cycle observed"
+    "legal": "approve private contracts; seller precontractual terms and durable confirmation; Lovable Pro DPA coverage; brand rights and international fiscal treatment",
+    "operations": "publish approved receiver sender code with same-backend server bindings; connect private external alert reader through supported access; scheduled TEST DB cycle now proven; commercial backup provider dependency deferred per owner decision"
   },
   "apply_after_approval": {
     "HOSTBUDDY_APP_URL": "canonical approved origin",
@@ -110,7 +116,16 @@
     "published_worker_updated": false,
     "source_export_performed": false,
     "source_access_blocker": "Lovable Cloud standard interface exposes neither external SQL connection nor service key",
-    "configured_production_secrets": false
+    "configured_production_secrets": false,
+    "preview_alert_configuration_saved": true,
+    "preview_alert_names": [
+      "NONA_OPS_ALERT_TRANSPORT",
+      "NONA_OPS_ALERT_URL",
+      "NONA_COMMERCIAL_OPS_APPROVED"
+    ],
+    "receiver_server_key_reuse_prepared": true,
+    "new_secret_key_created": false,
+    "external_reader_connected": false
   },
   "user_launch_sequence": {
     "operations_notifications_before_visual_finish": true,
@@ -140,5 +155,16 @@
     "native_alert_receipt_observed": false,
     "commercial_http_relay_connected": false,
     "auto_fix_security_issues": false
+  },
+  "pre_da_preparation": {
+    "starting_head": "cd7932397d2a1cd28640f70eaa8684df595a8dd6",
+    "date": "2026-10-14",
+    "legal_private_drafts_completed": true,
+    "legal_approved": false,
+    "visual_changes": false,
+    "ready_for_final_da": true,
+    "commercial_go": false,
+    "generated_lovable_credits_used": 0,
+    "acquired_recipes_rerun": false
   }
 }

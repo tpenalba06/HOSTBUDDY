@@ -34,7 +34,7 @@ describe("optional SSR failure alert", () => {
     expect(await send({ ...config, request: "guest-email", error: "secret-exception" })).toBe(
       "ACKNOWLEDGED",
     );
-    const options = fetcher.mock.calls[0][1];
+    const options = fetcher.mock.calls[0]![1];
     expect(options.redirect).toBe("error");
     expect(JSON.parse(options.body)).toEqual({
       schema: "hostbuddy.operations.v1",
@@ -51,7 +51,7 @@ describe("optional SSR failure alert", () => {
     const result = createServerFailureAlert(fetcher)(config);
     await vi.advanceTimersByTimeAsync(3000);
     expect(await result).toBe("FAILED");
-    expect(fetcher.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(fetcher.mock.calls[0]![1].signal.aborted).toBe(true);
   });
   it("does not propagate receiver errors or acknowledge rejected deliveries", async () => {
     expect(

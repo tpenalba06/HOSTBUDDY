@@ -24,11 +24,11 @@ describe("hosted alert bindings and isolated receiver", () => {
       NONA_OPS_ALERT_TOKEN: "sb_secret_fixture",
     };
     expect(await createServerFailureAlert(fetcher)(config)).toBe("ACKNOWLEDGED");
-    expect(fetcher.mock.calls[0][1].headers).toEqual({
+    expect(fetcher.mock.calls[0]![1].headers).toEqual({
       "Content-Type": "application/json",
       apikey: "sb_secret_fixture",
     });
-    expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({
+    expect(JSON.parse(fetcher.mock.calls[0]![1].body)).toEqual({
       _schema: "hostbuddy.operations.v1",
       _event: "server_request_failed",
       _level: "error",

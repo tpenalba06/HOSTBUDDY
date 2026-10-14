@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppPaymentsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
 import { Route as ApiPublicBillingSyncRouteImport } from './routes/api/public/billing-sync'
 import { Route as ApiPublicCheckoutRouteImport } from './routes/api/public/checkout'
+import { Route as ApiPublicConciergeRouteImport } from './routes/api/public/concierge'
 import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
 import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
@@ -193,6 +194,11 @@ const ApiPublicCheckoutRoute = ApiPublicCheckoutRouteImport.update({
   path: '/api/public/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicConciergeRoute = ApiPublicConciergeRouteImport.update({
+  id: '/api/public/concierge',
+  path: '/api/public/concierge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicFeedbackRoute = ApiPublicFeedbackRouteImport.update({
   id: '/api/public/feedback',
   path: '/api/public/feedback',
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
+  '/api/public/concierge': typeof ApiPublicConciergeRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/app/team': typeof AuthenticatedAppTeamRoute
   '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
+  '/api/public/concierge': typeof ApiPublicConciergeRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/_authenticated/app/team': typeof AuthenticatedAppTeamRoute
   '/api/public/billing-sync': typeof ApiPublicBillingSyncRoute
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
+  '/api/public/concierge': typeof ApiPublicConciergeRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/api/public/billing-sync'
     | '/api/public/checkout'
+    | '/api/public/concierge'
     | '/api/public/feedback'
     | '/api/public/messages'
     | '/api/public/order-status'
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
     | '/app/team'
     | '/api/public/billing-sync'
     | '/api/public/checkout'
+    | '/api/public/concierge'
     | '/api/public/feedback'
     | '/api/public/messages'
     | '/api/public/order-status'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/team'
     | '/api/public/billing-sync'
     | '/api/public/checkout'
+    | '/api/public/concierge'
     | '/api/public/feedback'
     | '/api/public/messages'
     | '/api/public/order-status'
@@ -476,6 +488,7 @@ export interface RootRouteChildren {
   PayTokenRoute: typeof PayTokenRoute
   ApiPublicBillingSyncRoute: typeof ApiPublicBillingSyncRoute
   ApiPublicCheckoutRoute: typeof ApiPublicCheckoutRoute
+  ApiPublicConciergeRoute: typeof ApiPublicConciergeRoute
   ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
   ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
@@ -682,6 +695,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/concierge': {
+      id: '/api/public/concierge'
+      path: '/api/public/concierge'
+      fullPath: '/api/public/concierge'
+      preLoaderRoute: typeof ApiPublicConciergeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/feedback': {
       id: '/api/public/feedback'
       path: '/api/public/feedback'
@@ -806,6 +826,7 @@ const rootRouteChildren: RootRouteChildren = {
   PayTokenRoute: PayTokenRoute,
   ApiPublicBillingSyncRoute: ApiPublicBillingSyncRoute,
   ApiPublicCheckoutRoute: ApiPublicCheckoutRoute,
+  ApiPublicConciergeRoute: ApiPublicConciergeRoute,
   ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,
   ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,

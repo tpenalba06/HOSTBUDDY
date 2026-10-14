@@ -53,6 +53,7 @@ function GuestPage() {
     <div className="hb-guide">
       <GuideView
         guide={guide}
+        conciergeSlug={slug}
         offlineAction={<OfflineSaveButton guide={guide} slug={slug} />}
         onRequest={setServiceId}
         onMessage={() => setMessageOpen(true)}

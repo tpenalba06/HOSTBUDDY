@@ -6,6 +6,7 @@ import { DemoManager } from "./DemoManager";
 import { createVillaMare, demoGuide } from "./villa-mare-fixture";
 import { validStoredDemoProperty } from "./demo-storage";
 import { useI18n } from "@/lib/i18n";
+import { NonaConcierge } from "@/components/guest/NonaConcierge";
 
 export function DemoExperience({ compact = false }: { compact?: boolean }) {
   const { locale, t } = useI18n();
@@ -65,7 +66,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
         ))}
       </div>
       <div
-        className={`demo-frame mx-auto w-full overflow-clip rounded-xl border bg-background shadow-soft ${compact ? "" : "max-w-6xl"}`}
+        className={`demo-frame relative mx-auto w-full overflow-clip rounded-xl border bg-background shadow-soft ${compact ? "" : "max-w-6xl"}`}
       >
         <div
           className={`demo-viewport bg-background text-foreground ${mode === "manager" ? "overflow-visible" : "overflow-x-hidden overflow-y-auto"}`}
@@ -103,6 +104,9 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
             </p>
           )}
         </div>
+      </div>
+      <div hidden={mode !== "guest"} className="relative">
+        <NonaConcierge guide={demoGuide(villa)} demo onContact={() => setMessageOpen(true)} />
       </div>
       <Dialog open={messageOpen} onOpenChange={setMessageOpen}>
         <DialogContent>

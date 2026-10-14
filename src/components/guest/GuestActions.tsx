@@ -2,7 +2,15 @@ import { readBookingConfig, serviceTotalCents } from "@/lib/service-booking";
 import { serviceCopy } from "@/lib/service-copy";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { parseThreadSession, type GuestThread, type GuestThreadSession } from "@/lib/guest-thread";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  publicBookingTransport,
+  type BookingTransport,
+  type BookingPrefill,
+  type BookingReceipt,
+} from "@/lib/service-booking-client";
+import { conciergeCopy } from "@/lib/concierge-copy";
+import { zonedDate, type ConciergeDraft } from "@/lib/concierge";
 import { Check, Send, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
@@ -180,30 +188,129 @@ export function OrderDrawer({
   service: PublicService | undefined;
   onClose: () => void;
 }) {
+  return service ? (
+    <Drawer title={service.name} onClose={onClose}>
+      <ServiceBookingForm slug={slug} service={service} />
+    </Drawer>
+  ) : null;
+}
+export function ServiceBookingForm({
+  slug,
+  service,
+  transport = publicBookingTransport,
+  prefill,
+  onDraftChange,
+  quoteLoader,
+  submitLabel,
+  refreshKey = 0,
+}: {
+  slug: string;
+  service: PublicService | undefined;
+  transport?: BookingTransport;
+  prefill?: BookingPrefill;
+  onDraftChange?: (draft: ConciergeDraft) => void;
+  quoteLoader?: (
+    draft: ConciergeDraft,
+  ) => Promise<{ totalCents: number; revision?: string } | null>;
+  submitLabel?: string;
+  refreshKey?: number;
+}) {
   const { t, locale } = useI18n();
   const c = (key: Parameters<typeof serviceCopy>[1]) => serviceCopy(locale, key);
-  const config = readBookingConfig(service?.bookingConfig);
+  const config = useMemo(() => readBookingConfig(service?.bookingConfig), [service?.bookingConfig]);
+  const hasPrefill = prefill !== undefined;
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(prefill?.quantity ?? 1);
   const [busy, setBusy] = useState(false);
-  const [receipt, setReceipt] = useState<{
-    id: string;
-    amount: number;
-    status: string;
-    paymentStatus?: string;
-  } | null>(null);
+  const [receipt, setReceipt] = useState<BookingReceipt | null>(null);
   const [identity, setIdentity] = useState(() => ({
     requestId: crypto.randomUUID(),
     receiptToken: Array.from(crypto.getRandomValues(new Uint8Array(32)), (x) =>
       x.toString(16).padStart(2, "0"),
     ).join(""),
   }));
-  const [optionId, setOptionId] = useState("");
+  const [optionId, setOptionId] = useState(prefill?.optionId ?? "");
   const [requestedFor, setRequestedFor] = useState("");
   const [details, setDetails] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(!service?.revision);
-  const storageKey = `nona.booking.${slug}.${service?.id}`;
+  const [day, setDay] = useState(prefill?.date ?? "");
+  const [time, setTime] = useState(prefill?.time ?? "");
+  const [serverQuote, setServerQuote] = useState<{
+    key: string;
+    totalCents: number;
+    revision?: string;
+  } | null>(null);
+  const submitLock = useRef(false);
+  const storageKey = `nona.${transport.mode === "demo" ? "demo." : ""}booking.${slug}.${service?.id}`;
+  const quoteDraft: ConciergeDraft = {
+    serviceId: service?.id,
+    quantity,
+    optionId: optionId || null,
+    requestedFor: requestedFor
+      ? config.slots.length
+        ? requestedFor
+        : new Date(requestedFor).toISOString()
+      : null,
+  };
+  const changeRef = useRef(onDraftChange);
+  changeRef.current = onDraftChange;
+  const quoteKey = JSON.stringify(quoteDraft);
+  useEffect(() => {
+    changeRef.current?.({
+      ...JSON.parse(quoteKey),
+      ...(day ? { date: day } : {}),
+      ...(time ? { time } : {}),
+    });
+  }, [quoteKey, day, time]);
+  useEffect(() => {
+    if (prefill?.quantity !== undefined) setQuantity(prefill.quantity);
+    if (prefill?.optionId !== undefined) setOptionId(prefill.optionId ?? "");
+    if (prefill?.date) setDay(prefill.date);
+    if (prefill?.time) setTime(prefill.time);
+    if (prefill?.requestedFor)
+      setRequestedFor(
+        config.slots.length ? prefill.requestedFor : prefill.requestedFor.slice(0, 16),
+      );
+  }, [
+    prefill?.quantity,
+    prefill?.optionId,
+    prefill?.date,
+    prefill?.time,
+    prefill?.requestedFor,
+    config.slots.length,
+  ]);
+  useEffect(() => {
+    if (!hasPrefill || config.slots.length) return;
+    setRequestedFor(day && time ? `${day}T${time}` : "");
+  }, [day, time, hasPrefill, config.slots]);
+  useEffect(() => {
+    if (!hasPrefill || !config.slots.length || !day || !time) return;
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const slot = config.slots.find(
+      (value) =>
+        zonedDate(new Date(value), zone) === day &&
+        new Intl.DateTimeFormat("en-GB", {
+          timeZone: zone,
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(new Date(value)) === time,
+    );
+    setRequestedFor(slot ?? "");
+  }, [day, time, hasPrefill, config.slots]);
+  useEffect(() => {
+    let active = true;
+    setServerQuote(null);
+    if (quoteLoader && !receipt)
+      void quoteLoader(JSON.parse(quoteKey))
+        .then((quote) => {
+          if (active) setServerQuote(quote ? { ...quote, key: quoteKey } : null);
+        })
+        .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [quoteKey, quoteLoader, receipt]);
   useEffect(() => {
     let active = true;
     try {
@@ -214,14 +321,10 @@ export function OrderDrawer({
         /^[a-f0-9-]{36}$/.test(saved.requestId)
       ) {
         setIdentity({ requestId: saved.requestId, receiptToken: saved.receiptToken });
-        if (saved.id) setReceipt({ id: saved.id, amount: saved.amount, status: saved.status });
-        void fetch("/api/public/order-status", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ requestId: saved.requestId, token: saved.receiptToken }),
-        })
-          .then(async (response) => {
-            if (response.ok && active) setReceipt(await response.json());
+        void transport
+          .read({ requestId: saved.requestId, token: saved.receiptToken })
+          .then((value) => {
+            if (value && active) setReceipt(value);
           })
           .catch(() => {});
       }
@@ -231,17 +334,35 @@ export function OrderDrawer({
     return () => {
       active = false;
     };
-  }, [storageKey]);
+  }, [storageKey, transport]);
+  useEffect(() => {
+    if (!receipt?.id) return;
+    const orderId = receipt.id;
+    let active = true;
+    const read = () => {
+      if (document.visibilityState === "hidden") return;
+      void transport
+        .read({ orderId, token: identity.receiptToken })
+        .then((next) => {
+          if (active && next) setReceipt(next);
+        })
+        .catch(() => {});
+    };
+    read();
+    const timer = setInterval(read, 15000);
+    window.addEventListener("focus", read);
+    return () => {
+      active = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", read);
+    };
+  }, [receipt?.id, identity.receiptToken, transport, refreshKey]);
   const refresh = async () => {
     if (!receipt) return;
     try {
-      const response = await fetch("/api/public/order-status", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ orderId: receipt.id, token: identity.receiptToken }),
-      });
-      if (!response.ok) throw new Error();
-      setReceipt(await response.json());
+      const next = await transport.read({ orderId: receipt.id, token: identity.receiptToken });
+      if (!next) throw new Error("unavailable");
+      setReceipt(next);
       setError("");
     } catch {
       setError(t("message.failed"));
@@ -250,7 +371,13 @@ export function OrderDrawer({
 
   const [error, setError] = useState("");
   if (!service) return null;
-  const slots = config.slots.filter((slot) => Date.parse(slot) > Date.now());
+  const slots = config.slots.filter(
+    (slot) =>
+      Date.parse(slot) > Date.now() &&
+      (!prefill ||
+        !day ||
+        zonedDate(new Date(slot), Intl.DateTimeFormat().resolvedOptions().timeZone) === day),
+  );
   let totalCents: number | undefined;
   try {
     totalCents = serviceTotalCents(service.price, quantity, config, optionId || undefined);
@@ -258,9 +385,13 @@ export function OrderDrawer({
     /* Incomplete selection cannot be sent. */
   }
   const validSlot = !config.slots.length || slots.includes(requestedFor);
+  const quoteReady =
+    !quoteLoader ||
+    (!!serverQuote && serverQuote.key === quoteKey && serverQuote.revision === service.revision);
+  if (quoteLoader) totalCents = quoteReady ? serverQuote!.totalCents : undefined;
 
   return (
-    <Drawer title={service.name} onClose={onClose}>
+    <div data-booking-form className="space-y-4">
       {receipt ? (
         <div className="space-y-4" role="status">
           <h3 className="font-semibold">{c("requestReceived")}</h3>
@@ -322,11 +453,27 @@ export function OrderDrawer({
           )}
           {receipt.status === "confirmed" &&
             receipt.paymentStatus &&
-            ["pending", "expired"].includes(receipt.paymentStatus) && (
-              <a className="btn btn-primary w-full" href={`/pay/${identity.receiptToken}`}>
+            ["pending", "expired"].includes(receipt.paymentStatus) &&
+            (transport.mode === "demo" ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (transport.simulatePayment)
+                    void transport.simulatePayment(receipt.id).then(setReceipt);
+                }}
+              >
+                {conciergeCopy(locale).demoPay}
+              </Button>
+            ) : (
+              <a
+                className="btn btn-primary w-full"
+                href={`/pay/${identity.receiptToken}`}
+                target={prefill ? "_blank" : undefined}
+                rel={prefill ? "noreferrer" : undefined}
+              >
                 {t("payments.pay")}
               </a>
-            )}
+            ))}
           {error && <p role="alert">{error}</p>}
           <Button type="button" onClick={() => void refresh()}>
             {c("refresh")}
@@ -337,7 +484,16 @@ export function OrderDrawer({
           className="space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (busy || totalCents === undefined || !termsAccepted || !validSlot) return;
+            if (
+              submitLock.current ||
+              busy ||
+              totalCents === undefined ||
+              !termsAccepted ||
+              !validSlot ||
+              !quoteReady
+            )
+              return;
+            submitLock.current = true;
             setBusy(true);
             setError("");
             try {
@@ -349,10 +505,8 @@ export function OrderDrawer({
               } catch {
                 /* Keep the same in-memory request identity on retry. */
               }
-              const r = await fetch("/api/public/orders", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({
+              const result = {
+                booking: await transport.submit({
                   slug,
                   serviceId: service.id,
                   revision: service.revision,
@@ -370,9 +524,7 @@ export function OrderDrawer({
                   ...identity,
                   website: "",
                 }),
-              });
-              if (!r.ok) throw new Error("unavailable");
-              const result = await r.json();
+              };
               setReceipt(result.booking);
               try {
                 localStorage.setItem(
@@ -389,6 +541,7 @@ export function OrderDrawer({
             } catch {
               setError(t("message.failed"));
             } finally {
+              submitLock.current = false;
               setBusy(false);
             }
           }}
@@ -419,6 +572,20 @@ export function OrderDrawer({
               </select>
             </label>
           )}
+          {!!config.slots.length && prefill && (
+            <label className="block">
+              {conciergeCopy(locale).dateHint}
+              <input
+                className="field"
+                type="date"
+                value={day}
+                onChange={(e) => {
+                  setDay(e.target.value);
+                  setRequestedFor("");
+                }}
+              />
+            </label>
+          )}
           {!!config.slots.length && (
             <label className="block">
               {c("slots")}
@@ -440,7 +607,31 @@ export function OrderDrawer({
               </select>
             </label>
           )}
-          {!config.slots.length && config.requestDate && (
+          {!config.slots.length && config.requestDate && prefill && (
+            <div className="grid grid-cols-2 gap-3">
+              <label>
+                {conciergeCopy(locale).dateHint}
+                <input
+                  className="field"
+                  type="date"
+                  required
+                  value={day}
+                  onChange={(e) => setDay(e.target.value)}
+                />
+              </label>
+              <label>
+                {conciergeCopy(locale).timeHint}
+                <input
+                  className="field"
+                  type="time"
+                  required
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                />
+              </label>
+            </div>
+          )}
+          {!config.slots.length && config.requestDate && !prefill && (
             <label className="block">
               {c("date")}
               <input
@@ -475,6 +666,13 @@ export function OrderDrawer({
               onChange={(e) => setQuantity(Number(e.target.value))}
             />
           </label>
+          {quoteLoader && (
+            <p>
+              {transport.mode === "demo"
+                ? conciergeCopy(locale).demoQuote
+                : conciergeCopy(locale).quote}
+            </p>
+          )}
           <p className="text-xl font-bold">
             {t("order.total")} : {totalCents === undefined ? "—" : (totalCents / 100).toFixed(2)} €
           </p>
@@ -498,11 +696,11 @@ export function OrderDrawer({
             className="w-full"
             disabled={busy || totalCents === undefined || !termsAccepted || !validSlot}
           >
-            {busy ? "…" : t("order.send")}
+            {busy ? "…" : (submitLabel ?? t("order.send"))}
           </Button>
         </form>
       )}
-    </Drawer>
+    </div>
   );
 }
 export function FeedbackDrawer({ slug, onClose }: { slug: string; onClose: () => void }) {

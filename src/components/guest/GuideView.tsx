@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, lazy, Suspense, type ReactNode } from "react";
+const NonaConcierge = lazy(() =>
+  import("./NonaConcierge").then((module) => ({ default: module.NonaConcierge })),
+);
 import {
   ArrowDown,
   ArrowLeft,
@@ -62,6 +65,7 @@ export function GuideView({
   onMessage,
   onFeedback,
   offlineAction,
+  conciergeSlug,
 }: {
   guide: GuideViewData;
   sectionKey?: string | null;
@@ -70,6 +74,7 @@ export function GuideView({
   onMessage?: () => void;
   onFeedback?: () => void;
   offlineAction?: ReactNode;
+  conciergeSlug?: string;
 }) {
   const { locale, t } = useI18n();
   const [localKey, setLocalKey] = useState<string | null>(null);
@@ -429,6 +434,23 @@ export function GuideView({
             </div>
           </div>
         </>
+      )}
+      {conciergeSlug && (
+        <Suspense fallback={null}>
+          <NonaConcierge
+            key={conciergeSlug}
+            guide={guide}
+            slug={conciergeSlug}
+            onContact={
+              guide.messagingEnabled && onMessage
+                ? onMessage
+                : () => {
+                    const target = sections.find((s) => sectionKind(s.key) === "contact");
+                    if (target) go(target.key);
+                  }
+            }
+          />
+        </Suspense>
       )}
       <Dialog open={menu} onOpenChange={setMenu}>
         <DialogContent className="hb-guide hb-guide-menu" aria-describedby={undefined}>

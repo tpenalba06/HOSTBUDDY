@@ -20,6 +20,7 @@ import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.function
 import { DemoPropertyEditor } from "./DemoPropertyEditor";
 import { createDemoProperty, type DemoProperty } from "./demo-property";
 import { villaMareOperations } from "./villa-mare-fixture";
+import { DEMO_BOOKING_EVENT, demoBookingOrders, updateDemoBooking } from "./demo-bookings";
 import { validStoredDemoProperty } from "./demo-storage";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
@@ -98,7 +99,20 @@ export function DemoManager({
   }, [currentProperties, storageKey, restoredStorageKey]);
   const propertyForEditor = currentProperties.find((property) => property.id === selectedProperty);
   const [initialOperations] = useState(() => villaMareOperations(villa));
-  const [orders, setOrders] = useState(initialOperations.orders);
+  const [orders, setOrders] = useState(() => [...initialOperations.orders, ...demoBookingOrders()]);
+  useEffect(() => {
+    const sync = () =>
+      setOrders((current) => {
+        const incoming = demoBookingOrders();
+        return [
+          ...current.filter((row) => !incoming.some((item) => item.id === row.id)),
+          ...incoming,
+        ];
+      });
+    window.addEventListener(DEMO_BOOKING_EVENT, sync);
+    sync();
+    return () => window.removeEventListener(DEMO_BOOKING_EVENT, sync);
+  }, []);
   const [conversations, setConversations] = useState(initialOperations.conversations);
   const [feedback, setFeedback] = useState(initialOperations.feedback);
   const [team, setTeam] = useState(initialOperations.team);
@@ -222,9 +236,10 @@ export function DemoManager({
       <ManagerOrdersScreen
         orders={orders}
         onBack={() => setArea("properties")}
-        onStatusChange={(id, status) =>
-          setOrders((items) => items.map((item) => (item.id === id ? { ...item, status } : item)))
-        }
+        onStatusChange={(id, status) => {
+          updateDemoBooking(id, status);
+          setOrders((items) => items.map((item) => (item.id === id ? { ...item, status } : item)));
+        }}
       />
     );
   } else if (area === "messages") {

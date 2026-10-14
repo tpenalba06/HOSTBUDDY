@@ -11,6 +11,7 @@ import type { GuideViewData } from "@/components/guest/guide-model";
 import { toPublicSections } from "@/components/guest/guide-adapters";
 import { getVillaMare, type GuideData } from "@/components/guest/villaMare";
 import { createDemoProperty, fieldsFromDemoSections, type DemoProperty } from "./demo-property";
+import { readBookingConfig } from "@/lib/service-booking";
 
 export const VILLA_MARE_ID = "demo-villa-mare";
 
@@ -133,7 +134,56 @@ export function createVillaMare(
       name: service.name,
       description: service.desc,
       price: service.price,
-      pricing_type: "fixed",
+      pricing_type: index === 0 ? "per_person" : "fixed",
+      booking_config:
+        index === 0
+          ? {
+              maxQuantity: 10,
+              requestDate: true,
+              instructions: "",
+              seller: data.host,
+              cancellation: {
+                fr: "Démonstration : demande annulable avant confirmation.",
+                en: "Demo: cancel before host confirmation.",
+                es: "Demo: cancelación antes de confirmar.",
+                de: "Demo: Stornierung vor Bestätigung.",
+                it: "Demo: annullamento prima della conferma.",
+                pt: "Demo: cancelar antes da confirmação.",
+              }[locale],
+              options: [
+                {
+                  id: "11111111-1111-4111-8111-111111111111",
+                  label: {
+                    fr: "Classique",
+                    en: "Classic",
+                    es: "Clásico",
+                    de: "Klassisch",
+                    it: "Classico",
+                    pt: "Clássico",
+                  }[locale],
+                  priceCents: 0,
+                },
+                {
+                  id: "22222222-2222-4222-8222-222222222222",
+                  label: {
+                    fr: "Végétarien",
+                    en: "Vegetarian",
+                    es: "Vegetariano",
+                    de: "Vegetarisch",
+                    it: "Vegetariano",
+                    pt: "Vegetariano",
+                  }[locale],
+                  priceCents: 250,
+                },
+              ],
+              slots: [8.5, 9].map((hour) => {
+                const date = new Date();
+                date.setDate(date.getDate() + 1);
+                date.setHours(Math.floor(hour), hour % 1 ? 30 : 0, 0, 0);
+                return date.toISOString();
+              }),
+            }
+          : {},
       is_active: true,
       image_path:
         index === 0 ? data.sectionPhotos["services"]! : data.gallery[index % data.gallery.length]!,
@@ -163,6 +213,8 @@ export function demoGuide(property: DemoProperty): GuideViewData {
         description: service.description,
         price: Number(service.price),
         pricingType: service.pricing_type as "fixed" | "per_person",
+        revision: "2026-10-01T00:00:00.000Z",
+        bookingConfig: readBookingConfig(service.booking_config),
         imagePath: property.media.some((media) => media.storage_path === service.image_path)
           ? service.image_path
           : null,

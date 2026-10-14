@@ -1,0 +1,111 @@
+{
+  "schema": "nona.concierge.v1",
+  "date": "2026-10-15",
+  "base_head": "ef99bf00987af74bd16a4ec9e4ce200794718d0c",
+  "provider": {
+    "mode": "guided",
+    "realAiConnected": false,
+    "modelCalls": 0,
+    "estimatedCostMicros": 0
+  },
+  "tests": {
+    "files": 7,
+    "passed": 26,
+    "new": 17,
+    "existingAffected": 9
+  },
+  "checks": {
+    "lintErrors": 0,
+    "existingLintWarnings": 16,
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "browser": [
+    {
+      "viewport": {
+        "width": 360,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    }
+  ],
+  "endpoint": {
+    "target": "mhhtnqfdkyudwyqlmnce",
+    "status": 200,
+    "mode": "guided",
+    "facts": 1,
+    "cacheControl": "no-store",
+    "usage": {
+      "modelCalls": 0,
+      "estimatedCostMicros": 0
+    }
+  },
+  "financialEngineChanged": false,
+  "migrationsApplied": false,
+  "productionDeployed": false,
+  "lovableGenerationUsed": false,
+  "stripePaymentExecuted": false,
+  "officialMascotAssetsAvailable": false
+}

@@ -97,6 +97,14 @@ export function GuideView({
     (item) => item.key === (sectionKey === undefined ? localKey : sectionKey),
   );
   const cover = guideCover(guide);
+  if (guide.services?.length && !sections.some((item) => sectionKind(item.key) === "services"))
+    sections.push({
+      id: "service-catalog",
+      key: "services",
+      title: t("section.services"),
+      icon: "✨",
+      content: { items: [] },
+    });
   const { services: serviceSection, main, extra } = homeSections(sections);
   const address = guide.sections
     .flatMap((section) => section.content.items ?? [])

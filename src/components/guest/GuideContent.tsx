@@ -228,6 +228,8 @@ export function SectionMedia({
   );
 }
 export type PublicService = {
+  revision?: string;
+  bookingConfig?: import("@/lib/service-booking").BookingConfig;
   id: string;
   name: string;
   description: string;

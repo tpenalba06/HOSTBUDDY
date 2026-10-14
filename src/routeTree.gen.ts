@@ -39,6 +39,7 @@ import { Route as ApiPublicBillingSyncRouteImport } from './routes/api/public/bi
 import { Route as ApiPublicCheckoutRouteImport } from './routes/api/public/checkout'
 import { Route as ApiPublicFeedbackRouteImport } from './routes/api/public/feedback'
 import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messages'
+import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
 import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
 import { Route as ApiPublicPaymentInfoRouteImport } from './routes/api/public/payment-info'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
@@ -202,6 +203,11 @@ const ApiPublicMessagesRoute = ApiPublicMessagesRouteImport.update({
   path: '/api/public/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOrderStatusRoute = ApiPublicOrderStatusRouteImport.update({
+  id: '/api/public/order-status',
+  path: '/api/public/order-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
   id: '/api/public/orders',
   path: '/api/public/orders',
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/api/public/checkout': typeof ApiPublicCheckoutRoute
   '/api/public/feedback': typeof ApiPublicFeedbackRoute
   '/api/public/messages': typeof ApiPublicMessagesRoute
+  '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/order-status'
     | '/api/public/orders'
     | '/api/public/payment-info'
     | '/api/public/stripe-webhook'
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/order-status'
     | '/api/public/orders'
     | '/api/public/payment-info'
     | '/api/public/stripe-webhook'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/api/public/checkout'
     | '/api/public/feedback'
     | '/api/public/messages'
+    | '/api/public/order-status'
     | '/api/public/orders'
     | '/api/public/payment-info'
     | '/api/public/stripe-webhook'
@@ -466,6 +478,7 @@ export interface RootRouteChildren {
   ApiPublicCheckoutRoute: typeof ApiPublicCheckoutRoute
   ApiPublicFeedbackRoute: typeof ApiPublicFeedbackRoute
   ApiPublicMessagesRoute: typeof ApiPublicMessagesRoute
+  ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
   ApiPublicOrdersRoute: typeof ApiPublicOrdersRoute
   ApiPublicPaymentInfoRoute: typeof ApiPublicPaymentInfoRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -683,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/order-status': {
+      id: '/api/public/order-status'
+      path: '/api/public/order-status'
+      fullPath: '/api/public/order-status'
+      preLoaderRoute: typeof ApiPublicOrderStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/orders': {
       id: '/api/public/orders'
       path: '/api/public/orders'
@@ -788,6 +808,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCheckoutRoute: ApiPublicCheckoutRoute,
   ApiPublicFeedbackRoute: ApiPublicFeedbackRoute,
   ApiPublicMessagesRoute: ApiPublicMessagesRoute,
+  ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,
   ApiPublicOrdersRoute: ApiPublicOrdersRoute,
   ApiPublicPaymentInfoRoute: ApiPublicPaymentInfoRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,

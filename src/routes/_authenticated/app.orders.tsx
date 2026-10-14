@@ -10,6 +10,7 @@ const ordersQuery = (orgId: string) =>
     queryKey: ["orders", orgId],
     queryFn: () => listOrders(orgId),
     staleTime: 15_000,
+    refetchInterval: 15_000,
   });
 
 export const Route = createFileRoute("/_authenticated/app/orders")({
@@ -56,10 +57,17 @@ function OrdersPage() {
   });
 
   return (
-    <ManagerOrdersScreen
-      orders={data}
-      onBack={() => nav({ to: "/app" })}
-      onStatusChange={(id, status) => mutation.mutate({ id, status })}
-    />
+    <>
+      {mutation.isError && (
+        <p role="alert" className="rounded-lg bg-warning-soft p-3">
+          La modification a échoué. Le statut enregistré est conservé.
+        </p>
+      )}
+      <ManagerOrdersScreen
+        orders={data}
+        onBack={() => nav({ to: "/app" })}
+        onStatusChange={(id, status) => mutation.mutate({ id, status })}
+      />
+    </>
   );
 }

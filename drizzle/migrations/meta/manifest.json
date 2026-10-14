@@ -92,6 +92,10 @@
     {
       "tag": "0022_paid_billing_capacity",
       "sha256": "04f1140e8ea91911e2a1e140ea99354eeffb51b5355b2da843cc6f0b86de762c"
+    },
+    {
+      "tag": "0023_service_booking_catalog",
+      "sha256": "933296662dc0f83735250170174bd1bf144aa0e7bb67aba601a72ca127e1f347"
     }
   ]
 }

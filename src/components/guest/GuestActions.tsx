@@ -1,3 +1,5 @@
+import { readBookingConfig, serviceTotalCents } from "@/lib/service-booking";
+import { serviceCopy } from "@/lib/service-copy";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { parseThreadSession, type GuestThread, type GuestThreadSession } from "@/lib/guest-thread";
 import { useEffect, useState } from "react";
@@ -178,41 +180,212 @@ export function OrderDrawer({
   service: PublicService | undefined;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const c = (key: Parameters<typeof serviceCopy>[1]) => serviceCopy(locale, key);
+  const config = readBookingConfig(service?.bookingConfig);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [receipt, setReceipt] = useState<{
+    id: string;
+    amount: number;
+    status: string;
+    paymentStatus?: string;
+  } | null>(null);
+  const [identity, setIdentity] = useState(() => ({
+    requestId: crypto.randomUUID(),
+    receiptToken: Array.from(crypto.getRandomValues(new Uint8Array(32)), (x) =>
+      x.toString(16).padStart(2, "0"),
+    ).join(""),
+  }));
+  const [optionId, setOptionId] = useState("");
+  const [requestedFor, setRequestedFor] = useState("");
+  const [details, setDetails] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(!service?.revision);
+  const storageKey = `nona.booking.${slug}.${service?.id}`;
+  useEffect(() => {
+    let active = true;
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+      if (
+        saved &&
+        /^[a-f0-9]{64}$/.test(saved.receiptToken) &&
+        /^[a-f0-9-]{36}$/.test(saved.requestId)
+      ) {
+        setIdentity({ requestId: saved.requestId, receiptToken: saved.receiptToken });
+        if (saved.id) setReceipt({ id: saved.id, amount: saved.amount, status: saved.status });
+        void fetch("/api/public/order-status", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ requestId: saved.requestId, token: saved.receiptToken }),
+        })
+          .then(async (response) => {
+            if (response.ok && active) setReceipt(await response.json());
+          })
+          .catch(() => {});
+      }
+    } catch {
+      /* Persistence is optional, never an excuse to retry a payment. */
+    }
+    return () => {
+      active = false;
+    };
+  }, [storageKey]);
+  const refresh = async () => {
+    if (!receipt) return;
+    try {
+      const response = await fetch("/api/public/order-status", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ orderId: receipt.id, token: identity.receiptToken }),
+      });
+      if (!response.ok) throw new Error();
+      setReceipt(await response.json());
+      setError("");
+    } catch {
+      setError(t("message.failed"));
+    }
+  };
+
   const [error, setError] = useState("");
   if (!service) return null;
+  const slots = config.slots.filter((slot) => Date.parse(slot) > Date.now());
+  let totalCents: number | undefined;
+  try {
+    totalCents = serviceTotalCents(service.price, quantity, config, optionId || undefined);
+  } catch {
+    /* Incomplete selection cannot be sent. */
+  }
+  const validSlot = !config.slots.length || slots.includes(requestedFor);
+
   return (
     <Drawer title={service.name} onClose={onClose}>
-      {sent ? (
-        <Success text={t("order.sent")} onClose={onClose} />
+      {receipt ? (
+        <div className="space-y-4" role="status">
+          <h3 className="font-semibold">{c("requestReceived")}</h3>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setReceipt(null);
+              setIdentity({
+                requestId: crypto.randomUUID(),
+                receiptToken: Array.from(crypto.getRandomValues(new Uint8Array(32)), (x) =>
+                  x.toString(16).padStart(2, "0"),
+                ).join(""),
+              });
+              setError("");
+              setName("");
+              setContact("");
+              setTermsAccepted(false);
+              try {
+                localStorage.removeItem(storageKey);
+              } catch {
+                /* Local storage can be disabled. */
+              }
+            }}
+          >
+            {c("newRequest")}
+          </Button>
+          <p>
+            {c("reference")} : {receipt.id.slice(0, 8)}
+          </p>
+          <p>
+            {c(
+              (
+                {
+                  pending: "pending",
+                  confirmed: "confirmed",
+                  completed: "completed",
+                  cancelled: "cancelled",
+                } as const
+              )[receipt.status as "pending"] ?? "pending",
+            )}
+          </p>
+          <p>{Number(receipt.amount).toFixed(2)} €</p>
+          <p>
+            {receipt.paymentStatus === "paid"
+              ? t("payments.success")
+              : receipt.paymentStatus === "refunded"
+                ? t("payments.refunded")
+                : receipt.paymentStatus === "partially_refunded"
+                  ? t("payments.partialRefund")
+                  : receipt.paymentStatus === "failed"
+                    ? t("payments.failed")
+                    : receipt.paymentStatus === "expired"
+                      ? c("expired")
+                      : c("notPaid")}
+          </p>
+          {receipt.status === "cancelled" && receipt.paymentStatus === "paid" && (
+            <p>{c("cancelNote")}</p>
+          )}
+          {receipt.status === "confirmed" &&
+            receipt.paymentStatus &&
+            ["pending", "expired"].includes(receipt.paymentStatus) && (
+              <a className="btn btn-primary w-full" href={`/pay/${identity.receiptToken}`}>
+                {t("payments.pay")}
+              </a>
+            )}
+          {error && <p role="alert">{error}</p>}
+          <Button type="button" onClick={() => void refresh()}>
+            {c("refresh")}
+          </Button>
+        </div>
       ) : (
         <form
           className="space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
+            if (busy || totalCents === undefined || !termsAccepted || !validSlot) return;
             setBusy(true);
             setError("");
             try {
+              try {
+                localStorage.setItem(
+                  storageKey,
+                  JSON.stringify({ ...identity, schema: "nona.booking-receipt.v1" }),
+                );
+              } catch {
+                /* Keep the same in-memory request identity on retry. */
+              }
               const r = await fetch("/api/public/orders", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
                 body: JSON.stringify({
                   slug,
                   serviceId: service.id,
+                  revision: service.revision,
                   name,
                   contact,
                   quantity,
-                  requestedFor: null,
+                  requestedFor: requestedFor
+                    ? config.slots.length
+                      ? requestedFor
+                      : new Date(requestedFor).toISOString()
+                    : null,
+                  optionId: optionId || null,
+                  details,
+                  termsAccepted,
+                  ...identity,
                   website: "",
                 }),
               });
               if (!r.ok) throw new Error("unavailable");
-              setSent(true);
+              const result = await r.json();
+              setReceipt(result.booking);
+              try {
+                localStorage.setItem(
+                  storageKey,
+                  JSON.stringify({
+                    ...result.booking,
+                    ...identity,
+                    schema: "nona.booking-receipt.v1",
+                  }),
+                );
+              } catch {
+                /* Sending still succeeds without local storage. */
+              }
             } catch {
               setError(t("message.failed"));
             } finally {
@@ -220,33 +393,111 @@ export function OrderDrawer({
             }
           }}
         >
-          <p className="rounded-xl bg-warning-soft p-3 text-sm">{t("order.notice")}</p>
+          {service.imagePath && (
+            <img src={service.imagePath} alt={service.name} className="w-full rounded-xl" />
+          )}
+          <p>{service.description}</p>
+          <p className="rounded-xl bg-warning-soft p-3 text-sm">{c("notPaid")}</p>
+          {config.seller && <p className="whitespace-pre-line">{config.seller}</p>}
+          {config.cancellation && <p className="whitespace-pre-line">{config.cancellation}</p>}
+          {config.instructions && <p className="whitespace-pre-line">{config.instructions}</p>}
+          {!!config.options.length && (
+            <label className="block">
+              {c("options")}
+              <select
+                className="field"
+                required
+                value={optionId}
+                onChange={(e) => setOptionId(e.target.value)}
+              >
+                <option value="">{c("choose")}</option>
+                {config.options.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label} (+{(option.priceCents / 100).toFixed(2)} €)
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {!!config.slots.length && (
+            <label className="block">
+              {c("slots")}
+              <select
+                className="field"
+                required
+                value={requestedFor}
+                onChange={(e) => setRequestedFor(e.target.value)}
+              >
+                <option value="">{c("choose")}</option>
+                {slots.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {new Intl.DateTimeFormat(locale, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(new Date(slot))}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {!config.slots.length && config.requestDate && (
+            <label className="block">
+              {c("date")}
+              <input
+                className="field"
+                type="datetime-local"
+                required
+                value={requestedFor}
+                onChange={(e) => setRequestedFor(e.target.value)}
+              />
+            </label>
+          )}
+          <label className="block">
+            {c("details")}
+            <textarea
+              className="field"
+              maxLength={1000}
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+            />
+          </label>
           <Field label={t("form.name")} value={name} onChange={setName} required />
-          <Field
-            label={`${t("form.contact")} (${t("common.optional")})`}
-            value={contact}
-            onChange={setContact}
-          />
+          <Field label={c("contactRequired")} required value={contact} onChange={setContact} />
           <label className="block">
             <span className="mb-1 block font-semibold">{t("form.quantity")}</span>
             <input
               className="field"
               type="number"
               min={1}
-              max={20}
+              max={config.maxQuantity}
+              required
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
             />
           </label>
           <p className="text-xl font-bold">
-            {t("order.total")} : {(service.price * quantity).toFixed(2)} €
+            {t("order.total")} : {totalCents === undefined ? "—" : (totalCents / 100).toFixed(2)} €
           </p>
           {error && (
             <p role="alert" className="rounded-lg bg-warning-soft p-3">
               {error}
             </p>
           )}
-          <Button className="w-full" disabled={busy}>
+          {service.revision && (
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                required
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+              />
+              {config.seller || config.cancellation ? c("terms") : c("notPaid")}
+            </label>
+          )}
+          <Button
+            className="w-full"
+            disabled={busy || totalCents === undefined || !termsAccepted || !validSlot}
+          >
             {busy ? "…" : t("order.send")}
           </Button>
         </form>

@@ -420,6 +420,10 @@ export type Database = {
       }
       orders: {
         Row: {
+          booking_details?: Json
+          booking_request_id?: string | null
+          guest_receipt_hash?: string | null
+
           created_at: string
           guest_contact: string | null
           guest_name: string | null
@@ -434,6 +438,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          booking_details?: Json
+          booking_request_id?: string | null
+          guest_receipt_hash?: string | null
+
           created_at?: string
           guest_contact?: string | null
           guest_name?: string | null
@@ -448,6 +456,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          booking_details?: Json
+          booking_request_id?: string | null
+          guest_receipt_hash?: string | null
+
           created_at?: string
           guest_contact?: string | null
           guest_name?: string | null
@@ -1199,6 +1211,11 @@ export type Database = {
       }
       services: {
         Row: {
+          booking_config?: Json
+          property_ids?: string[] | null
+          image_paths?: Json
+          deleted_at?: string | null
+
           created_at: string
           description: string
           id: string
@@ -1212,6 +1229,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          booking_config?: Json
+          property_ids?: string[] | null
+          image_paths?: Json
+          deleted_at?: string | null
+
           created_at?: string
           description?: string
           id?: string
@@ -1225,6 +1247,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          booking_config?: Json
+          property_ids?: string[] | null
+          image_paths?: Json
+          deleted_at?: string | null
+
           created_at?: string
           description?: string
           id?: string
@@ -1412,6 +1439,14 @@ export type Database = {
         }
         Returns: string
       }
+      submit_service_booking: {
+        Args: { _slug: string; _service: string; _name: string; _contact: string; _quantity: number; _requested_for: string | null; _fingerprint: string; _request_id: string; _receipt_hash: string; _option?: string | null; _details?: string; _terms?: boolean; _revision?: string }
+        Returns: Json
+      }
+      read_service_booking: { Args: { _order: string; _receipt_hash: string }; Returns: Json }
+      read_service_booking_request: { Args: { _request: string; _receipt_hash: string }; Returns: Json }
+      service_order_payment_states: { Args: { _org: string }; Returns: Json }
+      save_service_catalog: { Args: { _org: string; _property: string; _service: string; _values: Json }; Returns: Json }
       submit_guest_order: {
         Args: {
           _contact: string

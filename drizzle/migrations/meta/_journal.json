@@ -162,6 +162,13 @@
       "when": 1791231753003,
       "tag": "0022_paid_billing_capacity",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791231753004,
+      "tag": "0023_service_booking_catalog",
+      "breakpoints": true
     }
   ]
 }

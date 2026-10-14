@@ -52,6 +52,7 @@ export function ManagerShell({
   onSignOut,
   embedded = false,
   viewKey,
+  pendingOrders = 0,
 }: {
   children: ReactNode;
   orgName: string;
@@ -61,6 +62,7 @@ export function ManagerShell({
   onSignOut?: () => void;
   embedded?: boolean;
   viewKey?: string;
+  pendingOrders?: number;
 }) {
   const { t } = useI18n();
   const [more, setMore] = useState(false);
@@ -68,7 +70,12 @@ export function ManagerShell({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const operational: NavItem[] = [
     { id: "messages", to: "/app/messages", label: t("nav.messages"), icon: MessageCircle },
-    { id: "orders", to: "/app/orders", label: t("nav.orders"), icon: ClipboardList },
+    {
+      id: "orders",
+      to: "/app/orders",
+      label: `${t("nav.orders")}${pendingOrders ? ` (${pendingOrders})` : ""}`,
+      icon: ClipboardList,
+    },
     { id: "feedback", to: "/app/feedback", label: t("nav.feedback"), icon: Star },
   ];
   const management: NavItem[] = [

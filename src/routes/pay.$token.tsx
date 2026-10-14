@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { serviceCopy } from "@/lib/service-copy";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { Logo } from "@/components/shared/Logo";
@@ -35,6 +36,7 @@ function PaymentPage() {
         status: string;
         name: string;
         canPay: boolean;
+        bookingTerms?: { seller: string; cancellation: string; optionLabel: string };
       };
     },
   });
@@ -55,6 +57,29 @@ function PaymentPage() {
                 currency: summary.data.currency,
               }).format(summary.data.amountCents / 100)}
             </p>
+            {["failed", "expired", "refunded", "partially_refunded"].includes(
+              summary.data.status,
+            ) && (
+              <p role="status" className="mt-4">
+                {summary.data.status === "expired"
+                  ? serviceCopy(locale, "expired")
+                  : t(
+                      summary.data.status === "failed"
+                        ? "payments.failed"
+                        : summary.data.status === "refunded"
+                          ? "payments.refunded"
+                          : "payments.partialRefund",
+                    )}
+              </p>
+            )}
+            {summary.data.canPay && <p className="mt-4">{serviceCopy(locale, "paymentPending")}</p>}
+            {summary.data.bookingTerms && (
+              <div className="mt-4 space-y-3 whitespace-pre-line">
+                <p>{summary.data.bookingTerms.optionLabel}</p>
+                <p>{summary.data.bookingTerms.seller}</p>
+                <p>{summary.data.bookingTerms.cancellation}</p>
+              </div>
+            )}
             {summary.data.status === "paid" && (
               <p role="status" className="mt-4">
                 {t("payments.success")}
@@ -67,6 +92,19 @@ function PaymentPage() {
           <p role="alert" className="mt-4">
             {t("payments.unavailable")}
           </p>
+        )}
+        {summary.data && (
+          <button
+            type="button"
+            className="btn btn-secondary mt-4 w-full"
+            disabled={summary.isFetching}
+            onClick={() => {
+              setError(false);
+              void summary.refetch();
+            }}
+          >
+            {t("payments.refresh")}
+          </button>
         )}
         <button
           className="btn btn-primary mt-6 w-full"

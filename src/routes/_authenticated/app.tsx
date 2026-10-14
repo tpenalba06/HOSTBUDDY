@@ -31,6 +31,19 @@ function AppLayout() {
     refetchInterval: 60_000,
     retry: 2,
   });
+  const pendingOrders = useQuery({
+    queryKey: ["pending-service-orders", org.id],
+    queryFn: async () => {
+      const result = await supabase
+        .from("orders")
+        .select("id", { head: true, count: "exact" })
+        .eq("organization_id", org.id)
+        .eq("status", "pending");
+      if (result.error) throw new Error("unavailable");
+      return result.count ?? 0;
+    },
+    refetchInterval: 30_000,
+  });
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
@@ -38,7 +51,12 @@ function AppLayout() {
     nav({ to: "/auth", search: { mode: "login" }, replace: true });
   };
   return (
-    <ManagerShell orgName={org.name} role={org.role} onSignOut={signOut}>
+    <ManagerShell
+      pendingOrders={pendingOrders.data ?? 0}
+      orgName={org.name}
+      role={org.role}
+      onSignOut={signOut}
+    >
       <Outlet />
     </ManagerShell>
   );

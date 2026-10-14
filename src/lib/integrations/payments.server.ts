@@ -592,21 +592,41 @@ export async function createOrderPaymentLink(org: string, orderId: string) {
   }
   return { url: `${appOrigin()}/pay/${token}` };
 }
+async function bookingPaymentFallback(token: string): Promise<Payment | null> {
+  const order = checked(
+    await paymentDb
+      .from("orders")
+      .select("id,organization_id")
+      .eq("guest_receipt_hash", createHash("sha256").update(token).digest("hex"))
+      .gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString())
+      .maybeSingle(),
+  );
+  if (!order) return null;
+  return checked(
+    await paymentDb
+      .from("order_payments")
+      .select("*")
+      .eq("order_id", order.id)
+      .eq("organization_id", order.organization_id)
+      .maybeSingle(),
+  ) as Payment | null;
+}
 export async function paymentSummary(token: string) {
-  const payment = checked(
+  const directPayment = checked(
     await paymentDb
       .from("order_payments")
       .select("order_id,amount_cents,currency,status,expires_at")
       .eq("token_hash", createHash("sha256").update(token).digest("hex"))
       .maybeSingle(),
   );
+  const payment = directPayment ?? (await bookingPaymentFallback(token));
   if (!payment || !payment.order_id || Date.parse(payment.expires_at) < Date.now())
     throw new Error("payment_link_unavailable");
   const order = required(
     checked(
       await paymentDb
         .from("orders")
-        .select("status,services(name)")
+        .select("status,services(name),booking_details")
         .eq("id", payment.order_id)
         .single(),
     ),
@@ -616,17 +636,32 @@ export async function paymentSummary(token: string) {
     currency: payment.currency,
     status: payment.status,
     name: order.services?.name ?? "",
+    ...(order.booking_details &&
+    typeof order.booking_details === "object" &&
+    !Array.isArray(order.booking_details) &&
+    (order.booking_details["seller"] ||
+      order.booking_details["cancellation"] ||
+      order.booking_details["optionLabel"])
+      ? {
+          bookingTerms: {
+            seller: String(order.booking_details["seller"] ?? ""),
+            cancellation: String(order.booking_details["cancellation"] ?? ""),
+            optionLabel: String(order.booking_details["optionLabel"] ?? ""),
+          },
+        }
+      : {}),
     canPay: order.status === "confirmed" && ["pending", "expired"].includes(payment.status),
   };
 }
 export async function checkoutForToken(token: string) {
-  const payment = checked(
+  const directPayment = checked(
     await paymentDb
       .from("order_payments")
       .select("*")
       .eq("token_hash", createHash("sha256").update(token).digest("hex"))
       .maybeSingle(),
   );
+  const payment = directPayment ?? (await bookingPaymentFallback(token));
   if (
     !payment ||
     !payment.order_id ||

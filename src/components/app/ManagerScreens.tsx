@@ -1,3 +1,5 @@
+import { serviceCopy } from "@/lib/service-copy";
+import type { Json } from "@/integrations/supabase/types";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
@@ -52,6 +54,11 @@ export type ManagerMetrics = {
 };
 
 export type ManagerOrder = {
+  booking_request_id?: string | null;
+  quantity?: number;
+  guest_contact?: string | null;
+  booking_details?: Json;
+  order_payments?: { status: string }[] | null;
   id: string;
   status: "pending" | "confirmed" | "completed" | "cancelled";
   requested_for: string | null;
@@ -490,6 +497,15 @@ export function ManagerOrdersScreen({
   today.setHours(0, 0, 0, 0);
   const groups = [
     {
+      title: serviceCopy(locale, "pastOrders"),
+      items: orders.filter(
+        (x) =>
+          x.status !== "completed" &&
+          x.status !== "cancelled" &&
+          new Date(x.requested_for ?? x.created_at) < today,
+      ),
+    },
+    {
       title: t("orders.today"),
       items: orders.filter(
         (x) =>
@@ -573,6 +589,49 @@ export function ManagerOrdersScreen({
                     </span>
                     <strong>{Number(order.total_amount).toFixed(2)} €</strong>
                   </div>
+                  {order.guest_contact && <p className="mt-3 break-words">{order.guest_contact}</p>}
+                  {order.quantity && (
+                    <p>
+                      {t("form.quantity")} : {order.quantity}
+                    </p>
+                  )}
+                  {order.booking_details &&
+                    typeof order.booking_details === "object" &&
+                    !Array.isArray(order.booking_details) && (
+                      <div className="mt-2 space-y-2">
+                        {["optionLabel", "details", "cancellation"].map(
+                          (key) =>
+                            typeof (order.booking_details as Record<string, Json>)[key] ===
+                              "string" && (
+                              <p key={key} className="whitespace-pre-line">
+                                {String((order.booking_details as Record<string, Json>)[key])}
+                              </p>
+                            ),
+                        )}
+                      </div>
+                    )}
+                  {order.order_payments?.[0] && (
+                    <p className="mt-2">
+                      {t(
+                        order.order_payments[0].status === "paid"
+                          ? "payments.paid"
+                          : order.order_payments[0].status === "refunded"
+                            ? "payments.refunded"
+                            : order.order_payments[0].status === "partially_refunded"
+                              ? "payments.partialRefund"
+                              : order.order_payments[0].status === "failed"
+                                ? "payments.failed"
+                                : "payments.pending",
+                      )}
+                    </p>
+                  )}
+                  {order.order_payments?.some((payment) =>
+                    ["paid", "partially_refunded"].includes(payment.status),
+                  ) && (
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {serviceCopy(locale, "cancelNote")}
+                    </p>
+                  )}
                   {order.status !== "completed" && order.status !== "cancelled" && (
                     <div className="mt-4 grid gap-2 @sm:grid-cols-2">
                       {order.status === "pending" ? (
@@ -586,6 +645,13 @@ export function ManagerOrdersScreen({
                       ) : (
                         <Button
                           className="min-h-12"
+                          disabled={
+                            Number(order.total_amount) > 0 &&
+                            !!order.booking_request_id &&
+                            !["paid", "partially_refunded"].includes(
+                              order.order_payments?.[0]?.status ?? "",
+                            )
+                          }
                           onClick={() => onStatusChange(order.id, "completed")}
                         >
                           <PackageCheck />

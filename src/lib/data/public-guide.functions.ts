@@ -68,6 +68,8 @@ export interface PublicGuide {
     description: string;
     price: number;
     pricingType: "fixed" | "per_person";
+    revision?: string;
+    bookingConfig?: import("@/lib/service-booking").BookingConfig;
     imagePath?: string | null;
   }[];
   review?: {

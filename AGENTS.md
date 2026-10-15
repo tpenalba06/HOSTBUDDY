@@ -29,3 +29,4 @@
 - Organization roles are authoritative in membership rows: owners manage team and financial summaries, admins edit content and settings, and members have read-only property plus operational access.
 - Authenticated and demo manager experiences share `ManagerShell`; demo navigation uses local adapters so its responsive structure cannot drift from production.
 - Public backend URL/publishable key have a build-time fallback in `vite.config.ts` because `.env` is untracked and absent from published builds.
+- Nona's guided transport and shared booking form remain authoritative; AI Elements provide presentation only, so UI polish cannot activate a model or change transactional behavior.

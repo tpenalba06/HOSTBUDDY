@@ -4,21 +4,27 @@
   bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 45;
   color: var(--foreground);
+  font-family: var(--font-sans);
 }
 .nona-concierge[data-demo] {
   position: absolute;
 }
 .nona-launcher {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 12px 18px;
-  border: 1px solid var(--border);
+  min-height: 52px;
+  padding: 12px 20px;
+  gap: 10px;
   border-radius: 28px;
-  background: var(--card, white);
-  box-shadow: 0 4px 20px #0002;
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+  font-size: 16px;
   font-weight: 600;
+}
+.nona-launcher svg {
+  color: var(--success);
+  width: 22px;
+  height: 22px;
 }
 .nona-launcher img {
   width: 48px;
@@ -27,106 +33,132 @@
 }
 .nona-panel {
   position: absolute;
-  bottom: 64px;
+  bottom: 68px;
   right: 0;
-  width: min(400px, calc(100vw - 32px));
-  height: min(680px, calc(100dvh - 112px));
+  width: min(420px, calc(100vw - 32px));
+  height: min(700px, calc(100dvh - 112px));
   max-width: calc(100vw - 32px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--background, white);
-  box-shadow: 0 8px 32px #0003;
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow-phone);
 }
 .nona-panel[hidden] {
   display: none;
 }
 .nona-concierge[data-demo] .nona-panel {
-  height: min(540px, calc(100dvh - 160px));
+  height: min(580px, calc(100dvh - 160px));
 }
 .nona-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px;
+  padding: 16px;
   border-bottom: 1px solid var(--border);
+  background: var(--background);
 }
 .nona-header h2 {
-  font-size: 17px;
+  font-size: 22px;
+  line-height: 1.2;
   font-weight: 600;
 }
 .nona-header p {
-  font-size: 12px;
-  opacity: 0.8;
-  max-width: 290px;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
 }
-.nona-header button,
-.nona-composer button {
-  min-width: 44px;
-  min-height: 44px;
+.nona-header button {
+  flex-shrink: 0;
 }
 .nona-content {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 12px;
   overflow-wrap: anywhere;
 }
-.nona-bubble {
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  border-radius: 12px;
-  background: var(--muted, #f3f4f3);
-  white-space: pre-line;
-  font-size: 14px;
+.nona-content-inner {
+  gap: 0;
+  padding: 18px 16px;
+  overscroll-behavior: contain;
 }
-.nona-user {
-  margin-left: 24px;
-  border: 1px solid var(--border);
-  background: var(--card, white);
+.nona-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.nona-bubble {
+  max-width: 100%;
+  white-space: pre-line;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.nona-bubble > div {
+  font-size: 16px;
+  line-height: 1.65;
+}
+.nona-user > div {
+  background: var(--ink);
+  color: var(--ink-foreground);
+  border-radius: 8px;
 }
 .nona-bubble blockquote {
   margin-top: 10px;
-  padding-left: 10px;
-  border-left: 2px solid currentColor;
+  padding: 10px 12px;
+  border-left: 3px solid var(--success);
+  background: var(--success-soft);
+  color: var(--foreground);
 }
 .nona-bubble small {
   display: block;
-  opacity: 0.75;
+  font-size: 12px;
+  color: var(--muted-foreground);
 }
 .nona-quick {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  min-height: 44px;
-  margin: 4px 0 10px;
-  font-size: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  min-height: 48px;
+  margin: 4px 0 14px;
+  font-size: 16px;
+  white-space: normal;
 }
-.nona-service-card,
-.nona-booking-card {
+.nona-service-card {
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: var(--background);
+}
+.nona-booking-card {
+  padding: 16px 0;
+  margin-bottom: 14px;
+  border-top: 2px solid var(--success);
 }
 .nona-service-card img {
   width: 100%;
-  max-height: 140px;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 .nona-service-card h3,
 .nona-booking-card h3 {
   font-weight: 600;
+  font-size: 22px;
   margin: 8px 0;
 }
 .nona-service-card p {
-  margin: 6px 0;
-  font-size: 14px;
+  margin: 8px 0;
+  font-size: 16px;
+  line-height: 1.55;
+}
+.nona-select {
+  width: 100%;
+  white-space: normal;
+  margin-top: 8px;
 }
 .nona-booking-card input,
 .nona-booking-card select,
@@ -138,27 +170,59 @@
 .nona-booking-card .grid > label {
   min-width: 0;
 }
-.nona-composer {
-  display: flex;
-  gap: 8px;
-  padding: 10px;
-  border-top: 1px solid var(--border);
+.nona-booking-card label {
+  line-height: 1.5;
 }
-.nona-composer input {
+.nona-composer {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+.nona-composer > [data-slot="input-group"] {
+  background: var(--card);
+  border-color: var(--input);
+}
+.nona-composer textarea {
   min-width: 0;
-  flex: 1;
-  padding: 8px;
+  min-height: 64px;
+  max-height: 120px;
+  padding: 12px;
   font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  line-height: 1.5;
+  color: var(--foreground);
+}
+.nona-composer-footer {
+  justify-content: flex-end;
+  padding: 0 8px 8px;
+}
+.nona-composer-footer button {
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
 }
 .nona-panel :focus-visible,
 .nona-launcher:focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
 @media (max-width: 430px) {
   .nona-panel {
     width: calc(100vw - 32px);
+  }
+  .nona-header {
+    padding: 14px;
+  }
+  .nona-header h2 {
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nona-concierge *,
+  .nona-concierge *::before,
+  .nona-concierge *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

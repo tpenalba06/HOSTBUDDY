@@ -203,6 +203,7 @@ export function ServiceBookingForm({
   quoteLoader,
   submitLabel,
   refreshKey = 0,
+  compact = false,
 }: {
   slug: string;
   service: PublicService | undefined;
@@ -214,6 +215,7 @@ export function ServiceBookingForm({
   ) => Promise<{ totalCents: number; revision?: string } | null>;
   submitLabel?: string;
   refreshKey?: number;
+  compact?: boolean;
 }) {
   const { t, locale } = useI18n();
   const c = (key: Parameters<typeof serviceCopy>[1]) => serviceCopy(locale, key);
@@ -549,112 +551,136 @@ export function ServiceBookingForm({
           {service.imagePath && (
             <img src={service.imagePath} alt={service.name} className="w-full rounded-xl" />
           )}
+          {compact && (
+            <p>
+              {quantity} · {day} {time} · {config.options.find((o) => o.id === optionId)?.label}
+            </p>
+          )}
           <p>{service.description}</p>
           <p className="rounded-xl bg-warning-soft p-3 text-sm">{c("notPaid")}</p>
-          {config.seller && <p className="whitespace-pre-line">{config.seller}</p>}
-          {config.cancellation && <p className="whitespace-pre-line">{config.cancellation}</p>}
-          {config.instructions && <p className="whitespace-pre-line">{config.instructions}</p>}
-          {!!config.options.length && (
-            <label className="block">
-              {c("options")}
-              <select
-                className="field"
-                required
-                value={optionId}
-                onChange={(e) => setOptionId(e.target.value)}
-              >
-                <option value="">{c("choose")}</option>
-                {config.options.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label} (+{(option.priceCents / 100).toFixed(2)} €)
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {!!config.slots.length && prefill && (
-            <label className="block">
-              {conciergeCopy(locale).dateHint}
-              <input
-                className="field"
-                type="date"
-                value={day}
-                onChange={(e) => {
-                  setDay(e.target.value);
-                  setRequestedFor("");
-                }}
-              />
-            </label>
-          )}
-          {!!config.slots.length && (
-            <label className="block">
-              {c("slots")}
-              <select
-                className="field"
-                required
-                value={requestedFor}
-                onChange={(e) => setRequestedFor(e.target.value)}
-              >
-                <option value="">{c("choose")}</option>
-                {slots.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {new Intl.DateTimeFormat(locale, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(slot))}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {!config.slots.length && config.requestDate && prefill && (
-            <div className="grid grid-cols-2 gap-3">
-              <label>
+          <details open={!compact}>
+            <summary hidden={!compact}>
+              {
+                {
+                  fr: "Détails, conditions et modifications",
+                  en: "Details, terms and changes",
+                  es: "Detalles, condiciones y cambios",
+                  de: "Details, Bedingungen und Änderungen",
+                  it: "Dettagli, condizioni e modifiche",
+                  pt: "Detalhes, condições e alterações",
+                }[locale]
+              }
+            </summary>
+            {config.seller && <p className="whitespace-pre-line">{config.seller}</p>}
+            {config.cancellation && <p className="whitespace-pre-line">{config.cancellation}</p>}
+            {config.instructions && <p className="whitespace-pre-line">{config.instructions}</p>}
+            {!!config.options.length && (
+              <label className="block">
+                {c("options")}
+                <select
+                  className="field"
+                  required
+                  value={optionId}
+                  onChange={(e) => setOptionId(e.target.value)}
+                >
+                  <option value="">{c("choose")}</option>
+                  {config.options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label} (+{(option.priceCents / 100).toFixed(2)} €)
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {!!config.slots.length && prefill && (
+              <label className="block">
                 {conciergeCopy(locale).dateHint}
                 <input
                   className="field"
                   type="date"
-                  required
                   value={day}
-                  onChange={(e) => setDay(e.target.value)}
+                  onChange={(e) => {
+                    setDay(e.target.value);
+                    setRequestedFor("");
+                  }}
                 />
               </label>
-              <label>
-                {conciergeCopy(locale).timeHint}
+            )}
+            {!!config.slots.length && (
+              <label className="block">
+                {c("slots")}
+                <select
+                  className="field"
+                  required
+                  value={requestedFor}
+                  onChange={(e) => setRequestedFor(e.target.value)}
+                >
+                  <option value="">{c("choose")}</option>
+                  {slots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {new Intl.DateTimeFormat(locale, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(slot))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {!config.slots.length && config.requestDate && prefill && (
+              <div className="grid grid-cols-2 gap-3">
+                <label>
+                  {conciergeCopy(locale).dateHint}
+                  <input
+                    className="field"
+                    type="date"
+                    required
+                    value={day}
+                    onChange={(e) => setDay(e.target.value)}
+                  />
+                </label>
+                <label>
+                  {conciergeCopy(locale).timeHint}
+                  <input
+                    className="field"
+                    type="time"
+                    required
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
+            {!config.slots.length && config.requestDate && !prefill && (
+              <label className="block">
+                {c("date")}
                 <input
                   className="field"
-                  type="time"
+                  type="datetime-local"
                   required
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
+                  value={requestedFor}
+                  onChange={(e) => setRequestedFor(e.target.value)}
                 />
               </label>
-            </div>
-          )}
-          {!config.slots.length && config.requestDate && !prefill && (
+            )}
             <label className="block">
-              {c("date")}
-              <input
+              {c("details")}
+              <textarea
                 className="field"
-                type="datetime-local"
-                required
-                value={requestedFor}
-                onChange={(e) => setRequestedFor(e.target.value)}
+                maxLength={1000}
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
               />
             </label>
-          )}
-          <label className="block">
-            {c("details")}
-            <textarea
-              className="field"
-              maxLength={1000}
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-            />
-          </label>
-          <Field label={t("form.name")} value={name} onChange={setName} required />
+          </details>
+          <Field
+            label={compact && locale === "fr" ? "Ton nom" : t("form.name")}
+            value={name}
+            onChange={setName}
+            required
+          />
           <Field label={c("contactRequired")} required value={contact} onChange={setContact} />
-          <label className="block">
+          <label className="block" hidden={compact}>
             <span className="mb-1 block font-semibold">{t("form.quantity")}</span>
             <input
               className="field"

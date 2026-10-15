@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
-import { conciergeRequestSchema, guidedProposal, validateConciergeTurn } from "./concierge";
+import { conciergeRequestSchema } from "./concierge";
+import { runConciergeModel } from "./concierge-model.server";
 import type { PublicGuide } from "./data/public-guide.functions";
 import type { Database } from "@/integrations/supabase/types";
 import { readPublicJson } from "./public-json";
@@ -46,17 +47,33 @@ export async function conciergeResponse(request: Request) {
     if (error) throw new Error("unavailable");
     if (!data) return Response.json({ error: "guide_unavailable" }, { status: 404, headers });
     const guide = data as unknown as PublicGuide;
-    const turn = validateConciergeTurn(parsed.data, guide, guidedProposal(parsed.data, guide));
+    const turn = await runConciergeModel(parsed.data, guide, fingerprint);
     // Reuse the same property-scoped media signer as the public guide. No media
     // URL, service ID or facts supplied by the browser/provider are trusted.
     const resolved = await resolvePublishedMedia(
-      { ...guide, sections: [], services: turn.services },
+      {
+        ...guide,
+        sections: guide.sections.filter(
+          (s) => s.key.split("-")[0] === "places" && turn.places.length > 0,
+        ),
+        services: turn.services,
+      },
       async (paths) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         return supabaseAdmin.storage.from("guide-media").createSignedUrls(paths, 900);
       },
     );
-    return Response.json({ ...turn, services: resolved.services ?? [] }, { headers });
+    const places = turn.places.map((place) => {
+      const section = resolved.sections.find((s) =>
+        (s.content.entries ?? []).some((e) => e.title === place.title),
+      );
+      const entry = section?.content.entries?.find((e) => e.title === place.title);
+      const image = section?.media?.find(
+        (m) => m.type === "image" && entry?.mediaIds?.includes(m.id),
+      )?.url;
+      return { ...place, ...(image ? { image } : {}) };
+    });
+    return Response.json({ ...turn, places, services: resolved.services ?? [] }, { headers });
   } catch {
     return Response.json({ error: "concierge_unavailable" }, { status: 503, headers });
   }

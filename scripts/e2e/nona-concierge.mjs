@@ -32,26 +32,30 @@ page.on("request", (request) => {
 try {
   await page.goto(base.href, { waitUntil: "networkidle", timeout: 30000 });
   await page.getByRole("button", { name: "Discuter avec Nona", exact: true }).click();
-  const panel = page.getByRole("dialog", { name: "Nona, votre concierge" });
-  await panel
-    .getByRole("textbox", { name: "Votre question ou votre envie…" })
-    .fill("Bonjour Nona, un petit-déjeuner demain pour 3 personnes");
-  await panel.getByRole("button", { name: "Envoyer", exact: true }).click();
-  await panel
-    .getByText("Quantité", { exact: true })
-    .waitFor({ timeout: 10000 })
-    .catch(() => {});
+  const panel = page.getByRole("dialog", { name: "Nona, ta concierge" });
+  const send = async (text) => {
+    await panel.getByRole("textbox", { name: "Ta question ou ton envie…" }).fill(text);
+    await panel.getByRole("button", { name: "Envoyer", exact: true }).click();
+    await page.waitForFunction(
+      () => document.querySelector(".nona-composer textarea")?.value === "",
+    );
+  };
+  await send("Je voudrais un petit-déjeuner");
+  assert.equal(await panel.locator("[data-booking-form]").count(), 0);
+  await send("Trois");
+  await send("demain");
+  await send("vers 9 h");
+  await send("Classique");
+  await panel.locator("[data-booking-form]").waitFor();
   assert.equal(await panel.locator('input[type="number"]').inputValue(), "3");
-  const selects = panel.locator("select");
-  await selects.nth(0).selectOption("11111111-1111-4111-8111-111111111111");
-  await selects.nth(1).selectOption({ index: 1 });
-  await panel.getByRole("textbox", { name: "Votre nom", exact: true }).fill("Voyageur TEST Nona");
+  await panel.getByRole("textbox", { name: "Ton nom", exact: true }).fill("Voyageur TEST Nona");
   await panel
-    .getByRole("textbox", { name: /Votre e-mail ou téléphone/ })
+    .getByRole("textbox", { name: /Ton e-mail ou téléphone/ })
     .fill("nona-test@example.invalid");
   await panel.getByRole("checkbox").check();
+  await page.screenshot({ path: join(destination, `concierge-${width}.png`) });
   await panel.getByText("Total demandé : 75.00 €", { exact: true }).waitFor();
-  await panel.getByRole("textbox", { name: "Votre question ou votre envie…" }).fill("oui");
+  await panel.getByRole("textbox", { name: "Ta question ou ton envie…" }).fill("oui");
   await panel.getByRole("button", { name: "Envoyer", exact: true }).click();
   await page.waitForTimeout(100);
   const countOrders = () =>
@@ -82,7 +86,7 @@ try {
   await page.getByRole("tab", { name: "Voyageur", exact: true }).click();
   await page.getByRole("button", { name: "Discuter avec Nona", exact: true }).click();
   await panel
-    .getByRole("textbox", { name: "Votre question ou votre envie…" })
+    .getByRole("textbox", { name: "Ta question ou ton envie…" })
     .fill("Où en est mon petit-déjeuner ?");
   await panel.getByRole("button", { name: "Envoyer", exact: true }).click();
   await panel.getByRole("button", { name: "Simuler le paiement TEST" }).click();

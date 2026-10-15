@@ -4,7 +4,7 @@ import type { Locale } from "./i18n";
  * Single source of Nona's voice for the guided engine AND any future model adapter.
  * Bump the version whenever tone, rules or examples change (tests pin it).
  */
-export const NONA_PERSONALITY_VERSION = "nona-voice-2026-10-15.1";
+export const NONA_PERSONALITY_VERSION = "nona-voice-2026-10-15.2";
 
 export type NonaReplyKey =
   | "welcome"
@@ -48,10 +48,7 @@ const fr: Voice = {
     "Ohh, un petit moment de détente ! 💆 Tu as bien raison.",
     "Un peu de douceur, ça ne se refuse pas ! 💆 Je regarde ça avec toi.",
   ],
-  service: [
-    "Avec plaisir ! Je prépare ta demande.",
-    "Bonne idée ! On regarde ça ensemble.",
-  ],
+  service: ["Avec plaisir ! Je prépare ta demande.", "Bonne idée ! On regarde ça ensemble."],
   services: [
     "Voici ce que ton hôte propose. Choisis ce qui te fait envie ! ✨",
     "Regarde un peu ces petites douceurs proposées par ton hôte 😊",
@@ -63,15 +60,24 @@ const fr: Voice = {
     "Allez hop, tout le monde connecté ! 📶 Voici ce qu’indique ton livret :",
     "Le Wi-Fi, c’est par ici ! 📶 D’après ton livret :",
   ],
-  arrival: ["Pour ton arrivée, voici ce qu’indique ton livret 🔑", "Ton arrivée, c’est noté ! 🔑 D’après ton livret :"],
-  departure: ["Déjà le départ ? Voici ce qu’indique ton livret :", "Pour ton départ, d’après ton livret :"],
+  arrival: [
+    "Pour ton arrivée, voici ce qu’indique ton livret 🔑",
+    "Ton arrivée, c’est noté ! 🔑 D’après ton livret :",
+  ],
+  departure: [
+    "Déjà le départ ? Voici ce qu’indique ton livret :",
+    "Pour ton départ, d’après ton livret :",
+  ],
   italian: [
     "Mamma mia ! 🍕 Une envie d’Italie ? Voici les adresses italiennes que ton hôte recommande :",
   ],
   italianNone: [
     "Mamma mia ! 🍕 Je n’ai pas d’adresse italienne recommandée par ton hôte. Voici les bonnes adresses du livret, ou demande-lui directement.",
   ],
-  places: ["Voici les bonnes adresses que ton hôte recommande 😋", "Ton hôte a de bonnes idées, regarde :"],
+  places: [
+    "Voici les bonnes adresses que ton hôte recommande 😋",
+    "Ton hôte a de bonnes idées, regarde :",
+  ],
   fact: ["Voici ce qu’indique ton livret :"],
   emergency: [
     "Je suis désolée, je comprends que ce soit stressant. Contacte ton gestionnaire tout de suite avec les coordonnées ci-dessous. En cas de danger, appelle le 112.",
@@ -82,20 +88,21 @@ const fr: Voice = {
   ],
   askQuantity: ["Tu prévois pour combien de personnes ?", "C’est pour combien de gourmands ? 😊"],
   askDate: ["Ce serait pour quel jour ?"],
-  askTime: ["Et pour quelle heure ? Choisis un créneau :", "Tu préfères quel créneau ?"],
+  askTime: ["Et à quelle heure ça te ferait plaisir ?", "Tu préfères quelle heure ?"],
   askOption: ["Quelle formule te ferait plaisir ?", "Tu choisis quelle formule ?"],
-  slotUnavailable: [
-    "Ce créneau n’est pas proposé, désolée ! Voici ceux qui sont disponibles :",
-  ],
+  slotUnavailable: ["Ce créneau n’est pas proposé, désolée ! Voici ceux qui sont disponibles :"],
   ready: [
     "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
   ],
-  tracking: ["Voici le suivi de ta demande. Seul le serveur confirme son statut."],
+  tracking: ["Regardons où en est ta demande."],
 };
 
 const en: Voice = {
   welcome: ["Hello! 👋 How can I help you?"],
-  breakfast: ["Mmm, yummy! 🥐 I’ll get that ready for you.", "A good breakfast, great idea! ☕ Let me prepare it."],
+  breakfast: [
+    "Mmm, yummy! 🥐 I’ll get that ready for you.",
+    "A good breakfast, great idea! ☕ Let me prepare it.",
+  ],
   massage: ["Ooh, a little relaxation! 💆 You deserve it."],
   service: ["With pleasure! I’ll prepare your request."],
   services: ["Here’s what your host offers. Pick what tempts you! ✨"],
@@ -139,7 +146,9 @@ const es: Voice = {
   wifi: ["¡Todos conectados! 📶 Tu guía indica:"],
   arrival: ["Para tu llegada, tu guía indica 🔑"],
   departure: ["Para tu salida, tu guía indica:"],
-  italian: ["¡Mamma mia! 🍕 ¿Antojo de Italia? Estos son los italianos que recomienda tu anfitrión:"],
+  italian: [
+    "¡Mamma mia! 🍕 ¿Antojo de Italia? Estos son los italianos que recomienda tu anfitrión:",
+  ],
   italianNone: [
     "¡Mamma mia! 🍕 Tu anfitrión no ha recomendado ningún italiano. Aquí tienes las direcciones de la guía, o pregúntale.",
   ],
@@ -149,7 +158,9 @@ const es: Voice = {
     "Lo siento, entiendo que es estresante. Contacta ahora con tu gestor con los datos de abajo. Si hay peligro, llama al 112.",
   ],
   contact: ["¡Claro! Así puedes contactar con tu anfitrión:"],
-  unknown: ["No encuentro esa información en tu guía y prefiero no inventar. Tu gestor podrá ayudarte."],
+  unknown: [
+    "No encuentro esa información en tu guía y prefiero no inventar. Tu gestor podrá ayudarte.",
+  ],
   askQuantity: ["¿Para cuántas personas?"],
   askDate: ["¿Para qué día sería?"],
   askTime: ["¿Y a qué hora? Elige un horario:"],
@@ -173,7 +184,9 @@ const de: Voice = {
   wifi: ["Alle online! 📶 Laut deinem Gästebuch:"],
   arrival: ["Zu deiner Anreise steht im Gästebuch 🔑"],
   departure: ["Zu deiner Abreise steht im Gästebuch:"],
-  italian: ["Mamma mia! 🍕 Lust auf Italien? Diese italienischen Adressen empfiehlt dein Gastgeber:"],
+  italian: [
+    "Mamma mia! 🍕 Lust auf Italien? Diese italienischen Adressen empfiehlt dein Gastgeber:",
+  ],
   italianNone: [
     "Mamma mia! 🍕 Dein Gastgeber hat kein italienisches Lokal empfohlen. Hier sind die Tipps aus dem Gästebuch – oder frag ihn direkt.",
   ],
@@ -183,7 +196,9 @@ const de: Voice = {
     "Das tut mir leid, das ist sicher stressig. Kontaktiere sofort deinen Verwalter mit den Angaben unten. Bei Gefahr ruf die 112 an.",
   ],
   contact: ["Natürlich! So erreichst du deinen Gastgeber:"],
-  unknown: ["Das finde ich nicht in deinem Gästebuch, und ich rate lieber nicht. Dein Verwalter hilft dir gern."],
+  unknown: [
+    "Das finde ich nicht in deinem Gästebuch, und ich rate lieber nicht. Dein Verwalter hilft dir gern.",
+  ],
   askQuantity: ["Für wie viele Personen?"],
   askDate: ["Für welchen Tag?"],
   askTime: ["Und um wie viel Uhr? Wähle einen Termin:"],
@@ -217,7 +232,9 @@ const it: Voice = {
     "Mi dispiace, capisco che sia stressante. Contatta subito il tuo gestore con i recapiti qui sotto. In caso di pericolo chiama il 112.",
   ],
   contact: ["Certo! Ecco come contattare il tuo host:"],
-  unknown: ["Non trovo questa informazione nella tua guida e preferisco non inventare. Il tuo gestore potrà aiutarti."],
+  unknown: [
+    "Non trovo questa informazione nella tua guida e preferisco non inventare. Il tuo gestore potrà aiutarti.",
+  ],
   askQuantity: ["Per quante persone?"],
   askDate: ["Per quale giorno?"],
   askTime: ["E a che ora? Scegli un orario:"],
@@ -241,7 +258,9 @@ const pt: Voice = {
   wifi: ["Todos ligados! 📶 O teu guia indica:"],
   arrival: ["Para a tua chegada, o guia indica 🔑"],
   departure: ["Para a tua saída, o guia indica:"],
-  italian: ["Mamma mia! 🍕 Desejo de Itália? Estes são os italianos que o teu anfitrião recomenda:"],
+  italian: [
+    "Mamma mia! 🍕 Desejo de Itália? Estes são os italianos que o teu anfitrião recomenda:",
+  ],
   italianNone: [
     "Mamma mia! 🍕 O teu anfitrião não recomendou nenhum italiano. Aqui tens as moradas do guia, ou pergunta-lhe.",
   ],
@@ -251,7 +270,9 @@ const pt: Voice = {
     "Lamento, percebo que seja stressante. Contacta já o teu gestor com os dados abaixo. Em caso de perigo, liga 112.",
   ],
   contact: ["Claro! Assim podes contactar o teu anfitrião:"],
-  unknown: ["Não encontro essa informação no teu guia e prefiro não inventar. O teu gestor pode ajudar."],
+  unknown: [
+    "Não encontro essa informação no teu guia e prefiro não inventar. O teu gestor pode ajudar.",
+  ],
   askQuantity: ["Para quantas pessoas?"],
   askDate: ["Para que dia seria?"],
   askTime: ["E a que horas? Escolhe um horário:"],

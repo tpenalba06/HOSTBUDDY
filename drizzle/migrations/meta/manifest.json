@@ -96,6 +96,10 @@
     {
       "tag": "0023_service_booking_catalog",
       "sha256": "933296662dc0f83735250170174bd1bf144aa0e7bb67aba601a72ca127e1f347"
+    },
+    {
+      "tag": "0024_concierge_budget",
+      "sha256": "824c87b28ea8033a318d98e52de056f6ea736802ef863d75f837fc54f629938f"
     }
   ]
 }

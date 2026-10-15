@@ -169,6 +169,13 @@
       "when": 1791231753004,
       "tag": "0023_service_booking_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791231753005,
+      "tag": "0024_concierge_budget",
+      "breakpoints": true
     }
   ]
 }

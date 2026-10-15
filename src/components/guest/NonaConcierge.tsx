@@ -14,6 +14,7 @@ import {
 } from "@/lib/concierge";
 import { readBookingConfig } from "@/lib/service-booking";
 import { nonaAssets } from "@/lib/nona-assets";
+import { nonaLine } from "@/lib/nona-personality";
 import { demoBookingTransport } from "@/components/demo/demo-bookings";
 import { ServiceBookingForm } from "./GuestActions";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ type Message = {
   role: "user" | "assistant";
   text: string;
   facts?: ConciergeTurn["facts"];
+  places?: ConciergeTurn["places"];
 };
 export function NonaConcierge({
   guide,
@@ -135,6 +137,10 @@ export function NonaConcierge({
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [services, setServices] = useState<ConciergeService[]>([]);
+  const [choices, setChoices] = useState<ConciergeTurn["choices"]>([]);
+  const [lastMode, setLastMode] = useState<ConciergeTurn["mode"]>("guided");
+  const savedDrafts = useRef<ConciergeDraft[]>([]);
+  const conversationId = useRef(crypto.randomUUID());
   const [selected, setSelected] = useState<ConciergeService | null>(null);
   const [prefill, setPrefill] = useState<ConciergeDraft>({});
   const [busy, setBusy] = useState(false);
@@ -159,6 +165,9 @@ export function NonaConcierge({
         message: text,
         draft: current,
         history,
+        savedDrafts: savedDrafts.current,
+        conversationId: conversationId.current,
+        requestId: crypto.randomUUID(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         website: "",
       });
@@ -195,7 +204,7 @@ export function NonaConcierge({
     const values = {
       ...next,
       serviceId: service.id,
-      ...(switching ? { optionId: null, requestedFor: null } : {}),
+      ...(switching && next.serviceId !== service.id ? { optionId: null, requestedFor: null } : {}),
     };
     draft.current = values;
     setPrefill(values);
@@ -221,6 +230,11 @@ export function NonaConcierge({
   }, [conversationKey, guide.services]);
   const persistSelection = (value: ConciergeDraft) => {
     draft.current = value;
+    if (value.serviceId)
+      savedDrafts.current = [
+        ...savedDrafts.current.filter((d) => d.serviceId !== value.serviceId),
+        value,
+      ].slice(-4);
     try {
       sessionStorage.setItem(conversationKey, JSON.stringify({ draft: value, open }));
     } catch {
@@ -258,14 +272,24 @@ export function NonaConcierge({
             role: "assistant" as const,
             text: turn.tracking && !selected ? c.emptyTracking : turn.text,
             facts: turn.facts,
+            places: turn.places,
           },
         ].slice(-12),
       );
-      draft.current = turn.draft;
+      if (draft.current.serviceId)
+        savedDrafts.current = [
+          ...savedDrafts.current.filter((d) => d.serviceId !== draft.current.serviceId),
+          draft.current,
+        ].slice(-4);
+      persistSelection(turn.draft);
       setServices(turn.services);
+      setChoices(turn.choices);
+      setLastMode(turn.mode);
       if (turn.tracking) setRefreshKey((key) => key + 1);
       const onlyService = turn.services.length === 1 ? turn.services[0] : undefined;
-      if (onlyService) select(onlyService, turn.draft);
+      if (onlyService && (turn.nextStep === "ready" || selected?.id === onlyService.id))
+        select(onlyService, turn.draft);
+      else if (onlyService && selected?.id !== onlyService.id) setSelected(null);
       setMessage("");
     } catch {
       setError(c.error);
@@ -342,7 +366,7 @@ export function NonaConcierge({
           )}
           <div>
             <h2>{c.title}</h2>
-            <p>{demo ? c.demo : c.mode}</p>
+            <p>{demo ? c.demo : lastMode === "ai" ? "Nona · IA" : c.mode}</p>
           </div>
           <Button
             variant="ghost"
@@ -373,7 +397,7 @@ export function NonaConcierge({
                 <MessageContent>
                   <p className="nona-property">{guide.name}</p>
                   <p>{c.greeting.replace("{property}", guide.name)}</p>
-                  <MessageResponse>{c.welcome}</MessageResponse>
+                  <MessageResponse>{nonaLine(locale, "welcome")}</MessageResponse>
                 </MessageContent>
               </ChatMessageView>
               {messages.map((item) => (
@@ -392,6 +416,28 @@ export function NonaConcierge({
                       <blockquote key={index}>
                         <strong>{fact.title}</strong>
                         {fact.original && <small>{c.original}</small>}
+                        {fact.copyValue && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              void navigator.clipboard
+                                ?.writeText(fact.copyValue!)
+                                .catch(() => setError(c.error));
+                            }}
+                          >
+                            {
+                              {
+                                fr: "Copier le mot de passe",
+                                en: "Copy password",
+                                es: "Copiar contraseña",
+                                de: "Passwort kopieren",
+                                it: "Copia password",
+                                pt: "Copiar palavra-passe",
+                              }[locale]
+                            }
+                          </Button>
+                        )}
                         {fact.text.length > 500 ? (
                           <>
                             <p>
@@ -407,10 +453,46 @@ export function NonaConcierge({
                         )}
                       </blockquote>
                     ))}
+                    {item.places?.map((place, index) => (
+                      <article className="nona-service-card" key={index}>
+                        {place.image && <img src={place.image} alt={place.title} loading="lazy" />}
+                        <h3>{place.title}</h3>
+                        <p>{place.text}</p>
+                        <p>{place.address}</p>
+                        {place.mapUrl && (
+                          <a href={place.mapUrl} target="_blank" rel="noreferrer">
+                            {
+                              {
+                                fr: "Itinéraire",
+                                en: "Directions",
+                                es: "Cómo llegar",
+                                de: "Route",
+                                it: "Indicazioni",
+                                pt: "Como chegar",
+                              }[locale]
+                            }
+                          </a>
+                        )}
+                      </article>
+                    ))}
                   </MessageContent>
                 </ChatMessageView>
               ))}
             </div>
+            {choices.length > 0 && (
+              <div className="nona-suggestions" aria-label={c.choose}>
+                {choices.map((choice, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => void send(choice.message)}
+                  >
+                    {choice.label}
+                  </Button>
+                ))}
+              </div>
+            )}
             <div className="nona-suggestions">
               {suggestions.map(({ label, query, icon: Icon }) => (
                 <Button
@@ -453,7 +535,7 @@ export function NonaConcierge({
                     type="button"
                     variant="outline"
                     className="nona-select"
-                    onClick={() => select(service)}
+                    onClick={() => void send(service.name)}
                   >
                     {c.selected}
                   </Button>
@@ -473,6 +555,7 @@ export function NonaConcierge({
                   quoteLoader={quoteLoader}
                   submitLabel={c.confirm}
                   refreshKey={refreshKey}
+                  compact
                 />
               </article>
             )}

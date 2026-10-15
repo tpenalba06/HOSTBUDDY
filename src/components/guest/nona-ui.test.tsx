@@ -28,7 +28,14 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 async function renderNona() {
-  await act(async () => root.render(<NonaConcierge demo guide={{ id: "ui", name: "Demo", originalLocale: "en", sections: [], services: [] }} />));
+  await act(async () =>
+    root.render(
+      <NonaConcierge
+        demo
+        guide={{ id: "ui", name: "Demo", originalLocale: "en", sections: [], services: [] }}
+      />,
+    ),
+  );
 }
 it("starts closed with no invented mascot and keeps the English demo disclosure", async () => {
   await renderNona();
@@ -38,7 +45,9 @@ it("starts closed with no invented mascot and keeps the English demo disclosure"
   if (!launcher) throw new Error("Missing Nona launcher");
   await act(async () => launcher.click());
   expect(host.textContent).toContain("Demo · no real order or payment");
-  expect(host.querySelector("textarea")).toHaveAttribute("aria-label", "Your question or request…");
+  expect(host.querySelector("textarea")?.getAttribute("aria-label")).toBe(
+    "Your question or request…",
+  );
   expect(host.querySelector('button[type="submit"]')).toHaveProperty("disabled", true);
 });
 it("closes on Escape and returns focus to the visible launcher", async () => {
@@ -47,7 +56,9 @@ it("closes on Escape and returns focus to the visible launcher", async () => {
   const panel = host.querySelector<HTMLElement>('[role="dialog"]');
   if (!launcher || !panel) throw new Error("Missing Nona controls");
   await act(async () => launcher.click());
-  await act(async () => panel.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+  await act(async () =>
+    panel.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
+  );
   expect(panel.hidden).toBe(true);
   expect(document.activeElement).toBe(launcher);
 });

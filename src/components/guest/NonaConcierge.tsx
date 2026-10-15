@@ -90,19 +90,25 @@ export function NonaConcierge({
     } catch {
       /* Optional. */
     }
-    const show = setTimeout(() => {
-      if (document.visibilityState === "hidden") return;
-      setInvited(true);
-      setWaving(
-        Boolean(nonaAssets.wave) &&
-          !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
-      );
-    }, Math.max(0, 3000 - (Date.now() - invitationStartedAt.current)));
-    const hide = setTimeout(() => {
-      setInvited(false);
-      setWaving(false);
-      invitationUsed.current = true;
-    }, Math.max(0, 10000 - (Date.now() - invitationStartedAt.current)));
+    const show = setTimeout(
+      () => {
+        if (document.visibilityState === "hidden") return;
+        setInvited(true);
+        setWaving(
+          Boolean(nonaAssets.wave) &&
+            !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
+        );
+      },
+      Math.max(0, 3000 - (Date.now() - invitationStartedAt.current)),
+    );
+    const hide = setTimeout(
+      () => {
+        setInvited(false);
+        setWaving(false);
+        invitationUsed.current = true;
+      },
+      Math.max(0, 10000 - (Date.now() - invitationStartedAt.current)),
+    );
     return () => {
       clearTimeout(show);
       clearTimeout(hide);

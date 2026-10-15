@@ -2,7 +2,8 @@
 ## Nona frontend polish
 - [x] Inspect official mascot only; keep Nona without a mascot when assets are absent
 - [x] Improve existing chat readability and composer without changing guided or booking engines
-- [x] Verify targeted tests and the Villa Mare chat on desktop and mobile (23 tests pass; overall type validation remains blocked by pre-existing generated booking types outside this frontend scope)
+- [x] Restore acquired service contract through regeneration-safe additive types, preserving operational alert definitions and original clients
+- [x] Verify invitation before click, dismissal, reduced motion, grounded shortcuts and shared booking tests; preview checks and desktop/mobile pass
 - [x] Add premium hospitality imagery and refreshed design tokens
 - [x] Add FR/EN/ES/DE/IT/PT locale foundation and selectors
 - [x] Translate core marketing, auth, workspace, import, property, and guest-guide screens

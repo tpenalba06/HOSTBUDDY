@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/order-status")({
           .refine((value) => value.orderId || value.requestId)
           .safeParse(await readPublicJson(request));
         if (!result.success) return Response.json({ error: "invalid_request" }, { status: 400 });
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/service-database-client.server");
         const hash = createHash("sha256").update(result.data.token).digest("hex");
         const { data, error } = result.data.orderId
           ? await supabaseAdmin.rpc("read_service_booking", {

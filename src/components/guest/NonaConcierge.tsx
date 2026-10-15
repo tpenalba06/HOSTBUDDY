@@ -54,6 +54,7 @@ export function NonaConcierge({
   const [invited, setInvited] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const invitationUsed = useRef(false);
+  const invitationStartedAt = useRef<number | null>(null);
   const invitationKey = `nona.invitation.${demo ? "demo" : "guest"}.${guide.id}`;
   const dismissInvitation = () => {
     invitationUsed.current = true;
@@ -77,13 +78,13 @@ export function NonaConcierge({
   }, []);
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(invitationKey)) return;
+      if (sessionStorage.getItem(invitationKey) && invitationStartedAt.current === null) return;
     } catch {
       /* In-memory fallback. */
     }
     if (invitationUsed.current || open) return;
     // Reserve this guide's only invitation even when a short visit ends before the timer.
-    invitationUsed.current = true;
+    invitationStartedAt.current ??= Date.now();
     try {
       sessionStorage.setItem(invitationKey, "seen");
     } catch {
@@ -96,11 +97,12 @@ export function NonaConcierge({
         Boolean(nonaAssets.wave) &&
           !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
       );
-    }, 3000);
+    }, Math.max(0, 3000 - (Date.now() - invitationStartedAt.current)));
     const hide = setTimeout(() => {
       setInvited(false);
       setWaving(false);
-    }, 10000);
+      invitationUsed.current = true;
+    }, Math.max(0, 10000 - (Date.now() - invitationStartedAt.current)));
     return () => {
       clearTimeout(show);
       clearTimeout(hide);

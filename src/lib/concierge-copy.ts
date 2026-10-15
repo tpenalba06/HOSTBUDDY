@@ -91,7 +91,8 @@ const copy: Record<Locale, Copy> = {
   es: {
     invite: "¡Hola! ¿Alguna pregunta? 👋",
     dismissInvite: "Cerrar invitación",
-    greeting: "Te damos la bienvenida a {property}. Estoy aquí para ayudarte a disfrutar de tu estancia.",
+    greeting:
+      "Te damos la bienvenida a {property}. Estoy aquí para ayudarte a disfrutar de tu estancia.",
     wifi: "Wi-Fi",
     arrival: "Llegada",
     places: "Recomendaciones locales",

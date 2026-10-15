@@ -335,8 +335,6 @@ export function NonaConcierge({
                   </MessageContent>
                 </ChatMessageView>
               ))}
-                </div>
-              ))}
             </div>
             <div className="nona-suggestions">
               {suggestions.map(({ label, query, icon: Icon }) => <Button key={label} variant="outline" disabled={busy} onClick={() => void send(query)}><Icon aria-hidden="true" />{label}</Button>)}

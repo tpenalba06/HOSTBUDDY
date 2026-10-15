@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/public/orders")({
         const fingerprint = createHash("sha256")
           .update(`${ip}|${request.headers.get("user-agent") ?? ""}|${parsed.data.slug}`)
           .digest("hex");
-        const { supabaseAdmin: client } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin: client } = await import("@/lib/service-database-client.server");
         if (!parsed.data.revision) {
           // Preserve the acquired legacy request until the additive catalogue
           // migration is applied; no new options/slots are accepted in this path.

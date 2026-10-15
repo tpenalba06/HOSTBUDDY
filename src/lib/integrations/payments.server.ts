@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { paymentServerEnvironment } from "./payment-environment.server";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/lib/service-database";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { cents, paymentEnvironment, subscriptionQuote, serviceFeeCents } from "./payment-policy";
 import { connectStatusFromAccount } from "./connect-status";

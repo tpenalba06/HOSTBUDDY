@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { Json, Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/lib/service-database-client";
+import type { Json, Tables } from "@/lib/service-database";
 import { FriendlyError, listProperties, uploadSectionMedia } from "./properties";
 import { bookingConfigSchema, type BookingConfig } from "@/lib/service-booking";
 

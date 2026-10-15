@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { PublicGuide } from "./data/public-guide.functions";
 import { readBookingConfig, serviceTotalCents } from "./service-booking";
 import { conciergeCopy } from "./concierge-copy";
+import { NONA_PERSONALITY_VERSION, nonaLine, type NonaReplyKey } from "./nona-personality";
 
 export const conciergeDraftSchema = z
   .object({
@@ -53,21 +54,37 @@ export type ConciergeTurn = {
   tracking: boolean;
   quote: { totalCents: number; revision?: string } | null;
   usage: { modelCalls: 0; estimatedCostMicros: 0 };
+  /** Shared Nona voice key and version; text is always built from validated facts. */
+  persona: NonaReplyKey;
+  personaVersion: string;
+  nextStep: "quantity" | "date" | "time" | "option" | "ready" | null;
+  /** Guided buttons derived from the catalogue only; `message` is resent as user text. */
+  choices: { label: string; message: string }[];
 };
 // A future provider may propose IDs and fields only, never booking/payment actions,
 // status, prices or arbitrary factual answers. It receives no receipts or contact data.
 export const conciergeProposalSchema = z
   .object({
-    intent: z.enum(["services", "facts", "tracking", "unknown"]),
+    intent: z.enum(["services", "facts", "tracking", "emergency", "contact", "unknown"]),
     serviceIds: z.array(z.string().max(100)).max(4).default([]),
     factKeys: z.array(z.string().max(80)).max(2).default([]),
     draft: conciergeDraftSchema.default({}),
+    tonalHint: z
+      .enum(["breakfast", "massage", "earlyArrival", "italian", "wifi", "arrival", "departure", "places"])
+      .optional(),
   })
   .strict();
+export type ConciergeProposal = z.infer<typeof conciergeProposalSchema>;
 export interface ConciergeProvider {
   propose(input: { message: string; history: string[]; guide: PublicGuide }): Promise<unknown>;
 }
 const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+const emergency =
+  /urgen|panne|fuite|incendie|feu |inond|bloque dehors|plus d.?electricite|plus d.?eau|emergenc|broken|leak|fire|flood|locked out|no power|no water|notfall|kaputt|defekt|feuer|emergenza|guasto|perdita|incendio|averia|fuga|socorro|avaria|vazamento/;
+const early =
+  /arriv\w*\s+(?:plus tot|en avance|anticip)|early (?:check.?in|arrival)|arrive early|llegada anticipada|llegar (?:antes|temprano)|fruh\w* anreise|fruher anreisen|arrivo anticipato|arrivare prima|chegada antecipada|chegar mais cedo/;
+const italian = /ital|pizz|pasta|trattoria/;
+const massage = /massag|masaj|massaggi|detente|relax|spa\b/;
 const vocabulary: Record<string, RegExp> = {
   breakfast: /petit.?dejeuner|breakfast|desayuno|fruhstuck|colazione|pequeno.?almoco/,
   wifi: /wi.?fi|internet|password|mot de passe|contrasena|passwort|senha/,
@@ -143,8 +160,23 @@ function inferDraft(
     const today = zonedDate(now, zone);
     next.date = new Date(Date.parse(`${today}T12:00:00Z`) + 86400000).toISOString().slice(0, 10);
   }
-  const time = text.match(/\b([01]?\d|2[0-3])\s*(?:h|:)\s*([0-5]\d)\b/);
-  if (time) next.time = `${time[1]!.padStart(2, "0")}:${time[2]}`;
+  const time =
+    text.match(/\b([01]?\d|2[0-3])\s*(?:h|:)\s*([0-5]\d)\b/) ??
+    text.match(/\b([01]?\d|2[0-3])\s*(?:h|uhr|heures?|horas?)(?![a-z0-9])/) ??
+    text.match(/\b(1[0-2]|0?\d)\s*(am|pm)\b/);
+  if (time) {
+    let hour = Number(time[1]);
+    if (time[2] === "pm" && hour < 12) hour += 12;
+    if (time[2] === "am" && hour === 12) hour = 0;
+    const minutes = time[2] && /^\d+$/.test(time[2]) ? time[2] : "00";
+    next.time = `${String(hour).padStart(2, "0")}:${minutes}`;
+  }
+  // A bare number answers "how many people?" once a service is being prepared.
+  const bare = text.trim().match(/^(\d{1,2})$/);
+  if (bare && previous.serviceId && !previous.quantity) {
+    const quantity = Number(bare[1]);
+    if (quantity >= 1 && quantity <= 20) next.quantity = quantity;
+  }
   return next;
 }
 export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now = new Date()) {
@@ -152,22 +184,44 @@ export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now 
   const text = normalize(input.message);
   const draft = inferDraft(input.message, input.draft, now, input.timeZone);
   const current = guide.services?.find((service) => service.id === draft.serviceId);
-  const option = readBookingConfig(current?.bookingConfig).options.find((item) =>
-    text.includes(normalize(item.label)),
-  );
+  const words = text.split(/[^a-z0-9]+/).filter((word) => word.length >= 4);
+  const option = readBookingConfig(current?.bookingConfig).options.find((item) => {
+    const label = normalize(item.label);
+    return (
+      text.includes(label) ||
+      label.split(/[^a-z0-9]+/).some((part) => words.some((word) => part.startsWith(word)))
+    );
+  });
   if (option) draft.optionId = option.id;
+  const sectionKeys = (kind: string) =>
+    guide.sections
+      .filter((s) => s.key.split("-")[0] === kind)
+      .map((s) => s.key)
+      .slice(0, 2);
+  if (emergency.test(text))
+    return { intent: "emergency", draft, serviceIds: [], factKeys: sectionKeys("contact") };
   if (
     /statut|suivi|status|tracking|ou en est|where.*(?:order|breakfast)|estado|stato|pedido|bestellung/.test(
       text,
     )
   )
     return { intent: "tracking", draft, serviceIds: [], factKeys: [] };
+  if (early.test(text))
+    return {
+      intent: "facts",
+      draft,
+      serviceIds: [],
+      factKeys: sectionKeys("arrival"),
+      tonalHint: "earlyArrival",
+    };
+  if (italian.test(text) && vocabulary["places"]!.test(text + " restaurant"))
+    return { intent: "facts", draft, serviceIds: [], factKeys: sectionKeys("places"), tonalHint: "italian" };
   const breakfast = vocabulary["breakfast"]!.test(text);
+  const relax = massage.test(text);
   const direct = (guide.services ?? []).filter((s) => text.includes(normalize(s.name)));
-  const matches = breakfast
-    ? (guide.services ?? []).filter((s) =>
-        vocabulary["breakfast"]!.test(normalize(`${s.name} ${s.description}`)),
-      )
+  const family = breakfast ? vocabulary["breakfast"]! : relax ? massage : null;
+  const matches = family
+    ? (guide.services ?? []).filter((s) => family.test(normalize(`${s.name} ${s.description}`)))
     : direct;
   if (matches.length)
     return {
@@ -175,6 +229,7 @@ export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now 
       draft,
       serviceIds: matches.map((s) => s.id).slice(0, 4),
       factKeys: [],
+      ...(breakfast ? { tonalHint: "breakfast" } : relax ? { tonalHint: "massage" } : {}),
     };
   if (/service|prestation|servizi|servico|dienstleistung/.test(text))
     return {
@@ -186,15 +241,17 @@ export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now 
   const kind = Object.entries(vocabulary).find(
     ([key, pattern]) => key !== "breakfast" && pattern.test(text),
   )?.[0];
+  if (kind === "contact")
+    return { intent: "contact", draft, serviceIds: [], factKeys: sectionKeys("contact") };
   if (kind)
     return {
       intent: "facts",
       draft,
       serviceIds: [],
-      factKeys: guide.sections
-        .filter((s) => s.key.split("-")[0] === kind)
-        .map((s) => s.key)
-        .slice(0, 2),
+      factKeys: sectionKeys(kind),
+      ...(["wifi", "arrival", "departure", "places"].includes(kind)
+        ? { tonalHint: kind as "wifi" }
+        : {}),
     };
   if (
     draft.serviceId &&

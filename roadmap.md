@@ -1,4 +1,8 @@
 # HostBuddy roadmap
+## Nona frontend polish
+- [x] Inspect official mascot only; keep Nona without a mascot when assets are absent
+- [x] Improve existing chat readability and composer without changing guided or booking engines
+- [ ] Verify targeted tests and the Villa Mare chat on desktop and mobile
 - [x] Add premium hospitality imagery and refreshed design tokens
 - [x] Add FR/EN/ES/DE/IT/PT locale foundation and selectors
 - [x] Translate core marketing, auth, workspace, import, property, and guest-guide screens

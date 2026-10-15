@@ -17,8 +17,17 @@ import { demoBookingTransport } from "@/components/demo/demo-bookings";
 import { ServiceBookingForm } from "./GuestActions";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent } from "@/components/ai-elements/conversation";
-import { Message as ChatMessageView, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
+import {
+  Message as ChatMessageView,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputSubmit,
+} from "@/components/ai-elements/prompt-input";
 import "./nona-concierge.css";
 type Message = {
   id: number;
@@ -227,103 +236,119 @@ export function NonaConcierge({
             <h2>{c.title}</h2>
             <p>{demo ? c.demo : c.mode}</p>
           </div>
-          <Button variant="ghost" size="icon" type="button" aria-label={c.close} title={c.close} onClick={close}>
+          <Button
+            variant="ghost"
+            size="icon"
+            type="button"
+            aria-label={c.close}
+            title={c.close}
+            onClick={close}
+          >
             <X size={22} />
           </Button>
         </header>
-        <Conversation className="nona-content" aria-live="polite" aria-relevant="additions text" initial="instant" resize="instant">
+        <Conversation
+          className="nona-content"
+          aria-live="polite"
+          aria-relevant="additions text"
+          initial="instant"
+          resize="instant"
+        >
           <ConversationContent className="nona-content-inner">
-          <div
-            role="log"
-            aria-live="polite"
-            aria-relevant="additions text"
-            className="nona-messages"
-          >
-            <ChatMessageView from="assistant" className="nona-bubble">
-              <MessageContent><MessageResponse>{c.welcome}</MessageResponse></MessageContent>
-            </ChatMessageView>
-            {messages.map((item) => (
-              <div
-                key={item.id}
-                className={`nona-bubble ${item.role === "user" ? "nona-user" : ""}`}
-              >
-                <p>{item.text}</p>
-                {item.facts?.map((fact, index) => (
-                  <blockquote key={index}>
-                    <strong>{fact.title}</strong>
-                    {fact.original && <small>{c.original}</small>}
-                    <p>{fact.text}</p>
-                  </blockquote>
-                ))}
-              </div>
-            ))}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="nona-quick"
-            disabled={busy}
-            onClick={() => void send(c.services)}
-          >
-            {c.services}
-          </Button>
-          <div className="nona-services">
-            {services.map((service) => (
-              <article key={service.id} className="nona-service-card">
-                {service.imagePath && (
-                  <img src={service.imagePath} alt={service.name} loading="lazy" />
-                )}
-                <h3>{service.name}</h3>
-                <p>{service.description}</p>
-                <p>
-                  {new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(
-                    service.price,
-                  )}{" "}
-                  · {service.pricingType === "per_person" ? c.person : c.unit}
-                </p>
-                <Button type="button" variant="outline" className="nona-select" onClick={() => select(service)}>
-                  {c.selected}
-                </Button>
-              </article>
-            ))}
-          </div>
-          {selected && (
-            <article className="nona-booking-card" aria-label={selected.name}>
-              <h3>{selected.name}</h3>
-              <ServiceBookingForm
-                key={selected.id}
-                slug={slug ?? "villa-mare-demo"}
-                service={selected}
-                prefill={prefill}
-                onDraftChange={persistSelection}
-                {...(demoTransport ? { transport: demoTransport } : {})}
-                quoteLoader={quoteLoader}
-                submitLabel={c.confirm}
-                refreshKey={refreshKey}
-              />
-            </article>
-          )}
-          {error && <p role="alert">{error}</p>}
-          {onContact && (
+            <div
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions text"
+              className="nona-messages"
+            >
+              <ChatMessageView from="assistant" className="nona-bubble">
+                <MessageContent>
+                  <MessageResponse>{c.welcome}</MessageResponse>
+                </MessageContent>
+              </ChatMessageView>
+              {messages.map((item) => (
+                <div
+                  key={item.id}
+                  className={`nona-bubble ${item.role === "user" ? "nona-user" : ""}`}
+                >
+                  <p>{item.text}</p>
+                  {item.facts?.map((fact, index) => (
+                    <blockquote key={index}>
+                      <strong>{fact.title}</strong>
+                      {fact.original && <small>{c.original}</small>}
+                      <p>{fact.text}</p>
+                    </blockquote>
+                  ))}
+                </div>
+              ))}
+            </div>
             <Button
               type="button"
               variant="outline"
-            className="nona-quick"
-              onClick={() => {
-                close();
-                onContact();
-              }}
+              className="nona-quick"
+              disabled={busy}
+              onClick={() => void send(c.services)}
             >
-              {c.contact}
+              {c.services}
             </Button>
-          )}
+            <div className="nona-services">
+              {services.map((service) => (
+                <article key={service.id} className="nona-service-card">
+                  {service.imagePath && (
+                    <img src={service.imagePath} alt={service.name} loading="lazy" />
+                  )}
+                  <h3>{service.name}</h3>
+                  <p>{service.description}</p>
+                  <p>
+                    {new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(
+                      service.price,
+                    )}{" "}
+                    · {service.pricingType === "per_person" ? c.person : c.unit}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="nona-select"
+                    onClick={() => select(service)}
+                  >
+                    {c.selected}
+                  </Button>
+                </article>
+              ))}
+            </div>
+            {selected && (
+              <article className="nona-booking-card" aria-label={selected.name}>
+                <h3>{selected.name}</h3>
+                <ServiceBookingForm
+                  key={selected.id}
+                  slug={slug ?? "villa-mare-demo"}
+                  service={selected}
+                  prefill={prefill}
+                  onDraftChange={persistSelection}
+                  {...(demoTransport ? { transport: demoTransport } : {})}
+                  quoteLoader={quoteLoader}
+                  submitLabel={c.confirm}
+                  refreshKey={refreshKey}
+                />
+              </article>
+            )}
+            {error && <p role="alert">{error}</p>}
+            {onContact && (
+              <Button
+                type="button"
+                variant="outline"
+                className="nona-quick"
+                onClick={() => {
+                  close();
+                  onContact();
+                }}
+              >
+                {c.contact}
+              </Button>
+            )}
           </ConversationContent>
         </Conversation>
-        <PromptInput
-          className="nona-composer"
-          onSubmit={() => send(message)}
-          maxFiles={0}
-        >
+        <PromptInput className="nona-composer" onSubmit={() => send(message)} maxFiles={0}>
           <PromptInputTextarea
             ref={input}
             aria-label={c.placeholder}
@@ -333,8 +358,17 @@ export function NonaConcierge({
             onChange={(event) => setMessage(event.target.value)}
           />
           <PromptInputFooter className="nona-composer-footer">
-            <PromptInputSubmit aria-label={c.send} title={c.send} status={busy ? "submitted" : "ready"} disabled={busy || !message.trim()}>
-              {busy ? <span className="sr-only">{t("common.loading")}</span> : <Send size={20} aria-hidden="true" />}
+            <PromptInputSubmit
+              aria-label={c.send}
+              title={c.send}
+              status={busy ? "submitted" : "ready"}
+              disabled={busy || !message.trim()}
+            >
+              {busy ? (
+                <span className="sr-only">{t("common.loading")}</span>
+              ) : (
+                <Send size={20} aria-hidden="true" />
+              )}
             </PromptInputSubmit>
           </PromptInputFooter>
         </PromptInput>

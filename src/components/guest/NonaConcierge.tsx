@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Send, X } from "lucide-react";
+import { MessageCircle, Send, X, Wifi, KeyRound, MapPin, Coffee, LoaderCircle } from "lucide-react";
 import type { PublicGuide } from "@/lib/data/public-guide.functions";
 import { useI18n } from "@/lib/i18n";
 import { conciergeCopy } from "@/lib/concierge-copy";
@@ -12,6 +12,7 @@ import {
   type ConciergeTurn,
   type ConciergeService,
 } from "@/lib/concierge";
+import { readBookingConfig } from "@/lib/service-booking";
 import { nonaAssets } from "@/lib/nona-assets";
 import { demoBookingTransport } from "@/components/demo/demo-bookings";
 import { ServiceBookingForm } from "./GuestActions";
@@ -50,6 +51,50 @@ export function NonaConcierge({
   const c = conciergeCopy(locale);
   const [open, setOpen] = useState(false);
   const [waving, setWaving] = useState(false);
+  const [invited, setInvited] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const invitationUsed = useRef(false);
+  const invitationKey = `nona.invitation.${demo ? "demo" : "guest"}.${guide.id}`;
+  const dismissInvitation = () => {
+    invitationUsed.current = true;
+    setInvited(false);
+    setWaving(false);
+    try { sessionStorage.setItem(invitationKey, "seen"); } catch { /* Optional session marker, no personal data. */ }
+  };
+  useEffect(() => {
+    const motion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const update = () => { setReducedMotion(motion?.matches ?? false); if (motion?.matches) setWaving(false); };
+    update();
+    motion?.addEventListener?.("change", update);
+    return () => motion?.removeEventListener?.("change", update);
+  }, []);
+  useEffect(() => {
+    try { if (sessionStorage.getItem(invitationKey)) return; } catch { /* In-memory fallback. */ }
+    if (invitationUsed.current || open) return;
+    // Reserve this guide's only invitation even when a short visit ends before the timer.
+    invitationUsed.current = true;
+    try { sessionStorage.setItem(invitationKey, "seen"); } catch { /* Optional. */ }
+    const show = setTimeout(() => {
+      if (document.visibilityState === "hidden") return;
+      setInvited(true);
+      setWaving(Boolean(nonaAssets.wave) && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+    }, 3000);
+    const hide = setTimeout(() => { setInvited(false); setWaving(false); }, 10000);
+    return () => { clearTimeout(show); clearTimeout(hide); };
+  }, [invitationKey, open]);
+  const available = (guide.services ?? []).filter((service) => {
+    const slots = readBookingConfig(service.bookingConfig).slots;
+    return !slots.length || slots.some((slot) => Date.parse(slot) > Date.now());
+  });
+  const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  const hasBreakfast = available.some((service) => /petit.?dejeuner|breakfast|desayuno|fruhstuck|colazione|pequeno.?almoco/.test(normalize(`${service.name} ${service.description}`)));
+  const hasSection = (key: string) => guide.sections.some((section) => section.key.split("-")[0] === key);
+  const suggestions = [
+    ...(hasSection("wifi") ? [{ label: c.wifi, query: "Wi-Fi", icon: Wifi }] : []),
+    ...(hasSection("arrival") ? [{ label: c.arrival, query: c.arrival, icon: KeyRound }] : []),
+    ...(hasSection("places") ? [{ label: c.places, query: "restaurant", icon: MapPin }] : []),
+    ...(hasBreakfast ? [{ label: c.breakfast, query: c.breakfast, icon: Coffee }] : []),
+  ];
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [services, setServices] = useState<ConciergeService[]>([]);
@@ -192,9 +237,13 @@ export function NonaConcierge({
       setBusy(false);
     }
   };
-  const image = waving && nonaAssets.wave ? nonaAssets.wave : nonaAssets.portrait;
+  const image = waving && !reducedMotion && nonaAssets.wave ? nonaAssets.wave : nonaAssets.portrait;
   return (
     <aside className="nona-concierge" data-demo={demo || undefined}>
+      {invited && !open && <div className="nona-invitation" role="status">
+        <Button variant="ghost" className="nona-invitation-open" onClick={() => { dismissInvitation(); setOpen(true); }}>{c.invite}</Button>
+        <Button variant="ghost" size="icon" aria-label={c.dismissInvite} title={c.dismissInvite} onClick={dismissInvitation}><X aria-hidden="true" /></Button>
+      </div>}
       <Button
         ref={launcher}
         type="button"
@@ -204,8 +253,8 @@ export function NonaConcierge({
         aria-expanded={open}
         aria-controls={`nona-chat-${guide.id}`}
         onClick={() => {
+          dismissInvitation();
           setOpen(!open);
-          if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) setWaving(true);
         }}
       >
         {image ? (
@@ -232,6 +281,7 @@ export function NonaConcierge({
         }}
       >
         <header className="nona-header">
+          {nonaAssets.portrait && <img className="nona-header-portrait" src={nonaAssets.portrait} alt="Nona" />}
           <div>
             <h2>{c.title}</h2>
             <p>{demo ? c.demo : c.mode}</p>
@@ -263,26 +313,35 @@ export function NonaConcierge({
             >
               <ChatMessageView from="assistant" className="nona-bubble">
                 <MessageContent>
+                  <p className="nona-property">{guide.name}</p>
+                  <p>{c.greeting.replace("{property}", guide.name)}</p>
                   <MessageResponse>{c.welcome}</MessageResponse>
                 </MessageContent>
               </ChatMessageView>
               {messages.map((item) => (
-                <div
-                  key={item.id}
-                  className={`nona-bubble ${item.role === "user" ? "nona-user" : ""}`}
-                >
-                  <p>{item.text}</p>
-                  {item.facts?.map((fact, index) => (
-                    <blockquote key={index}>
-                      <strong>{fact.title}</strong>
-                      {fact.original && <small>{c.original}</small>}
-                      <p>{fact.text}</p>
-                    </blockquote>
-                  ))}
+                <ChatMessageView from={item.role} key={item.id} className={`nona-bubble ${item.role === "user" ? "nona-user" : ""}`}>
+                  <MessageContent>
+                    {item.role === "assistant" ? <MessageResponse>{item.text}</MessageResponse> : <p>{item.text}</p>}
+                    {item.facts?.map((fact, index) => (
+                      <blockquote key={index}>
+                        <strong>{fact.title}</strong>
+                        {fact.original && <small>{c.original}</small>}
+                        {fact.text.length > 500 ? <>
+                          <p>{fact.text.slice(0, Math.max(fact.text.lastIndexOf("\n", 500), 300))}…</p>
+                          <details><summary>{c.more}</summary><p>{fact.text}</p></details>
+                        </> : <p>{fact.text}</p>}
+                      </blockquote>
+                    ))}
+                  </MessageContent>
+                </ChatMessageView>
+              ))}
                 </div>
               ))}
             </div>
-            <Button
+            <div className="nona-suggestions">
+              {suggestions.map(({ label, query, icon: Icon }) => <Button key={label} variant="outline" disabled={busy} onClick={() => void send(query)}><Icon aria-hidden="true" />{label}</Button>)}
+            </div>
+            {available.length > 0 && <Button
               type="button"
               variant="outline"
               className="nona-quick"
@@ -290,7 +349,7 @@ export function NonaConcierge({
               onClick={() => void send(c.services)}
             >
               {c.services}
-            </Button>
+            </Button>}
             <div className="nona-services">
               {services.map((service) => (
                 <article key={service.id} className="nona-service-card">
@@ -365,7 +424,7 @@ export function NonaConcierge({
               disabled={busy || !message.trim()}
             >
               {busy ? (
-                <span className="sr-only">{t("common.loading")}</span>
+                <><LoaderCircle className="animate-spin" aria-hidden="true" /><span className="sr-only">{t("common.loading")}</span></>
               ) : (
                 <Send size={20} aria-hidden="true" />
               )}

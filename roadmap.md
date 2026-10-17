@@ -1,4 +1,8 @@
 # HostBuddy roadmap
+## Official NONA assets and desktop guest guide
+- [x] Integrate supplied logo and mascot across shared brand surfaces and favicon, preserving source proportions and transparency
+- [x] Arrange desktop guest guide with large left photo and right sections, preserving mobile and all existing actions
+- [x] Verify shared guide/chat tests and visual desktop/mobile interactions
 ## Nona frontend polish
 - [x] Inspect official mascot only; keep Nona without a mascot when assets are absent
 - [x] Improve existing chat readability and composer without changing guided or booking engines

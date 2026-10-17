@@ -354,6 +354,7 @@ export function GuideView({
               </button>
             </div>
           </header>
+          <div className="nona-property-layout">
           <section className="nona-property-intro">
             <div className="nona-property-heading">
               <h1>{displayName ?? guide.name}</h1>
@@ -364,6 +365,7 @@ export function GuideView({
                 </p>
               )}
             </div>
+            <div className="nona-property-visual">
             <section
               className={`hb-cover nona-property-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}
             >
@@ -423,6 +425,7 @@ export function GuideView({
                 </button>
               </div>
             )}
+            </div>
           </section>
           <div className="hb-guide-body hb-index" ref={contentRef}>
             <div className="hb-index-content">
@@ -552,6 +555,7 @@ export function GuideView({
               {offlineAction}
               <p className="hb-signature">NONA · {t("guest.noInstall")}</p>
             </div>
+          </div>
           </div>
         </>
       )}

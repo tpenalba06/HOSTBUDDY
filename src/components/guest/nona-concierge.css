@@ -330,6 +330,8 @@
     width: 100%;
     max-width: none;
     height: 100dvh;
+    min-height: 0;
+    max-height: none;
     border-radius: 0;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);

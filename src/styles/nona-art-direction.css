@@ -987,6 +987,8 @@ body {
     width: 100%;
     max-width: none;
     height: 100dvh;
+    min-height: 0;
+    max-height: none;
     border-radius: 0;
     padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
   }
@@ -1172,6 +1174,8 @@ body {
   .nona-concierge.nona-concierge[data-demo] .nona-panel {
     inset: 0;
     height: 100dvh;
+    min-height: 0;
+    max-height: none;
   }
 }
 

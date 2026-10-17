@@ -1,0 +1,96 @@
+{
+  "checkedAt": "2026-10-17T15:00:24.738Z",
+  "scope": "Local Windows verification only; no deployment, remote tenant mutation or paid inference",
+  "repository": {
+    "branch": "feat/guest-guide-v2-lot1",
+    "localHead": "036a5ac3bf471ebb1859d4cfa32ef3d6a87dae79",
+    "remoteBranchHeadIdentical": true,
+    "mainHead": "53e4a6857f6778ffad5feaf4f3c49dee8cfd6df0",
+    "aheadOfMain": 311,
+    "behindMain": 2,
+    "mainOnlyFiles": [
+      ".github/workflows/billing-sync-preview.yml"
+    ],
+    "worktreeDirty": true,
+    "committed": false,
+    "pushed": false
+  },
+  "remoteCi": {
+    "validatedAtCurrentHead": false,
+    "headSkippedCi": true,
+    "lastFailedRun": 38664136768,
+    "lastFailedJob": 116192022532,
+    "lastFailedHead": "0a1ee072c513e1fe928d28b5379d904efef701a2",
+    "failedStep": "npm run lint",
+    "cause": "15 formatting errors",
+    "localCorrectionVerified": true,
+    "remoteRerun": false
+  },
+  "hostedBuild": {
+    "verified": false,
+    "reason": "Forbidden legacy service not contacted; no production deployment"
+  },
+  "checks": {
+    "runtime": "Windows, Node 24.15.0; remote CI uses Node 22/Linux and was not rerun",
+    "vitest": {
+      "passed": 460,
+      "skipped": 2,
+      "failed": 0,
+      "passedFiles": 85,
+      "skippedFiles": 1
+    },
+    "node": {
+      "passed": 19,
+      "skipped": 1,
+      "failed": 0,
+      "skipReason": "POSIX filesystem permissions test on Windows; remains active on Linux"
+    },
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 23
+    },
+    "typecheck": true,
+    "build": true,
+    "buildBackend": "Fictitious .invalid backend for isolated compiled demo",
+    "compiledSsrSmoke": true,
+    "migrations": 26,
+    "syntheticLogicalRestore": true,
+    "syntheticArchiveRestore": true,
+    "postRestoreSqlAssertions": true,
+    "storageBytesVerified": true
+  },
+  "import": {
+    "evidence": "nona-compiled-import-20261017.json",
+    "extractor": "deterministic rules; not an AI extraction implementation",
+    "lateContradictionRetained": true,
+    "fullProvenance": true,
+    "humanReviewRequiredWhenPreviewShortened": true,
+    "partialWifiParseNoLongerHidesSource": true,
+    "remoteImportPublicationValidated": false
+  },
+  "conversation": {
+    "url": "http://127.0.0.1:4182/nona",
+    "provider": "ollama-local",
+    "model": "qwen3.5:9b",
+    "newRealWifiTurn": true,
+    "externalBrowserRequests": 0,
+    "transactionRequests": 0,
+    "evidence": "nona-interface-wifi-20261017.json",
+    "priorFullRecipePreserved": "nona-interface-20261017.json",
+    "haikuValidated": false
+  },
+  "protections": {
+    "paidAiCalls": 0,
+    "paidAiEnabled": false,
+    "applicationCapEuros": 4,
+    "maximumAuthorizedEuros": 5,
+    "testLedgerRenewed": false,
+    "testLedgerEnabledByThisPass": false,
+    "realPayments": 0,
+    "stripeLiveChanged": false,
+    "supabaseProductionChanged": false,
+    "lovableServiceUsed": false,
+    "productionDeployed": false
+  },
+  "nextGate": "Continue authenticated isolated TEST import-to-public-guide QA; establish CI/review path without forbidden service sync or spending. Commercial launch is not validated."
+}

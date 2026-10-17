@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { LocalConciergeTransport } from "@/lib/concierge-transport";
 import { MessageCircle, Send, X, Wifi, KeyRound, MapPin, Coffee, LoaderCircle } from "lucide-react";
 import type { PublicGuide } from "@/lib/data/public-guide.functions";
 import { useI18n } from "@/lib/i18n";
-import { conciergeCopy } from "@/lib/concierge-copy";
+import { conciergeCopy, conciergeWelcome } from "@/lib/concierge-copy";
 import {
   conciergeRequestSchema,
   conciergeDraftSchema,
@@ -14,11 +15,11 @@ import {
 } from "@/lib/concierge";
 import { readBookingConfig } from "@/lib/service-booking";
 import { nonaAssets } from "@/lib/nona-assets";
-import { nonaLine } from "@/lib/nona-personality";
+import { NonaMascot } from "@/components/shared/NonaBrand";
 import { demoBookingTransport } from "@/components/demo/demo-bookings";
 import { ServiceBookingForm } from "./GuestActions";
 import { Button } from "@/components/ui/button";
-import { Conversation, ConversationContent } from "@/components/ai-elements/conversation";
+import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import {
   Message as ChatMessageView,
   MessageContent,
@@ -37,11 +38,13 @@ type Message = {
   text: string;
   facts?: ConciergeTurn["facts"];
   places?: ConciergeTurn["places"];
+  services?: ConciergeService[];
+  choices?: ConciergeTurn["choices"];
 };
 export function NonaConcierge({
   guide,
   slug,
-  demo = false,
+  demo: demoProp = false,
   onContact,
 }: {
   guide: PublicGuide;
@@ -49,6 +52,8 @@ export function NonaConcierge({
   demo?: boolean;
   onContact?: () => void;
 }) {
+  const localTransport = useContext(LocalConciergeTransport);
+  const demo = demoProp || Boolean(localTransport);
   const { locale, t } = useI18n();
   const c = conciergeCopy(locale);
   const [open, setOpen] = useState(false);
@@ -126,6 +131,9 @@ export function NonaConcierge({
       normalize(`${service.name} ${service.description}`),
     ),
   );
+  const hasMassage = available.some((service) =>
+    /massage|masaje|massaggio|massagem/.test(normalize(`${service.name} ${service.description}`)),
+  );
   const hasSection = (key: string) =>
     guide.sections.some((section) => section.key.split("-")[0] === key);
   const suggestions = [
@@ -135,9 +143,13 @@ export function NonaConcierge({
     ...(hasBreakfast ? [{ label: c.breakfast, query: c.breakfast, icon: Coffee }] : []),
   ];
   const [message, setMessage] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [services, setServices] = useState<ConciergeService[]>([]);
-  const [choices, setChoices] = useState<ConciergeTurn["choices"]>([]);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const offeredServices = useRef("");
+  const [bookingMessageId, setBookingMessageId] = useState<number | null>(null);
+  const content = useRef<HTMLDivElement>(null);
   const [lastMode, setLastMode] = useState<ConciergeTurn["mode"]>("guided");
   const savedDrafts = useRef<ConciergeDraft[]>([]);
   const conversationId = useRef(crypto.randomUUID());
@@ -152,6 +164,14 @@ export function NonaConcierge({
   const input = useRef<HTMLTextAreaElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
   const messageId = useRef(0);
+  const latestMessageId = messages.at(-1)?.id;
+  useEffect(() => {
+    if (!open || !content.current) return;
+    const latest = content.current.querySelector<HTMLElement>("[data-message-id]:last-child");
+    if (!latest) return;
+    content.current.scrollTop +=
+      latest.getBoundingClientRect().top - content.current.getBoundingClientRect().top - 16;
+  }, [latestMessageId, open]);
   const conversationKey = `nona.concierge.selection.${demo ? "demo" : slug}.${guide.id}`;
   const demoTransport = useMemo(
     () => (demo ? demoBookingTransport(guide) : undefined),
@@ -165,12 +185,16 @@ export function NonaConcierge({
         message: text,
         draft: current,
         history,
+        dialogueHistory: messagesRef.current
+          .slice(-10)
+          .map(({ role, text }) => ({ role, text: text.slice(0, 700) })),
         savedDrafts: savedDrafts.current,
         conversationId: conversationId.current,
         requestId: crypto.randomUUID(),
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         website: "",
       });
+      if (localTransport) return localTransport(body);
       if (demo) return validateConciergeTurn(body, guide, guidedProposal(body, guide));
       const result = await fetch("/api/public/concierge", {
         method: "POST",
@@ -181,7 +205,7 @@ export function NonaConcierge({
       if (!result.ok) throw new Error("unavailable");
       return (await result.json()) as ConciergeTurn;
     },
-    [demo, guide, slug, locale],
+    [demo, guide, slug, locale, localTransport],
   );
   const quoteLoader = useCallback(
     async (current: ConciergeDraft) => (await requestTurn("", current)).quote,
@@ -251,11 +275,16 @@ export function NonaConcierge({
   }, [conversationKey, open, restored]);
   const send = async (text: string) => {
     if (sending.current || !text.trim() || (!demo && !slug)) return;
+    setShowHelp(
+      /\b(?:aide|aider|help|ayuda|ayudar|hilfe|helfen|aiuto|aiutare|ajuda|ajudar)\b|(?:que|qu.est.ce que) (?:peux|sais).?tu faire|what can you (?:do|help)/.test(
+        normalize(text),
+      ),
+    );
     sending.current = true;
     setBusy(true);
     setError("");
     try {
-      const turn = await requestTurn(
+      const pending = requestTurn(
         text,
         draft.current,
         messages
@@ -263,18 +292,29 @@ export function NonaConcierge({
           .slice(-6)
           .map((m) => m.text),
       );
+      const userId = ++messageId.current;
+      setMessages((current) =>
+        [...current, { id: userId, role: "user" as const, text }].slice(-24),
+      );
+      setMessage("");
+      const turn = await pending;
+      const assistantId = ++messageId.current;
+      const signature = turn.services.map((service) => service.id).join(",");
+      const freshServices = signature !== offeredServices.current ? turn.services : [];
+      offeredServices.current = signature;
       setMessages((current) =>
         [
           ...current,
-          { id: ++messageId.current, role: "user" as const, text },
           {
-            id: ++messageId.current,
+            id: assistantId,
             role: "assistant" as const,
             text: turn.tracking && !selected ? c.emptyTracking : turn.text,
             facts: turn.facts,
             places: turn.places,
+            services: freshServices,
+            choices: turn.choices,
           },
-        ].slice(-12),
+        ].slice(-24),
       );
       if (draft.current.serviceId)
         savedDrafts.current = [
@@ -282,15 +322,14 @@ export function NonaConcierge({
           draft.current,
         ].slice(-4);
       persistSelection(turn.draft);
-      setServices(turn.services);
-      setChoices(turn.choices);
       setLastMode(turn.mode);
       if (turn.tracking) setRefreshKey((key) => key + 1);
       const onlyService = turn.services.length === 1 ? turn.services[0] : undefined;
-      if (onlyService && (turn.nextStep === "ready" || selected?.id === onlyService.id))
+      if (onlyService && (turn.nextStep === "ready" || selected?.id === onlyService.id)) {
+        if (selected?.id !== onlyService.id || bookingMessageId === null)
+          setBookingMessageId(assistantId);
         select(onlyService, turn.draft);
-      else if (onlyService && selected?.id !== onlyService.id) setSelected(null);
-      setMessage("");
+      } else if (onlyService && selected?.id !== onlyService.id) setSelected(null);
     } catch {
       setError(c.error);
     } finally {
@@ -298,9 +337,34 @@ export function NonaConcierge({
       setBusy(false);
     }
   };
+  const bookingCard = selected && (
+    <details
+      className="nona-booking-card"
+      aria-label={selected.name}
+      open={bookingMessageId !== null && bookingMessageId === latestMessageId}
+    >
+      <summary>{selected.name}</summary>
+      <ServiceBookingForm
+        key={selected.id}
+        slug={slug ?? "villa-mare-demo"}
+        service={selected}
+        prefill={prefill}
+        onDraftChange={persistSelection}
+        {...(demoTransport ? { transport: demoTransport } : {})}
+        quoteLoader={quoteLoader}
+        submitLabel={c.confirm}
+        refreshKey={refreshKey}
+        compact
+      />
+    </details>
+  );
   const image = waving && !reducedMotion && nonaAssets.wave ? nonaAssets.wave : nonaAssets.portrait;
   return (
-    <aside className="nona-concierge" data-demo={demo || undefined}>
+    <aside
+      className="nona-concierge"
+      data-demo={demo || undefined}
+      data-local={Boolean(localTransport) || undefined}
+    >
       {invited && !open && (
         <div className="nona-invitation" role="status">
           <Button
@@ -337,14 +401,7 @@ export function NonaConcierge({
           setOpen(!open);
         }}
       >
-        {image ? (
-          <img src={image} alt="Nona" />
-        ) : (
-          <>
-            <MessageCircle size={21} aria-hidden="true" />
-            <span>Nona</span>
-          </>
-        )}
+        {image ? <img src={image} alt="Nona" /> : <NonaMascot className="nona-launcher-mascot" />}
       </Button>
       <section
         id={`nona-chat-${guide.id}`}
@@ -364,10 +421,22 @@ export function NonaConcierge({
           {nonaAssets.portrait && (
             <img className="nona-header-portrait" src={nonaAssets.portrait} alt="Nona" />
           )}
+          {!nonaAssets.portrait && <NonaMascot className="nona-chat-mascot" />}
           <div>
-            <h2>{c.title}</h2>
-            <p>{demo ? c.demo : lastMode === "ai" ? "Nona · IA" : c.mode}</p>
+            <h2>Nona</h2>
+            <p>
+              {localTransport
+                ? "Nona · IA locale"
+                : demo
+                  ? c.demo
+                  : lastMode === "ai"
+                    ? "Nona · IA"
+                    : c.mode}
+            </p>
           </div>
+          <fieldset className="nona-language" disabled={busy}>
+            <LanguageSelect compact />
+          </fieldset>
           <Button
             variant="ghost"
             size="icon"
@@ -379,14 +448,13 @@ export function NonaConcierge({
             <X size={22} />
           </Button>
         </header>
-        <Conversation
+        <div
+          ref={content}
           className="nona-content"
           aria-live="polite"
           aria-relevant="additions text"
-          initial="instant"
-          resize="instant"
         >
-          <ConversationContent className="nona-content-inner">
+          <div className="nona-content-inner">
             <div
               role="log"
               aria-live="polite"
@@ -396,12 +464,18 @@ export function NonaConcierge({
               <ChatMessageView from="assistant" className="nona-bubble">
                 <MessageContent>
                   <p className="nona-property">{guide.name}</p>
-                  <p>{c.greeting.replace("{property}", guide.name)}</p>
-                  <MessageResponse>{nonaLine(locale, "welcome")}</MessageResponse>
+                  <p>
+                    {conciergeWelcome(locale, guide.name, {
+                      breakfast: hasBreakfast,
+                      massage: hasMassage,
+                    })}
+                  </p>
                 </MessageContent>
               </ChatMessageView>
+              {bookingCard && !messages.some((item) => item.id === bookingMessageId) && bookingCard}
               {messages.map((item) => (
                 <ChatMessageView
+                  data-message-id={item.id}
                   from={item.role}
                   key={item.id}
                   className={`nona-bubble ${item.role === "user" ? "nona-user" : ""}`}
@@ -475,38 +549,77 @@ export function NonaConcierge({
                         )}
                       </article>
                     ))}
+                    <div className="nona-services">
+                      {item.services?.map((service) => (
+                        <details key={service.id} className="nona-service-card">
+                          <summary>
+                            <span>{service.name}</span>
+                            <span className="nona-service-price">
+                              {new Intl.NumberFormat(locale, {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(service.price)}
+                              {" · "}
+                              {service.pricingType === "per_person" ? c.person : c.unit}
+                            </span>
+                          </summary>
+                          {service.imagePath && (
+                            <img src={service.imagePath} alt={service.name} loading="lazy" />
+                          )}
+                          <p>{service.description}</p>
+                          <p>
+                            {new Intl.NumberFormat(locale, {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(service.price)}{" "}
+                            · {service.pricingType === "per_person" ? c.person : c.unit}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="nona-select"
+                            onClick={() => void send(service.name)}
+                          >
+                            {c.selected}
+                          </Button>
+                        </details>
+                      ))}
+                    </div>
+                    {item.id === latestMessageId && Boolean(item.choices?.length) && (
+                      <div className="nona-suggestions" aria-label={c.choose}>
+                        {item.choices?.map((choice, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() => void send(choice.message)}
+                          >
+                            {choice.label}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    {item.id === bookingMessageId && bookingCard}
                   </MessageContent>
                 </ChatMessageView>
               ))}
             </div>
-            {choices.length > 0 && (
-              <div className="nona-suggestions" aria-label={c.choose}>
-                {choices.map((choice, index) => (
+            {showHelp && (
+              <div className="nona-suggestions">
+                {suggestions.map(({ label, query, icon: Icon }) => (
                   <Button
-                    key={index}
+                    key={label}
                     variant="outline"
                     disabled={busy}
-                    onClick={() => void send(choice.message)}
+                    onClick={() => void send(query)}
                   >
-                    {choice.label}
+                    <Icon aria-hidden="true" />
+                    {label}
                   </Button>
                 ))}
               </div>
             )}
-            <div className="nona-suggestions">
-              {suggestions.map(({ label, query, icon: Icon }) => (
-                <Button
-                  key={label}
-                  variant="outline"
-                  disabled={busy}
-                  onClick={() => void send(query)}
-                >
-                  <Icon aria-hidden="true" />
-                  {label}
-                </Button>
-              ))}
-            </div>
-            {available.length > 0 && (
+            {showHelp && available.length > 0 && (
               <Button
                 type="button"
                 variant="outline"
@@ -517,50 +630,8 @@ export function NonaConcierge({
                 {c.services}
               </Button>
             )}
-            <div className="nona-services">
-              {services.map((service) => (
-                <article key={service.id} className="nona-service-card">
-                  {service.imagePath && (
-                    <img src={service.imagePath} alt={service.name} loading="lazy" />
-                  )}
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <p>
-                    {new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(
-                      service.price,
-                    )}{" "}
-                    · {service.pricingType === "per_person" ? c.person : c.unit}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="nona-select"
-                    onClick={() => void send(service.name)}
-                  >
-                    {c.selected}
-                  </Button>
-                </article>
-              ))}
-            </div>
-            {selected && (
-              <article className="nona-booking-card" aria-label={selected.name}>
-                <h3>{selected.name}</h3>
-                <ServiceBookingForm
-                  key={selected.id}
-                  slug={slug ?? "villa-mare-demo"}
-                  service={selected}
-                  prefill={prefill}
-                  onDraftChange={persistSelection}
-                  {...(demoTransport ? { transport: demoTransport } : {})}
-                  quoteLoader={quoteLoader}
-                  submitLabel={c.confirm}
-                  refreshKey={refreshKey}
-                  compact
-                />
-              </article>
-            )}
             {error && <p role="alert">{error}</p>}
-            {onContact && (
+            {showHelp && onContact && (
               <Button
                 type="button"
                 variant="outline"
@@ -573,8 +644,8 @@ export function NonaConcierge({
                 {c.contact}
               </Button>
             )}
-          </ConversationContent>
-        </Conversation>
+          </div>
+        </div>
         <PromptInput className="nona-composer" onSubmit={() => send(message)} maxFiles={0}>
           <PromptInputTextarea
             ref={input}

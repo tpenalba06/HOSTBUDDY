@@ -3,9 +3,15 @@ const NonaConcierge = lazy(() =>
   import("./NonaConcierge").then((module) => ({ default: module.NonaConcierge })),
 );
 import {
-  ArrowDown,
   ArrowLeft,
   ArrowRight,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  Mail,
+  Luggage,
+  Wifi,
   Bookmark,
   Check,
   MapPin,
@@ -40,10 +46,12 @@ import {
   type GuideViewData,
 } from "./guide-model";
 
-import { homeSections, sectionVisual } from "./visual-library";
+import { homeSections } from "./visual-library";
 import { PresentationVideo } from "./PresentationVideo";
 import { resolvePropertyMedia } from "./property-media";
 import { PropertyMediaGallery } from "./PropertyMediaGallery";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
+import { nonaVisualCopy } from "@/lib/nona-visual-copy";
 
 const sectionTone = (key: string) => {
   const kind = sectionKind(key);
@@ -66,6 +74,7 @@ export function GuideView({
   onFeedback,
   offlineAction,
   conciergeSlug,
+  displayName,
 }: {
   guide: GuideViewData;
   sectionKey?: string | null;
@@ -75,8 +84,11 @@ export function GuideView({
   onFeedback?: () => void;
   offlineAction?: ReactNode;
   conciergeSlug?: string;
+  displayName?: string;
 }) {
   const { locale, t } = useI18n();
+  const visual = nonaVisualCopy(locale);
+  const [heroIndex, setHeroIndex] = useState(0);
   const [localKey, setLocalKey] = useState<string | null>(null);
   const [entryId, setEntryId] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
@@ -110,7 +122,23 @@ export function GuideView({
       icon: "✨",
       content: { items: [] },
     });
-  const { services: serviceSection, main, extra } = homeSections(sections);
+  const { services: serviceSection, main: allMain, extra: other } = homeSections(sections);
+  const primaryKeys = ["arrival", "wifi", "house", "contact"];
+  const main = primaryKeys.flatMap((key) =>
+    allMain.filter((section) => sectionKind(section.key) === key),
+  );
+  const extra = [
+    ...allMain.filter((section) => !primaryKeys.includes(sectionKind(section.key))),
+    ...other,
+  ];
+  const photos = [
+    ...new Set(
+      [cover, ...resolvePropertyMedia(sections).gallery.map((photo) => photo.url)].filter(
+        (url): url is string => !!url,
+      ),
+    ),
+  ];
+  const activePhoto = photos[heroIndex % photos.length] ?? cover;
   const address = guide.sections
     .flatMap((section) => section.content.items ?? [])
     .find((item) =>
@@ -286,38 +314,115 @@ export function GuideView({
         </>
       ) : (
         <>
-          <section className={`hb-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}>
-            {cover && (
-              <img
-                src={cover}
-                alt={hasPropertyPhotos ? guide.name : t("media.ambience")}
-                className="hb-cover-image"
-                fetchPriority="high"
-              />
-            )}
-            {!hasPropertyPhotos && <p className="hb-ambience-label">{t("media.ambience")}</p>}
-            <header className="hb-cover-nav">{navigation}</header>
-            <div className="hb-cover-copy">
-              <p>{t("guest.welcome")}</p>
-              <h1>{guide.name}</h1>
-              {guide.subtitle && <p className="hb-eyebrow">{guide.subtitle}</p>}
-            </div>
-            <button
-              className="hb-discover"
-              onClick={() =>
-                contentRef.current?.scrollIntoView({
-                  block: "start",
-                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-                    ? "auto"
-                    : "smooth",
-                })
-              }
-            >
-              <span>{t("guide.discover")}</span>
-              <span className="hb-icon-button">
-                <ArrowDown size={20} />
-              </span>
+          <header className="nona-guide-topbar">
+            <button className="nona-brand-home" onClick={() => go(null)} aria-label="NONA">
+              <NonaWordmark />
             </button>
+            <nav className="nona-guide-navigation" aria-label={guide.name}>
+              <button aria-current="page" onClick={() => go(null)}>
+                {visual.home}
+              </button>
+              {serviceSection && (
+                <button onClick={() => go(serviceSection.key)}>{visual.services}</button>
+              )}
+              {sections.some((section) => sectionKind(section.key) === "places") && (
+                <button
+                  onClick={() =>
+                    go(sections.find((section) => sectionKind(section.key) === "places")!.key)
+                  }
+                >
+                  {visual.nearby}
+                </button>
+              )}
+            </nav>
+            <div className="nona-guide-top-actions">
+              {(contact || (guide.messagingEnabled && onMessage)) && (
+                <button
+                  className="nona-contact-button"
+                  onClick={() => (contact ? go(contact.key) : onMessage?.())}
+                >
+                  <Mail size={18} />
+                  {visual.contact}
+                </button>
+              )}
+              <button
+                className="hb-icon-button nona-mobile-menu"
+                onClick={toggleMenu}
+                aria-label={t("guide.menu")}
+              >
+                <Menu size={25} />
+              </button>
+            </div>
+          </header>
+          <section className="nona-property-intro">
+            <div className="nona-property-heading">
+              <h1>{displayName ?? guide.name}</h1>
+              {(guide.subtitle || address) && (
+                <p>
+                  <MapPin size={17} />
+                  {guide.subtitle || address}
+                </p>
+              )}
+            </div>
+            <section
+              className={`hb-cover nona-property-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}
+            >
+              {activePhoto && (
+                <img
+                  src={activePhoto}
+                  alt={hasPropertyPhotos ? guide.name : t("media.ambience")}
+                  className="hb-cover-image"
+                  fetchPriority="high"
+                />
+              )}
+              {!hasPropertyPhotos && <p className="hb-ambience-label">{t("media.ambience")}</p>}
+              {photos.length > 1 && (
+                <button
+                  className="nona-photo-button"
+                  onClick={() => setHeroIndex((index) => (index + 1) % photos.length)}
+                  aria-label={visual.next}
+                >
+                  <ImageIcon size={16} />
+                  {visual.photos}
+                  <span className="sr-only">
+                    {" "}
+                    {(heroIndex % photos.length) + 1}/{photos.length}
+                  </span>
+                </button>
+              )}
+            </section>
+            {photos.length > 1 && (
+              <div className="nona-photo-navigation" aria-label={visual.photos}>
+                <button
+                  className="nona-gallery-arrow"
+                  onClick={() =>
+                    setHeroIndex((index) => (index + photos.length - 1) % photos.length)
+                  }
+                  aria-label={visual.previous}
+                >
+                  <ChevronLeft />
+                </button>
+                <div className="nona-photo-thumbnails">
+                  {photos.map((photo, index) => (
+                    <button
+                      key={photo}
+                      aria-label={`${visual.photos} ${index + 1}`}
+                      aria-pressed={heroIndex % photos.length === index}
+                      onClick={() => setHeroIndex(index)}
+                    >
+                      <img src={photo} alt="" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  className="nona-gallery-arrow"
+                  onClick={() => setHeroIndex((index) => (index + 1) % photos.length)}
+                  aria-label={visual.next}
+                >
+                  <ChevronRight />
+                </button>
+              </div>
+            )}
           </section>
           <div className="hb-guide-body hb-index" ref={contentRef}>
             <div className="hb-index-content">
@@ -332,18 +437,6 @@ export function GuideView({
                   <Search size={20} />
                 </button>
               </div>
-              {serviceSection && (
-                <button className="hb-services-feature" onClick={() => go(serviceSection.key)}>
-                  <img src={sectionVisual(serviceSection)} alt="" />
-                  <span>
-                    <span className="hb-eyebrow">{t("guide.servicesEyebrow")}</span>
-                    <strong>{cleanTitle(serviceSection.title)}</strong>
-                    <span className="hb-services-cta">
-                      {t("guide.servicesExplore")} <ArrowRight size={17} />
-                    </span>
-                  </span>
-                </button>
-              )}
               <div className="hb-section-grid">
                 {main.map((section) => (
                   <SectionCard
@@ -353,6 +446,33 @@ export function GuideView({
                   />
                 ))}
               </div>
+              {serviceSection && (
+                <section className="nona-home-services" aria-label={t("section.services")}>
+                  <div className="nona-services-heading">
+                    <h2>{visual.additionalServices}</h2>
+                    <button onClick={() => go(serviceSection.key)}>
+                      {visual.all}
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                  {(guide.services?.length ?? 0) > 0 ? (
+                    <ServiceList
+                      services={guide.services ?? []}
+                      onRequest={onRequest}
+                      t={t}
+                      rail
+                      discovery
+                      onDiscover={() => go(serviceSection.key)}
+                      actionLabel={visual.discover}
+                    />
+                  ) : (
+                    <button className="hb-button" onClick={() => go(serviceSection.key)}>
+                      {t("guide.servicesExplore")}
+                      <ArrowRight size={17} />
+                    </button>
+                  )}
+                </section>
+              )}
               {extra.length > 0 && (
                 <details className="hb-all-info">
                   <summary>
@@ -430,7 +550,7 @@ export function GuideView({
                 </div>
               )}
               {offlineAction}
-              <p className="hb-signature">HostBuddy · {t("guest.noInstall")}</p>
+              <p className="hb-signature">NONA · {t("guest.noInstall")}</p>
             </div>
           </div>
         </>
@@ -455,6 +575,7 @@ export function GuideView({
       <Dialog open={menu} onOpenChange={setMenu}>
         <DialogContent className="hb-guide hb-guide-menu" aria-describedby={undefined}>
           <DialogTitle>{t("guide.search")}</DialogTitle>
+          <LanguageSelect compact />
           <label className="hb-search">
             <Search size={20} />
             <input
@@ -490,11 +611,24 @@ export function GuideView({
 }
 
 function SectionCard({ section, onClick }: { section: PublicSection; onClick: () => void }) {
-  const photo = sectionVisual(section);
+  const { locale, t } = useI18n();
+  const kind = sectionKind(section.key);
+  const Icon =
+    kind === "wifi"
+      ? Wifi
+      : kind === "arrival"
+        ? CalendarDays
+        : kind === "contact"
+          ? Phone
+          : Luggage;
+  const title =
+    kind === "house" && section.title === t("section.house")
+      ? nonaVisualCopy(locale).equipment
+      : cleanTitle(section.title);
   return (
     <button className={`hb-section-card hb-tone-${sectionTone(section.key)} `} onClick={onClick}>
-      {photo && <img src={photo} alt="" loading="lazy" />}
-      <span className="hb-section-card-label">{cleanTitle(section.title)}</span>
+      <Icon className="nona-section-icon" strokeWidth={1.8} aria-hidden="true" />
+      <span className="hb-section-card-label">{title}</span>
       <span className="hb-card-arrow">
         <ArrowRight size={16} />
       </span>

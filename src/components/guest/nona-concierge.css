@@ -9,6 +9,9 @@
 .nona-concierge[data-demo] {
   position: absolute;
 }
+.nona-concierge[data-local] {
+  position: fixed;
+}
 .nona-launcher {
   min-height: 52px;
   padding: 12px 20px;
@@ -92,8 +95,8 @@
   position: absolute;
   bottom: 68px;
   right: 0;
-  width: min(420px, calc(100vw - 32px));
-  height: min(700px, calc(100dvh - 112px));
+  width: min(520px, calc(100vw - 32px));
+  height: min(780px, calc(100dvh - 112px));
   max-width: calc(100vw - 32px);
   display: flex;
   flex-direction: column;
@@ -107,9 +110,10 @@
   display: none;
 }
 .nona-concierge[data-demo] .nona-panel {
-  height: min(580px, calc(100dvh - 160px));
+  height: min(780px, calc(100dvh - 112px));
 }
 .nona-header {
+  flex-shrink: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -132,15 +136,40 @@
 .nona-header button {
   flex-shrink: 0;
 }
+.nona-language {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.nona-language > label {
+  min-height: 40px;
+  gap: 4px;
+  padding: 0 8px;
+}
 .nona-content {
   flex: 1;
   min-height: 0;
   overflow-wrap: anywhere;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
 }
 .nona-content-inner {
   gap: 0;
   padding: 18px 16px;
   overscroll-behavior: contain;
+}
+.nona-content-inner > .nona-suggestions {
+  margin-top: 12px;
+}
+.nona-bubble .nona-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 8px 0 0;
+}
+.nona-bubble .nona-suggestions button {
+  min-height: 40px;
 }
 .nona-messages {
   display: flex;
@@ -212,6 +241,31 @@
   font-size: 16px;
   line-height: 1.55;
 }
+.nona-service-card > summary,
+.nona-booking-card > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  gap: 8px;
+}
+.nona-service-card > summary {
+  flex-wrap: wrap;
+}
+.nona-service-price {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+.nona-service-card > summary::after,
+.nona-booking-card > summary::after {
+  content: "+";
+  margin-left: auto;
+}
+.nona-service-card[open] > summary::after,
+.nona-booking-card[open] > summary::after {
+  content: "−";
+}
 .nona-select {
   width: 100%;
   white-space: normal;
@@ -231,31 +285,36 @@
   line-height: 1.5;
 }
 .nona-composer {
-  padding: 12px;
+  flex-shrink: 0;
+  padding: 8px 12px;
   border-top: 1px solid var(--border);
   background: var(--background);
 }
 .nona-composer > [data-slot="input-group"] {
+  position: relative;
   background: var(--card);
   border-color: var(--input);
 }
 .nona-composer textarea {
   min-width: 0;
-  min-height: 64px;
-  max-height: 120px;
-  padding: 12px;
+  min-height: 52px;
+  max-height: 104px;
+  padding: 12px 64px 12px 12px;
   font-size: 16px;
   line-height: 1.5;
   color: var(--foreground);
 }
 .nona-composer-footer {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
   justify-content: flex-end;
-  padding: 0 8px 8px;
+  padding: 0;
 }
 .nona-composer-footer button {
-  width: 48px;
-  height: 48px;
-  min-height: 48px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
   padding: 0;
 }
 .nona-panel :focus-visible,
@@ -263,9 +322,20 @@
   outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
-@media (max-width: 430px) {
-  .nona-panel {
-    width: calc(100vw - 32px);
+@media (max-width: 600px) {
+  .nona-concierge:not([data-demo]) .nona-panel,
+  .nona-concierge[data-local] .nona-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nona-concierge:has(.nona-panel:not([hidden])) > .nona-launcher {
+    visibility: hidden;
   }
   .nona-header {
     padding: 14px;

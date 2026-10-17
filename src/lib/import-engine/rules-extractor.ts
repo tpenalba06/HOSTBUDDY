@@ -137,30 +137,39 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
       };
     }
 
-    const unique = [...new Set(hits)].slice(0, 8);
+    const evidence = [...new Set(hits)];
+    // The preview stays short, but review decisions and provenance use ALL
+    // evidence. A late contradiction or credential must never disappear.
+    const shortened = evidence.length > 8;
+    const unique = shortened ? [...evidence.slice(0, 4), ...evidence.slice(-4)] : evidence;
     const joined = unique.join("\n");
-    const ambiguous = unique.some((hit) => AMBIGUOUS.test(hit));
-    const conflicting = hasConflictingEvidence(def.key, unique);
+    const ambiguous = evidence.some((hit) => AMBIGUOUS.test(hit));
+    const conflicting = hasConflictingEvidence(def.key, evidence);
 
     // Explicit pasted facts are found; low-trust web text and uncertain evidence require review.
     // An explicit absence is evidence, but never proof that the amenity exists.
     // Keep the original wording in review; optional sections only use found fields.
     const absentAmenity =
       ["pool", "parking", "climate"].includes(def.key) &&
-      unique.some((hit) =>
+      evidence.some((hit) =>
         /(?:\b(?:no|without|sans|kein(?:e|en)?|ohne|sin|senza|sem)\b|pas de|ne .{0,25}pas|not available|non disponible)/i.test(
           hit,
         ),
       );
     const externalAmenity =
       ["pool", "parking", "climate"].includes(def.key) &&
-      unique.some((hit) =>
+      evidence.some((hit) =>
         /(?:publique?|public|municipal|nearby|à proximité|proche de|near the|in der nähe)/i.test(
           hit,
         ),
       );
     const needsReview =
-      ambiguous || conflicting || absentAmenity || externalAmenity || baseConfidence < 0.7;
+      shortened ||
+      ambiguous ||
+      conflicting ||
+      absentAmenity ||
+      externalAmenity ||
+      baseConfidence < 0.7;
     const confidence = needsReview
       ? Math.min(0.58, baseConfidence)
       : Math.max(0.78, baseConfidence);
@@ -169,7 +178,7 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
       key: def.key,
       value: joined,
       status: needsReview ? "to_verify" : "found",
-      rawValue: joined,
+      rawValue: evidence.join("\n"),
       confidence,
     };
   });

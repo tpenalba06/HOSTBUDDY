@@ -4,18 +4,25 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { PublicGuide } from "@/lib/data/public-guide.functions";
 import { conciergeCopy } from "@/lib/concierge-copy";
-vi.mock("@/lib/i18n", () => ({ useI18n: () => ({ locale: "en", t: (key: string) => key }) }));
+vi.mock("@/lib/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/i18n")>()),
+  useI18n: () => ({ locale: "en", setLocale: vi.fn(), t: (key: string) => key }),
+}));
 vi.mock("@/components/ai-elements/conversation", () => ({
   Conversation: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   ConversationContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock("@/components/ai-elements/message", () => ({
-  Message: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Message: ({ children, className }: { children: ReactNode; className?: string }) => (
+    <div className={className}>{children}</div>
+  ),
   MessageContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   MessageResponse: ({ children }: { children: ReactNode }) => <p>{children}</p>,
 }));
 import { NonaConcierge } from "./NonaConcierge";
 import { nonaAssets } from "@/lib/nona-assets";
+import { LocalConciergeTransport } from "@/lib/concierge-transport";
+import { guidedProposal, validateConciergeTurn, type ConciergeRequest } from "@/lib/concierge";
 let root: Root;
 let host: HTMLDivElement;
 let reduced = false;
@@ -66,6 +73,29 @@ afterEach(async () => {
 async function renderNona(value = guide) {
   await act(async () => root.render(<NonaConcierge demo guide={value} />));
 }
+it("uses the isolated model transport while forcing simulated booking permissions", async () => {
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  const transport = vi.fn(async (request: ConciergeRequest) => ({
+    ...validateConciergeTurn(request, guide, guidedProposal(request, guide)),
+    text: "A freshly generated local response.",
+    mode: "ai" as const,
+  }));
+  await act(async () =>
+    root.render(
+      <LocalConciergeTransport.Provider value={transport}>
+        <NonaConcierge guide={guide} slug="nona-local" />
+      </LocalConciergeTransport.Provider>,
+    ),
+  );
+  await click(".nona-launcher");
+  await sendMessage("Wi-Fi");
+  expect(transport).toHaveBeenCalledOnce();
+  expect(host.textContent).toContain("A freshly generated local response.");
+  expect(host.querySelector(".nona-header")?.textContent).toContain("IA locale");
+  expect(host.querySelector(".nona-concierge")?.getAttribute("data-demo")).toBe("true");
+  expect(fetch).not.toHaveBeenCalled();
+});
 async function advance(ms: number) {
   await act(async () => vi.advanceTimersByTime(ms));
 }
@@ -74,6 +104,17 @@ async function click(selector: string) {
   if (!button) throw new Error(`Missing control ${selector}`);
   await act(async () => button.click());
   return button;
+}
+async function sendMessage(value: string) {
+  const input = host.querySelector<HTMLTextAreaElement>(".nona-composer textarea")!;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(
+      input,
+      value,
+    );
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await click(".nona-composer button[type=submit]");
 }
 it("shows a text invitation at 3 seconds before a click without inventing a mascot or opening chat", async () => {
   await renderNona();
@@ -135,13 +176,14 @@ it("does not repeat for a short visit and early launcher click cancels the invit
   await advance(5000);
   expect(host.querySelector(".nona-invitation")).toBeNull();
 });
-it("opens from invitation, shows exact property, four grounded shortcuts and demo disclosure", async () => {
+it("opens from invitation without unsolicited shortcuts and keeps demo disclosure", async () => {
   await renderNona();
   await advance(3000);
   await click(".nona-invitation-open");
   expect(host.querySelector(".nona-property")?.textContent).toBe(guide.name);
   expect(host.textContent).toContain("Welcome to Villa Mare Exact");
-  expect(host.querySelectorAll(".nona-suggestions button")).toHaveLength(4);
+  expect(host.querySelectorAll(".nona-suggestions button")).toHaveLength(0);
+  expect(host.querySelector(".nona-quick")).toBeNull();
   expect(host.textContent).toContain("Demo · no real order or payment");
   expect(host.querySelector("textarea")?.getAttribute("aria-label")).toBe(
     "Your question or request…",
@@ -150,6 +192,8 @@ it("opens from invitation, shows exact property, four grounded shortcuts and dem
 });
 it("does not offer breakfast or services without available catalogue entries", async () => {
   await renderNona({ ...guide, services: [] });
+  await click(".nona-launcher");
+  await sendMessage("Help me");
   expect(host.querySelectorAll(".nona-suggestions button")).toHaveLength(3);
   expect(host.querySelector(".nona-quick")).toBeNull();
   await renderNona({
@@ -186,9 +230,53 @@ it("shortcut returns published facts and long facts remain fully accessible", as
     ],
   });
   await click(".nona-launcher");
+  await sendMessage("Help me");
   await click(".nona-suggestions button");
   expect(host.querySelector("details p")?.textContent).toContain(text);
   expect(host.querySelector("summary")?.textContent).toBe("View full information");
+});
+it("offers navigation and contact only after help, then hides them when the topic changes", async () => {
+  await act(async () => root.render(<NonaConcierge demo guide={guide} onContact={() => {}} />));
+  await click(".nona-launcher");
+  expect(host.querySelector(".nona-quick")).toBeNull();
+  await sendMessage("Bonjour Nona");
+  expect(host.querySelectorAll(".nona-suggestions button")).toHaveLength(0);
+  await sendMessage("Tu peux m'aider ?");
+  expect(host.querySelectorAll(".nona-suggestions button")).toHaveLength(4);
+  expect(host.querySelectorAll(".nona-quick")).toHaveLength(2);
+  await click(".nona-suggestions button");
+  expect(host.querySelectorAll(".nona-suggestions button")).toHaveLength(0);
+  expect(host.querySelector(".nona-quick")).toBeNull();
+});
+it("keeps offered cards before later typed messages instead of repeating them at the bottom", async () => {
+  const transport = vi.fn(async (request: ConciergeRequest) => ({
+    ...validateConciergeTurn(request, guide, guidedProposal(request, guide)),
+    mode: "ai" as const,
+    text:
+      request.message === "Breakfast" ? "Let's prepare breakfast." : "You can keep talking to me.",
+  }));
+  await act(async () =>
+    root.render(
+      <LocalConciergeTransport.Provider value={transport}>
+        <NonaConcierge guide={guide} slug="nona-local" />
+      </LocalConciergeTransport.Provider>,
+    ),
+  );
+  await click(".nona-launcher");
+  await sendMessage("Breakfast");
+  const offered = host.querySelector(".nona-service-card")!;
+  expect(offered).not.toBeNull();
+  await sendMessage("Can I also ask another question?");
+  const latestUser = [...host.querySelectorAll(".nona-user")].at(-1)!;
+  const latestReply = [...host.querySelectorAll(".nona-bubble")].at(-1)!;
+  expect(host.querySelectorAll(".nona-service-card")).toHaveLength(1);
+  expect(
+    offered.compareDocumentPosition(latestUser) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    offered.compareDocumentPosition(latestReply) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(latestReply.textContent).toContain("You can keep talking to me.");
 });
 it("closes on Escape and returns focus to launcher", async () => {
   await renderNona();

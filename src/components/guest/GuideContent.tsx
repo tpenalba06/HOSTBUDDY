@@ -75,7 +75,9 @@ export function WifiTemplate({
 }) {
   const [copyError, setCopyError] = useState(false);
   const explicit = wifiCredentials(items.map((item) => item.text).join("\n"));
-  const network = explicit ? (explicit.network ?? "—") : (items[0]?.text ?? "—");
+  // A recognized password does not mean the remaining source can be discarded.
+  // Keep the original information visible when no explicit network label parsed.
+  const network = explicit?.network ?? items[0]?.text ?? "—";
   const password = explicit ? explicit.password : items[1]?.text;
   const copyText = password || (explicit ? explicit.network : items[0]?.text);
 
@@ -241,16 +243,29 @@ export function ServiceList({
   services,
   onRequest,
   t,
+  rail = false,
+  actionLabel,
+  discovery = false,
+  onDiscover,
 }: {
   services: PublicService[];
   onRequest: ((id: string) => void) | undefined;
   t: (key: string) => string;
+  rail?: boolean;
+  actionLabel?: string;
+  discovery?: boolean;
+  onDiscover?: (id: string) => void;
 }) {
   if (!services.length) return <p className="rounded-xl bg-muted p-4">{t("guest.noServices")}</p>;
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div
+      className={`hb-service-list grid gap-4 sm:grid-cols-2 ${rail ? "hb-service-rail" : ""} ${discovery ? "nona-service-discovery" : ""}`}
+    >
       {services.map((service) => (
-        <article key={service.id} className="overflow-hidden rounded-xl border bg-card">
+        <article
+          key={service.id}
+          className="hb-service-card overflow-hidden rounded-xl border bg-card"
+        >
           {service.imagePath && (
             <img
               src={service.imagePath}
@@ -259,28 +274,34 @@ export function ServiceList({
               className="aspect-[4/3] w-full object-cover"
             />
           )}
-          <div className="p-4">
-            <div className="flex justify-between gap-3">
+          <div className="hb-service-info p-4">
+            <div className="hb-service-description flex justify-between gap-3">
               <div>
-                <p className="font-bold">{service.name}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>
+                <p className="hb-service-name font-bold">{service.name}</p>
+                <p className="hb-service-summary mt-1 text-sm text-muted-foreground">
+                  {service.description}
+                </p>
               </div>
-              <strong className="shrink-0 text-primary">
-                {Number(service.price).toFixed(2)} €
-                {service.pricingType === "per_person" && (
-                  <span className="block text-xs font-normal">{t("services.perPerson")}</span>
-                )}
-              </strong>
+              {!discovery && (
+                <strong className="shrink-0 text-primary">
+                  {Number(service.price).toFixed(2)} €
+                  {service.pricingType === "per_person" && (
+                    <span className="block text-xs font-normal">{t("services.perPerson")}</span>
+                  )}
+                </strong>
+              )}
             </div>
             <Button
               className="mt-4 w-full"
-              disabled={!onRequest}
-              onClick={() => onRequest?.(service.id)}
+              disabled={discovery ? !onDiscover : !onRequest}
+              onClick={() => (discovery ? onDiscover?.(service.id) : onRequest?.(service.id))}
             >
               <ShoppingBag />
-              {t("guest.request")}
+              {actionLabel ?? t("guest.request")}
             </Button>
-            <p className="mt-2 text-center text-xs text-muted-foreground">{t("guest.unpaid")}</p>
+            {!discovery && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">{t("guest.unpaid")}</p>
+            )}
           </div>
         </article>
       ))}

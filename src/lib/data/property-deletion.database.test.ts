@@ -164,7 +164,9 @@ it("denies direct REST deletion even for an owner", async () => {
   await rejected(`DELETE FROM properties WHERE id='${p1}'`, "permission denied");
 });
 it("preserves files referenced by global services", async () => {
-  await db.exec(`INSERT INTO services(id,organization_id,name,price,image_path) VALUES('${globalService}','${org}','Global',0,'${org}/${p1}/shared.jpg');
+  await db.exec(`INSERT INTO section_media(organization_id,property_id,section_id,media_type,storage_path,mime_type,file_size)
+ VALUES('${org}','${p1}','${section}','image','${org}/${p1}/shared.jpg','image/jpeg',100);
+ INSERT INTO services(id,organization_id,name,price,image_path) VALUES('${globalService}','${org}','Global',0,'${org}/${p1}/shared.jpg');
  INSERT INTO storage.objects(bucket_id,name) VALUES('guide-media','${org}/${p1}/shared.jpg');`);
   const rows = await query(`SELECT delete_property_permanently('${p1}','Delete me') AS job`);
   expect((rows[0] as { job: { paths: string[] } }).job.paths).toEqual([]);

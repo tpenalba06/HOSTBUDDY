@@ -12,11 +12,15 @@ vi.mock("node:fs", () => ({
           : "codec",
     ),
   readdirSync: (path: string) =>
-    path.endsWith("guide-fonts")
-      ? files.legacy
-        ? ["text.ttf", "text.woff2"]
-        : ["text.woff2"]
-      : ["cover.webp"],
+    path.replaceAll("\\", "/").endsWith("nona/fonts")
+      ? ["nona-ui.woff2"]
+      : path.endsWith("nona")
+        ? ["logo-reference.png", "mascotte-reference.png", "official-da.png"]
+        : path.endsWith("guide-fonts")
+          ? files.legacy
+            ? ["text.ttf", "text.woff2"]
+            : ["text.woff2"]
+          : ["cover.webp"],
 }));
 
 function manifest() {
@@ -50,6 +54,13 @@ beforeEach(() => {
   files.legacy = false;
 });
 describe("offline reader release cache", () => {
+  it("includes official NONA fonts and character without downloading the full manager composite", () => {
+    const assets = manifest().assets;
+    expect(assets).toContain("/nona/fonts/nona-ui.woff2");
+    expect(assets).toContain("/nona/logo-reference.png");
+    expect(assets).toContain("/nona/mascotte-reference.png");
+    expect(assets).not.toContain("/nona/official-da.png");
+  });
   it("does not fetch both TTF and its equivalent WOFF2 in the offline shell", () => {
     files.legacy = true;
     expect(manifest().assets).toContain("/guide-fonts/text.woff2");

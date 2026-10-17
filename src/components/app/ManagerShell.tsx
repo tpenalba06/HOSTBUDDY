@@ -17,6 +17,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/Logo";
+import { NonaMascot, NonaWordmark } from "@/components/shared/NonaBrand";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 
@@ -152,10 +153,7 @@ export function ManagerShell({
               className="h-auto min-w-0 justify-start gap-2 px-1 font-display text-lg font-semibold text-foreground"
               onClick={() => navigate("properties")}
             >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-                H
-              </span>
-              <span className="truncate">HostBuddy</span>
+              <NonaWordmark />
             </Button>
           ) : (
             <Logo to="/app" />
@@ -178,7 +176,9 @@ export function ManagerShell({
         className={`manager-shell-grid ${embedded ? "h-full pt-[69px]" : "mx-auto w-full max-w-7xl"}`}
       >
         <aside className="manager-shell-sidebar min-h-0 overflow-y-auto border-r bg-card/60 p-4">
-          <div className="manager-sidebar-wordmark">HostBuddy</div>
+          <div className="manager-sidebar-wordmark">
+            <NonaWordmark />
+          </div>
           <nav className="space-y-1" aria-label={t("demo.manager")}>
             <ShellItem
               item={properties}
@@ -210,6 +210,7 @@ export function ManagerShell({
               />
             )}
           </nav>
+          <NonaMascot className="manager-sidebar-mascot" />
         </aside>
         <main
           ref={contentRef}
@@ -295,13 +296,23 @@ function ShellItem({
   const classes = `flex min-h-12 w-full items-center gap-3 rounded-lg px-3 font-semibold transition ${primary ? "mt-5 bg-primary text-primary-foreground" : active ? "bg-secondary text-primary" : "hover:bg-muted"}`;
   if (onNavigate)
     return (
-      <Button variant="ghost" className={classes} onClick={() => onNavigate(item.id)}>
+      <Button
+        variant="ghost"
+        className={classes}
+        aria-current={active ? "page" : undefined}
+        onClick={() => onNavigate(item.id)}
+      >
         <item.icon className="h-5 w-5" />
         <span className="min-w-0 truncate">{item.label}</span>
       </Button>
     );
   return (
-    <Link to={item.to} preload="intent" className={classes}>
+    <Link
+      to={item.to}
+      preload="intent"
+      className={classes}
+      aria-current={active ? "page" : undefined}
+    >
       <item.icon className="h-5 w-5" />
       <span className="min-w-0 truncate">{item.label}</span>
     </Link>

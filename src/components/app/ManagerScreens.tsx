@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { nonaVisualCopy } from "@/lib/nona-visual-copy";
 import { ambienceFor } from "@/components/guest/visual-library";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
 import { DeletePropertyDialog } from "./DeletePropertyDialog";
@@ -163,7 +164,8 @@ export function ManagerPropertiesScreen({
     name: string,
   ) => Promise<{ cleanupPending: boolean; billingPending: boolean }>;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const visual = nonaVisualCopy(locale);
   const [qr, setQr] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [search, setSearch] = useState("");
@@ -203,7 +205,7 @@ export function ManagerPropertiesScreen({
             </Button>
           </div>
         ))}
-      <div className="grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
+      <div className="manager-properties-heading grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
         <PageHeading title={t("app.myProperties")} />
         <div className="manager-property-tools">
           <label className="manager-property-search">
@@ -260,6 +262,9 @@ export function ManagerPropertiesScreen({
             </span>
           </button>
         ))}
+        <button type="button" disabled title={visual.trashHint} className="manager-trash-tab">
+          {visual.trash}
+        </button>
       </div>
 
       {properties.length ? (
@@ -307,6 +312,29 @@ export function ManagerPropertiesScreen({
               >
                 {property.status === "published" ? t("app.published") : t("app.draft")}
               </span>
+              <div className="manager-property-quick-actions">
+                {renderEdit ? (
+                  renderEdit(
+                    property,
+                    "btn btn-secondary",
+                    role === "member" ? t("common.view") : t("common.edit"),
+                  )
+                ) : (
+                  <Button variant="outline" onClick={() => onEdit(property.id)}>
+                    <Pencil size={16} />
+                    {role === "member" ? t("common.view") : t("common.edit")}
+                  </Button>
+                )}
+                {property.status === "published" &&
+                  (renderView ? (
+                    renderView(property, "btn btn-secondary", visual.card)
+                  ) : (
+                    <Button variant="outline" onClick={() => onView(property.slug)}>
+                      <Eye size={16} />
+                      {visual.card}
+                    </Button>
+                  ))}
+              </div>
               <details className="manager-property-menu">
                 <summary aria-label={t(role === "member" ? "common.view" : "common.edit")}>
                   <MoreHorizontal size={19} />

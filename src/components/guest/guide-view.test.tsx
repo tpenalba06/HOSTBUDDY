@@ -35,7 +35,8 @@ describe("shared guest guide compatibility", () => {
     const html = renderToStaticMarkup(<GuideView guide={guide} />);
     expect(html).toContain("Maison réelle");
     expect(html).toContain("media.ambience");
-    expect(html).toContain("/hostbuddy-media/wifi.webp");
+    expect(html).toContain("nona-section-icon");
+    expect(html).not.toContain("/hostbuddy-media/wifi.webp");
     expect(html).not.toMatch(/Villa Mare|soleil2026|breakfast|arrival.jpg|spa.jpg/);
     expect(guideCover(guide)).toBe("/hostbuddy-media/apartment.webp");
   });
@@ -44,6 +45,16 @@ describe("shared guest guide compatibility", () => {
     expect(html).toContain("Réseau Maison / mot de passe secret");
     expect(html).not.toContain("guest.wifiPassword");
     expect(html).toContain("guest.copy");
+  });
+  it("preserves the original Wi-Fi information when only the password can be normalized", () => {
+    const text = "Wi-Fi : RECETTE_FINAL ; mot de passe SYNTHETIQUE_2026.";
+    const combined = {
+      ...guide,
+      sections: [{ ...section, content: { items: [{ label: "Wi-Fi", text }] } }],
+    };
+    const html = renderToStaticMarkup(<GuideView guide={combined} sectionKey="wifi" />);
+    expect(html).toContain(text);
+    expect(html).toContain("guest.wifiPassword");
   });
   it("preserves custom sections, their full text, video and captions", () => {
     const custom: PublicSection = {
@@ -224,7 +235,8 @@ describe("presentation video placement", () => {
       />,
     );
     expect(html.indexOf("hb-cover")).toBeLessThan(html.indexOf("hb-presentation-video"));
-    expect(html.indexOf("hb-presentation-video")).toBeLessThan(html.indexOf("hb-services-feature"));
+    expect(html.indexOf("hb-presentation-video")).toBeLessThan(html.indexOf("nona-home-services"));
+    expect(html.indexOf("hb-section-grid")).toBeLessThan(html.indexOf("nona-home-services"));
     expect(html.match(/<video/g)).toHaveLength(1);
     expect(html).toContain("playsInline");
     expect(html).not.toContain("autoPlay");

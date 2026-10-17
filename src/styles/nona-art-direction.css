@@ -1,0 +1,1207 @@
+@import "./nona-tokens.css";
+@import "./nona-fonts.css";
+/* NONA, official composite supplied 17 October 2026. Presentation only. */
+:root,
+.manager-shell,
+.hb-guide,
+.nona-concierge {
+  --font-display: var(--nona-font-heading);
+  --font-sans: var(--nona-font-ui);
+  --background: #fcf9f2;
+  --foreground: #210804;
+  --card: #fcf9f2;
+  --card-foreground: #210804;
+  --primary: #780e2f;
+  --primary-foreground: #ffffff;
+  --secondary: #f8eee8;
+  --secondary-foreground: #780e2f;
+  --muted: #f6f1ec;
+  --muted-foreground: #6c6466;
+  --accent: #f9e8df;
+  --accent-foreground: #780e2f;
+  --border: #e8e0db;
+  --input: #dcd5d2;
+  --ring: #780e2f;
+  --ink: #780e2f;
+  --ink-foreground: #fcf9f2;
+  --radius: 0.65rem;
+  --shadow-soft: 0 3px 14px #63132d08;
+}
+body {
+  font-family: var(--font-sans);
+}
+.nona-wordmark {
+  display: inline-block;
+  width: 120px;
+  height: 42px;
+  flex-shrink: 0;
+  background: url("/nona/logo-reference.png") no-repeat -24px -14px / 202px 90px;
+  mix-blend-mode: multiply;
+}
+.nona-official-mascot {
+  display: block;
+  width: 168px;
+  height: 164px;
+  flex-shrink: 0;
+  background: url("/nona/official-da.png") no-repeat -32px -600px / 1994px 789px;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.nona-brand-home {
+  padding: 0;
+  border: 0;
+  background: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.manager-shell.manager-shell {
+  background: var(--background);
+}
+.manager-shell > header {
+  background: var(--background);
+  border-color: var(--border);
+}
+.manager-shell .manager-shell-grid {
+  max-width: none;
+  grid-template-columns: 226px minmax(0, 1fr);
+}
+.manager-shell .manager-shell-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 70px);
+  padding: 22px 16px;
+  background: #fcf9f2;
+  border-color: var(--border);
+}
+.manager-shell .manager-sidebar-wordmark {
+  margin: 0 5px 26px;
+  line-height: 1;
+}
+.manager-shell .manager-sidebar-wordmark .nona-wordmark {
+  width: 125px;
+}
+.manager-shell .manager-shell-sidebar nav :is(a, button) {
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #210804;
+  background: transparent;
+}
+.manager-shell .manager-shell-sidebar nav svg {
+  width: 23px;
+  height: 23px;
+  color: var(--primary);
+}
+.manager-shell .manager-shell-sidebar nav [aria-current="page"],
+.manager-shell .manager-shell-sidebar nav .bg-primary {
+  color: white;
+  background: var(--primary);
+}
+.manager-shell .manager-shell-sidebar nav .bg-primary svg {
+  color: var(--primary);
+}
+.manager-shell .manager-shell-sidebar nav [aria-current="page"] svg {
+  color: var(--primary-foreground);
+}
+.manager-shell .manager-shell-sidebar nav > :last-child {
+  margin-top: 20px;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  background: transparent;
+  font-size: 12px;
+}
+.manager-shell .manager-sidebar-mascot {
+  margin: 30px auto 0;
+}
+.manager-shell .manager-shell-content {
+  padding: 32px 32px 56px;
+}
+.manager-shell :is(h1, h2, h3) {
+  color: var(--primary);
+  letter-spacing: -0.04em;
+}
+.manager-shell .manager-properties {
+  padding: 0;
+}
+.manager-shell .manager-properties-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+.manager-shell .manager-properties-heading h1 {
+  font-size: clamp(34px, 4cqw, 52px);
+  line-height: 1.1;
+  font-weight: 600;
+}
+.manager-shell .manager-properties-heading > button {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 14px;
+  border-radius: 10px;
+  min-height: 48px;
+  padding-inline: 22px;
+}
+.manager-shell .manager-property-tools {
+  grid-row: 2;
+  grid-column: 1/-1;
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin: 0;
+}
+.manager-shell .manager-property-search {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+.manager-shell .manager-property-search svg {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+}
+.manager-shell .manager-property-search input {
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  font-size: 14px;
+  background: transparent;
+  outline-offset: 4px;
+}
+.manager-shell .manager-property-sort {
+  font-size: 12px;
+  max-width: 135px;
+  min-height: 44px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.manager-shell .manager-property-filters {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin: 13px 0 20px;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  border-radius: 0;
+}
+.manager-shell .manager-property-filters button {
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 2px solid transparent;
+}
+.manager-shell .manager-property-filters button[aria-pressed="true"] {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+.manager-shell .manager-trash-tab {
+  color: var(--muted-foreground);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.manager-shell .manager-property-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.manager-shell .manager-property-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: none;
+  padding-bottom: 10px;
+  overflow: hidden;
+  background: var(--card);
+}
+.manager-shell .manager-property-photo {
+  aspect-ratio: 1.78;
+  border-radius: 0;
+}
+.manager-shell .manager-property-card > div:nth-child(2) {
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 12px 12px 0;
+}
+.manager-shell .manager-property-card h2 {
+  color: #211a18;
+  font-size: clamp(21px, 2.1cqw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+.manager-shell .manager-property-card > div:nth-child(2) > p {
+  font-size: 12px;
+  margin-top: 6px;
+}
+.manager-shell .manager-property-status {
+  position: absolute;
+  inset: 10px 10px auto auto;
+  width: fit-content;
+  margin: 0;
+  padding: 4px 13px;
+  border-radius: 30px;
+  background: #f4faeb;
+  color: #314129;
+  font-size: 11px;
+  font-weight: 500;
+}
+.manager-shell .manager-property-status.is-draft {
+  color: #67513d;
+  background: #fff1dd;
+}
+.manager-shell .manager-property-quick-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 10px 0;
+}
+.manager-shell .manager-property-quick-actions :is(button, a) {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+  padding: 7px 8px;
+  border: 1px solid #cc7c92;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 12px;
+  line-height: 1.3;
+  box-shadow: none;
+  white-space: normal;
+}
+.manager-shell .manager-property-quick-actions svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.manager-shell .manager-property-menu {
+  position: relative;
+  inset: auto;
+  float: right;
+  margin: 7px 10px 0;
+}
+.manager-shell .manager-property-menu summary {
+  min-height: 28px;
+  min-width: 30px;
+}
+.manager-shell .manager-property-menu[open] {
+  float: none;
+  margin: 7px 10px;
+}
+.manager-shell .manager-property-actions {
+  position: static;
+  box-shadow: none;
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+.manager-shell .surface,
+.manager-shell .field {
+  border-color: var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: none;
+}
+.manager-shell .btn,
+.manager-shell [data-slot="button"] {
+  border-radius: 8px;
+}
+.manager-shell input:focus-visible,
+.manager-shell select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.hb-guide.hb-guide {
+  background: var(--background);
+  --guide-space: 24px;
+  --guide-sea: var(--primary);
+  --guide-sage: var(--primary);
+  --guide-taupe: var(--primary);
+}
+.nona-guide-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1170px;
+  margin: auto;
+  padding: 22px 26px 16px;
+}
+.nona-guide-navigation {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-left: auto;
+  font-size: 14px;
+}
+.nona-guide-navigation button {
+  padding: 8px 0;
+  min-height: 44px;
+  border-bottom: 2px solid transparent;
+}
+.nona-guide-navigation [aria-current="page"] {
+  color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+.nona-guide-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.nona-contact-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--primary);
+  padding: 10px 14px;
+  min-height: 44px;
+  border: 1px solid #cd8695;
+  border-radius: 9px;
+  font-size: 13px;
+  background: #f8e3d4;
+}
+.nona-mobile-menu {
+  display: none;
+}
+.nona-property-intro {
+  max-width: 1170px;
+  margin: 0 auto;
+  padding: 0 26px;
+  display: flex;
+  flex-direction: column;
+}
+.nona-property-heading {
+  margin: 8px 0 14px;
+}
+.hb-guide .nona-property-heading h1 {
+  font-size: clamp(38px, 4.6cqw, 58px);
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+.nona-property-heading > p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+.hb-guide .nona-property-cover {
+  width: 100%;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+  aspect-ratio: 2.9;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: none;
+}
+.hb-guide .nona-property-cover::after {
+  display: none;
+}
+.nona-property-cover .hb-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.nona-photo-button {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: #fcf9f2ed;
+  font-size: 12px;
+}
+.nona-photo-navigation {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 12px 0 4px;
+}
+.nona-gallery-arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f8e3d4;
+  color: var(--primary);
+}
+.nona-photo-thumbnails {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+}
+.nona-photo-thumbnails button {
+  flex: 0 0 calc((100% - 30px) / 4);
+  height: 80px;
+  min-height: 44px;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+.nona-photo-thumbnails button[aria-pressed="true"] {
+  border-color: var(--primary);
+}
+.nona-photo-thumbnails img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hb-guide .hb-index {
+  max-width: 1170px;
+  display: block;
+  padding: 12px 26px 110px;
+}
+.hb-guide .hb-index-content {
+  display: block;
+  max-width: none;
+}
+.hb-guide .hb-index-heading {
+  display: none;
+}
+.hb-guide .hb-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.hb-guide .hb-section-card {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  height: auto;
+  aspect-ratio: auto;
+  padding: 12px 18px;
+  gap: 16px;
+  border: 1px solid rgb(33 8 4 / 80%);
+  border-radius: 9px;
+  box-shadow: none;
+  background: transparent;
+  color: #210804;
+  text-align: left;
+}
+.hb-guide .hb-section-card::after {
+  display: none;
+}
+.hb-guide .nona-section-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+.hb-guide .hb-section-card-label {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.hb-guide .hb-card-arrow {
+  position: static;
+  color: var(--primary);
+  border: none;
+  border-radius: 0;
+  background: none;
+  width: 20px;
+  height: 24px;
+}
+.nona-home-services {
+  margin: 22px 0 12px;
+  min-width: 0;
+}
+.nona-services-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.hb-guide .nona-services-heading h2 {
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.04em;
+}
+.nona-services-heading > button {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  color: var(--primary);
+  white-space: nowrap;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hb-guide .hb-service-list.hb-service-rail {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-bottom: 8px;
+}
+.hb-service-rail .hb-service-card {
+  flex: 0 0 calc((100% - 28px) / 3);
+  min-width: 0;
+  scroll-snap-align: start;
+  border-radius: 9px;
+  background: var(--card);
+  border-color: var(--border);
+}
+.hb-guide .hb-service-rail .hb-service-card > img {
+  width: 100%;
+  aspect-ratio: 1.85;
+  object-fit: cover;
+  border-radius: 0;
+}
+.hb-service-rail .hb-service-info {
+  padding: 12px;
+}
+.hb-service-rail .hb-service-description {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hb-service-rail .hb-service-name {
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.hb-service-rail .hb-service-summary {
+  display: none;
+}
+.hb-service-rail strong {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--primary);
+}
+.hb-service-rail strong span {
+  display: inline;
+  margin-left: 4px;
+  font-size: 12px;
+}
+.hb-service-rail .hb-service-info > button {
+  min-height: 44px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  color: var(--primary);
+  background: transparent;
+  border: 1px solid #ce8195;
+  border-radius: 7px;
+  font-size: 13px;
+}
+.hb-service-rail .hb-service-info > button svg {
+  display: none;
+}
+.hb-service-rail .hb-service-info > p {
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: left;
+}
+.hb-guide .hb-all-info {
+  margin-top: 16px;
+  border-color: var(--border);
+}
+.hb-guide .hb-all-info > summary {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+.hb-guide .hb-section-page .hb-page-title {
+  color: var(--primary);
+}
+.hb-guide .hb-section-page .hb-service-card {
+  border-radius: 10px;
+}
+.nona-local-preview-notice {
+  padding: 5px 12px;
+  background: #f8eee8;
+  color: #6d525b;
+  font: 10px/1.4 var(--font-sans);
+  text-align: center;
+}
+.nona-standalone-demo > [role="tablist"] {
+  position: fixed;
+  top: 8px;
+  right: 12px;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+}
+.nona-standalone-demo > [role="tablist"]:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nona-standalone-demo > .demo-frame {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: none;
+  overflow: visible;
+}
+.nona-standalone-demo .demo-viewport {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+.nona-standalone-demo > .relative {
+  position: static;
+}
+.nona-standalone-demo .nona-concierge[data-demo] {
+  position: fixed;
+}
+
+.nona-concierge.nona-concierge {
+  z-index: 50;
+}
+.nona-concierge .nona-launcher {
+  border: 0;
+  background: var(--background);
+  padding: 0;
+  width: 96px;
+  height: 98px;
+  border-radius: 50% 50% 12px 12px;
+  box-shadow: none;
+}
+.nona-official-mascot.nona-launcher-mascot {
+  width: 101px;
+  height: 99px;
+  background-size: 1196.4px 473.4px;
+  background-position: -19.2px -360px;
+}
+.nona-official-mascot.nona-chat-mascot {
+  width: 50px;
+  height: 49px;
+  background-size: 598.2px 236.7px;
+  background-position: -9.6px -180px;
+}
+.nona-concierge .nona-panel {
+  border-radius: 20px;
+  border-color: #e2d2d6;
+  box-shadow: 0 12px 65px #46102225;
+  bottom: 106px;
+}
+.nona-concierge .nona-header {
+  align-items: center;
+  background: #fcf5ef;
+  padding: 14px 16px;
+}
+.nona-concierge .nona-header h2 {
+  font-size: 24px;
+  color: var(--primary);
+  font-weight: 600;
+}
+.nona-concierge .nona-header p {
+  color: #735965;
+  font-size: 11px;
+}
+.nona-concierge .nona-invitation {
+  bottom: 108px;
+  border-radius: 16px 16px 4px 16px;
+  border-color: #e5cad2;
+}
+.nona-concierge .nona-property {
+  color: var(--primary);
+}
+.nona-concierge .nona-bubble blockquote {
+  border: 1px solid var(--nona-separator);
+  border-left: 3px solid var(--nona-burgundy);
+  border-radius: 12px;
+  background: var(--nona-cream);
+  color: var(--nona-cocoa);
+}
+.nona-concierge .nona-service-card {
+  border-top-color: var(--nona-separator);
+}
+.nona-concierge .nona-language label {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 4px;
+}
+.nona-concierge .nona-bubble[data-from="assistant"] {
+  background: #faf2ed;
+}
+.nona-concierge .nona-composer {
+  background: #fffaf6;
+}
+.nona-concierge .nona-composer > [data-slot="input-group"] {
+  border-radius: 16px;
+}
+
+@container (min-width: 1001px) {
+  .manager-shell > header {
+    position: absolute;
+    inset: 10px 20px auto auto;
+    border: 0;
+    background: transparent;
+    height: 44px;
+  }
+  .manager-shell > header > div {
+    padding: 0;
+  }
+  .manager-shell > header > div > :first-child {
+    display: none;
+  }
+  .manager-shell > header .manager-shell-org {
+    max-width: 130px;
+  }
+  .manager-shell .manager-shell-grid {
+    padding-top: 0;
+  }
+  .manager-shell .manager-shell-sidebar {
+    min-height: 100dvh;
+  }
+  .manager-shell .manager-shell-content {
+    padding-top: 62px;
+  }
+  .manager-shell .manager-properties-heading {
+    margin-top: -14px;
+  }
+}
+@container (max-width: 1000px) {
+  .manager-shell .manager-shell-grid {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .manager-shell .manager-property-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .manager-shell .manager-shell-content {
+    padding: 24px 20px 90px;
+  }
+  .manager-shell .manager-properties-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .manager-shell .manager-properties-heading > button {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+  .manager-shell .manager-property-tools {
+    grid-row: 3;
+  }
+}
+@container (max-width: 759px) {
+  .nona-guide-topbar {
+    padding: 15px 18px 12px;
+    gap: 12px;
+  }
+  .nona-guide-navigation,
+  .nona-contact-button {
+    display: none;
+  }
+  .nona-mobile-menu {
+    display: grid;
+  }
+  .nona-property-intro {
+    padding: 0 18px;
+  }
+  .nona-property-heading {
+    order: 2;
+    margin: 14px 0 12px;
+  }
+  .hb-guide .nona-property-heading h1 {
+    font-size: clamp(30px, 8.4cqw, 38px);
+    line-height: 1.08;
+  }
+  .nona-property-heading > p {
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .hb-guide .nona-property-cover {
+    order: 1;
+    aspect-ratio: 1.65;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    border-radius: 9px;
+  }
+  .nona-photo-button {
+    bottom: 8px;
+    left: auto;
+    right: 8px;
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .nona-photo-navigation {
+    display: none;
+  }
+  .hb-guide .hb-index {
+    display: block;
+    padding: 0 18px 115px;
+  }
+  .hb-guide .hb-section-grid {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hb-guide .hb-section-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16px;
+    grid-template-rows: 34px auto;
+    min-height: 98px;
+    padding: 12px 14px;
+    gap: 7px 5px;
+    border-radius: 9px;
+  }
+  .hb-guide .nona-section-icon {
+    grid-column: 1;
+    grid-row: 1;
+    width: 31px;
+    height: 31px;
+  }
+  .hb-guide .hb-section-card-label {
+    grid-column: 1/-1;
+    grid-row: 2;
+    font-size: 14px;
+  }
+  .hb-guide .hb-card-arrow {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .nona-home-services {
+    margin-top: 18px;
+  }
+  .hb-guide .nona-services-heading h2 {
+    font-size: clamp(24px, 6.3cqw, 29px);
+  }
+  .nona-services-heading {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .nona-services-heading > button {
+    font-size: 12px;
+  }
+  .hb-guide .hb-service-list.hb-service-rail {
+    gap: 10px;
+  }
+  .hb-service-rail .hb-service-card {
+    flex-basis: 48%;
+  }
+  .hb-guide .hb-service-rail .hb-service-card > img {
+    aspect-ratio: 1.65;
+  }
+  .hb-service-rail .hb-service-info {
+    padding: 9px;
+  }
+  .hb-service-rail .hb-service-name {
+    font-size: 13px;
+    min-height: 34px;
+  }
+  .hb-service-rail strong {
+    font-size: 14px;
+  }
+  .hb-service-rail strong span {
+    display: block;
+    margin-left: 0;
+    font-size: 11px;
+  }
+  .hb-service-rail .hb-service-info > p {
+    font-size: 10px;
+  }
+}
+@container (max-width: 720px) {
+  .manager-shell .manager-shell-grid {
+    display: block;
+  }
+  .manager-shell .manager-shell-sidebar {
+    display: none;
+  }
+  .manager-shell .manager-property-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .manager-shell .manager-shell-content {
+    padding: 20px 16px 100px;
+  }
+  .manager-shell .manager-properties-heading h1 {
+    font-size: 34px;
+  }
+  .manager-shell .manager-property-card h2 {
+    font-size: 23px;
+  }
+  .manager-shell .manager-property-quick-actions {
+    flex-wrap: wrap;
+  }
+  .manager-shell .manager-property-quick-actions :is(button, a) {
+    flex-basis: 100%;
+  }
+}
+@container (max-width: 450px) {
+  .manager-shell .manager-property-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .nona-concierge .nona-launcher {
+    width: 78px;
+    height: 78px;
+  }
+  .nona-official-mascot.nona-launcher-mascot {
+    width: 81px;
+    height: 79px;
+    background-size: 957.12px 378.72px;
+    background-position: -15.36px -288px;
+  }
+  .nona-concierge .nona-panel,
+  .nona-concierge[data-demo] .nona-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    border-radius: 0;
+    padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+  }
+  .nona-concierge .nona-header {
+    gap: 9px;
+    padding: 12px;
+  }
+  .nona-concierge .nona-header h2 {
+    font-size: 21px;
+  }
+  .nona-concierge .nona-invitation {
+    bottom: 90px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nona-guide-topbar *,
+  .nona-photo-navigation *,
+  .hb-service-rail {
+    scroll-behavior: auto;
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Refinement from CHARTE-NONA.md: A is official, B remains an experiment. */
+.manager-shell :is(h1, h2, h3),
+.hb-guide :is(h1, h2, h3),
+.hb-guide .nona-property-heading h1 {
+  font-family: var(--nona-font-heading);
+  letter-spacing: normal;
+  font-weight: 500;
+}
+.manager-shell .manager-properties-heading h1 {
+  font-size: clamp(34px, 3.6cqw, 50px);
+}
+.manager-shell .manager-property-card h2 {
+  font-size: 22px;
+  letter-spacing: normal;
+}
+.manager-shell .manager-property-card {
+  border-radius: var(--nona-radius-card);
+}
+.manager-shell .manager-shell-sidebar nav > :last-child svg {
+  color: var(--primary);
+}
+.manager-shell .manager-property-quick-actions :is(button, a) {
+  font-size: 14px;
+}
+.hb-guide .nona-property-heading h1 {
+  font-size: clamp(38px, 4cqw, 52px);
+  line-height: 1.15;
+}
+.hb-guide .hb-section-card {
+  border-radius: var(--nona-radius-card);
+  border-color: var(--nona-guide-border);
+  gap: 12px;
+}
+.hb-guide .hb-section-card-label {
+  color: var(--nona-cocoa);
+  font-size: 16px;
+  letter-spacing: normal;
+}
+.hb-guide .nona-section-icon {
+  stroke-width: 2;
+}
+.hb-guide .nona-services-heading h2 {
+  font-size: 28px;
+  letter-spacing: normal;
+}
+.hb-guide .nona-photo-button {
+  color: var(--nona-cocoa);
+}
+.hb-service-rail.nona-service-discovery .hb-service-info > button {
+  border: 0;
+  padding: 0;
+  margin: 2px 0 0;
+  justify-content: flex-start;
+  width: auto;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 14px;
+  box-shadow: none;
+}
+.hb-service-rail.nona-service-discovery .hb-service-name {
+  font-size: 15px;
+  min-height: 0;
+}
+.hb-service-rail.nona-service-discovery .hb-service-info {
+  padding: 10px 12px 4px;
+}
+.nona-concierge .nona-launcher {
+  width: 112px;
+  height: 70px;
+  border-radius: 0;
+  background: transparent;
+}
+.nona-concierge .nona-launcher img {
+  width: 112px;
+  height: 64px;
+  object-fit: contain;
+  /* Clip only the outer paper of the supplied raster. Preserve its opaque
+     cream interior; do not multiply the character onto the property photo. */
+  clip-path: polygon(
+    12% 78%,
+    14% 70%,
+    16% 66%,
+    18% 55%,
+    22% 43%,
+    28% 30%,
+    36% 20%,
+    46% 15%,
+    56% 15%,
+    67% 20%,
+    77% 30%,
+    83% 39%,
+    85% 34%,
+    87% 31%,
+    87% 23%,
+    91% 21%,
+    95% 23%,
+    96% 31%,
+    95% 38%,
+    100% 43%,
+    100% 74%,
+    96% 78%,
+    96% 87%,
+    92% 94%,
+    85% 96%,
+    79% 94%,
+    76% 88%,
+    30% 88%,
+    26% 94%,
+    20% 95%,
+    15% 92%,
+    12% 86%
+  );
+  mix-blend-mode: normal;
+}
+.nona-concierge .nona-header-portrait {
+  width: 56px;
+  height: 32px;
+  object-fit: contain;
+  clip-path: inset(13% 0 5%);
+  mix-blend-mode: normal;
+}
+.nona-concierge.nona-concierge {
+  bottom: max(0px, env(safe-area-inset-bottom));
+}
+.nona-concierge .nona-panel {
+  bottom: 84px;
+}
+.nona-concierge .nona-invitation {
+  bottom: 90px;
+}
+.nona-demo-booking-dialog {
+  max-height: 90dvh;
+  overflow-y: auto;
+  background: var(--nona-cream);
+  color: var(--nona-cocoa);
+  font-family: var(--nona-font-ui);
+  border-radius: var(--nona-radius-card);
+}
+.nona-demo-booking-dialog :is(input, select, textarea) {
+  font-size: 16px;
+}
+.nona-demo-booking-dialog h2 {
+  font-family: var(--nona-font-heading);
+  color: var(--nona-burgundy);
+}
+@container (max-width: 759px) {
+  .hb-guide .nona-property-heading h1 {
+    font-size: clamp(28px, 7.8cqw, 32px);
+  }
+  .hb-guide .nona-services-heading h2 {
+    font-size: 23px;
+  }
+  .hb-guide .hb-section-card-label {
+    font-size: 15px;
+  }
+  .hb-guide .hb-section-grid {
+    gap: 12px;
+  }
+  .hb-guide .hb-section-card {
+    min-height: 102px;
+    padding: 14px 16px;
+  }
+  .hb-service-rail.nona-service-discovery .hb-service-info {
+    padding: 10px;
+  }
+  .hb-service-rail.nona-service-discovery .hb-service-name {
+    min-height: 40px;
+  }
+}
+.nona-auth h1 {
+  color: var(--nona-burgundy);
+  font-family: var(--nona-font-heading);
+  font-weight: 500;
+}
+.nona-auth .btn {
+  border-radius: var(--nona-radius-control);
+  min-height: var(--nona-min-target);
+  font-family: var(--nona-font-ui);
+}
+.nona-auth .field {
+  border-width: 1px;
+  border-radius: var(--nona-radius-control);
+  font-size: 16px;
+}
+.nona-auth .btn-secondary {
+  border-width: 1px;
+  color: var(--nona-burgundy);
+}
+.nona-auth > a[href="/legal"] {
+  display: block;
+  margin-top: 4px;
+}

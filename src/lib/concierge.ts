@@ -28,6 +28,17 @@ export const conciergeRequestSchema = z
     message: z.string().trim().max(1200),
     draft: conciergeDraftSchema.default({}),
     history: z.array(z.string().max(1200)).max(6).default([]),
+    dialogueHistory: z
+      .array(
+        z
+          .object({
+            role: z.enum(["user", "assistant"]),
+            text: z.string().max(700),
+          })
+          .strict(),
+      )
+      .max(10)
+      .default([]),
     savedDrafts: z.array(conciergeDraftSchema).max(4).default([]),
     requestId: z.string().uuid().optional(),
     conversationId: z.string().uuid().optional(),
@@ -64,15 +75,15 @@ export type ConciergeTurn = {
   tracking: boolean;
   quote: { totalCents: number; revision?: string } | null;
   usage: { modelCalls: number; estimatedCostMicros: number };
-  /** Shared Nona voice key and version; text is always built from validated facts. */
+  /** Shared voice version; factual cards always come from validated sources. */
   persona: NonaReplyKey;
   personaVersion: string;
   nextStep: "quantity" | "date" | "time" | "option" | "ready" | null;
   /** Guided buttons derived from the catalogue only; `message` is resent as user text. */
   choices: { label: string; message: string }[];
 };
-// A future provider may propose IDs and fields only, never booking/payment actions,
-// status, prices or arbitrary factual answers. It receives no receipts or contact data.
+// Business proposal: IDs and draft fields only, never booking/payment actions.
+// The server-only model schema adds separate conversation prose, not facts.
 export const conciergeProposalSchema = z
   .object({
     intent: z.enum([
@@ -465,6 +476,7 @@ export function validateConciergeTurn(
   guide: PublicGuide,
   proposal: unknown,
   now = new Date(),
+  preferredStep?: ConciergeTurn["nextStep"],
 ): ConciergeTurn {
   guide = { ...guide, services: availableServices(guide, now) };
   const parsed = conciergeProposalSchema.safeParse(proposal);
@@ -601,16 +613,13 @@ export function validateConciergeTurn(
   let choices: ConciergeTurn["choices"] = [];
   if (chosen && p.intent === "services") {
     const config = readBookingConfig(chosen.bookingConfig);
+    const missing: NonNullable<ConciergeTurn["nextStep"]>[] = [];
+    if (draft.quantity === undefined) missing.push("quantity");
+    if ((config.requestDate || config.slots.length) && !draft.date) missing.push("date");
+    if ((config.requestDate || config.slots.length) && !draft.requestedFor) missing.push("time");
+    if (config.options.length && !draft.optionId) missing.push("option");
     nextStep =
-      draft.quantity === undefined
-        ? "quantity"
-        : (config.requestDate || config.slots.length) && !draft.date
-          ? "date"
-          : (config.requestDate || config.slots.length) && !draft.requestedFor
-            ? "time"
-            : config.options.length && !draft.optionId
-              ? "option"
-              : "ready";
+      preferredStep && missing.includes(preferredStep) ? preferredStep : (missing[0] ?? "ready");
     if (nextStep === "quantity")
       choices = [1, 2, 3, 4]
         .filter((n) => n <= config.maxQuantity)

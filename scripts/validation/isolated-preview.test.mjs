@@ -43,21 +43,30 @@ test("source credentials, Stripe and outgoing transports cannot enter the TEST p
   );
 });
 
-test("private key files refuse insecure permissions and symlink substitution", () => {
-  const dir = mkdtempSync(join(tmpdir(), "nona-credentials-fixture-"));
-  try {
-    writeFileSync(join(dir, "api-publishable"), "sb_publishable_fixture", { mode: 0o600 });
-    writeFileSync(join(dir, "api-secret"), "sb_secret_fixture", { mode: 0o600 });
-    assert.equal(loadCredentials(dir).serverKey, "sb_secret_fixture");
-    chmodSync(join(dir, "api-secret"), 0o644);
-    assert.throws(() => loadCredentials(dir), /private_test_key_file_required/);
-    rmSync(join(dir, "api-secret"));
-    symlinkSync(join(dir, "api-publishable"), join(dir, "api-secret"));
-    assert.throws(() => loadCredentials(dir), /private_test_key_file_required/);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+test(
+  "POSIX private key files refuse insecure permissions and symlink substitution",
+  {
+    skip:
+      process.platform === "win32"
+        ? "POSIX modes are verified by Linux CI; Windows uses the separate DPAPI vault"
+        : false,
+  },
+  () => {
+    const dir = mkdtempSync(join(tmpdir(), "nona-credentials-fixture-"));
+    try {
+      writeFileSync(join(dir, "api-publishable"), "sb_publishable_fixture", { mode: 0o600 });
+      writeFileSync(join(dir, "api-secret"), "sb_secret_fixture", { mode: 0o600 });
+      assert.equal(loadCredentials(dir).serverKey, "sb_secret_fixture");
+      chmodSync(join(dir, "api-secret"), 0o644);
+      assert.throws(() => loadCredentials(dir), /private_test_key_file_required/);
+      rmSync(join(dir, "api-secret"));
+      symlinkSync(join(dir, "api-publishable"), join(dir, "api-secret"));
+      assert.throws(() => loadCredentials(dir), /private_test_key_file_required/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+);
 
 test("preflight refuses enabled signup, HTTP failure and redirects", async () => {
   const key = { publicKey: "sb_publishable_fixture", serverKey: "sb_secret_fixture" };

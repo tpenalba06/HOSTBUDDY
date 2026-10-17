@@ -32,10 +32,12 @@ export function DemoManager({
   villa,
   onVillaChange,
   onPreview,
+  standalone = false,
 }: {
   villa: DemoProperty;
   onVillaChange: (update: (current: DemoProperty) => DemoProperty) => void;
   onPreview: () => void;
+  standalone?: boolean;
 }) {
   const { t, locale } = useI18n();
   const storageKey = `hostbuddy.demo.properties.v1.${locale}`;
@@ -493,7 +495,7 @@ export function DemoManager({
 
   return (
     <ManagerShell
-      embedded
+      embedded={!standalone}
       orgName="Conciergerie Azur"
       role="owner"
       active={area === "editor" ? "properties" : area}

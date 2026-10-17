@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-16T22:51:47.946Z",
+  "project": "mhhtnqfdkyudwyqlmnce",
+  "auditRunId": 38977888022,
+  "auditJobId": 117231592833,
+  "opsCommit": "fbbeb4e1b7b638b48c222dff783a41a00907405e",
+  "authorization": {
+    "enabled": false,
+    "expires_at": "2026-10-15T02:51:09.122225+00:00",
+    "cap_micros": 4000000,
+    "reserved_micros": 0
+  },
+  "checks": {
+    "rls_enabled": true,
+    "policy_count": 0,
+    "guest_table_access": false,
+    "guest_rpc_access": false,
+    "server_rpc_access": true,
+    "server_counter_read": true,
+    "rpc_matches_acquired_source": true,
+    "rpc_security_definer": true,
+    "rpc_search_path_valid": true
+  },
+  "rpc_body_sha256": "6cbcbf2f5522fb98f4ec15755132b8df46ae35a0ce1f5f00763b6ac82d4dcec8",
+  "read_only": true,
+  "passed": true,
+  "inferenceCalls": 0,
+  "externalSpendEUR": 0,
+  "billingEnvelopeVerified": false
+}

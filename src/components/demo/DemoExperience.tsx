@@ -7,18 +7,28 @@ import { createVillaMare, demoGuide } from "./villa-mare-fixture";
 import { validStoredDemoProperty } from "./demo-storage";
 import { useI18n } from "@/lib/i18n";
 import { NonaConcierge } from "@/components/guest/NonaConcierge";
+import { DemoServiceBooking } from "./DemoServiceBooking";
 
-export function DemoExperience({ compact = false }: { compact?: boolean }) {
+export function DemoExperience({
+  compact = false,
+  standalone = false,
+  initialMode = "guest",
+}: {
+  compact?: boolean;
+  standalone?: boolean;
+  initialMode?: "guest" | "manager";
+}) {
   const { locale, t } = useI18n();
   const storageKey = `hostbuddy.demo.v2.${locale}`;
   const [villa, setVilla] = useState(() => createVillaMare(locale));
   const [restoredLocale, setRestoredLocale] = useState<string | null>(null);
-  const [mode, setMode] = useState<"guest" | "manager">("guest");
+  const [mode, setMode] = useState<"guest" | "manager">(initialMode);
   const [section, setSection] = useState<string | null>(null);
   const [notice, setNotice] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messageSent, setMessageSent] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   useEffect(() => {
     let property = createVillaMare(locale);
     try {
@@ -43,7 +53,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
     }
   }, [villa, locale, restoredLocale, storageKey]);
   return (
-    <div className="demo-container w-full">
+    <div className={`demo-container w-full ${standalone ? "nona-standalone-demo" : ""}`}>
       <div
         className="mx-auto mb-4 grid max-w-md grid-cols-2 rounded-full border bg-card/95 p-1.5 py-2.5 shadow-soft"
         role="tablist"
@@ -79,7 +89,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
                 setSection(key);
                 setNotice(false);
               }}
-              onRequest={() => setNotice(true)}
+              onRequest={setBookingId}
               onMessage={() => {
                 setMessageSent(false);
                 setMessageOpen(true);
@@ -89,6 +99,7 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
           </div>
           <div hidden={mode !== "manager"} className="h-full">
             <DemoManager
+              standalone={standalone}
               key={locale}
               villa={villa}
               onVillaChange={setVilla}
@@ -141,6 +152,11 @@ export function DemoExperience({ compact = false }: { compact?: boolean }) {
           )}
         </DialogContent>
       </Dialog>
+      <DemoServiceBooking
+        guide={demoGuide(villa)}
+        serviceId={bookingId}
+        onClose={() => setBookingId(null)}
+      />
     </div>
   );
 }

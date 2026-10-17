@@ -3,7 +3,7 @@ import type { Locale } from "./i18n";
 const fr = {
   invite: "Coucou ! Une question ? 👋",
   dismissInvite: "Fermer l’invitation",
-  greeting: "Bienvenue à {property}. Je suis là pour que tu profites de ton séjour.",
+  greeting: "Coucou, bienvenue à {property} !",
   wifi: "Wi-Fi",
   arrival: "Arrivée",
   places: "Bonnes adresses",
@@ -255,3 +255,56 @@ const copy: Record<Locale, Copy> = {
   },
 };
 export const conciergeCopy = (locale: Locale) => copy[locale];
+
+export function conciergeWelcome(
+  locale: Locale,
+  property: string,
+  services: { breakfast: boolean; massage: boolean },
+) {
+  const prompts: Record<Locale, [string, string, string, string]> = {
+    fr: [
+      "Un petit-déjeuner ?",
+      "Un massage pour te détendre ?",
+      "Une question sur le logement ?",
+      "Laisse-moi t’aider, mon petit.",
+    ],
+    en: [
+      "Fancy some breakfast?",
+      "A relaxing massage?",
+      "A question about the place?",
+      "Tell me what you need — I'm here to look after you.",
+    ],
+    es: [
+      "¿Te apetece un desayuno?",
+      "¿Un masaje para relajarte?",
+      "¿Alguna pregunta sobre el alojamiento?",
+      "Cuéntame, que yo te ayudo.",
+    ],
+    de: [
+      "Lust auf ein Frühstück?",
+      "Eine entspannende Massage?",
+      "Eine Frage zur Unterkunft?",
+      "Sag mir, was du brauchst, ich bin für dich da.",
+    ],
+    it: [
+      "Ti va una colazione?",
+      "Un massaggio per rilassarti?",
+      "Una domanda sull’alloggio?",
+      "Dimmi pure, ci pensa Nona ad aiutarti.",
+    ],
+    pt: [
+      "Apetece-te um pequeno-almoço?",
+      "Uma massagem para relaxar?",
+      "Alguma dúvida sobre o alojamento?",
+      "Conta-me, estou aqui para te ajudar.",
+    ],
+  };
+  const [breakfast, massage, home, ending] = prompts[locale];
+  return [
+    conciergeCopy(locale).greeting.replace("{property}", property),
+    ...(services.breakfast ? [breakfast] : []),
+    ...(services.massage ? [massage] : []),
+    home,
+    ending,
+  ].join(" ");
+}

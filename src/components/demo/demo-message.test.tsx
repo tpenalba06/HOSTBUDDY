@@ -11,7 +11,8 @@ vi.mock("@/components/guest/GuideView", () => ({
     </>
   ),
 }));
-vi.mock("@/lib/i18n", () => ({
+vi.mock("@/lib/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/i18n")>()),
   useI18n: () => ({ locale: "fr", t: (key: string) => key }),
   translateStatic: (_locale: string, key: string) => key,
 }));
@@ -37,8 +38,9 @@ it("opens a message form even after a service request and never sends a network 
     );
   await click("request");
   await click("message");
-  expect(document.querySelector('[role="dialog"] textarea')).not.toBeNull();
-  const textarea = document.querySelector('[role="dialog"] textarea') as HTMLTextAreaElement;
+  const dialog = document.querySelector('[role="dialog"][data-state="open"]')!;
+  expect(dialog?.querySelector("textarea")).not.toBeNull();
+  const textarea = dialog.querySelector("textarea") as HTMLTextAreaElement;
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(
       textarea,
@@ -51,9 +53,7 @@ it("opens a message form even after a service request and never sends a network 
       .closest("form")!
       .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
   );
-  expect(document.querySelector('[role="dialog"] [role="status"]')?.textContent).toBe(
-    "demo.messageSaved",
-  );
+  expect(dialog.querySelector('[role="status"]')?.textContent).toBe("demo.messageSaved");
   expect(fetch).not.toHaveBeenCalled();
   fetch.mockRestore();
 });

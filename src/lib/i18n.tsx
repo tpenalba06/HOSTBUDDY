@@ -130,7 +130,7 @@ export const translations: Record<Locale, Copy> = {
     "nav.dashboard": "Tableau de bord",
     "nav.team": "Équipe",
     "nav.more": "Plus",
-    "app.myProperties": "Mes logements",
+    "app.myProperties": "Mes hébergements",
     "app.add": "Ajouter un hébergement",
     "app.published": "En ligne",
     "app.draft": "Brouillon",

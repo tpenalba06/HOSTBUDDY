@@ -19,12 +19,12 @@ export const Route = createFileRoute("/auth")({
       : {},
   head: () => ({
     meta: [
-      { title: "Essayer HostBuddy gratuitement" },
+      { title: "Essayer NONA gratuitement" },
       {
         name: "description",
         content: "Créez votre compte en 30 secondes. 1 logement gratuit, sans carte bancaire.",
       },
-      { property: "og:title", content: "Essayer HostBuddy gratuitement" },
+      { property: "og:title", content: "Essayer NONA gratuitement" },
       { property: "og:description", content: "1 logement gratuit, sans carte bancaire." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -41,6 +41,9 @@ const signupSchema = z.object({
 
 function AuthPage() {
   const { t } = useI18n();
+  // The visual recipe is built with an explicitly fictitious backend. Never
+  // contact an external OAuth provider from that isolated preview.
+  const visualPreview = import.meta.env["VITE_SUPABASE_URL"] === "https://nona-demo.invalid";
   const { mode } = Route.useSearch();
   const nav = useNavigate();
   const [form, setForm] = useState({ firstName: "", email: "", password: "" });
@@ -157,7 +160,7 @@ function AuthPage() {
 
   if (checkEmail) {
     return (
-      <main className="mx-auto max-w-md px-5 py-8 text-center">
+      <main className="nona-auth mx-auto max-w-md px-5 py-8 text-center">
         <div className="flex items-center justify-between">
           <Link
             to="/"
@@ -180,7 +183,7 @@ function AuthPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-5 py-8">
+    <main className="nona-auth mx-auto max-w-md px-5 py-8">
       <div className="flex items-center justify-between">
         <Link to="/" className="inline-flex min-h-12 items-center gap-1 font-semibold text-primary">
           ← {t("common.backSite")}
@@ -202,7 +205,7 @@ function AuthPage() {
         <>
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || visualPreview}
             className="btn btn-secondary mt-6 w-full"
             onClick={google}
           >

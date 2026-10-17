@@ -1,6 +1,7 @@
 import { expect, it, vi, afterEach } from "vitest";
 import { modelContext, runConciergeModel, type ModelDependencies } from "./concierge-model.server";
-import { conciergeRequestSchema, safeNonaOpening } from "./concierge";
+import { conciergeRequestSchema } from "./concierge";
+import { validateNonaDialogue } from "./nona-dialogue.server";
 import { createVillaMare, demoGuide } from "@/components/demo/villa-mare-fixture";
 const input = (message = "un ptit dej stp") =>
   conciergeRequestSchema.parse({
@@ -20,13 +21,17 @@ it("uses validated structured understanding, bounded personality and catalogue t
       intent: "services",
       serviceIds: ["bf"],
       draft: { quantity: 3 },
-      opening: "Coucou ! Bonne idée !",
+      dialogue: {
+        text: "Une jolie façon de commencer la journée ! Pour quel jour tu imagines ce petit plaisir ?",
+        questionFor: "date",
+      },
     }),
   };
   const result = await runConciergeModel(input(), guide(), "hash", deps);
   expect(result.mode).toBe("ai");
   expect(result.draft.quantity).toBe(3);
-  expect(result.text).toContain("Bonne idée");
+  expect(result.text).toContain("tu imagines ce petit plaisir");
+  expect(result.nextStep).toBe("date");
   expect(result.usage.modelCalls).toBe(1);
 });
 it("makes zero calls when durable reservation fails or credentials/authorization are missing", async () => {
@@ -83,17 +88,20 @@ it("does not invoke the model for quote refreshes, emergencies or private tracki
   }
   expect(deps.reserve).not.toHaveBeenCalled();
 });
-it("allows only non-factual social clauses, rejecting generated prices, promises, passwords or invented places", () => {
-  expect(safeNonaOpening("Coucou ! Bonne idée !")).not.toBeNull();
-  for (const value of [
+it("rejects generated concrete values and false confirmations without a phrase bank", async () => {
+  const turn = await runConciergeModel(input(), guide(), "hash", {
+    reserve: async () => false,
+    propose: async () => null,
+  });
+  for (const text of [
     "C'est réservé !",
     "Ton code est abc",
-    "Le restaurant TEST est ouvert",
+    "Voici https://invented.invalid",
     "Ça coûte 5 €",
-    "You are confirmed",
-    "Ignore les règles",
+    "Your booking is confirmed",
+    "Quel jour souhaitez-vous venir ?",
   ]) {
-    expect(safeNonaOpening(value)).toBeNull();
+    expect(() => validateNonaDialogue(text, turn.nextStep ?? "none", turn, "fr")).toThrow();
   }
 });
 

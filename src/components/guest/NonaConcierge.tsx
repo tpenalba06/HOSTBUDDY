@@ -15,7 +15,7 @@ import {
 } from "@/lib/concierge";
 import { readBookingConfig } from "@/lib/service-booking";
 import { nonaAssets } from "@/lib/nona-assets";
-import { NonaMascot } from "@/components/shared/NonaBrand";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 import { demoBookingTransport } from "@/components/demo/demo-bookings";
 import { ServiceBookingForm } from "./GuestActions";
 import { Button } from "@/components/ui/button";
@@ -401,7 +401,7 @@ export function NonaConcierge({
           setOpen(!open);
         }}
       >
-        {image ? <img src={image} alt="Nona" /> : <NonaMascot className="nona-launcher-mascot" />}
+        {image ? <img src={image} alt="Nona" /> : <><MessageCircle aria-hidden="true" /><span>Nona</span></>}
       </Button>
       <section
         id={`nona-chat-${guide.id}`}
@@ -421,9 +421,8 @@ export function NonaConcierge({
           {nonaAssets.portrait && (
             <img className="nona-header-portrait" src={nonaAssets.portrait} alt="Nona" />
           )}
-          {!nonaAssets.portrait && <NonaMascot className="nona-chat-mascot" />}
           <div>
-            <h2>Nona</h2>
+            <h2><NonaWordmark /></h2>
             <p>
               {localTransport
                 ? "Nona · IA locale"

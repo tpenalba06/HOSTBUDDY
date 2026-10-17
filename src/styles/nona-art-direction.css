@@ -1164,6 +1164,16 @@ body {
   display: block;
   margin-top: 4px;
 }
+.nona-concierge .nona-header .nona-wordmark {
+  width: 88px;
+}
+@media (max-width: 600px) {
+  .nona-concierge .nona-panel,
+  .nona-concierge[data-demo] .nona-panel {
+    inset: 0;
+    height: 100dvh;
+  }
+}
 
 /* Desktop composition only: published property media on the left, unchanged
    guide controls on the right. Container queries keep embedded previews mobile. */

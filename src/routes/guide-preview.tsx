@@ -8,7 +8,15 @@ export const Route = createFileRoute("/guide-preview")({
   validateSearch: (search: Record<string, unknown>): { device?: "mobile" | "desktop" } =>
     search["device"] === "mobile" ? { device: "mobile" } : {},
   head: () => ({
-    meta: [{ title: "Guide voyageur V2 — HostBuddy" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Aperçu du guide voyageur — NONA" },
+      { name: "description", content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare." },
+      { property: "og:title", content: "Aperçu du guide voyageur — NONA" },
+      { property: "og:description", content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: GuidePreview,
 });

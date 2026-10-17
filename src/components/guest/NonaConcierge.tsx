@@ -405,7 +405,14 @@ export function NonaConcierge({
           setOpen(!open);
         }}
       >
-        {image ? <img src={image} alt="Nona" /> : <><MessageCircle aria-hidden="true" /><span>Nona</span></>}
+        {image ? (
+          <img src={image} alt="Nona" />
+        ) : (
+          <>
+            <MessageCircle aria-hidden="true" />
+            <span>Nona</span>
+          </>
+        )}
       </Button>
       <section
         id={`nona-chat-${guide.id}`}
@@ -426,7 +433,9 @@ export function NonaConcierge({
             <img className="nona-header-portrait" src={nonaAssets.portrait} alt="Nona" />
           )}
           <div>
-            <h2><NonaWordmark /></h2>
+            <h2>
+              <NonaWordmark />
+            </h2>
             <p>
               {localTransport
                 ? "Nona · IA locale"

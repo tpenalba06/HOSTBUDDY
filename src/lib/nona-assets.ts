@@ -1,5 +1,7 @@
-/** Set these local paths only after the official mascot assets are supplied. */
+import mascotAsset from "@/assets/nona-official-mascot.png.asset.json";
+
+/** Supplied official portrait. No waving artwork was supplied. */
 export const nonaAssets: { portrait: string | null; wave: string | null } = {
-  portrait: "/nona/mascotte-reference.png",
+  portrait: mascotAsset.url,
   wave: null,
 };

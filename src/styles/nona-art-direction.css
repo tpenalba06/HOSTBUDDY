@@ -33,18 +33,18 @@ body {
 .nona-wordmark {
   display: inline-block;
   width: 120px;
-  height: 42px;
+  height: auto;
+  aspect-ratio: 878 / 217;
+  object-fit: contain;
   flex-shrink: 0;
-  background: url("/nona/logo-reference.png") no-repeat -24px -14px / 202px 90px;
-  mix-blend-mode: multiply;
 }
 .nona-official-mascot {
   display: block;
   width: 168px;
-  height: 164px;
+  height: auto;
+  aspect-ratio: 1067 / 577;
+  object-fit: contain;
   flex-shrink: 0;
-  background: url("/nona/official-da.png") no-repeat -32px -600px / 1994px 789px;
-  mix-blend-mode: multiply;
   pointer-events: none;
 }
 .nona-brand-home {
@@ -704,15 +704,11 @@ body {
 }
 .nona-official-mascot.nona-launcher-mascot {
   width: 101px;
-  height: 99px;
-  background-size: 1196.4px 473.4px;
-  background-position: -19.2px -360px;
+  height: auto;
 }
 .nona-official-mascot.nona-chat-mascot {
   width: 50px;
-  height: 49px;
-  background-size: 598.2px 236.7px;
-  background-position: -9.6px -180px;
+  height: auto;
 }
 .nona-concierge .nona-panel {
   border-radius: 20px;
@@ -838,6 +834,10 @@ body {
   .nona-property-heading {
     order: 2;
     margin: 14px 0 12px;
+  }
+  .nona-property-visual {
+    order: 1;
+    min-width: 0;
   }
   .hb-guide .nona-property-heading h1 {
     font-size: clamp(30px, 8.4cqw, 38px);
@@ -978,9 +978,7 @@ body {
   }
   .nona-official-mascot.nona-launcher-mascot {
     width: 81px;
-    height: 79px;
-    background-size: 957.12px 378.72px;
-    background-position: -15.36px -288px;
+    height: auto;
   }
   .nona-concierge .nona-panel,
   .nona-concierge[data-demo] .nona-panel {
@@ -1089,50 +1087,11 @@ body {
   width: 112px;
   height: 64px;
   object-fit: contain;
-  /* Clip only the outer paper of the supplied raster. Preserve its opaque
-     cream interior; do not multiply the character onto the property photo. */
-  clip-path: polygon(
-    12% 78%,
-    14% 70%,
-    16% 66%,
-    18% 55%,
-    22% 43%,
-    28% 30%,
-    36% 20%,
-    46% 15%,
-    56% 15%,
-    67% 20%,
-    77% 30%,
-    83% 39%,
-    85% 34%,
-    87% 31%,
-    87% 23%,
-    91% 21%,
-    95% 23%,
-    96% 31%,
-    95% 38%,
-    100% 43%,
-    100% 74%,
-    96% 78%,
-    96% 87%,
-    92% 94%,
-    85% 96%,
-    79% 94%,
-    76% 88%,
-    30% 88%,
-    26% 94%,
-    20% 95%,
-    15% 92%,
-    12% 86%
-  );
-  mix-blend-mode: normal;
 }
 .nona-concierge .nona-header-portrait {
   width: 56px;
   height: 32px;
   object-fit: contain;
-  clip-path: inset(13% 0 5%);
-  mix-blend-mode: normal;
 }
 .nona-concierge.nona-concierge {
   bottom: max(0px, env(safe-area-inset-bottom));
@@ -1204,4 +1163,73 @@ body {
 .nona-auth > a[href="/legal"] {
   display: block;
   margin-top: 4px;
+}
+
+/* Desktop composition only: published property media on the left, unchanged
+   guide controls on the right. Container queries keep embedded previews mobile. */
+@container (min-width: 1001px) {
+  .nona-property-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    gap: 0 40px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 12px 32px 0;
+  }
+  .nona-property-layout .nona-property-intro {
+    display: contents;
+  }
+  .nona-property-layout .nona-property-heading {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 12px 0 24px;
+  }
+  .hb-guide .nona-property-layout .nona-property-heading h1 {
+    font-size: 44px;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+  .nona-property-layout .nona-property-visual {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    position: sticky;
+    top: 24px;
+    min-width: 0;
+  }
+  .hb-guide .nona-property-layout .nona-property-cover {
+    height: max(520px, calc(100dvh - 200px));
+    aspect-ratio: auto;
+    border-radius: var(--nona-radius-card);
+  }
+  .nona-property-layout .nona-photo-navigation {
+    margin-top: 16px;
+  }
+  .nona-property-layout .nona-photo-thumbnails button {
+    height: 64px;
+  }
+  .hb-guide .nona-property-layout .hb-index {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    margin: 0;
+    min-width: 0;
+    padding: 0 0 110px;
+  }
+  .hb-guide .nona-property-layout .hb-section-card {
+    min-height: 88px;
+    padding: 16px;
+    gap: 12px;
+  }
+  .hb-guide .nona-property-layout .hb-section-card-label {
+    letter-spacing: 0;
+  }
+  .hb-guide .nona-property-layout .nona-services-heading h2 {
+    font-size: 28px;
+    letter-spacing: 0;
+  }
+  .nona-property-layout .hb-service-rail .hb-service-card {
+    flex-basis: calc((100% - 14px) / 2);
+  }
 }

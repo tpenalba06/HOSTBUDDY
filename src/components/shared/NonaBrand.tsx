@@ -1,9 +1,11 @@
-/** Official supplied rasters and composite A, cropped only through CSS.
- * No generated replacement. Vector masters and final waving animation pending. */
+import logoAsset from "@/assets/nona-official-logo.png.asset.json";
+import mascotAsset from "@/assets/nona-official-mascot.png.asset.json";
+
+/** Exact supplied artwork, separated by cropping only; no CSS reconstruction. */
 export function NonaWordmark() {
-  return <span className="nona-wordmark" role="img" aria-label="NONA" />;
+  return <img className="nona-wordmark" src={logoAsset.url} width={878} height={217} alt="NONA" />;
 }
 
 export function NonaMascot({ className = "" }: { className?: string }) {
-  return <span className={`nona-official-mascot ${className}`} role="img" aria-label="NONA" />;
+  return <img className={`nona-official-mascot ${className}`} src={mascotAsset.url} width={1067} height={577} alt="NONA" />;
 }

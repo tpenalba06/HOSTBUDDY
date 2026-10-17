@@ -1,3 +1,7 @@
+import { prepareMediaUpload, preparedVideoMetadata } from "@/lib/media/prepare-upload";
+import { validateMediaUpload } from "@/lib/data/media-validation";
+import { GuideView } from "@/components/guest/GuideView";
+import { demoGuide } from "./villa-mare-fixture";
 import { useState, type ReactNode } from "react";
 import {
   PropertyEditorScreen,
@@ -12,11 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import type { PropertyField } from "@/lib/data/properties";
 import type { Json } from "@/integrations/supabase/types";
-import {
-  buildGuideContent,
-  fieldUpdatesForGuideSection,
-  getGuideItems,
-} from "@/lib/data/guide-content";
+import { buildGuideContent, fieldUpdatesForGuideSection } from "@/lib/data/guide-content";
 import { answerDemoField, type DemoProperty } from "./demo-property";
 
 export function DemoPropertyEditor({
@@ -58,7 +58,7 @@ export function DemoPropertyEditor({
         cta_label: null,
         sort_order: order,
         is_visible: true,
-        content: { items: [] },
+        content: { items: [], explicitlyEnabled: true },
         created_at: "",
         updated_at: "",
       };
@@ -66,13 +66,43 @@ export function DemoPropertyEditor({
       return section;
     },
     save: async (section, values) => {
+      if (values.propertyMedia) {
+        const updated = {
+          ...section,
+          content: {
+            ...(section.content as object),
+            propertyMedia: values.propertyMedia,
+          } as unknown as Json,
+        };
+        onChange((current) => ({
+          ...current,
+          sections: current.sections.map((item) =>
+            item.id === section.id
+              ? {
+                  ...item,
+                  content: {
+                    ...(item.content as object),
+                    propertyMedia: values.propertyMedia,
+                  } as unknown as Json,
+                }
+              : item,
+          ),
+        }));
+        return updated;
+      }
       const updated = {
         ...section,
         title: values.title,
         icon: values.icon,
         cta_label: values.ctaLabel || null,
         is_visible: values.isVisible,
-        content: buildGuideContent(section.section_key, section.content, values.items) as Json,
+        content: buildGuideContent(
+          section.section_key,
+          values.propertyMedia
+            ? { ...(section.content as object), propertyMedia: values.propertyMedia }
+            : section.content,
+          values.items,
+        ) as Json,
       };
       const updates = fieldUpdatesForGuideSection(
         section.section_key,
@@ -103,7 +133,9 @@ export function DemoPropertyEditor({
         ...current,
         sections: current.sections.filter((item) => item.id !== id),
       })),
-    upload: async (_, __, sectionId, file) => {
+    upload: async (_, __, sectionId, file, options) => {
+      file = await prepareMediaUpload(file, options);
+      await validateMediaUpload(file);
       const media = {
         id: `demo-media-${crypto.randomUUID()}`,
         organization_id: "demo",
@@ -119,12 +151,30 @@ export function DemoPropertyEditor({
         created_at: "",
         updated_at: "",
       };
-      onChange((current) => ({ ...current, media: [...current.media, media] }));
+      const video = preparedVideoMetadata(file);
+      onChange((current) => ({
+        ...current,
+        media: [...current.media, media],
+        sections: video
+          ? current.sections.map((s) =>
+              s.id === sectionId
+                ? {
+                    ...s,
+                    content: {
+                      ...(s.content as object),
+                      mediaMetadata: { [media.id]: video },
+                    } as unknown as Json,
+                  }
+                : s,
+            )
+          : current.sections,
+      }));
       return media;
     },
     updateMedia: async (item, values) => {
       const updated = {
         ...item,
+        sort_order: values.sortOrder ?? item.sort_order,
         caption: values.caption ?? item.caption,
         alt_text: values.altText ?? item.alt_text,
       };
@@ -164,19 +214,7 @@ export function DemoPropertyEditor({
         <Button variant="outline" onClick={() => setPreview(false)}>
           ← {t("common.back")}
         </Button>
-        <h1 className="mt-4 text-3xl font-semibold">{property.name}</h1>
-        {property.sections
-          .filter((section) => section.is_visible)
-          .map((section) => (
-            <section key={section.id} className="surface mt-4 p-4">
-              <h2 className="text-xl font-semibold">{section.title}</h2>
-              {getGuideItems(section.section_key, section.content).map((item, index) => (
-                <p key={index} className="mt-2 whitespace-pre-line">
-                  {item.text}
-                </p>
-              ))}
-            </section>
-          ))}
+        <GuideView guide={demoGuide(property)} />
       </div>
     );
   return (
@@ -208,6 +246,10 @@ export function DemoPropertyEditor({
                 media: property.media,
               }}
               actions={actions}
+              onPublish={async () => {
+                onChange((current) => ({ ...current, status: "published" }));
+                flash();
+              }}
               onChanged={flash}
               onPreview={() => setPreview(true)}
             />
@@ -234,6 +276,13 @@ export function DemoPropertyEditor({
         <div className="mt-7">
           <ServicesScreen
             services={property.services}
+            photos={property.media
+              .filter((item) => item.media_type === "image")
+              .map((item) => ({
+                path: item.storage_path,
+                url: item.storage_path,
+                label: item.alt_text || property.name,
+              }))}
             onSave={async (values) => {
               const service = {
                 id: values.id ?? `demo-service-${crypto.randomUUID()}`,
@@ -244,14 +293,39 @@ export function DemoPropertyEditor({
                 price: values.price,
                 pricing_type: values.pricingType,
                 is_active: values.isActive,
-                image_path: null,
+                image_path: values.imagePath ?? null,
                 created_at: "",
                 updated_at: "",
               };
               const services = property.services.some((item) => item.id === service.id)
                 ? property.services.map((item) => (item.id === service.id ? service : item))
                 : [...property.services, service];
-              onChange((current) => ({ ...current, services }));
+              onChange((current) => ({
+                ...current,
+                services,
+                sections:
+                  values.isActive &&
+                  !current.sections.some(
+                    (section) => section.section_key.split("-")[0] === "services",
+                  )
+                    ? [
+                        ...current.sections,
+                        {
+                          id: `demo-services-${crypto.randomUUID()}`,
+                          property_id: current.id,
+                          section_key: "services",
+                          title: t("section.services"),
+                          icon: "✨",
+                          cta_label: null,
+                          sort_order: 6,
+                          is_visible: true,
+                          content: { items: [], explicitlyEnabled: true },
+                          created_at: "",
+                          updated_at: "",
+                        },
+                      ]
+                    : current.sections,
+              }));
               onServicesChange?.(services);
             }}
           />

@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import nonaCss from "../styles/nona-art-direction.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { hasSupabaseConfig, supabase } from "../integrations/supabase/client";
 import { LocaleProvider } from "../lib/i18n";
@@ -80,21 +81,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "HostBuddy" },
-      { name: "theme-color", content: "#e9d9c4" },
+      { name: "nona-build-revision", content: import.meta.env["VITE_NONA_BUILD_REVISION"] },
+      { name: "nona-build-state", content: import.meta.env["VITE_NONA_BUILD_STATE"] },
+      { name: "nona-build-source", content: import.meta.env["VITE_NONA_BUILD_SOURCE"] },
+      { title: "NONA" },
+      { name: "theme-color", content: "#fcf9f2" },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap",
-      },
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "stylesheet", href: nonaCss },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
   }),
   shellComponent: RootShell,

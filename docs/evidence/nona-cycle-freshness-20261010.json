@@ -1,0 +1,58 @@
+{
+  "scope": "Latest scheduled successful jobs, observed read-only in GitHub UI; historical snapshot, not a live collector",
+  "observation": {
+    "repository": "tpenalba06/NONA-OPS",
+    "accessible": true,
+    "complete": true,
+    "observed_at": "2026-10-10T17:24:50.159516+00:00",
+    "workflows": {
+      "health": [
+        {
+          "id": 38054244084,
+          "event": "schedule",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-10-10T13:03:22Z"
+        }
+      ],
+      "backup": [
+        {
+          "id": 38045846944,
+          "event": "schedule",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-10-10T10:43:13Z"
+        }
+      ]
+    }
+  },
+  "evaluated_at": "2026-10-10T17:24:50.159516+00:00",
+  "result": {
+    "schema": "nona.cycles.v1",
+    "environment": "isolated-test",
+    "status": "ALERT",
+    "checks": [
+      {
+        "check": "health",
+        "status": "ALERT",
+        "code": "health_stale",
+        "last_success_id": 38054244084,
+        "age_seconds": 15688,
+        "threshold_seconds": 10800
+      },
+      {
+        "check": "backup",
+        "status": "RECENT",
+        "code": "backup_recent_success",
+        "last_success_id": 38045846944,
+        "age_seconds": 24097,
+        "threshold_seconds": 129600
+      }
+    ]
+  },
+  "tests": {
+    "passed": 7,
+    "failed": 0
+  },
+  "automatic_Work_notification_proven": false
+}

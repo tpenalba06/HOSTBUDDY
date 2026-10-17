@@ -1,0 +1,40 @@
+{
+  "tool": "fontTools",
+  "version": "4.61.1",
+  "scope": "lossless WOFF2, same faces, glyph outlines and metrics; no styling changes",
+  "fonts": [
+    {
+      "source": "newsreader-400.ttf",
+      "output": "newsreader-400.woff2",
+      "sourceBytes": 109472,
+      "outputBytes": 39156,
+      "sourceSha256": "b8f5e0a8bdd6a12c722ca5635d9da87e77ccbb2d0172112e34e00c4e55f2cd5a",
+      "outputSha256": "f3dea418c785d38aaad4ecd056ed1ab74063681ac7058b116a6fa21767fa1b09",
+      "sameGlyphOutlines": true,
+      "sameMetrics": true,
+      "sameCmap": true
+    },
+    {
+      "source": "manrope-600.ttf",
+      "output": "manrope-600.woff2",
+      "sourceBytes": 95096,
+      "outputBytes": 30392,
+      "sourceSha256": "6bad1a774228464cc88b8b0271555b266f7a3c64a7bedf15e165fdab4f6ac0ce",
+      "outputSha256": "0a0bf617587681cf5bbb33927f8840f3e36d81b16001d6a846ade75564a14102",
+      "sameGlyphOutlines": true,
+      "sameMetrics": true,
+      "sameCmap": true
+    },
+    {
+      "source": "manrope-400.ttf",
+      "output": "manrope-400.woff2",
+      "sourceBytes": 94972,
+      "outputBytes": 30404,
+      "sourceSha256": "a13d9b41b0a471ce58f0e46d377fa3cc76615e4632c3b15eb397caadf7a13f0a",
+      "outputSha256": "98a288f55ab50f1680a63a1288fcfd8cf36c579d95e9bb55a8076a5f9be5c32c",
+      "sameGlyphOutlines": true,
+      "sameMetrics": true,
+      "sameCmap": true
+    }
+  ]
+}

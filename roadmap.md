@@ -1,4 +1,13 @@
 # HostBuddy roadmap
+## Official NONA assets and desktop guest guide
+- [x] Integrate supplied logo and mascot across shared brand surfaces and favicon, preserving source proportions and transparency
+- [x] Arrange desktop guest guide with large left photo and right sections, preserving mobile and all existing actions
+- [x] Verify shared guide/chat tests and visual desktop/mobile interactions
+## Nona frontend polish
+- [x] Inspect official mascot only; keep Nona without a mascot when assets are absent
+- [x] Improve existing chat readability and composer without changing guided or booking engines
+- [x] Restore acquired service contract through regeneration-safe additive types, preserving operational alert definitions and original clients
+- [x] Verify invitation before click, dismissal, reduced motion, grounded shortcuts and shared booking tests; preview checks and desktop/mobile pass
 - [x] Add premium hospitality imagery and refreshed design tokens
 - [x] Add FR/EN/ES/DE/IT/PT locale foundation and selectors
 - [x] Translate core marketing, auth, workspace, import, property, and guest-guide screens
@@ -55,3 +64,8 @@
 - [x] Prevent broken or older local demo data from crashing homepage and /demo
 - [x] Polish shared traveler preview and responsive manager presentation
 - [x] Verify language selection, interactions, lint, tests, types and preview build
+
+## Concierge chat presentation
+- [x] Remove the "Bientôt" badge from the marketing services section, which is already available
+- [x] Open the Nona chat compact and grow it with the conversation, capped and mobile full-screen
+- [x] Keep the newest reply readable above the composer, including its quick-choice buttons

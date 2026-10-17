@@ -218,10 +218,7 @@ function Landing() {
               />
             </div>
             <div className="self-center">
-              <span className="rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-foreground">
-                {t("marketing.upcoming")}
-              </span>
-              <h2 className="mt-5 text-4xl font-semibold">{t("marketing.services")}</h2>
+              <h2 className="text-4xl font-semibold">{t("marketing.services")}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t("marketing.servicesD")}</p>
               <div className="mt-8 grid grid-cols-2 gap-3">
                 {[

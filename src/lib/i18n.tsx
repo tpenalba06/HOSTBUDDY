@@ -99,7 +99,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Passez du mode voyageur au mode gestionnaire et modifiez le Wi-Fi. Aucun faux chiffre, aucun faux témoignage.",
     "marketing.pricing": "Un prix simple pour démarrer",
-    "marketing.upcoming": "Bientôt",
     "marketing.footer": "L’accueil voyageur, simplement bien organisé.",
     "marketing.qrLine": "QR ou lien · sans compte · sans installation",
     "marketing.openDemo": "Ouvrir la démo complète",
@@ -365,7 +364,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Switch between guest and manager views and edit Wi-Fi. No fake numbers or testimonials.",
     "marketing.pricing": "Simple pricing to get started",
-    "marketing.upcoming": "Coming soon",
     "marketing.footer": "Guest hospitality, beautifully organized.",
     "marketing.qrLine": "QR or link · no account · no installation",
     "marketing.openDemo": "Open full demo",
@@ -627,7 +625,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Cambie entre huésped y gestor y edite el Wi-Fi. Sin cifras ni testimonios falsos.",
     "marketing.pricing": "Un precio simple para empezar",
-    "marketing.upcoming": "Próximamente",
     "marketing.footer": "La bienvenida al huésped, bien organizada.",
     "marketing.qrLine": "QR o enlace · sin cuenta · sin instalación",
     "marketing.openDemo": "Abrir demo completa",
@@ -888,7 +885,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Zwischen Gast und Verwaltung wechseln und WLAN bearbeiten. Keine erfundenen Angaben.",
     "marketing.pricing": "Ein einfacher Preis zum Start",
-    "marketing.upcoming": "Demnächst",
     "marketing.footer": "Gästeempfang, einfach gut organisiert.",
     "marketing.qrLine": "QR oder Link · kein Konto · keine Installation",
     "marketing.openDemo": "Vollständige Demo öffnen",
@@ -1149,7 +1145,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proof": "Un’esperienza che puoi davvero provare",
     "marketing.proofD": "Passa da ospite a gestore e modifica il Wi-Fi. Nessun dato inventato.",
     "marketing.pricing": "Un prezzo semplice per iniziare",
-    "marketing.upcoming": "Prossimamente",
     "marketing.footer": "L’accoglienza degli ospiti, ben organizzata.",
     "marketing.qrLine": "QR o link · senza account · senza installazione",
     "marketing.openDemo": "Apri la demo completa",
@@ -1406,7 +1401,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proof": "Uma experiência que pode realmente testar",
     "marketing.proofD": "Alterne entre hóspede e gestor e edite o Wi-Fi. Sem dados inventados.",
     "marketing.pricing": "Um preço simples para começar",
-    "marketing.upcoming": "Em breve",
     "marketing.footer": "A receção dos hóspedes, bem organizada.",
     "marketing.qrLine": "QR ou link · sem conta · sem instalação",
     "marketing.openDemo": "Abrir demonstração completa",

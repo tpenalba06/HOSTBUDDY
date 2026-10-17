@@ -64,3 +64,8 @@
 - [x] Prevent broken or older local demo data from crashing homepage and /demo
 - [x] Polish shared traveler preview and responsive manager presentation
 - [x] Verify language selection, interactions, lint, tests, types and preview build
+
+## Concierge chat presentation
+- [x] Remove the "Bientôt" badge from the marketing services section, which is already available
+- [x] Open the Nona chat compact and grow it with the conversation, capped and mobile full-screen
+- [x] Keep the newest reply readable above the composer, including its quick-choice buttons

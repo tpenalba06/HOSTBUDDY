@@ -169,8 +169,12 @@ export function NonaConcierge({
     if (!open || !content.current) return;
     const latest = content.current.querySelector<HTMLElement>("[data-message-id]:last-child");
     if (!latest) return;
+    const box = content.current.getBoundingClientRect();
+    const bubble = latest.getBoundingClientRect();
+    // Short replies start at the top; tall ones end just above the composer so their
+    // own quick-choice buttons stay readable without extra scrolling.
     content.current.scrollTop +=
-      latest.getBoundingClientRect().top - content.current.getBoundingClientRect().top - 16;
+      bubble.height >= box.height ? bubble.bottom - box.bottom + 16 : bubble.top - box.top - 16;
   }, [latestMessageId, open]);
   const conversationKey = `nona.concierge.selection.${demo ? "demo" : slug}.${guide.id}`;
   const demoTransport = useMemo(
@@ -401,7 +405,14 @@ export function NonaConcierge({
           setOpen(!open);
         }}
       >
-        {image ? <img src={image} alt="Nona" /> : <><MessageCircle aria-hidden="true" /><span>Nona</span></>}
+        {image ? (
+          <img src={image} alt="Nona" />
+        ) : (
+          <>
+            <MessageCircle aria-hidden="true" />
+            <span>Nona</span>
+          </>
+        )}
       </Button>
       <section
         id={`nona-chat-${guide.id}`}
@@ -422,7 +433,9 @@ export function NonaConcierge({
             <img className="nona-header-portrait" src={nonaAssets.portrait} alt="Nona" />
           )}
           <div>
-            <h2><NonaWordmark /></h2>
+            <h2>
+              <NonaWordmark />
+            </h2>
             <p>
               {localTransport
                 ? "Nona · IA locale"

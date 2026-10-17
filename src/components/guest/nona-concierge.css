@@ -96,7 +96,10 @@
   bottom: 68px;
   right: 0;
   width: min(520px, calc(100vw - 32px));
-  height: min(780px, calc(100dvh - 112px));
+  /* The window starts compact and grows with the conversation until it caps. */
+  height: auto;
+  min-height: min(340px, calc(100dvh - 112px));
+  max-height: min(780px, calc(100dvh - 112px));
   max-width: calc(100vw - 32px);
   display: flex;
   flex-direction: column;
@@ -108,9 +111,6 @@
 }
 .nona-panel[hidden] {
   display: none;
-}
-.nona-concierge[data-demo] .nona-panel {
-  height: min(780px, calc(100dvh - 112px));
 }
 .nona-header {
   flex-shrink: 0;

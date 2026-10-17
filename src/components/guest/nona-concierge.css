@@ -98,8 +98,8 @@
   width: min(520px, calc(100vw - 32px));
   /* The window starts compact and grows with the conversation until it caps. */
   height: auto;
-  min-height: min(340px, calc(100dvh - 112px));
-  max-height: min(780px, calc(100dvh - 112px));
+  min-height: min(340px, calc(100dvh - 180px));
+  max-height: min(780px, calc(100dvh - 180px));
   max-width: calc(100vw - 32px);
   display: flex;
   flex-direction: column;

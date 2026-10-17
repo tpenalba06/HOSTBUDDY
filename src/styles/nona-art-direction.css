@@ -1168,8 +1168,8 @@ body {
   width: 88px;
 }
 @media (max-width: 600px) {
-  .nona-concierge .nona-panel,
-  .nona-concierge[data-demo] .nona-panel {
+  .nona-concierge.nona-concierge .nona-panel,
+  .nona-concierge.nona-concierge[data-demo] .nona-panel {
     inset: 0;
     height: 100dvh;
   }

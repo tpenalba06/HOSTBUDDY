@@ -1,1 +1,1 @@
-{"sequence":3,"actions":[{"type":"click","x":1371,"y":972,"mission":"M3"},{"type":"wait","ms":500,"mission":"M3"}]}
+{"sequence":4,"actions":[{"type":"type","text":"Quel est le Wi-Fi et à quelle heure puis-je arriver ?","mission":"M3"},{"type":"key","key":"Enter","mission":"M3"},{"type":"wait","ms":800,"mission":"M3"}]}

@@ -76,7 +76,7 @@ function Landing() {
             className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover object-center sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]"
           />
           <div className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] rounded-xl bg-gradient-to-r from-ink/95 via-ink/70 to-ink/20 sm:inset-x-5 lg:inset-x-8" />
-          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-10 sm:py-14 lg:grid-cols-[1.3fr_0.7fr] lg:px-12">
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-10 sm:py-14 lg:grid-cols-2 lg:px-12">
             <div className="max-w-2xl text-ink-foreground">
               <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-card/95 px-4 py-2 text-sm font-bold text-foreground shadow-soft">
                 <WandSparkles className="h-4 w-4 text-primary" />

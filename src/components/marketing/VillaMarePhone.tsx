@@ -26,7 +26,7 @@ export function VillaMarePhone() {
     return () => observer.disconnect();
   }, []);
   return (
-    <div className="mx-auto w-full max-w-[350px] text-foreground">
+    <div className="nona-phone-showcase text-foreground">
       <div className="hb-marketing-phone shadow-phone">
         <div ref={screen} className="hb-marketing-phone-screen">
           <iframe
@@ -46,13 +46,13 @@ export function VillaMarePhone() {
           <br />
           {chatHint[locale][1]}
         </p>
-        <svg viewBox="0 0 112 64" fill="none" aria-hidden="true">
-          <path d="M8 48C37 63 92 42 89 6M77 18L89 6L100 20" />
+        <svg viewBox="0 0 120 70" fill="none" aria-hidden="true">
+          <path d="M110 8C117 49 48 58 8 40M20 30L8 40L23 50" />
         </svg>
       </div>
       <Link
         to="/demo"
-        className="btn btn-primary mt-4 flex min-h-12 w-full justify-center text-sm shadow-soft"
+        className="btn btn-primary nona-phone-demo-link mt-4 flex min-h-12 w-full justify-center text-sm shadow-soft"
       >
         {t("common.demo")}
       </Link>

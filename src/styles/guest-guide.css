@@ -1336,31 +1336,40 @@ html:has(.nona-phone-document)::-webkit-scrollbar {
   position: fixed;
   bottom: 0;
 }
-.nona-phone-chat-hint {
+.nona-phone-showcase {
   display: grid;
-  grid-template-columns: minmax(0, 180px) 96px;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  min-height: 64px;
-  margin-top: 4px;
-  color: #fff8ec;
-  font-family: "HB Newsreader", Georgia, serif;
-  font-size: 20px;
-  font-style: italic;
-  line-height: 1.25;
+  grid-template-columns: minmax(0, 350px) minmax(90px, 140px);
+  column-gap: 12px;
+  width: 100%;
+  max-width: 502px;
+  margin-inline: auto;
+}
+.nona-phone-demo-link { grid-column: 1; }
+.nona-phone-chat-hint {
+  position: relative;
+  align-self: end;
+  margin-bottom: 48px;
+  padding: 12px 8px;
+  border-radius: 16px;
+  background: #fcf9f2;
+  color: #4b4138;
+  font-family: var(--nona-font-ui, "HB Manrope", sans-serif);
+  font-size: clamp(13px, 1.3vw, 16px);
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.4;
   text-align: center;
-  text-shadow: 0 2px 8px #21080480;
   pointer-events: none;
 }
 .nona-phone-chat-hint p {
   margin: 0;
 }
 .nona-phone-chat-hint svg {
-  width: 96px;
-  height: 64px;
-  align-self: start;
-  margin-top: -24px;
+  position: absolute;
+  left: -54px;
+  bottom: -22px;
+  width: 70px;
+  height: 54px;
   overflow: visible;
   stroke: currentColor;
   stroke-width: 2.5;

@@ -1,4 +1,5 @@
 import { VillaMarePhone } from "@/components/marketing/VillaMarePhone";
+import { MarketingPhoto } from "@/components/marketing/MarketingPhoto";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -77,8 +78,9 @@ function Landing() {
 
       <main id="main-content" tabIndex={-1}>
         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
-          <img
+          <MarketingPhoto
             src={arrivalAsset.url}
+            fallback="/hostbuddy-media/arrival.webp"
             fetchPriority="high"
             alt={t("marketing.arrivalAlt")}
             width={1536}
@@ -235,8 +237,9 @@ function Landing() {
         <section className="mx-auto max-w-6xl px-5 py-24">
           <div className="grid gap-12 lg:grid-cols-2">
             <div className="overflow-hidden rounded-2xl">
-              <img
+              <MarketingPhoto
                 src={breakfastAsset.url}
+                fallback="/demo-guide/breakfast.webp"
                 alt={t("marketing.breakfastAlt")}
                 loading="lazy"
                 width={1200}
@@ -269,8 +272,10 @@ function Landing() {
               </p>
             </div>
             <div className="overflow-hidden rounded-2xl lg:order-4">
-              <img
+              <MarketingPhoto
                 src={spaAsset.url}
+                fallback="/demo-guide/pool.webp"
+                fallbackAlt={ux.poolPhoto}
                 alt={t("marketing.spaAlt")}
                 loading="lazy"
                 width={1200}

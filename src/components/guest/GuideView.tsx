@@ -186,15 +186,9 @@ export function GuideView({
       icon: "✨",
       content: { items: [] },
     });
-  const { services: serviceSection, main: allMain, extra: other } = homeSections(sections);
-  const primaryKeys = ["arrival", "wifi", "house", "contact"];
-  const main = primaryKeys.flatMap((key) =>
-    allMain.filter((section) => sectionKind(section.key) === key),
-  );
-  const extra = [
-    ...allMain.filter((section) => !primaryKeys.includes(sectionKind(section.key))),
-    ...other,
-  ];
+  // The manager's order is authoritative; quick shortcuts provide access to essentials
+  // without silently rearranging the guide or hiding reordered cards in another group.
+  const { services: serviceSection, main, extra } = homeSections(sections);
   const photos = [
     ...new Set(
       [cover, ...resolvePropertyMedia(sections).gallery.map((photo) => photo.url)].filter(
@@ -724,7 +718,6 @@ export function GuideView({
 }
 
 function SectionCard({ section, onClick }: { section: PublicSection; onClick: () => void }) {
-  const { locale, t } = useI18n();
   const kind = sectionKind(section.key);
   const Icon =
     kind === "wifi"
@@ -734,10 +727,7 @@ function SectionCard({ section, onClick }: { section: PublicSection; onClick: ()
         : kind === "contact"
           ? Phone
           : Luggage;
-  const title =
-    kind === "house" && section.title === t("section.house")
-      ? nonaVisualCopy(locale).equipment
-      : cleanTitle(section.title);
+  const title = cleanTitle(section.title);
   return (
     <button
       className={`hb-section-card hb-tone-${sectionTone(section.key)} `}

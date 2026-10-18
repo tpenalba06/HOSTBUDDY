@@ -1,16 +1,42 @@
-// Run with a local dev/preview server and Playwright Chromium installed.
-// HOSTBUDDY_PLAYWRIGHT_MODULE may point to the runtime's playwright-core module.
+// Browser regression coverage; this is not an unassisted UX discovery experiment.
 import assert from "node:assert/strict";
-import { writeFile } from "node:fs/promises";
-import process from "node:process";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE || "playwright-core");
 const browser = await chromium.launch({
   headless: true,
   ...(process.env.HOSTBUDDY_CHROMIUM ? { executablePath: process.env.HOSTBUDDY_CHROMIUM } : {}),
 });
 const origin = process.env.HOSTBUDDY_TEST_ORIGIN || "http://127.0.0.1:5173";
-const evidence = [];
-const boundaryFailures = [];
+const output = process.env.RUNNER_TEMP || "/tmp";
+await mkdir(output, { recursive: true });
+const evidence = [],
+  failures = [];
+const metrics = (target) =>
+  target.evaluate(() => ({
+    top: scrollY,
+    height: innerHeight,
+    width: innerWidth,
+    scrollHeight: document.documentElement.scrollHeight,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+async function swipe(context, page, x, y) {
+  const cdp = await context.newCDPSession(page);
+  try {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+    for (let step = 1; step <= 12; step++) {
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x, y: y - step * 12 }],
+      });
+      await page.waitForTimeout(20);
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await page.waitForTimeout(350);
+  } finally {
+    await cdp.detach();
+  }
+}
 try {
   for (const [width, height] of [
     [360, 800],
@@ -21,280 +47,131 @@ try {
     [1024, 900],
     [1440, 1000],
   ]) {
-    const context = await browser.newContext({
-      viewport: { width, height },
-      locale: "fr-FR",
-      isMobile: width < 500,
-      hasTouch: width < 500,
-    });
-    const page = await context.newPage();
-    for (const route of ["/", "/demo"]) {
-      await page.goto(origin + route);
-      const demo = page.locator(".demo-container");
-      await demo.waitFor({ state: "visible" });
-      // Vite serves CSS asynchronously on a cold start; test only the rendered layout.
-      await page.waitForFunction(() => {
-        const viewport = document.querySelector(".demo-viewport");
-        return (
-          viewport && getComputedStyle(viewport).height !== "auto" && viewport.clientHeight >= 420
-        );
+    for (const [label, route] of [
+      ["home", "/"],
+      ["guest", "/demo?mode=guest"],
+      ["manager", "/demo?mode=manager"],
+    ]) {
+      const context = await browser.newContext({
+        viewport: { width, height },
+        locale: "fr-FR",
+        isMobile: width < 500,
+        hasTouch: width < 500,
       });
-      await page.waitForLoadState("networkidle");
-      for (const mode of ["guest", "manager"]) {
-        await demo
-          .getByRole("tab")
-          .nth(mode === "guest" ? 0 : 1)
-          .click();
-        const owner =
-          mode === "guest"
-            ? demo.locator(".demo-viewport")
-            : demo.locator(".manager-shell-content");
-        if (mode === "manager" && width >= 768) {
-          // The desktop property list can fit; open the existing editor for long content.
-          await demo.locator(".manager-property-card").first().getByRole("button").first().click();
-        }
-        await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
-        await page.waitForTimeout(150);
-        const state = await owner.evaluate((el) => ({
-          h: el.clientHeight,
-          sh: el.scrollHeight,
-          overflow: getComputedStyle(el).overflowY,
-          chain: getComputedStyle(el).overscrollBehaviorY,
-        }));
-        console.error(JSON.stringify({ stage: "layout", route, mode, width, state }));
-        assert.equal(state.overflow, "auto");
-        assert.equal(state.chain, "auto");
-        assert.ok(state.h > 0 && state.sh > state.h, `scrollable ${route} ${mode} ${width}`);
-        await owner.evaluate((el) => {
-          el.scrollTop = 0;
-        });
-        const box = await owner.boundingBox();
-        const x = box.x + box.width / 2,
-          y = Math.min(height - 110, Math.max(150, box.y + 100));
-        console.error(
-          JSON.stringify({
-            route,
-            mode,
-            width,
-            state,
-            box,
-            x,
-            y,
-            hit: await page.evaluate(
-              ({ x, y }) => ({
-                tag: document.elementFromPoint(x, y)?.tagName,
-                classes: document.elementFromPoint(x, y)?.className,
-                inside: !!document.elementFromPoint(x, y)?.closest(".demo-viewport"),
-                sy: scrollY,
-              }),
-              { x, y },
-            ),
-          }),
-        );
-        await page.screenshot({
-          path:
-            (process.env.RUNNER_TEMP || "/tmp") +
-            `/hb-scroll-${route === "/" ? "home" : "demo"}-${width}-${mode}.png`,
-        });
-        await page.mouse.move(x, y);
-        await page.mouse.wheel(0, 250);
-        await page.waitForTimeout(250);
-        console.error(
-          JSON.stringify({
-            afterWheel: await owner.evaluate((el) => ({ top: el.scrollTop, sy: window.scrollY })),
-            route,
-            mode,
-            width,
-          }),
-        );
-        assert.ok(
-          (await owner.evaluate((el) => el.scrollTop)) > 0,
-          `internal scroll moves ${route} ${mode} ${width}`,
-        );
-        let boundaryWheelEvents;
-        if (route === "/") {
-          // Reach the boundary with real wheel input, rather than a main-thread
-          // scrollTop jump that can race the compositor's wheel target.
-          for (let step = 0; step < 32; step++) {
-            const atBottom = await owner.evaluate(
-              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1,
-            );
-            if (atBottom) break;
-            await page.mouse.wheel(0, 300);
-            await page.waitForTimeout(100);
+      await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+      const page = await context.newPage();
+      const record = { route, width, height, clicks: 0, pageErrors: [] };
+      page.on("pageerror", (error) => record.pageErrors.push(error.message));
+      const stem = join(output, `hb-scroll-${label}-${width}`);
+      try {
+        await page.goto(origin + route);
+        if (label === "home") {
+          const iframe = page.locator('.hb-marketing-phone iframe[src^="/phone-preview"]');
+          await iframe.scrollIntoViewIfNeeded();
+          await iframe.waitFor({ state: "visible" });
+          const phone = await (await iframe.elementHandle()).contentFrame();
+          await phone.locator(".hb-cover").waitFor();
+          await page.waitForTimeout(300);
+          const before = await metrics(phone);
+          assert.equal(before.width, 390, "Phone keeps real 390 CSS-pixel viewport");
+          assert.equal(before.height, 844, "Phone keeps real 844 CSS-pixel viewport");
+          assert.ok(before.scrollHeight > before.height, "Phone content exists below cover");
+          const box = await iframe.boundingBox();
+          assert.ok(box && box.width > 0);
+          const x = box.x + box.width * 0.5;
+          const y = Math.min(height - 100, Math.max(120, box.y + box.height * 0.5));
+          await page.mouse.move(x, y);
+          await page.mouse.wheel(0, 300);
+          await page.waitForTimeout(350);
+          record.phoneBefore = before;
+          record.phoneAfterWheel = await metrics(phone);
+          assert.ok(record.phoneAfterWheel.top > before.top, "Wheel moves phone document");
+          if (width < 500) {
+            await phone.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+            await swipe(context, page, x, y);
+            record.phoneAfterTouch = await metrics(phone);
+            assert.ok(record.phoneAfterTouch.top > 0, "Touch moves phone document");
           }
+          assert.ok((await metrics(phone)).scrollWidth <= 391, "No horizontal phone overflow");
+          await page.screenshot({ path: `${stem}.png`, fullPage: true });
+          await page.mouse.move(8, height * 0.5);
+          const outerBefore = (await metrics(page)).top;
+          await page.mouse.wheel(0, 300);
+          await page.waitForTimeout(350);
+          record.outerAfterWheel = await metrics(page);
           assert.ok(
-            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1),
-            "reached bottom with wheel",
+            record.outerAfterWheel.top > outerBefore,
+            "Marketing page scrolls outside phone",
           );
-          // End the previous wheel gesture before starting a new gesture at the boundary.
-          // Chromium otherwise keeps its compositor scroll latch on the inner scroller.
-          await page.waitForTimeout(1000);
-          const before = await page.evaluate(() => scrollY);
-          const beforeOwner = await owner.evaluate((el) => ({
-            top: el.scrollTop,
-            max: el.scrollHeight - el.clientHeight,
-          }));
-          // A wheel sequence can consume its first event at the inner boundary.
-          // Require actual document motion within a bounded sequence of native events.
-          for (boundaryWheelEvents = 1; boundaryWheelEvents <= 3; boundaryWheelEvents++) {
-            await page.mouse.wheel(0, 250);
-            await page.waitForTimeout(250);
-            if ((await page.evaluate(() => scrollY)) > before) break;
+        } else {
+          const demo = page.locator(".demo-container");
+          await demo.waitFor({ state: "visible" });
+          assert.equal(
+            await demo.getAttribute("data-layout"),
+            "page",
+            "Full demo uses document scrolling",
+          );
+          if (label === "manager") {
+            await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
+            record.clicks++;
+            await page.locator(".section-organizer").waitFor();
+          } else await demo.locator(".hb-cover").waitFor();
+          await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+          await page.waitForTimeout(300);
+          record.before = await metrics(page);
+          assert.ok(record.before.scrollHeight > height, "Demo content exists below fold");
+          // Right-side content avoids the intentionally scrollable manager section rail.
+          await page.mouse.move(width * 0.8, height * 0.6);
+          await page.mouse.wheel(0, 300);
+          await page.waitForTimeout(350);
+          record.afterWheel = await metrics(page);
+          assert.ok(record.afterWheel.top > 0, "Wheel moves full demo document");
+          if (width < 500) {
+            await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+            await swipe(context, page, width * 0.8, height * 0.65);
+            record.afterTouch = await metrics(page);
+            assert.ok(record.afterTouch.top > 0, "Touch moves full demo document");
           }
-          console.error(
-            JSON.stringify({
-              stage: "bottom",
-              boundaryWheelEvents,
-              route,
-              mode,
-              width,
-              before,
-              beforeOwner,
-              after: await page.evaluate(() => scrollY),
-              owner: await owner.evaluate((el) => ({
-                top: el.scrollTop,
-                max: el.scrollHeight - el.clientHeight,
-              })),
-              ancestors: await page.evaluate(
-                ({ x, y }) => {
-                  const result = [];
-                  for (let el = document.elementFromPoint(x, y); el; el = el.parentElement) {
-                    const css = getComputedStyle(el);
-                    result.push({
-                      cls: el.className,
-                      overflow: css.overflowY,
-                      chain: css.overscrollBehaviorY,
-                      top: el.scrollTop,
-                      height: el.clientHeight,
-                      scrollHeight: el.scrollHeight,
-                    });
-                  }
-                  return result;
-                },
-                { x, y },
-              ),
-              hit: await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, {
-                x,
-                y,
-              }),
-            }),
-          );
-          const chained = (await page.evaluate(() => scrollY)) > before;
-          if (!chained) {
-            boundaryFailures.push({ route, mode, width, edge: "bottom" });
-            await page.waitForTimeout(1000);
-            await page.mouse.wheel(0, 250);
-            await page.waitForTimeout(300);
-            console.error(
-              JSON.stringify({
-                stage: "boundary-repeat",
-                width,
-                mode,
-                sy: await page.evaluate(() => scrollY),
-                top: await owner.evaluate((el) => el.scrollTop),
-              }),
-            );
-            await page.waitForTimeout(300);
-            const edgeBox = await owner.boundingBox();
-            await page.mouse.move(edgeBox.x + 3, edgeBox.y + 100);
-            await page.mouse.wheel(0, 250);
-            await page.waitForTimeout(300);
-            console.error(
-              JSON.stringify({
-                stage: "boundary-padding",
-                width,
-                mode,
-                sy: await page.evaluate(() => scrollY),
-                top: await owner.evaluate((el) => el.scrollTop),
-              }),
-            );
-            const actualMax = await owner.evaluate((el) => {
-              el.scrollTop = 1e7;
-              return {
-                top: el.scrollTop,
-                max: el.scrollHeight - el.clientHeight,
-                rect: el.getBoundingClientRect().toJSON(),
-                css: getComputedStyle(el).height,
-              };
-            });
-            console.error(JSON.stringify({ stage: "boundary-actual-max", width, mode, actualMax }));
+          await page.screenshot({ path: `${stem}.png`, fullPage: true });
+          for (let step = 0; step < 40; step++) {
+            const state = await metrics(page);
+            if (state.top + state.height >= state.scrollHeight - 2) break;
+            await page.mouse.wheel(0, 1000);
+            await page.waitForTimeout(70);
           }
-          await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
-          await page.waitForTimeout(150);
-          await owner.evaluate((el) => {
-            el.scrollTop = 0;
-          });
-          const next = await owner.boundingBox();
-          await page.mouse.move(
-            next.x + next.width / 2,
-            Math.min(height - 110, Math.max(150, next.y + 100)),
+          record.bottom = await metrics(page);
+          assert.ok(
+            record.bottom.top + height >= record.bottom.scrollHeight - 2,
+            "Bottom reachable with native wheel",
           );
-          const up = await page.evaluate(() => scrollY);
-          await page.mouse.wheel(0, -250);
-          await page.waitForTimeout(250);
-          assert.ok((await page.evaluate(() => scrollY)) < up, "top chains to document");
+          await page.mouse.wheel(0, -400);
+          await page.waitForTimeout(350);
+          assert.ok(
+            (await metrics(page)).top < record.bottom.top,
+            "Can leave bottom without scroll trap",
+          );
         }
-        assert.equal(
-          await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
-          false,
-          "no horizontal overflow",
+        assert.ok(
+          (await metrics(page)).scrollWidth <= width + 1,
+          "No horizontal document overflow",
         );
-        evidence.push({
-          route,
-          mode,
-          width,
-          height,
-          ...state,
-          boundaryWheelEvents,
-          wheelPassed: !boundaryFailures.some(
-            (failure) =>
-              failure.route === route && failure.mode === mode && failure.width === width,
-          ),
-        });
+        assert.deepEqual(record.pageErrors, [], "No uncaught browser errors");
+        record.passed = true;
+      } catch (error) {
+        record.passed = false;
+        record.error = String(error);
+        failures.push(record);
+        await page.screenshot({ path: `${stem}-failure.png`, fullPage: true }).catch(() => {});
+      } finally {
+        evidence.push(record);
+        console.log(JSON.stringify(record));
+        await context.tracing.stop({ path: `${stem}-trace.zip` });
+        await context.close();
       }
     }
-    if (width === 390) {
-      await page.goto(origin + "/");
-      const demo = page.locator(".demo-container");
-      await demo.waitFor({ state: "visible" });
-      await page.waitForLoadState("networkidle");
-      const cdp = await context.newCDPSession(page);
-      for (const mode of ["guest", "manager"]) {
-        await demo
-          .getByRole("tab")
-          .nth(mode === "guest" ? 0 : 1)
-          .click();
-        const owner = demo.locator(mode === "guest" ? ".demo-viewport" : ".manager-shell-content");
-        await owner.evaluate((el) => {
-          el.scrollIntoView({ block: "center", behavior: "instant" });
-          el.scrollTop = 0;
-        });
-        const box = await owner.boundingBox();
-        const x = Math.round(box.x + box.width / 2),
-          y = Math.min(height - 180, Math.round(box.y + 180));
-        await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-        for (let i = 1; i <= 10; i++) {
-          await cdp.send("Input.dispatchTouchEvent", {
-            type: "touchMove",
-            touchPoints: [{ x, y: y - i * 10 }],
-          });
-          await page.waitForTimeout(16);
-        }
-        await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-        await page.waitForTimeout(300);
-        assert.ok((await owner.evaluate((el) => el.scrollTop)) > 0, `touch swipe scrolls ${mode}`);
-        evidence.push({ width, mode, touchPassed: true });
-      }
-    }
-    await context.close();
   }
-  console.log(JSON.stringify(evidence, null, 2));
-  await writeFile(
-    (process.env.RUNNER_TEMP || "/tmp") + "/demo-scroll-results.json",
-    JSON.stringify(evidence, null, 2),
-  );
-  assert.deepEqual(boundaryFailures, [], "Every native boundary gesture must chain");
 } finally {
+  await writeFile(join(output, "demo-scroll-results.json"), JSON.stringify(evidence, null, 2));
   await browser.close();
 }
+assert.deepEqual(failures, [], "Every viewport and demo scroll contract must pass");

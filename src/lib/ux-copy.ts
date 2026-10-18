@@ -230,6 +230,14 @@ export function uxCopy(locale: Locale) {
     >),
     ...software[locale],
     emptyGuideSearch: emptyGuideSearch[locale],
+    poolPhoto: {
+      fr: "Espace détente au bord d’une piscine",
+      en: "Relaxation by a swimming pool",
+      es: "Zona de descanso junto a una piscina",
+      de: "Entspannung am Pool",
+      it: "Area relax a bordo piscina",
+      pt: "Espaço de descanso junto à piscina",
+    }[locale],
     helpIdeas: {
       fr: "Que peut faire NONA pour moi ?",
       en: "How can NONA help me?",

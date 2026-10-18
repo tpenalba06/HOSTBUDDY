@@ -1,0 +1,76 @@
+name: NONA UX missions and regressions
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/nona-ux-checks-20261019]
+    paths: [.github/workflows/ux-regression.yml, scripts/e2e/ux-missions.mjs, scripts/e2e/editor-ux.mjs, scripts/e2e/demo-scroll.mjs]
+permissions:
+  contents: read
+concurrency:
+  group: nona-ux-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 18
+    env:
+      VITE_SUPABASE_URL: https://nona-demo.invalid
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_nona_visual_preview
+      VITE_SUPABASE_PROJECT_ID: nona-visual-preview
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - name: Isolated browser and media tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/nona-browser" --no-package-lock --no-audit --no-fund playwright@1.62.1
+          "$RUNNER_TEMP/nona-browser/node_modules/.bin/playwright" install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Build exact candidate and prepare video codecs
+        run: |
+          bun run build
+          cp -R .output/public/video-codec public/video-codec
+          git rev-parse HEAD > "$RUNNER_TEMP/nona-tested-revision.txt"
+          git rev-parse 'HEAD^{tree}' >> "$RUNNER_TEMP/nona-tested-revision.txt"
+      - name: Start synthetic local application
+        run: |
+          bun run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/nona-dev.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5173 > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Seven directed product missions
+        env:
+          HOSTBUDDY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/nona-browser/node_modules/playwright/index.mjs
+          NONA_UX_VIDEO: 1
+        run: node scripts/e2e/ux-missions.mjs
+      - name: Document scroll and real phone viewport
+        if: ${{ !cancelled() }}
+        env:
+          HOSTBUDDY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/nona-browser/node_modules/playwright/index.mjs
+        run: node scripts/e2e/demo-scroll.mjs
+      - name: Preserve editor order and video behaviour
+        if: ${{ !cancelled() }}
+        env:
+          HOSTBUDDY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/nona-browser/node_modules/playwright/index.mjs
+        run: node scripts/e2e/editor-ux.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nona-ux-missions-evidence
+          retention-days: 3
+          path: |
+            ${{ runner.temp }}/nona-missions
+            ${{ runner.temp }}/hb-*
+            ${{ runner.temp }}/demo-scroll-results.json
+            ${{ runner.temp }}/nona-tested-revision.txt
+            ${{ runner.temp }}/nona-dev.log

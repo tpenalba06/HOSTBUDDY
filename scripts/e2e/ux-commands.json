@@ -1,1 +1,1 @@
-{"sequence":13,"actions":[{"type":"click","x":621,"y":731,"mission":"M4"},{"type":"type","text":"Maison des Pins — Test UX","mission":"M4"},{"type":"scroll","dy":572,"x":1100,"y":850,"mission":"M4"},{"type":"wait","ms":500,"mission":"M4"}]}
+{"sequence":14,"actions":[{"type":"click","x":416,"y":805,"mission":"M4"},{"type":"key","key":"ControlOrMeta+End","mission":"M4"},{"type":"wait","ms":500,"mission":"M4"}]}

@@ -965,6 +965,12 @@ body {
   .manager-shell .manager-shell-grid {
     display: block;
   }
+  /* Embedded demos need a bounded grid row for the content to scroll. */
+  .manager-shell.manager-shell-embedded .manager-shell-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
   .manager-shell .manager-shell-sidebar {
     display: none;
   }

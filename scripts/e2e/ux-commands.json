@@ -1,1 +1,1 @@
-{"sequence":28,"actions":[{"type":"click","x":923,"y":909,"mission":"M7"},{"type":"wait","ms":650,"mission":"M7"}]}
+{"sequence":29,"actions":[{"type":"key","key":"ControlOrMeta+Home","mission":"M7"},{"type":"wait","ms":250,"mission":"M7"},{"type":"click","x":141,"y":113,"mission":"M7"},{"type":"wait","ms":700,"mission":"M7"}]}

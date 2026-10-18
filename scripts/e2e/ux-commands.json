@@ -1,1 +1,1 @@
-{"sequence":26,"actions":[{"type":"click","x":824,"y":785,"mission":"M6"},{"type":"wait","ms":800,"mission":"M6"},{"type":"key","key":"ControlOrMeta+Home","mission":"M7"},{"type":"wait","ms":400,"mission":"M7"}]}
+{"sequence":27,"actions":[{"type":"click","x":353,"y":459,"mission":"M7"},{"type":"wait","ms":300,"mission":"M7"},{"type":"click","x":986,"y":584,"mission":"M7"},{"type":"wait","ms":700,"mission":"M7"}]}

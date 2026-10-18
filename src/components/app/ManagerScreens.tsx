@@ -1054,11 +1054,13 @@ export function ManagerNewPropertyScreen({
   onImportUrl,
   onPasteText,
   onManual,
+  onConnectSoftware,
 }: {
   onBack?: () => void;
   onImportUrl: () => void;
   onPasteText: () => void;
   onManual: () => void;
+  onConnectSoftware?: (() => void) | undefined;
 }) {
   const { t } = useI18n();
   return (
@@ -1069,6 +1071,7 @@ export function ManagerNewPropertyScreen({
         onImportUrl={onImportUrl}
         onPasteText={onPasteText}
         onManual={onManual}
+        onConnectSoftware={onConnectSoftware}
       />
     </div>
   );
@@ -1078,10 +1081,12 @@ export function ManagerNewPropertyOptions({
   onImportUrl,
   onPasteText,
   onManual,
+  onConnectSoftware,
 }: {
   onImportUrl: () => void;
   onPasteText: () => void;
   onManual: () => void;
+  onConnectSoftware?: (() => void) | undefined;
 }) {
   const { t } = useI18n();
   const options = [
@@ -1092,41 +1097,63 @@ export function ManagerNewPropertyOptions({
       onClick: onImportUrl,
       recommended: true,
     },
+    ...(onConnectSoftware
+      ? [
+          {
+            icon: "↔",
+            title: "Connecter mon logiciel",
+            description: "Récupérez les logements de votre PMS, avec vos accès autorisés.",
+            onClick: onConnectSoftware,
+            recommended: false,
+          },
+        ]
+      : []),
     {
       icon: "📝",
       title: t("app.paste"),
       description: t("app.pasteD"),
       onClick: onPasteText,
     },
-    {
-      icon: "✏️",
-      title: t("app.manual"),
-      description: t("app.manualD"),
-      onClick: onManual,
-    },
+    ...(!onConnectSoftware
+      ? [
+          {
+            icon: "✏️",
+            title: t("app.manual"),
+            description: t("app.manualD"),
+            onClick: onManual,
+          },
+        ]
+      : []),
   ];
 
   return (
-    <div className="mt-6 grid gap-3 @lg:grid-cols-3">
-      {options.map((option) => (
-        <button
-          key={option.title}
-          type="button"
-          onClick={option.onClick}
-          className={`surface relative min-h-40 p-5 text-left transition hover:-translate-y-0.5 hover:shadow-soft ${
-            option.recommended ? "border-2 border-primary" : ""
-          }`}
-        >
-          {option.recommended && (
-            <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-              {t("app.recommended")}
-            </span>
-          )}
-          <span className="text-3xl">{option.icon}</span>
-          <h2 className="mt-3 text-xl font-semibold">{option.title}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+    <div>
+      <div className="mt-6 grid gap-3 @lg:grid-cols-3">
+        {options.map((option) => (
+          <button
+            key={option.title}
+            type="button"
+            onClick={option.onClick}
+            className={`surface relative min-h-40 p-5 text-left transition hover:-translate-y-0.5 hover:shadow-soft ${
+              option.recommended ? "border-2 border-primary" : ""
+            }`}
+          >
+            {option.recommended && (
+              <span className="absolute -top-3 left-5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                {t("app.recommended")}
+              </span>
+            )}
+            <span className="text-3xl">{option.icon}</span>
+            <h2 className="mt-3 text-xl font-semibold">{option.title}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+          </button>
+        ))}
+      </div>
+      {onConnectSoftware && (
+        <button type="button" className="mt-4 min-h-12 text-primary underline" onClick={onManual}>
+          {t("app.manual")}
         </button>
-      ))}
+      )}
     </div>
   );
 }

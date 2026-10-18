@@ -331,7 +331,16 @@ const labels: Record<Locale, readonly string[]> = {
   ],
 };
 export function addImportCopy(translations: Record<Locale, Record<string, string>>) {
+  const confirm: Record<Locale, string> = {
+    fr: "Confirmer cette information",
+    en: "Confirm this information",
+    es: "Confirmar esta información",
+    de: "Diese Angabe bestätigen",
+    it: "Conferma questa informazione",
+    pt: "Confirmar esta informação",
+  };
   for (const locale of Object.keys(copy) as Locale[]) {
+    translations[locale]["importFlow.confirmField"] = confirm[locale];
     keys.forEach((key, index) => {
       translations[locale][`importFlow.${key}`] = copy[locale][index]!;
     });

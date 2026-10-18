@@ -1,6 +1,7 @@
 import { FIELD_DEFS } from "@/lib/import-engine/fields";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 
 const BADGE_CLASS = {
   found: "bg-success-soft text-success",
@@ -58,7 +59,7 @@ export function ImportReview({
       </button>
 
       <div className="mt-2">
-        <p className="font-bold text-primary">HostBuddy</p>
+        <NonaWordmark />
         <h1 className="mt-1 text-3xl font-semibold">{t("importFlow.reviewTitle")}</h1>
         <p className="mt-2 text-muted-foreground">{t("importFlow.reviewHelp")}</p>
       </div>
@@ -77,6 +78,12 @@ export function ImportReview({
           <p className="text-2xl font-semibold">{missing}</p>
         </div>
       </div>
+      {!!value.analysis?.warnings.length && (
+        <p role="status" className="mt-4 rounded-xl bg-warning-soft p-3">
+          L’analyse assistée n’a pas pu être terminée. Le contenu détecté reste disponible
+          ci-dessous : vérifiez les informations avant de créer votre brouillon.
+        </p>
+      )}
 
       {essentialMissing > 0 && (
         <p className="mt-4 rounded-xl bg-warning-soft p-3 font-medium">
@@ -104,6 +111,7 @@ export function ImportReview({
                 src={url}
                 alt={t("importFlow.photoAlt")}
                 referrerPolicy="no-referrer"
+                loading="lazy"
                 className="aspect-square w-full rounded-xl object-cover"
               />
             ))}
@@ -151,11 +159,38 @@ export function ImportReview({
 
               <textarea
                 className="field mt-3 min-h-24"
+                disabled={busy}
                 value={field.value ?? ""}
                 placeholder={t("importFlow.fieldPrompt").replace("{label}", t(`field.${def.key}`))}
                 aria-label={t(`field.${def.key}`)}
                 onChange={(event) => updateField(def.key, event.target.value)}
               />
+              {field.status === "to_verify" &&
+                field.value?.trim() &&
+                !field.issues?.includes("conflicting_sources") && (
+                  <button
+                    type="button"
+                    className="mt-2 min-h-12 font-semibold text-primary underline"
+                    disabled={busy}
+                    onClick={() =>
+                      onChange({
+                        ...value,
+                        fields: value.fields.map((item) =>
+                          item.key === field.key
+                            ? { ...item, status: "found", confidence: 1, manuallyVerified: true }
+                            : item,
+                        ),
+                      })
+                    }
+                  >
+                    {t("importFlow.confirmField")}
+                  </button>
+                )}
+              {field.issues?.includes("conflicting_sources") && (
+                <p className="mt-2 text-sm text-warning">
+                  Plusieurs informations diffèrent dans la source. Choisissez la bonne valeur.
+                </p>
+              )}
 
               {field.rawValue && (
                 <details className="mt-2 text-sm text-muted-foreground">
@@ -163,6 +198,15 @@ export function ImportReview({
                     {t("importFlow.sourceText")}
                   </summary>
                   <p className="whitespace-pre-line rounded-lg bg-muted p-3">{field.rawValue}</p>
+                  <p className="mt-2">
+                    Confiance indicative : {Math.round(field.confidence * 100)} % ·{" "}
+                    {field.evidence?.some((item) => item.method === "local-ai")
+                      ? "Classement assisté par l'IA locale"
+                      : "Extraction du document"}
+                  </p>
+                  {value.analysis?.sourceUrl && (
+                    <p className="mt-1 break-all">Source : {value.analysis.sourceUrl}</p>
+                  )}
                 </details>
               )}
             </article>

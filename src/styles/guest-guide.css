@@ -1300,25 +1300,72 @@
   }
 }
 
-/* The landing phone is a crop of the guest guide, never a separately drawn interface. */
+/* The guide lives in its own mobile viewport; scale the entire screen, not its layout. */
 .hb-marketing-phone {
-  height: 520px;
-  container-type: inline-size;
+  padding: 8px;
+  border-radius: 36px;
+  background: var(--ink, #302a24);
+  overflow: hidden;
 }
-.hb-marketing-phone .hb-cover {
-  height: 210px;
-  min-height: 210px;
+.hb-marketing-phone-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 390 / 844;
+  overflow: hidden;
+  border-radius: 28px;
+  background: var(--background);
 }
-.hb-marketing-phone .hb-cover-copy {
-  top: auto;
-  bottom: 24px;
+.hb-marketing-phone-screen > iframe {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: block;
+  width: 390px;
+  height: 844px;
+  max-width: none;
+  border: 0;
+  transform-origin: top left;
 }
-.hb-marketing-phone .hb-cover-copy h1 {
-  font-size: 36px;
+html:has(.nona-phone-document) {
+  scrollbar-width: none;
+  overscroll-behavior-y: contain;
 }
-.hb-marketing-phone .hb-discover,
-.hb-marketing-phone .hb-index-heading {
+html:has(.nona-phone-document)::-webkit-scrollbar {
   display: none;
+}
+.nona-phone-document .nona-concierge[data-demo] {
+  position: fixed;
+  bottom: 0;
+}
+.nona-phone-chat-hint {
+  display: grid;
+  grid-template-columns: minmax(0, 180px) 96px;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  min-height: 64px;
+  margin-top: 4px;
+  color: #fff8ec;
+  font-family: "HB Newsreader", Georgia, serif;
+  font-size: 20px;
+  font-style: italic;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: 0 2px 8px #21080480;
+  pointer-events: none;
+}
+.nona-phone-chat-hint p {
+  margin: 0;
+}
+.nona-phone-chat-hint svg {
+  width: 96px;
+  height: 64px;
+  align-self: start;
+  margin-top: -24px;
+  overflow: visible;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Mobile entry stays short so Services and the main shortcuts are immediately reachable. */

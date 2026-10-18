@@ -1,9 +1,9 @@
-# Assets Nona officiels
+# Assets officiels NONA
 
-Les anciens rasters restent des références historiques de la charte.
-Le logo et le personnage affichés proviennent désormais de l'image officielle fournie « Logo NONA et mascotte souriante.png », séparée par recadrage sans modification des couleurs ou de la transparence.
-Leurs pointeurs CDN sont dans `src/assets/nona-official-*.png.asset.json`; les composants partagés et `src/lib/nona-assets.ts` les utilisent sans reconstruction CSS.
-Les fontes locales et leurs licences se trouvent dans `fonts/`.
+Les fichiers official-logo.png (878 × 217) et official-mascot.png (1067 × 577) sont les originaux PNG RGBA récupérés des assets Lovable de la révision 7c8f52d. Leur identité binaire a été vérifiée, sans réencodage, retouche ni modification de transparence.
 
-L'animation finale de coucou et les masters vectoriels/transparents ne sont pas fournis.
-Aucune mascotte ni animation de remplacement n'est générée. La réduction des animations reste respectée.
+Les composants NonaBrand et le concierge utilisent les chemins statiques centralisés dans src/lib/nona-assets.ts. Ces mêmes fichiers figurent dans le manifeste hors ligne. Les pointeurs *.asset.json sont conservés comme provenance.
+
+Les rasters *-reference.png et official-da.png restent des références historiques ; ils ne sont plus chargés comme marque. Les fontes et leurs licences se trouvent dans fonts/.
+
+La mascotte fournie est statique ; aucune animation de remplacement n’est générée.

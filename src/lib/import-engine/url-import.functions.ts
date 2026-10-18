@@ -34,18 +34,23 @@ export const importPropertyPhotos = createServerFn({ method: "POST" })
       .object({
         propertyId: z.string().uuid(),
         sourceUrl: z.string().url().max(2000),
-        urls: z.array(z.string().url().max(2000)).max(8),
+        urls: z.array(z.string().url().max(2000)).max(30),
         rightsConfirmed: z.literal(true),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const [{ UA, robotsAllows }, { safePublicFetch }, { propertyPhotoCandidates }] =
-      await Promise.all([
-        import("./url-source.server"),
-        import("./safe-public-fetch"),
-        import("./photo-candidates"),
-      ]);
+    const [
+      { UA, robotsAllows },
+      { safePublicFetch },
+      { propertyPhotoCandidates },
+      { sunverGuestDocument },
+    ] = await Promise.all([
+      import("./url-source.server"),
+      import("./safe-public-fetch"),
+      import("./photo-candidates"),
+      import("./html-document"),
+    ]);
     const sb = context.supabase;
     const { data: property, error } = await sb
       .from("properties")
@@ -65,7 +70,11 @@ export const importPropertyPhotos = createServerFn({ method: "POST" })
     );
     if (!page.response.ok || !(page.response.headers.get("content-type") ?? "").includes("html"))
       throw new Error("Import des photos indisponible. Ajoutez-les manuellement.");
-    const allowed = propertyPhotoCandidates(new TextDecoder().decode(page.buffer), page.url);
+    const html = new TextDecoder().decode(page.buffer);
+    const allowed = [
+      ...propertyPhotoCandidates(html, page.url),
+      ...(sunverGuestDocument(html, page.url)?.photos ?? []),
+    ];
     const { data: sections, error: sectionError } = await sb
       .from("guide_sections")
       .select("id")

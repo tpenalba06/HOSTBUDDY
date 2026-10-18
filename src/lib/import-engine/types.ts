@@ -13,6 +13,12 @@ export interface ExtractedField {
   confidence: number; // 0..1
   manuallyVerified?: boolean;
   manuallyOverridden?: boolean;
+  evidence?: {
+    quote: string;
+    sourceUrl?: string;
+    method: "rules" | "heading" | "structured" | "local-ai";
+  }[];
+  issues?: ("conflicting_sources" | "uncertain" | "manual_preserved")[];
 }
 
 export interface ExtractionResult {
@@ -20,6 +26,12 @@ export interface ExtractionResult {
   fields: ExtractedField[];
   photos?: string[];
   photoRightsConfirmed?: boolean;
+  analysis?: {
+    engine: "document" | "document+local-ai";
+    inputCharacters: number;
+    warnings: string[];
+    sourceUrl?: string;
+  };
 }
 
 /** Any extractor (deterministic rules today, structured AI tomorrow) implements this. */

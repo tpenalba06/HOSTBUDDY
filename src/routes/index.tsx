@@ -12,6 +12,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 import { PhoneDemo } from "@/components/marketing/PhoneDemo";
 import { SocialProof } from "@/components/marketing/SocialProof";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
@@ -20,9 +21,9 @@ import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 import breakfastAsset from "@/assets/hostbuddy-breakfast.jpg.asset.json";
 import spaAsset from "@/assets/hostbuddy-spa.jpg.asset.json";
 
-const TITLE = "HostBuddy — Votre accueil voyageur, prêt en quelques minutes";
+const TITLE = "NONA - Votre accueil voyageur, prêt en quelques minutes";
 const DESC =
-  "Importez vos contenus existants. HostBuddy prépare un guide voyageur élégant, sans application à télécharger.";
+  "Importez vos contenus existants. NONA prépare un guide voyageur élégant, sans application à télécharger.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -182,7 +183,9 @@ function Landing() {
         <section className="bg-ink py-20 text-ink-foreground">
           <div className="mx-auto max-w-7xl px-3 sm:px-5">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="font-bold text-accent">HostBuddy</p>
+              <div className="inline-flex rounded-xl bg-background px-3 py-2">
+                <NonaWordmark />
+              </div>
               <h2 className="mt-3 text-balance text-4xl font-semibold sm:text-5xl">
                 {t("demo.homePreviewTitle")}
               </h2>
@@ -314,9 +317,7 @@ function Landing() {
           <a href="/legal" className="min-h-12 py-3 text-primary underline">
             {t("legal.title")}
           </a>
-          <p className="text-sm text-muted-foreground">
-            © 2026 HostBuddy · {t("marketing.footer")}
-          </p>
+          <p className="text-sm text-muted-foreground">© 2026 NONA · {t("marketing.footer")}</p>
         </div>
       </footer>
     </div>

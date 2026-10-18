@@ -40,10 +40,7 @@ export function mediaOfflinePlugin(): Plugin {
         const names = readdirSync(resolve("public", directory)).sort();
         for (const name of names) {
           // The full composite is a manager reference, not a traveler download.
-          if (
-            directory === "nona" &&
-            !["logo-reference.png", "mascotte-reference.png"].includes(name)
-          )
+          if (directory === "nona" && !["official-logo.png", "official-mascot.png"].includes(name))
             continue;
           // Keep original TTF sources available, but don't download them again
           // when the reader uses the equivalent WOFF2 face.

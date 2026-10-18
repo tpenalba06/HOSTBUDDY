@@ -1,0 +1,34 @@
+{
+  "executedAt": "2026-10-18T12:23:41.956Z",
+  "scope": "HTTP only; no visual or authenticated editor interaction verified.",
+  "results": [
+    {
+      "path": "/demo?preview=manager",
+      "status": 200,
+      "redirect": null,
+      "htmlCharacters": 85534,
+      "hasNona": true
+    },
+    {
+      "path": "/guide-preview?device=mobile",
+      "status": 200,
+      "redirect": null,
+      "htmlCharacters": 33430,
+      "hasNona": true
+    },
+    {
+      "path": "/app/new",
+      "status": 200,
+      "redirect": null,
+      "htmlCharacters": 2869,
+      "hasNona": true
+    },
+    {
+      "path": "/app/import-pms",
+      "status": 200,
+      "redirect": null,
+      "htmlCharacters": 2883,
+      "hasNona": true
+    }
+  ]
+}

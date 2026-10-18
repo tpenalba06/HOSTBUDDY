@@ -49,5 +49,5 @@ export function propertyPhotoCandidates(html: string, source: string): string[] 
         }
       }),
     ),
-  ].slice(0, 8);
+  ].slice(0, 30);
 }

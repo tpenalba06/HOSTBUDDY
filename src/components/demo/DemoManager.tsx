@@ -14,7 +14,7 @@ import {
 import { ImportReview } from "@/components/app/ImportReview";
 import { ManagerConversationScreen } from "@/components/app/ManagerConversationScreen";
 import { QrCard } from "@/components/app/QrCard";
-import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
+import { extractDocument } from "@/lib/import-engine/document-extractor";
 import { getImportUrlIssue, normalizeUrl } from "@/lib/import-engine/url-adapters";
 import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.functions";
 import { DemoPropertyEditor } from "./DemoPropertyEditor";
@@ -24,6 +24,7 @@ import { DEMO_BOOKING_EVENT, demoBookingOrders, updateDemoBooking } from "./demo
 import { validStoredDemoProperty } from "./demo-storage";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 
 type DemoArea = ManagerArea | "editor";
 type NewMode = "options" | "text" | "url" | "manual";
@@ -388,7 +389,7 @@ export function DemoManager({
               setBusy(true);
               setError("");
               try {
-                setCandidate(await rulesExtractor.extract(text));
+                setCandidate(extractDocument(text));
               } catch {
                 setError("Le texte n’a pas pu être analysé.");
               } finally {
@@ -526,7 +527,7 @@ function DemoImportFrame({
       <Button variant="ghost" className="mb-3 min-h-12 px-0 text-primary" onClick={onBack}>
         ← {t("common.back")}
       </Button>
-      <p className="font-bold text-primary">HostBuddy</p>
+      <NonaWordmark />
       <h1 className="mt-1 text-3xl font-semibold @sm:text-4xl">{title}</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
       <div className="mt-6">

@@ -10,6 +10,7 @@ import { importPropertyPhotos } from "@/lib/import-engine/url-import.functions";
 import { initialGuideSections } from "./section-policy";
 import { FIELD_DEFS, FIELD_BY_KEY } from "@/lib/import-engine/fields";
 import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
+import { importedPropertyId } from "@/lib/import-engine/import-identity";
 import {
   buildGuideContent,
   fieldUpdatesForGuideSection,
@@ -588,10 +589,30 @@ export async function createPropertyFromExtraction(
   sourceUrl: string | null,
 ) {
   const name = result?.propertyName?.trim() || "Mon logement";
+  // Reopening an existing source never overwrites the manager's edits.
+  if (sourceUrl) {
+    const { data: existing, error: existingError } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("source_url", sourceUrl)
+      .limit(1)
+      .maybeSingle();
+    if (existingError) return fail(existingError);
+    if (existing) return existing;
+  }
+  const importedId = sourceUrl ? await importedPropertyId(orgId, source, sourceUrl) : undefined;
   const slug = `${slugify(name)}-${crypto.randomUUID().slice(0, 6)}`;
   const { data: property, error } = await supabase
     .from("properties")
-    .insert({ organization_id: orgId, name, slug, source_type: source, source_url: sourceUrl })
+    .insert({
+      ...(importedId ? { id: importedId } : {}),
+      organization_id: orgId,
+      name,
+      slug,
+      source_type: source,
+      source_url: sourceUrl,
+    })
     .select("*")
     .single();
   if (error) return fail(error);
@@ -628,7 +649,7 @@ export async function createPropertyFromExtraction(
     .eq("property_id", property.id);
   if (fieldLoadError) return fail(fieldLoadError);
   await ensureGuideSections(property.id, createdFields ?? []);
-  if (sourceUrl && result?.photos?.length && result.photoRightsConfirmed) {
+  if (source !== "pms" && sourceUrl && result?.photos?.length && result.photoRightsConfirmed) {
     const outcome = await importPropertyPhotos({
       data: { propertyId: property.id, sourceUrl, urls: result.photos, rightsConfirmed: true },
     }).catch(() => ({ imported: 0, failed: result.photos!.length }));

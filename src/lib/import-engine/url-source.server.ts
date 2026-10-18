@@ -1,7 +1,8 @@
 import { propertyPhotoCandidates } from "./photo-candidates";
 import { safePublicFetch } from "./safe-public-fetch";
 import { robotsTextAllows } from "./robots-policy";
-import { extractFromText } from "./rules-extractor";
+import { analyzeImportDocument } from "./intelligence.server";
+import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
 
@@ -146,15 +147,63 @@ export function webTextForRules(text: string) {
     .join("\n");
 }
 
-function visibleText(html: string) {
-  return decode(
-    html
-      .replace(/<(script|style|noscript|svg|nav|footer|header)[\s\S]*?<\/\1>/gi, " ")
-      .replace(/<(br|\/p|\/div|\/li|\/h\d)[^>]*>/gi, "\n")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/[ \t]+/g, " ")
-      .replace(/\n\s*\n+/g, "\n"),
-  ).slice(0, 20000);
+export async function extractAccessibleHtml(html: string, resolvedUrl: string, localAi = false) {
+  const structured = extractStructuredFields(html, resolvedUrl);
+  const sunver = sunverGuestDocument(html, resolvedUrl);
+  const visible = htmlDocumentText(html);
+  const textual = await analyzeImportDocument([sunver?.text, visible].filter(Boolean).join("\n"), {
+    sourceUrl: resolvedUrl,
+    localAi,
+  });
+  const fields = textual.fields.map((field) => {
+    if (field.key === "recommendations" && sunver?.recommendations)
+      return {
+        ...field,
+        value: sunver.recommendations,
+        rawValue: sunver.recommendations,
+        status: "to_verify" as const,
+        confidence: 0.85,
+        evidence: [
+          { quote: sunver.recommendations, sourceUrl: resolvedUrl, method: "structured" as const },
+        ],
+      };
+    const metadata = structured.fields[field.key];
+    if (!metadata) return field;
+    return {
+      ...metadata,
+      status: "to_verify" as const,
+      rawValue: [metadata.rawValue, field.rawValue].filter(Boolean).join("\n"),
+      evidence: [
+        ...(field.evidence ?? []),
+        {
+          quote: metadata.rawValue ?? metadata.value!,
+          sourceUrl: resolvedUrl,
+          method: "structured" as const,
+        },
+      ],
+      // Preserve competing sources in the review, rather than silently replacing one.
+      ...(field.value &&
+      metadata.value &&
+      !field.value.includes(metadata.value) &&
+      !metadata.value.includes(field.value)
+        ? {
+            value: [metadata.value, field.value].join("\n"),
+            issues: ["conflicting_sources" as const],
+          }
+        : {}),
+    };
+  });
+  return {
+    ...textual,
+    propertyName: sunver
+      ? textual.propertyName
+      : (structured.name?.slice(0, 120) ?? textual.propertyName),
+    fields,
+    photos: [
+      ...new Set([...(sunver?.photos ?? []), ...propertyPhotoCandidates(html, resolvedUrl)]),
+    ].slice(0, 30),
+    photoRightsConfirmed: false,
+  };
 }
 
 export async function runUrlImport(data: {
@@ -170,6 +219,8 @@ export async function runUrlImport(data: {
   }
   if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
     return { ok: false, source, reason: "invalid" };
+  if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
+    return { ok: false, source, reason: "blocked" };
   if (!(await robotsAllows(url))) return { ok: false, source, reason: "blocked" };
 
   let html: string;
@@ -201,28 +252,32 @@ export async function runUrlImport(data: {
     };
   }
   if (
-    /(captcha|cf-challenge|are you a robot|access denied|enable javascript to continue)/i.test(
+    /(captcha|cf-challenge|aws-waf|are you a robot|verify that you['’]re not a robot|access denied|enable javascript to continue|javascript is disabled)/i.test(
       html.slice(0, 20000),
     )
   ) {
     return { ok: false, source, reason: "blocked" };
   }
 
+  let result;
+  try {
+    result = await extractAccessibleHtml(
+      html,
+      resolvedUrl,
+      typeof process !== "undefined" && process.env["NONA_IMPORT_LOCAL_AI"] === "true",
+    );
+  } catch {
+    return { ok: false, source, reason: "insufficient" };
+  }
   const structured = extractStructuredFields(html, resolvedUrl);
-  const textual = extractFromText(webTextForRules(visibleText(html)), 0.6); // page text is never trusted blindly
-  const fields = textual.fields.map((f) => structured.fields[f.key] ?? f);
   // A generic meta description is not evidence that the page describes a property.
-  const useful = fields.filter(
+  const useful = result.fields.filter(
     (f) => f.status !== "missing" && !(f.key === "description" && !structured.lodging),
   ).length;
   if (useful < 2) return { ok: false, source, reason: "insufficient" };
   return {
     ok: true,
     source,
-    result: {
-      propertyName: structured.name?.slice(0, 120) ?? null,
-      fields,
-      photos: propertyPhotoCandidates(html, resolvedUrl),
-    },
+    result,
   };
 }

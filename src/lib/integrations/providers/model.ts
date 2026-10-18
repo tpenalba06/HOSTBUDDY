@@ -1,4 +1,5 @@
 import type { ExtractedField, ExtractionResult } from "@/lib/import-engine/types";
+import { FIELD_DEFS } from "@/lib/import-engine/fields";
 export interface NormalizedProperty {
   provider: string;
   externalId: string;
@@ -20,7 +21,16 @@ export interface ImportProvider {
 }
 export const extractionFromProvider = (property: NormalizedProperty): ExtractionResult => ({
   propertyName: property.name,
-  fields: property.fields,
+  fields: FIELD_DEFS.map(
+    (def) =>
+      property.fields.find((field) => field.key === def.key) ?? {
+        key: def.key,
+        value: null,
+        rawValue: null,
+        status: "missing",
+        confidence: 0,
+      },
+  ),
   photos: property.photos,
   photoRightsConfirmed: false,
 });

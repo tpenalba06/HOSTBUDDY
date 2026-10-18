@@ -17,6 +17,7 @@ import { Route as GuidePreviewRouteImport } from './routes/guide-preview'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as OfflineRouteImport } from './routes/offline'
+import { Route as PhonePreviewRouteImport } from './routes/phone-preview'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as ApiBillingSyncRouteImport } from './routes/api/billing-sync'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedAppConnectionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/app.dashboard'
 import { Route as AuthenticatedAppFeedbackRouteImport } from './routes/_authenticated/app.feedback'
 import { Route as AuthenticatedAppImportGuestyRouteImport } from './routes/_authenticated/app.import-guesty'
+import { Route as AuthenticatedAppImportPmsRouteImport } from './routes/_authenticated/app.import-pms'
 import { Route as AuthenticatedAppImportTextRouteImport } from './routes/_authenticated/app.import-text'
 import { Route as AuthenticatedAppImportUrlRouteImport } from './routes/_authenticated/app.import-url'
 import { Route as AuthenticatedAppManualRouteImport } from './routes/_authenticated/app.manual'
@@ -86,6 +88,11 @@ const OfflineRoute = OfflineRouteImport.update({
   path: '/offline',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PhonePreviewRoute = PhonePreviewRouteImport.update({
+  id: '/phone-preview',
+  path: '/phone-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -138,6 +145,12 @@ const AuthenticatedAppImportGuestyRoute =
   AuthenticatedAppImportGuestyRouteImport.update({
     id: '/import-guesty',
     path: '/import-guesty',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppImportPmsRoute =
+  AuthenticatedAppImportPmsRouteImport.update({
+    id: '/import-pms',
+    path: '/import-pms',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppImportTextRoute =
@@ -249,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof IntegrationsRoute
   '/legal': typeof LegalRoute
   '/offline': typeof OfflineRoute
+  '/phone-preview': typeof PhonePreviewRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -258,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/feedback': typeof AuthenticatedAppFeedbackRoute
   '/app/import-guesty': typeof AuthenticatedAppImportGuestyRoute
+  '/app/import-pms': typeof AuthenticatedAppImportPmsRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
@@ -287,6 +302,7 @@ export interface FileRoutesByTo {
   '/integrations': typeof IntegrationsRoute
   '/legal': typeof LegalRoute
   '/offline': typeof OfflineRoute
+  '/phone-preview': typeof PhonePreviewRoute
   '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/l/$slug': typeof LSlugRoute
@@ -295,6 +311,7 @@ export interface FileRoutesByTo {
   '/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/app/feedback': typeof AuthenticatedAppFeedbackRoute
   '/app/import-guesty': typeof AuthenticatedAppImportGuestyRoute
+  '/app/import-pms': typeof AuthenticatedAppImportPmsRoute
   '/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/app/manual': typeof AuthenticatedAppManualRoute
@@ -326,6 +343,7 @@ export interface FileRoutesById {
   '/integrations': typeof IntegrationsRoute
   '/legal': typeof LegalRoute
   '/offline': typeof OfflineRoute
+  '/phone-preview': typeof PhonePreviewRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/api/billing-sync': typeof ApiBillingSyncRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -335,6 +353,7 @@ export interface FileRoutesById {
   '/_authenticated/app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/app/feedback': typeof AuthenticatedAppFeedbackRoute
   '/_authenticated/app/import-guesty': typeof AuthenticatedAppImportGuestyRoute
+  '/_authenticated/app/import-pms': typeof AuthenticatedAppImportPmsRoute
   '/_authenticated/app/import-text': typeof AuthenticatedAppImportTextRoute
   '/_authenticated/app/import-url': typeof AuthenticatedAppImportUrlRoute
   '/_authenticated/app/manual': typeof AuthenticatedAppManualRoute
@@ -366,6 +385,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/legal'
     | '/offline'
+    | '/phone-preview'
     | '/app'
     | '/api/billing-sync'
     | '/api/stripe-webhook'
@@ -375,6 +395,7 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/feedback'
     | '/app/import-guesty'
+    | '/app/import-pms'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
@@ -404,6 +425,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/legal'
     | '/offline'
+    | '/phone-preview'
     | '/api/billing-sync'
     | '/api/stripe-webhook'
     | '/l/$slug'
@@ -412,6 +434,7 @@ export interface FileRouteTypes {
     | '/app/dashboard'
     | '/app/feedback'
     | '/app/import-guesty'
+    | '/app/import-pms'
     | '/app/import-text'
     | '/app/import-url'
     | '/app/manual'
@@ -442,6 +465,7 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/legal'
     | '/offline'
+    | '/phone-preview'
     | '/_authenticated/app'
     | '/api/billing-sync'
     | '/api/stripe-webhook'
@@ -451,6 +475,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/dashboard'
     | '/_authenticated/app/feedback'
     | '/_authenticated/app/import-guesty'
+    | '/_authenticated/app/import-pms'
     | '/_authenticated/app/import-text'
     | '/_authenticated/app/import-url'
     | '/_authenticated/app/manual'
@@ -482,6 +507,7 @@ export interface RootRouteChildren {
   IntegrationsRoute: typeof IntegrationsRoute
   LegalRoute: typeof LegalRoute
   OfflineRoute: typeof OfflineRoute
+  PhonePreviewRoute: typeof PhonePreviewRoute
   ApiBillingSyncRoute: typeof ApiBillingSyncRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LSlugRoute: typeof LSlugRoute
@@ -555,6 +581,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfflineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/phone-preview': {
+      id: '/phone-preview'
+      path: '/phone-preview'
+      fullPath: '/phone-preview'
+      preLoaderRoute: typeof PhonePreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -623,6 +656,13 @@ declare module '@tanstack/react-router' {
       path: '/import-guesty'
       fullPath: '/app/import-guesty'
       preLoaderRoute: typeof AuthenticatedAppImportGuestyRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/import-pms': {
+      id: '/_authenticated/app/import-pms'
+      path: '/import-pms'
+      fullPath: '/app/import-pms'
+      preLoaderRoute: typeof AuthenticatedAppImportPmsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/import-text': {
@@ -766,6 +806,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppFeedbackRoute: typeof AuthenticatedAppFeedbackRoute
   AuthenticatedAppImportGuestyRoute: typeof AuthenticatedAppImportGuestyRoute
+  AuthenticatedAppImportPmsRoute: typeof AuthenticatedAppImportPmsRoute
   AuthenticatedAppImportTextRoute: typeof AuthenticatedAppImportTextRoute
   AuthenticatedAppImportUrlRoute: typeof AuthenticatedAppImportUrlRoute
   AuthenticatedAppManualRoute: typeof AuthenticatedAppManualRoute
@@ -784,6 +825,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppFeedbackRoute: AuthenticatedAppFeedbackRoute,
   AuthenticatedAppImportGuestyRoute: AuthenticatedAppImportGuestyRoute,
+  AuthenticatedAppImportPmsRoute: AuthenticatedAppImportPmsRoute,
   AuthenticatedAppImportTextRoute: AuthenticatedAppImportTextRoute,
   AuthenticatedAppImportUrlRoute: AuthenticatedAppImportUrlRoute,
   AuthenticatedAppManualRoute: AuthenticatedAppManualRoute,
@@ -820,6 +862,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationsRoute: IntegrationsRoute,
   LegalRoute: LegalRoute,
   OfflineRoute: OfflineRoute,
+  PhonePreviewRoute: PhonePreviewRoute,
   ApiBillingSyncRoute: ApiBillingSyncRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LSlugRoute: LSlugRoute,

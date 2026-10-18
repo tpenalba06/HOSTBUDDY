@@ -1,12 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useI18n } from "@/lib/i18n";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ManagerNewPropertyScreen } from "@/components/app/ManagerScreens";
 
 export const Route = createFileRoute("/_authenticated/app/new")({ component: NewProperty });
 
 function NewProperty() {
   const nav = useNavigate();
-  const { t } = useI18n();
   return (
     <>
       <ManagerNewPropertyScreen
@@ -14,10 +12,8 @@ function NewProperty() {
         onImportUrl={() => nav({ to: "/app/import-url" })}
         onPasteText={() => nav({ to: "/app/import-text" })}
         onManual={() => nav({ to: "/app/manual" })}
+        onConnectSoftware={() => nav({ to: "/app/import-pms" })}
       />
-      <Link to="/app/import-guesty" className="btn btn-secondary mt-6 w-full">
-        {t("provider.title")}
-      </Link>
     </>
   );
 }

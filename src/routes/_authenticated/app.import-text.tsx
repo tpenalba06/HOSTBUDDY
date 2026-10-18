@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
+import { extractDocument, MAX_IMPORT_CHARACTERS } from "@/lib/import-engine/document-extractor";
+import { importFromText } from "@/lib/import-engine/text-import.functions";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import {
   createPropertyFromExtraction,
@@ -54,9 +55,14 @@ function ImportText() {
     let currentRunId: string | null = null;
 
     try {
-      currentRunId = await startImportRun(org.id, "text", { rawText: text.slice(0, 100_000) });
+      if (text.length > MAX_IMPORT_CHARACTERS) throw new Error("import_text_too_large");
+      currentRunId = await startImportRun(org.id, "text", { rawText: text });
       setRunId(currentRunId);
-      const result = await rulesExtractor.extract(text);
+      const result = await importFromText({ data: { text } }).catch(() => {
+        const fallback = extractDocument(text);
+        fallback.analysis!.warnings.push("analysis_service_unavailable");
+        return fallback;
+      });
       const useful = result.fields.filter((field) => field.status !== "missing").length;
 
       stop();
@@ -134,11 +140,43 @@ function ImportText() {
         <ImportProgress stages={stages} current={stage} />
       ) : (
         <div className="mt-6 space-y-4">
+          <label className="block text-sm font-semibold">
+            Charger un fichier texte ou HTML
+            <input
+              className="mt-2 block w-full text-sm"
+              type="file"
+              accept=".txt,.md,.html,.htm,text/plain,text/markdown,text/html"
+              onChange={async (event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (!file) return;
+                setError("");
+                try {
+                  if (file.size > 1_000_000 || !/\.(txt|md|html?)$/i.test(file.name))
+                    throw new Error("unsupported_document");
+                  let content = await file.text();
+                  if (content.includes("\0")) throw new Error("unsupported_document");
+                  if (/\.html?$/i.test(file.name))
+                    content = (await import("@/lib/import-engine/html-document")).htmlDocumentText(
+                      content,
+                    );
+                  if (content.length > MAX_IMPORT_CHARACTERS)
+                    throw new Error("import_text_too_large");
+                  setText(content);
+                } catch {
+                  setError(
+                    "Ce fichier ne peut pas être lu ici. Utilisez un fichier texte ou HTML de moins de 200 000 caractères, ou collez le texte de votre document.",
+                  );
+                }
+              }}
+            />
+          </label>
           <textarea
             className="field min-h-72 text-lg"
             placeholder={t("importFlow.placeholder")}
             aria-label={t("import.textTitle")}
             value={text}
+            maxLength={MAX_IMPORT_CHARACTERS}
             onChange={(e) => setText(e.target.value)}
           />
           <button

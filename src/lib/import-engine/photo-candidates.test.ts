@@ -2,6 +2,16 @@ import { describe, it, expect } from "vitest";
 import { propertyPhotoCandidates } from "./photo-candidates";
 import { privateAddress } from "./safe-public-fetch";
 describe("authorized photo import candidates", () => {
+  it("keeps a bounded property gallery with more than eight photos, without copying files", () => {
+    const photos = Array.from(
+      { length: 45 },
+      (_, i) => `https://example.invalid/property/${i}.webp`,
+    );
+    const html = `<script type="application/ld+json">${JSON.stringify({ "@type": "VacationRental", image: [...photos, photos[0]] })}</script>`;
+    expect(propertyPhotoCandidates(html, "https://example.invalid/property")).toEqual(
+      photos.slice(0, 30),
+    );
+  });
   it("extracts and deduplicates property metadata images, excluding arbitrary page imagery", () => {
     const html = `<script type="application/ld+json">{"@type":"VacationRental","image":["/villa.jpg",{"url":"https://cdn.test/2.webp"}]}</script><meta content="/villa.jpg" property="og:image"><img src="/advert.jpg">`;
     expect(propertyPhotoCandidates(html, "https://example.test/room")).toEqual([

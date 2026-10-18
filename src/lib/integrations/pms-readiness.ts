@@ -1,5 +1,5 @@
 /** Operational claims are separate from the provider's external API access.
- * Docs checked 2026-10-05. No planned connector is advertised as operational.
+ * Docs checked 2026-10-18. Implementation never implies a live customer connection.
  */
 export interface PmsReadiness {
   implementation: "adapter_implemented" | "not_implemented";
@@ -21,6 +21,10 @@ const planned = (
   authorization,
   fallback: ["pasted-text", "generic-web"],
 });
+const sessionAdapter = (documentation: string, authorization: string): PmsReadiness => ({
+  ...planned(documentation, authorization),
+  implementation: "adapter_implemented",
+});
 export const PMS_READINESS: Record<string, PmsReadiness> = {
   guesty: {
     ...planned(
@@ -29,18 +33,21 @@ export const PMS_READINESS: Record<string, PmsReadiness> = {
     ),
     implementation: "adapter_implemented",
   },
-  lodgify: planned("https://docs.lodgify.com/reference", "Customer X-ApiKey with API access"),
-  hostaway: planned(
-    "https://api.hostaway.com/documentation",
-    "OAuth client credentials: account ID and customer API secret",
+  lodgify: sessionAdapter(
+    "https://docs.lodgify.com/reference",
+    "Customer X-ApiKey with API access; live response contract remains unverified",
   ),
-  smoobu: planned(
+  hostaway: sessionAdapter(
+    "https://api.hostaway.com/documentation",
+    "Existing customer bearer access token; acquisition/refresh not implemented by session adapter",
+  ),
+  smoobu: sessionAdapter(
     "https://docs.smoobu.com/",
     "HMAC API key + secret; multi-user OAuth requires partner registration",
   ),
-  beds24: planned(
+  beds24: sessionAdapter(
     "https://wiki.beds24.com/index.php/API_V2",
-    "Scoped invite code exchanged for refresh/access tokens",
+    "Existing scoped long-life read-only token; invite exchange not implemented by session adapter",
   ),
   amenitiz: planned(
     "https://support.amenitiz.com/en/articles/805686-how-to-understand-the-amenitiz-api",

@@ -69,10 +69,28 @@ body {
 .manager-shell .manager-shell-sidebar {
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 70px);
-  padding: 22px 16px;
+  position: sticky;
+  top: 48px;
+  align-self: start;
+  height: calc(100dvh - 48px);
+  min-height: 0;
+  padding: 22px 16px 0;
+  overflow: hidden;
   background: #fcf9f2;
   border-color: var(--border);
+}
+.manager-shell .manager-shell-sidebar > nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+}
+.manager-shell.manager-shell-embedded .manager-shell-sidebar {
+  position: relative;
+  top: 0;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
 }
 .manager-shell .manager-sidebar-wordmark {
   margin: 0 5px 26px;
@@ -115,7 +133,9 @@ body {
   font-size: 12px;
 }
 .manager-shell .manager-sidebar-mascot {
-  margin: 30px auto 0;
+  margin: 20px auto 0;
+  max-width: 100%;
+  object-position: center bottom;
 }
 .manager-shell .manager-shell-content {
   padding: 32px 32px 56px;
@@ -785,7 +805,9 @@ body {
     padding-top: 0;
   }
   .manager-shell .manager-shell-sidebar {
-    min-height: 100dvh;
+    height: 100dvh;
+    min-height: 0;
+    top: 0;
   }
   .manager-shell .manager-shell-content {
     padding-top: 62px;
@@ -1081,14 +1103,20 @@ body {
 }
 .nona-concierge .nona-launcher {
   width: 112px;
-  height: 70px;
+  display: flex;
+  height: auto;
+  min-height: 0;
+  align-items: flex-end;
   border-radius: 0;
   background: transparent;
 }
 .nona-concierge .nona-launcher img {
   width: 112px;
-  height: 64px;
+  height: auto;
+  display: block;
+  aspect-ratio: 1067 / 577;
   object-fit: contain;
+  object-position: center bottom;
 }
 .nona-concierge .nona-header-portrait {
   width: 56px;
@@ -1096,7 +1124,7 @@ body {
   object-fit: contain;
 }
 .nona-concierge.nona-concierge {
-  bottom: max(0px, env(safe-area-inset-bottom));
+  bottom: 0;
 }
 .nona-concierge .nona-panel {
   bottom: 84px;

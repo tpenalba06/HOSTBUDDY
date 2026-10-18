@@ -1,0 +1,82 @@
+/* Shared by public, preview and demo guides; no change to brand artwork or palette. */
+.hb-guide .nona-guest-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.hb-guide .nona-guest-shortcuts button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 9px 13px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--nona-burgundy);
+  background: transparent;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.hb-guide .nona-guest-shortcuts svg {
+  flex-shrink: 0;
+}
+
+.hb-guide .hb-icon-button.nona-guest-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 44px;
+  padding-inline: 12px;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hb-guide
+  :is(
+    .nona-guest-shortcuts button,
+    .hb-entry-open,
+    .hb-section-card,
+    .hb-menu-results button
+  ):focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 4px;
+}
+
+.hb-guide h1[tabindex="-1"]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+.hb-guide .hb-menu-empty {
+  padding: 20px 0;
+  line-height: 1.6;
+}
+.hb-guide .hb-menu-empty button {
+  margin-top: 12px;
+}
+
+@media (hover: hover) {
+  .hb-guide .nona-guest-shortcuts button:hover {
+    background: color-mix(in srgb, currentColor 7%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hb-guide .nona-guest-shortcuts button {
+    transition:
+      background-color 140ms ease,
+      transform 140ms ease;
+  }
+  .hb-guide .nona-guest-shortcuts button:active {
+    transform: scale(0.98);
+  }
+}

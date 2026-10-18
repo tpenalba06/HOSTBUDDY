@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { NonaWordmark } from "@/components/shared/NonaBrand";
-import { PhoneDemo } from "@/components/marketing/PhoneDemo";
 import { SocialProof } from "@/components/marketing/SocialProof";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
+import { uxCopy } from "@/lib/ux-copy";
 import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 import breakfastAsset from "@/assets/hostbuddy-breakfast.jpg.asset.json";
 import spaAsset from "@/assets/hostbuddy-spa.jpg.asset.json";
@@ -42,12 +42,22 @@ export const Route = createFileRoute("/")({
 const sourceLabels = ["Airbnb", "Booking", "Sunver"];
 
 function Landing() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const ux = uxCopy(locale);
   return (
-    <div className="overflow-clip">
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
+    <div className="nona-marketing-page">
+      <a href="#main-content" className="nona-skip-link">
+        {ux.skipContent}
+      </a>
+      <header className="nona-marketing-header mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:px-5">
         <Logo />
         <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
+          <Link
+            to="/demo"
+            className="hidden min-h-12 items-center px-3 text-sm font-semibold text-primary sm:inline-flex"
+          >
+            {ux.explore}
+          </Link>
           <Link
             to="/integrations"
             className="hidden min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:inline-flex sm:px-2 sm:text-base"
@@ -65,7 +75,7 @@ function Landing() {
         </nav>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
           <img
             src={arrivalAsset.url}
@@ -104,17 +114,19 @@ function Landing() {
                 ))}
               </ul>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">
-                  {t("common.try")}
+                <Link to="/demo" className="btn btn-primary text-lg">
+                  {ux.explore}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link
-                  to="/demo"
+                  to="/auth"
+                  search={{ mode: "signup" }}
                   className="btn border-2 border-ink-foreground/60 bg-ink/20 text-ink-foreground backdrop-blur hover:bg-ink/35"
                 >
-                  {t("common.demo")}
+                  {ux.createGuide}
                 </Link>
               </div>
+              <p className="mt-3 text-sm text-ink-foreground/90">{ux.demoHint}</p>
               <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.paidTier")} ·{" "}
                 <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
@@ -197,13 +209,25 @@ function Landing() {
                 {t("marketing.qrLine")}
               </div>
             </div>
-            <div id="demo" className="mt-9">
-              <div className="mx-auto w-full max-w-6xl">
-                <PhoneDemo />
+            <div id="demo" className="nona-demo-entry mt-9">
+              <div>
+                <h3 className="text-3xl">{ux.demoPreviewTitle}</h3>
+                <p className="mt-3 text-ink-foreground/80">{ux.demoPreviewBody}</p>
               </div>
-              <Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">
-                {t("marketing.openDemo")}
-              </Link>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Link to="/demo" search={{ mode: "guest" }} className="btn btn-primary">
+                  {ux.demoGuest}
+                  <ArrowRight size={18} />
+                </Link>
+                <Link
+                  to="/demo"
+                  search={{ mode: "manager" }}
+                  className="btn border border-ink-foreground/60 text-ink-foreground hover:bg-ink-foreground/10"
+                >
+                  {ux.demoManager}
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>

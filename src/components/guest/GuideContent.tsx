@@ -16,6 +16,8 @@ import { useState } from "react";
 import { wifiCredentials } from "@/lib/import-engine/wifi-credentials";
 import { Button } from "@/components/ui/button";
 import type { PublicSection } from "@/lib/data/public-guide.functions";
+import { useI18n } from "@/lib/i18n";
+import { uxCopy } from "@/lib/ux-copy";
 export const GenericTemplate = ({ items }: { items: { label: string; text: string }[] }) => (
   <div className="space-y-4">
     {items.map((item, index) => (
@@ -74,6 +76,9 @@ export function WifiTemplate({
   onCopy: () => void;
 }) {
   const [copyError, setCopyError] = useState(false);
+  const [copyPending, setCopyPending] = useState(false);
+  const { locale } = useI18n();
+  const ux = uxCopy(locale);
   const explicit = wifiCredentials(items.map((item) => item.text).join("\n"));
   // A recognized password does not mean the remaining source can be discarded.
   // Keep the original information visible when no explicit network label parsed.
@@ -85,7 +90,7 @@ export function WifiTemplate({
     <div className="mx-auto max-w-xl rounded-2xl bg-ink p-6 text-ink-foreground shadow-phone">
       <Wifi className="h-8 w-8 text-accent" />
       <p className="mt-5 text-sm font-bold text-ink-foreground/70">{t("guest.network")}</p>
-      <p className="text-2xl font-semibold">{network}</p>
+      <p className="break-words text-2xl font-semibold">{network}</p>
       {password && (
         <>
           <p className="mt-5 text-sm font-bold text-ink-foreground/70">{t("guest.wifiPassword")}</p>
@@ -94,8 +99,11 @@ export function WifiTemplate({
       )}
       <Button
         className="mt-6 w-full"
-        disabled={!copyText}
+        disabled={!copyText || copyPending}
+        aria-busy={copyPending}
         onClick={async () => {
+          setCopyPending(true);
+          setCopyError(false);
           try {
             if (!navigator.clipboard || !copyText) throw new Error("clipboard unavailable");
             await navigator.clipboard.writeText(copyText);
@@ -103,17 +111,17 @@ export function WifiTemplate({
             onCopy();
           } catch {
             setCopyError(true);
+          } finally {
+            setCopyPending(false);
           }
         }}
       >
         <Copy />
-        {copied ? t("guest.copied") : t("guest.copy")}
+        {copied && !copyError ? t("guest.copied") : t("guest.copy")}
       </Button>
-      {copyError && (
-        <p role="status" className="mt-3">
-          {t("guide.copyFailed")}
-        </p>
-      )}
+      <p role="status" aria-live="polite" className={copyError ? "mt-3" : "sr-only"}>
+        {copyError ? ux.copyFailed : copied ? ux.copied : ""}
+      </p>
     </div>
   );
 }
@@ -330,6 +338,7 @@ export function ContactButtons({
         <a
           className="btn btn-secondary px-1 text-sm"
           href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+          aria-label={t("guest.whatsapp")}
         >
           <MessageCircle className="h-4 w-4" />
           <span className="hidden min-[390px]:inline">{t("guest.whatsapp")}</span>

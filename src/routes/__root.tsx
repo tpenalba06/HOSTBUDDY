@@ -12,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import nonaCss from "../styles/nona-art-direction.css?url";
+import uxCss from "../styles/ux-foundations.css?url";
+import managerUxCss from "../styles/manager-ux.css?url";
+import guestUxCss from "../styles/guest-ux.css?url";
+import { NavigationFeedback } from "../components/shared/NavigationFeedback";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { hasSupabaseConfig, supabase } from "../integrations/supabase/client";
 import { LocaleProvider } from "../lib/i18n";
@@ -93,6 +97,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "stylesheet", href: nonaCss },
+      { rel: "stylesheet", href: uxCss },
+      { rel: "stylesheet", href: managerUxCss },
+      { rel: "stylesheet", href: guestUxCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
   }),
@@ -134,6 +141,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
+        <NavigationFeedback />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </LocaleProvider>

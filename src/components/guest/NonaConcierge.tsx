@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import { LocalConciergeTransport } from "@/lib/concierge-transport";
 import { MessageCircle, Send, X, Wifi, KeyRound, MapPin, Coffee, LoaderCircle } from "lucide-react";
 import type { PublicGuide } from "@/lib/data/public-guide.functions";
@@ -19,6 +19,8 @@ import { NonaWordmark } from "@/components/shared/NonaBrand";
 import { demoBookingTransport } from "@/components/demo/demo-bookings";
 import { ServiceBookingForm } from "./GuestActions";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/shared/CopyButton";
+import { uxCopy } from "@/lib/ux-copy";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import {
   Message as ChatMessageView,
@@ -56,6 +58,8 @@ export function NonaConcierge({
   const demo = demoProp || Boolean(localTransport);
   const { locale, t } = useI18n();
   const c = conciergeCopy(locale);
+  const ux = uxCopy(locale);
+  const panelId = useId();
   const [open, setOpen] = useState(false);
   const [waving, setWaving] = useState(false);
   const [invited, setInvited] = useState(false);
@@ -145,6 +149,7 @@ export function NonaConcierge({
   const [message, setMessage] = useState("");
   const [showHelp, setShowHelp] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const showShortcuts = showHelp;
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const offeredServices = useRef("");
@@ -399,12 +404,17 @@ export function NonaConcierge({
         className="nona-launcher"
         aria-label={c.open}
         aria-expanded={open}
-        aria-controls={`nona-chat-${guide.id}`}
+        aria-controls={`nona-chat-${panelId}`}
         onClick={() => {
           dismissInvitation();
           setOpen(!open);
         }}
       >
+        {!open && !invited && (
+          <span className="nona-launcher-caption" aria-hidden="true">
+            {ux.askNona}
+          </span>
+        )}
         {image ? (
           <img src={image} alt="Nona" />
         ) : (
@@ -415,7 +425,7 @@ export function NonaConcierge({
         )}
       </Button>
       <section
-        id={`nona-chat-${guide.id}`}
+        id={`nona-chat-${panelId}`}
         role="dialog"
         aria-modal="false"
         aria-label={c.title}
@@ -503,16 +513,9 @@ export function NonaConcierge({
                         <strong>{fact.title}</strong>
                         {fact.original && <small>{c.original}</small>}
                         {fact.copyValue && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              void navigator.clipboard
-                                ?.writeText(fact.copyValue!)
-                                .catch(() => setError(c.error));
-                            }}
-                          >
-                            {
+                          <CopyButton
+                            value={fact.copyValue}
+                            label={
                               {
                                 fr: "Copier le mot de passe",
                                 en: "Copy password",
@@ -522,7 +525,7 @@ export function NonaConcierge({
                                 pt: "Copiar palavra-passe",
                               }[locale]
                             }
-                          </Button>
+                          />
                         )}
                         {fact.text.length > 500 ? (
                           <>
@@ -616,7 +619,23 @@ export function NonaConcierge({
                 </ChatMessageView>
               ))}
             </div>
-            {showHelp && (
+            {busy && (
+              <p className="nona-thinking" role="status">
+                <LoaderCircle className="animate-spin" size={16} aria-hidden="true" />
+                {t("common.loading")}
+              </p>
+            )}
+            {!showShortcuts && messages.length === 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                className="nona-help-discover"
+                onClick={() => setShowHelp(true)}
+              >
+                {ux.helpIdeas}
+              </Button>
+            )}
+            {showShortcuts && (
               <div className="nona-suggestions">
                 {suggestions.map(({ label, query, icon: Icon }) => (
                   <Button
@@ -631,7 +650,7 @@ export function NonaConcierge({
                 ))}
               </div>
             )}
-            {showHelp && available.length > 0 && (
+            {showShortcuts && available.length > 0 && (
               <Button
                 type="button"
                 variant="outline"
@@ -643,7 +662,7 @@ export function NonaConcierge({
               </Button>
             )}
             {error && <p role="alert">{error}</p>}
-            {showHelp && onContact && (
+            {showShortcuts && onContact && (
               <Button
                 type="button"
                 variant="outline"

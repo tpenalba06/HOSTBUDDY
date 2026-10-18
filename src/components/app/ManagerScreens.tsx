@@ -15,6 +15,8 @@ import {
   ClipboardList,
   Eye,
   Home,
+  Link2,
+  FileText,
   MailPlus,
   MapPin,
   MoreHorizontal,
@@ -31,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { nonaVisualCopy } from "@/lib/nona-visual-copy";
+import { uxCopy } from "@/lib/ux-copy";
 import { ambienceFor } from "@/components/guest/visual-library";
 import { INTEGRATIONS } from "@/lib/integrations/registry";
 import { DeletePropertyDialog } from "./DeletePropertyDialog";
@@ -166,6 +169,7 @@ export function ManagerPropertiesScreen({
 }) {
   const { t, locale } = useI18n();
   const visual = nonaVisualCopy(locale);
+  const copy = uxCopy(locale);
   const [qr, setQr] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [search, setSearch] = useState("");
@@ -207,7 +211,15 @@ export function ManagerPropertiesScreen({
         ))}
       <div className="manager-properties-heading grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
         <PageHeading title={t("app.myProperties")} />
-        <div className="manager-property-tools">
+        {role !== "member" && onAdd && (
+          <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
+            <Plus />
+            {t("app.add")}
+          </Button>
+        )}
+      </div>
+      {!!properties.length && (
+        <div className="manager-property-tools manager-property-toolbar">
           <label className="manager-property-search">
             <Search size={16} />
             <input
@@ -230,13 +242,7 @@ export function ManagerPropertiesScreen({
             <option value="oldest">{t("manager.sortOldest")}</option>
           </select>
         </div>
-        {role !== "member" && onAdd && (
-          <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
-            <Plus />
-            {t("app.add")}
-          </Button>
-        )}
-      </div>
+      )}
 
       <div className="manager-property-filters" role="group" aria-label={t("app.myProperties")}>
         {(["all", "published", "draft"] as const).map((value) => (
@@ -269,7 +275,22 @@ export function ManagerPropertiesScreen({
 
       {properties.length ? (
         <div className="manager-property-grid">
-          {!shown.length && <p className="text-muted-foreground">{t("manager.noResults")}</p>}
+          {!shown.length && (
+            <div className="manager-property-no-results surface p-6 text-center" role="status">
+              <Search className="mx-auto h-6 w-6 text-muted-foreground" />
+              <p className="mt-3 font-semibold">{copy.emptySearch}</p>
+              <Button
+                variant="outline"
+                className="mt-4 min-h-12"
+                onClick={() => {
+                  setSearch("");
+                  setStatus("all");
+                }}
+              >
+                {copy.resetSearch}
+              </Button>
+            </div>
+          )}
           {shown.map((property) => (
             <article
               key={property.id}
@@ -316,27 +337,35 @@ export function ManagerPropertiesScreen({
                 {renderEdit ? (
                   renderEdit(
                     property,
-                    "btn btn-secondary",
-                    role === "member" ? t("common.view") : t("common.edit"),
+                    "btn btn-primary manager-property-edit",
+                    role === "member" ? t("common.view") : copy.editGuide,
                   )
                 ) : (
-                  <Button variant="outline" onClick={() => onEdit(property.id)}>
+                  <Button className="manager-property-edit" onClick={() => onEdit(property.id)}>
                     <Pencil size={16} />
-                    {role === "member" ? t("common.view") : t("common.edit")}
+                    {role === "member" ? t("common.view") : copy.editGuide}
                   </Button>
                 )}
                 {property.status === "published" &&
                   (renderView ? (
-                    renderView(property, "btn btn-secondary", visual.card)
+                    renderView(
+                      property,
+                      "btn btn-secondary manager-property-preview",
+                      copy.guestPreview,
+                    )
                   ) : (
-                    <Button variant="outline" onClick={() => onView(property.slug)}>
+                    <Button
+                      variant="outline"
+                      className="manager-property-preview"
+                      onClick={() => onView(property.slug)}
+                    >
                       <Eye size={16} />
-                      {visual.card}
+                      {copy.guestPreview}
                     </Button>
                   ))}
               </div>
               <details className="manager-property-menu">
-                <summary aria-label={t(role === "member" ? "common.view" : "common.edit")}>
+                <summary aria-label={`${copy.managerMore} · ${property.name}`}>
                   <MoreHorizontal size={19} />
                 </summary>
                 <div className="manager-property-actions grid gap-2 p-3">
@@ -404,6 +433,12 @@ export function ManagerPropertiesScreen({
         <div className="mt-8 rounded-xl border border-dashed bg-card p-6 text-center">
           <Home className="mx-auto h-9 w-9 text-primary" />
           <p className="mt-3 font-semibold">{t("app.first")}</p>
+          {role !== "member" && onAdd && (
+            <Button className="mt-5 min-h-12" onClick={onAdd}>
+              <Plus />
+              {t("app.add")}
+            </Button>
+          )}
         </div>
       )}
       {deleting && onDelete && (role === "owner" || role === "admin") && (
@@ -1088,10 +1123,11 @@ export function ManagerNewPropertyOptions({
   onManual: () => void;
   onConnectSoftware?: (() => void) | undefined;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const copy = uxCopy(locale);
   const options = [
     {
-      icon: "🔗",
+      icon: Link2,
       title: t("app.importUrl"),
       description: t("app.importUrlD"),
       onClick: onImportUrl,
@@ -1100,16 +1136,16 @@ export function ManagerNewPropertyOptions({
     ...(onConnectSoftware
       ? [
           {
-            icon: "↔",
-            title: "Connecter mon logiciel",
-            description: "Récupérez les logements de votre PMS, avec vos accès autorisés.",
+            icon: Cable,
+            title: copy.connectSoftware,
+            description: copy.connectSoftwareDescription,
             onClick: onConnectSoftware,
             recommended: false,
           },
         ]
       : []),
     {
-      icon: "📝",
+      icon: FileText,
       title: t("app.paste"),
       description: t("app.pasteD"),
       onClick: onPasteText,
@@ -1117,7 +1153,7 @@ export function ManagerNewPropertyOptions({
     ...(!onConnectSoftware
       ? [
           {
-            icon: "✏️",
+            icon: Pencil,
             title: t("app.manual"),
             description: t("app.manualD"),
             onClick: onManual,
@@ -1143,7 +1179,7 @@ export function ManagerNewPropertyOptions({
                 {t("app.recommended")}
               </span>
             )}
-            <span className="text-3xl">{option.icon}</span>
+            <option.icon className="h-7 w-7 text-primary" aria-hidden="true" />
             <h2 className="mt-3 text-xl font-semibold">{option.title}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
           </button>

@@ -1,0 +1,68 @@
+name: NONA isolated UX browser
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/nona-ux-actions-20261019]
+    paths: [.github/workflows/ux-remote.yml, scripts/e2e/ux-remote.mjs]
+permissions:
+  contents: read
+concurrency:
+  group: nona-ux-remote-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: ux-product
+    env:
+      VITE_SUPABASE_URL: https://nona-demo.invalid
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_nona_visual_preview
+      VITE_SUPABASE_PROJECT_ID: nona-visual-preview
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 9ed7d0c41d5f9718327c3c251a3416a7aa086e36
+          path: ux-product
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - name: Install existing isolated browser infrastructure
+        run: |
+          npm install --prefix "$RUNNER_TEMP/nona-browser" --no-package-lock --no-audit --no-fund playwright@1.62.1 @actions/artifact@2.3.2
+          "$RUNNER_TEMP/nona-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Start isolated NONA with synthetic configuration
+        run: |
+          bun run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/nona-dev.log" 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5173 > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/nona-dev.log"
+          exit 1
+      - name: Observe and control real browser through immutable evidence
+        uses: actions/github-script@v7
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          script: |
+            const { pathToFileURL } = require('node:url');
+            const { runRemoteUx } = await import(pathToFileURL(process.env.GITHUB_WORKSPACE + '/scripts/e2e/ux-remote.mjs').href);
+            await runRemoteUx();
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ux-browser-final
+          retention-days: 3
+          path: |
+            ${{ runner.temp }}/nona-ux-evidence
+            ${{ runner.temp }}/nona-dev.log

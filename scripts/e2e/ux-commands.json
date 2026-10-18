@@ -1,1 +1,1 @@
-{"sequence":19,"actions":[{"type":"click","x":839,"y":642,"mission":"M5"},{"type":"key","key":"ControlOrMeta+A","mission":"M5"},{"type":"type","text":"Réseau : Pins_Test_UX. Mot de passe : bienvenue-test-2026.","mission":"M5"},{"type":"click","x":705,"y":884,"mission":"M5"},{"type":"click","x":1284,"y":200,"mission":"M5"},{"type":"wait","ms":650,"mission":"M5"}]}
+{"sequence":20,"actions":[{"type":"key","key":"ControlOrMeta+Home","mission":"M6"},{"type":"wait","ms":400,"mission":"M6"}]}

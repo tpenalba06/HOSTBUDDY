@@ -1,1 +1,1 @@
-{"sequence":2,"actions":[{"type":"wait","ms":1000,"mission":"M2"},{"type":"observe","mission":"M2"}]}
+{"sequence":3,"actions":[{"type":"click","x":1371,"y":972,"mission":"M3"},{"type":"wait","ms":500,"mission":"M3"}]}

@@ -15,7 +15,7 @@ const localized = {
       ["Restaurant Le Cabanon", "Poisson du jour, réservation conseillée"],
     ],
     services: [
-      ["Petit-déjeuner", "Livré à 8 h 30, pour 2 personnes"],
+      ["Petit-déjeuner", "Livré à la villa, par personne"],
       ["Massage à domicile", "1 heure, au bord de la piscine"],
       ["Transfert", "Aéroport de Nice ↔ villa"],
       ["Départ tardif", "Profitez de la villa jusqu’à 14 h"],
@@ -35,7 +35,7 @@ const localized = {
       ["Le Cabanon Restaurant", "Catch of the day, booking advised"],
     ],
     services: [
-      ["Breakfast", "Delivered at 8:30 am, for 2 guests"],
+      ["Breakfast", "Delivered to the villa, per person"],
       ["In-home massage", "1 hour by the pool"],
       ["Transfer", "Nice Airport ↔ villa"],
       ["Late checkout", "Enjoy the villa until 2 pm"],
@@ -56,7 +56,7 @@ const localized = {
       ["Restaurante Le Cabanon", "Pescado del día, se recomienda reservar"],
     ],
     services: [
-      ["Desayuno", "Entrega a las 8:30, para 2 personas"],
+      ["Desayuno", "Entrega en la villa, por persona"],
       ["Masaje a domicilio", "1 hora junto a la piscina"],
       ["Traslado", "Aeropuerto de Niza ↔ villa"],
       ["Salida tardía", "Disfrute de la villa hasta las 14:00"],
@@ -76,7 +76,7 @@ const localized = {
       ["Restaurant Le Cabanon", "Tagesfisch, Reservierung empfohlen"],
     ],
     services: [
-      ["Frühstück", "Lieferung um 8:30 Uhr, für 2 Personen"],
+      ["Frühstück", "Lieferung zur Villa, pro Person"],
       ["Massage zu Hause", "1 Stunde am Pool"],
       ["Transfer", "Flughafen Nizza ↔ Villa"],
       ["Später Check-out", "Villa bis 14 Uhr genießen"],
@@ -96,7 +96,7 @@ const localized = {
       ["Ristorante Le Cabanon", "Pesce del giorno, prenotazione consigliata"],
     ],
     services: [
-      ["Colazione", "Consegnata alle 8:30, per 2 persone"],
+      ["Colazione", "Consegna alla villa, per persona"],
       ["Massaggio a domicilio", "1 ora a bordo piscina"],
       ["Transfer", "Aeroporto di Nizza ↔ villa"],
       ["Check-out posticipato", "Goditi la villa fino alle 14:00"],
@@ -117,7 +117,7 @@ const localized = {
       ["Restaurante Le Cabanon", "Peixe do dia, reserva aconselhada"],
     ],
     services: [
-      ["Pequeno-almoço", "Entrega às 8:30, para 2 pessoas"],
+      ["Pequeno-almoço", "Entrega na villa, por pessoa"],
       ["Massagem ao domicílio", "1 hora junto à piscina"],
       ["Transfer", "Aeroporto de Nice ↔ villa"],
       ["Saída tardia", "Desfrute da villa até às 14:00"],
@@ -126,6 +126,10 @@ const localized = {
 } as const;
 export type GuideData = {
   name: string;
+  location: string;
+  coverUrl: string;
+  gallery: string[];
+  sectionPhotos: Record<string, string>;
   host: string;
   phone: string;
   email: string;
@@ -142,6 +146,19 @@ export function getVillaMare(locale: Locale): GuideData {
   const d = localized[locale];
   return {
     name: "Villa Mare",
+    location: "Antibes",
+    coverUrl: "/demo-guide/house.webp",
+    gallery: ["/demo-guide/house.webp", "/demo-guide/pool.webp", "/demo-guide/coast.webp"],
+    sectionPhotos: {
+      arrival: "/hostbuddy-media/arrival.webp",
+      wifi: "/hostbuddy-media/wifi.webp",
+      house: "/demo-guide/house.webp",
+      places: "/demo-guide/restaurant.webp",
+      departure: "/hostbuddy-media/departure.webp",
+      contact: "/hostbuddy-media/contact.webp",
+      pool: "/demo-guide/pool.webp",
+      services: "/demo-guide/breakfast.webp",
+    },
     host: d.host,
     phone: "+33612345678",
     email: "bonjour@conciergerie-azur.fr",

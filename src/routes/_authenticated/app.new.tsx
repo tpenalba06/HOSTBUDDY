@@ -6,11 +6,14 @@ export const Route = createFileRoute("/_authenticated/app/new")({ component: New
 function NewProperty() {
   const nav = useNavigate();
   return (
-    <ManagerNewPropertyScreen
-      onBack={() => nav({ to: "/app" })}
-      onImportUrl={() => nav({ to: "/app/import-url" })}
-      onPasteText={() => nav({ to: "/app/import-text" })}
-      onManual={() => nav({ to: "/app/manual" })}
-    />
+    <>
+      <ManagerNewPropertyScreen
+        onBack={() => nav({ to: "/app" })}
+        onImportUrl={() => nav({ to: "/app/import-url" })}
+        onPasteText={() => nav({ to: "/app/import-text" })}
+        onManual={() => nav({ to: "/app/manual" })}
+        onConnectSoftware={() => nav({ to: "/app/import-pms" })}
+      />
+    </>
   );
 }

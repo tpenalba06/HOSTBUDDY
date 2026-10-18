@@ -1,0 +1,28 @@
+{
+  "base": "036a5ac3bf471ebb1859d4cfa32ef3d6a87dae79",
+  "targetedTests": {
+    "passed": 71,
+    "failed": 0,
+    "files": 11
+  },
+  "nodeLabTests": {
+    "passed": 2,
+    "failed": 0
+  },
+  "finalAdapterRetest": {
+    "passed": 26,
+    "failed": 0,
+    "subsetOfTargetedTests": true
+  },
+  "typeScript": "PASS",
+  "build": "PASS",
+  "lint": {
+    "errors": 0,
+    "inheritedWarnings": 23
+  },
+  "visualCheck": "BLOCKED: browser spawn UNKNOWN",
+  "labHTTP": 200,
+  "externalInferenceCalls": 0,
+  "externalSpendEUR": 0,
+  "businessEngineDiff": []
+}

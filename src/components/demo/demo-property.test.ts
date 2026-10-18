@@ -102,3 +102,27 @@ describe("local demo property adapter", () => {
     ).toEqual([]);
   });
 });
+
+it("updates an added Wi-Fi section from Information without duplicating it or retaining old credentials", () => {
+  const property = createDemoProperty("demo-a", { propertyName: "A", fields: [] });
+  property.sections.push({
+    id: "added",
+    property_id: "demo-a",
+    section_key: "wifi-ab12",
+    content: {
+      items: [
+        { label: "Réseau", text: "old-network" },
+        { label: "Mot de passe", text: "old-password" },
+      ],
+    },
+  } as unknown as (typeof property.sections)[number]);
+  const next = answerDemoField(
+    property,
+    property.fields.find((f) => f.key === "wifi")!,
+    "new credentials",
+  );
+  expect(next.sections.filter((s) => s.section_key.startsWith("wifi"))).toHaveLength(1);
+  expect(getGuideItems("wifi-ab12", next.sections.find((s) => s.id === "added")?.content)).toEqual([
+    { fieldKey: "wifi", label: "Wi-Fi", text: "new credentials" },
+  ]);
+});

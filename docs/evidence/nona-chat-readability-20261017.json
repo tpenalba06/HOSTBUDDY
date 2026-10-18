@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-10-17T00:15:46.068Z",
+  "errors": [],
+  "externalRequests": [],
+  "turns": [
+    {
+      "message": "Je voudrais un petit-déjeuner",
+      "text": "Ah, un petit-déjeuner ! Quelle excellente idée pour bien commencer la journée. Dis-moi, combien de personnes souhaitent se régaler ?",
+      "provider": "ollama-local",
+      "visible": true
+    },
+    {
+      "message": "Merci, et comment je me connecte au Wi-Fi ?",
+      "text": "Pour le Wi-Fi, jette un œil aux informations affichées juste ci-dessous ! Quant à ce petit-déjeuner, il faut que tu demandes à l'hôte s'il est disponible.",
+      "provider": "ollama-local",
+      "visible": true
+    }
+  ],
+  "passed": true,
+  "mobile": {
+    "panel": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "viewport": {
+      "x": 1,
+      "y": 81,
+      "width": 388,
+      "height": 691
+    },
+    "composer": {
+      "x": 1,
+      "y": 772,
+      "width": 388,
+      "height": 71
+    }
+  },
+  "desktop": {
+    "panel": {
+      "x": 744,
+      "y": 36,
+      "width": 520,
+      "height": 780
+    },
+    "viewport": {
+      "x": 745,
+      "y": 121.890625,
+      "width": 518,
+      "height": 622.109375
+    }
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "version": "13.5.0",
+  "fetchTime": "2026-10-05T23:30:21.136Z",
+  "throttlingMethod": "devtools",
+  "scores": {
+    "performance": 64,
+    "accessibility": 93,
+    "best-practices": 100
+  },
+  "metrics": {
+    "first-contentful-paint": 4366.173,
+    "largest-contentful-paint": 7461.458,
+    "total-blocking-time": 74.6319999999996,
+    "cumulative-layout-shift": 0.003066126499280361,
+    "speed-index": 5080
+  },
+  "diagnostics": {
+    "lcp-breakdown-insight": {
+      "items": [
+        {
+          "items": [
+            {
+              "subpart": "timeToFirstByte",
+              "duration": 2298.243
+            },
+            {
+              "subpart": "resourceLoadDelay",
+              "duration": 37.318
+            },
+            {
+              "subpart": "resourceLoadDuration",
+              "duration": 5102.439
+            },
+            {
+              "subpart": "elementRenderDelay",
+              "duration": 23.458
+            }
+          ]
+        },
+        {
+          "boundingRect": {
+            "top": 0,
+            "bottom": 260,
+            "left": 0,
+            "right": 412,
+            "width": 412,
+            "height": 260
+          }
+        }
+      ]
+    },
+    "lcp-discovery-insight": {
+      "items": [
+        {
+          "boundingRect": {
+            "top": 0,
+            "bottom": 260,
+            "left": 0,
+            "right": 412,
+            "width": 412,
+            "height": 260
+          }
+        }
+      ]
+    },
+    "document-latency-insight": {
+      "debugData": {
+        "redirectDuration": 0,
+        "serverResponseTime": 2285,
+        "uncompressedResponseBytes": 0,
+        "wastedBytes": 0
+      }
+    },
+    "image-delivery-insight": {
+      "items": [
+        {
+          "totalBytes": 162816,
+          "wastedBytes": 148813,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 148813
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 89326,
+          "wastedBytes": 79722,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 51536
+              },
+              {
+                "wastedBytes": 66625
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 82626,
+          "wastedBytes": 73022,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 44836
+              },
+              {
+                "wastedBytes": 61628
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 67418,
+          "wastedBytes": 57814,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 29628
+              },
+              {
+                "wastedBytes": 50285
+              }
+            ]
+          }
+        },
+        {
+          "totalBytes": 102562,
+          "wastedBytes": 44804,
+          "subItems": {
+            "items": [
+              {
+                "wastedBytes": 5394
+              },
+              {
+                "wastedBytes": 41598
+              }
+            ]
+          }
+        }
+      ],
+      "debugData": {
+        "wastedBytes": 404175
+      }
+    },
+    "render-blocking-insight": {
+      "items": [
+        {
+          "totalBytes": 22646,
+          "wastedMs": 300
+        },
+        {
+          "totalBytes": 1342,
+          "wastedMs": 1525
+        }
+      ]
+    }
+  },
+  "failedAuditIds": [
+    "first-contentful-paint",
+    "largest-contentful-paint",
+    "speed-index",
+    "server-response-time",
+    "interactive",
+    "color-contrast",
+    "landmark-one-main",
+    "cache-insight",
+    "document-latency-insight",
+    "forced-reflow-insight",
+    "image-delivery-insight",
+    "lcp-breakdown-insight",
+    "network-dependency-tree-insight",
+    "render-blocking-insight"
+  ]
+}

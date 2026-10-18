@@ -29,3 +29,6 @@
 - Organization roles are authoritative in membership rows: owners manage team and financial summaries, admins edit content and settings, and members have read-only property plus operational access.
 - Authenticated and demo manager experiences share `ManagerShell`; demo navigation uses local adapters so its responsive structure cannot drift from production.
 - Public backend URL/publishable key have a build-time fallback in `vite.config.ts` because `.env` is untracked and absent from published builds.
+- Nona's guided transport and shared booking form remain authoritative; AI Elements provide presentation only, so UI polish cannot activate a model or change transactional behavior.
+- Acquired service contracts live in `src/lib/service-database.ts` as exact additive types over generated schema, and service wrappers reuse the original clients; this prevents regeneration from erasing deployed/isolated booking contracts without changing auth, RLS or requests.
+- Official brand artwork is served from the byte-identical static originals in public/nona through shared NonaBrand and nona-assets; guest desktop layout is container-scoped in the shared GuideView so branding and presentation stay consistent without changing business behavior. Keep the historical Lovable asset pointers for provenance only.

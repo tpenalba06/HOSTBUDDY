@@ -1,0 +1,87 @@
+{
+  "executedAt": "2026-10-18T12:29:46.024Z",
+  "scope": "Synthetic documents, actual local-model calls. No UI or database verification.",
+  "results": [
+    {
+      "name": "multilingual-contradictory",
+      "sourceType": "Synthetic test document processed by the actual local model",
+      "inputCharacters": 208,
+      "elapsedMs": 26509,
+      "analysis": {
+        "engine": "document+local-ai",
+        "inputCharacters": 208,
+        "warnings": []
+      },
+      "fields": [
+        {
+          "key": "arrival",
+          "characters": 57,
+          "aiQuotes": 1
+        },
+        {
+          "key": "wifi",
+          "characters": 218,
+          "issues": [
+            "conflicting_sources"
+          ],
+          "aiQuotes": 2
+        },
+        {
+          "key": "rules",
+          "characters": 55,
+          "aiQuotes": 1
+        },
+        {
+          "key": "departure",
+          "characters": 75,
+          "aiQuotes": 1
+        },
+        {
+          "key": "contact",
+          "characters": 67,
+          "aiQuotes": 1
+        }
+      ],
+      "lateCredentialPreserved": true
+    },
+    {
+      "name": "long-legacy-document",
+      "sourceType": "Synthetic test document processed by the actual local model",
+      "inputCharacters": 34060,
+      "elapsedMs": 180021,
+      "analysis": {
+        "engine": "document+local-ai",
+        "inputCharacters": 34060,
+        "warnings": [
+          "local_ai_partial"
+        ]
+      },
+      "fields": [
+        {
+          "key": "description",
+          "characters": 207,
+          "aiQuotes": 1
+        },
+        {
+          "key": "arrival",
+          "characters": 13,
+          "aiQuotes": 0
+        },
+        {
+          "key": "wifi",
+          "characters": 303,
+          "issues": [
+            "conflicting_sources"
+          ],
+          "aiQuotes": 1
+        },
+        {
+          "key": "departure",
+          "characters": 16,
+          "aiQuotes": 0
+        }
+      ],
+      "lateCredentialPreserved": true
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-10-17T16:26:59.767Z",
+  "scope": "Chrome at 390x844 through the PC's authenticated LAN endpoint, not a physical phone",
+  "officialPalette": true,
+  "realLocalInference": true,
+  "provider": "ollama-local",
+  "modelCalls": 1,
+  "paidCostMicros": 0,
+  "externalBrowserRequests": 0,
+  "pageErrors": [],
+  "passed": true
+}

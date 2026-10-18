@@ -4,9 +4,17 @@ import { DemoExperience } from "@/components/demo/DemoExperience";
 import { Logo } from "@/components/shared/Logo";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
-const title = "Démo interactive HostBuddy";
+const title = "Démo interactive NONA";
 const description = "Essayez le guide voyageur et le même éditeur que les gestionnaires HostBuddy.";
 export const Route = createFileRoute("/demo")({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { device?: "mobile"; preview?: "guide" | "manager" } => ({
+    ...(search["device"] === "mobile" ? { device: "mobile" as const } : {}),
+    ...(search["preview"] === "manager" || search["preview"] === "guide"
+      ? { preview: search["preview"] }
+      : {}),
+  }),
   head: () => ({
     meta: [
       { title },
@@ -21,6 +29,9 @@ export const Route = createFileRoute("/demo")({
 });
 function DemoPage() {
   const { t } = useI18n();
+  const { device, preview } = Route.useSearch();
+  if (preview)
+    return <DemoExperience standalone initialMode={preview === "manager" ? "manager" : "guest"} />;
   return (
     <div className="min-h-screen bg-ink px-3 py-4 text-ink-foreground sm:px-6 sm:py-6">
       <header className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
@@ -40,7 +51,9 @@ function DemoPage() {
           <h1 className="text-4xl font-semibold sm:text-5xl">{t("demo.pageTitle")}</h1>
           <p className="mt-3 text-lg text-ink-foreground/80">{t("demo.pageDesc")}</p>
         </div>
-        <DemoExperience />
+        <div style={device === "mobile" ? { maxWidth: 390, marginInline: "auto" } : undefined}>
+          <DemoExperience />
+        </div>
       </main>
     </div>
   );

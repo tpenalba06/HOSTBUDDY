@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { ManagerShell, type ManagerArea } from "@/components/app/ManagerShell";
 import {
@@ -10,158 +10,115 @@ import {
   ManagerOrdersScreen,
   ManagerPropertiesScreen,
   ManagerTeamScreen,
-  type ManagerConversation,
-  type ManagerFeedback,
-  type ManagerOrder,
-  type ManagerTeamMember,
 } from "@/components/app/ManagerScreens";
 import { ImportReview } from "@/components/app/ImportReview";
 import { ManagerConversationScreen } from "@/components/app/ManagerConversationScreen";
 import { QrCard } from "@/components/app/QrCard";
-import { rulesExtractor } from "@/lib/import-engine/rules-extractor";
+import { extractDocument } from "@/lib/import-engine/document-extractor";
 import { getImportUrlIssue, normalizeUrl } from "@/lib/import-engine/url-adapters";
 import { demoImportFromAirbnbUrl } from "@/lib/import-engine/url-import.functions";
 import { DemoPropertyEditor } from "./DemoPropertyEditor";
-import { createDemoProperty, fieldsFromDemoSections, type DemoProperty } from "./demo-property";
-import type { GuideSection, PropertyField } from "@/lib/data/properties";
-import { getVillaMare } from "@/components/guest/villaMare";
+import { createDemoProperty, type DemoProperty } from "./demo-property";
+import { villaMareOperations } from "./villa-mare-fixture";
+import { DEMO_BOOKING_EVENT, demoBookingOrders, updateDemoBooking } from "./demo-bookings";
+import { validStoredDemoProperty } from "./demo-storage";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 
 type DemoArea = ManagerArea | "editor";
 type NewMode = "options" | "text" | "url" | "manual";
 
-const now = new Date();
-const isoAt = (hoursFromNow: number) =>
-  new Date(now.getTime() + hoursFromNow * 60 * 60 * 1000).toISOString();
-
-const INITIAL_ORDERS: ManagerOrder[] = [
-  {
-    id: "demo-order-breakfast",
-    status: "pending",
-    requested_for: isoAt(2),
-    created_at: isoAt(-2),
-    total_amount: 25,
-    guest_name: "Sophie",
-    services: { name: "Petit-déjeuner" },
-    properties: { name: "Villa Mare" },
-  },
-  {
-    id: "demo-order-transfer",
-    status: "confirmed",
-    requested_for: isoAt(28),
-    created_at: isoAt(-5),
-    total_amount: 55,
-    guest_name: "Lucas",
-    services: { name: "Transfert gare" },
-    properties: { name: "Villa Mare" },
-  },
-];
-
-const INITIAL_CONVERSATIONS: ManagerConversation[] = [
-  {
-    id: "demo-conversation-sophie",
-    guest_display_name: "Sophie",
-    last_message_at: isoAt(-0.5),
-    status: "open",
-    properties: { name: "Villa Mare" },
-    messages: [
-      {
-        id: "demo-message-1",
-        sender_type: "guest",
-        read_at: null,
-        created_at: isoAt(-1),
-        body: "Bonjour, où peut-on se garer en arrivant ?",
-      },
-      {
-        id: "demo-message-2",
-        sender_type: "manager",
-        read_at: isoAt(-0.8),
-        created_at: isoAt(-0.8),
-        body: "Bonjour Sophie ! Le parking privé est juste devant la villa.",
-      },
-    ],
-  },
-];
-
-const INITIAL_FEEDBACK: ManagerFeedback[] = [
-  {
-    id: "demo-feedback-1",
-    rating: 5,
-    comment: "Super séjour, le livret était vraiment pratique. Merci !",
-    guest_name: "Camille",
-    created_at: isoAt(-24),
-    is_read: false,
-    properties: { name: "Villa Mare" },
-  },
-];
-
-const INITIAL_TEAM: ManagerTeamMember[] = [
-  { user_id: "demo-owner", email: "tristan@conciergerie-azur.fr", role: "owner" },
-  { user_id: "demo-admin", email: "claire@conciergerie-azur.fr", role: "admin" },
-  { user_id: "demo-member", email: "julien@conciergerie-azur.fr", role: "member" },
-];
-
 export function DemoManager({
-  editor,
+  villa,
+  onVillaChange,
   onPreview,
-  villaName,
-  villaSections,
-  onVillaFieldSave,
-  onVillaRename,
-  onVillaServicesChange,
+  standalone = false,
 }: {
-  editor: ReactNode;
+  villa: DemoProperty;
+  onVillaChange: (update: (current: DemoProperty) => DemoProperty) => void;
   onPreview: () => void;
-  villaName: string;
-  villaSections: GuideSection[];
-  onVillaFieldSave: (field: PropertyField, value: string) => Promise<void>;
-  onVillaRename: (name: string) => void;
-  onVillaServicesChange: (services: DemoProperty["services"]) => void;
+  standalone?: boolean;
 }) {
   const { t, locale } = useI18n();
+  const storageKey = `hostbuddy.demo.properties.v1.${locale}`;
   const [area, setArea] = useState<DemoArea>("properties");
   const [previewProperty, setPreviewProperty] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState("demo-villa-mare");
   const [properties, setProperties] = useState<DemoProperty[]>(() => {
-    const base = getVillaMare(locale);
-    const property = createDemoProperty("demo-villa-mare", { propertyName: base.name, fields: [] });
     return [
+      villa,
       {
-        ...property,
-        slug: "villa-mare",
-        status: "published",
-        location: "Antibes",
-        services: base.services.map((service) => ({
-          id: service.id,
-          name: service.name,
-          description: service.desc,
-          price: service.price,
-          pricing_type: "fixed",
-          is_active: true,
-          image_path: null,
-          organization_id: "demo",
-          property_id: property.id,
-          created_at: "",
-          updated_at: "",
-        })),
+        ...createDemoProperty("demo-maison-oliviers", {
+          propertyName: "Maison Oliviers",
+          fields: [],
+        }),
+        location: "Porto-Vecchio",
+        coverUrl: "/demo-guide/pool.webp",
+      },
+      {
+        ...createDemoProperty("demo-appartement-centre", {
+          propertyName: "Appartement Centre",
+          fields: [],
+        }),
+        location: "Bordeaux",
+        coverUrl: "/hostbuddy-media/apartment.webp",
       },
     ];
   });
-  const activeProperty = properties.find((property) => property.id === selectedProperty);
-  const propertyForEditor =
-    activeProperty?.id === "demo-villa-mare"
-      ? {
-          ...activeProperty,
-          name: villaName,
-          sections: villaSections,
-          fields: fieldsFromDemoSections(activeProperty.fields, villaSections),
-        }
-      : activeProperty;
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
-  const [feedback, setFeedback] = useState(INITIAL_FEEDBACK);
-  const [team, setTeam] = useState(INITIAL_TEAM);
+  const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const saved: unknown = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
+      if (
+        Array.isArray(saved) &&
+        saved.length &&
+        saved.every(validStoredDemoProperty) &&
+        saved.some((property) => property.id === villa.id)
+      )
+        setProperties(saved);
+    } catch {
+      /* Local storage is optional for the isolated demo. */
+    }
+    setRestoredStorageKey(storageKey);
+  }, [storageKey, villa.id]);
+  const currentProperties = useMemo(
+    () => properties.map((property) => (property.id === villa.id ? villa : property)),
+    [properties, villa],
+  );
+  useEffect(() => {
+    if (restoredStorageKey !== storageKey) return;
+    if (
+      currentProperties.some((property) =>
+        property.media.some((media) => media.storage_path.startsWith("blob:")),
+      )
+    )
+      return;
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(currentProperties));
+    } catch {
+      /* Storage limits never prevent demo editing. */
+    }
+  }, [currentProperties, storageKey, restoredStorageKey]);
+  const propertyForEditor = currentProperties.find((property) => property.id === selectedProperty);
+  const [initialOperations] = useState(() => villaMareOperations(villa));
+  const [orders, setOrders] = useState(() => [...initialOperations.orders, ...demoBookingOrders()]);
+  useEffect(() => {
+    const sync = () =>
+      setOrders((current) => {
+        const incoming = demoBookingOrders();
+        return [
+          ...current.filter((row) => !incoming.some((item) => item.id === row.id)),
+          ...incoming,
+        ];
+      });
+    window.addEventListener(DEMO_BOOKING_EVENT, sync);
+    sync();
+    return () => window.removeEventListener(DEMO_BOOKING_EVENT, sync);
+  }, []);
+  const [conversations, setConversations] = useState(initialOperations.conversations);
+  const [feedback, setFeedback] = useState(initialOperations.feedback);
+  const [team, setTeam] = useState(initialOperations.team);
   const [openConversation, setOpenConversation] = useState<string | null>(null);
   const [newMode, setNewMode] = useState<NewMode>("options");
   const [text, setText] = useState("");
@@ -173,8 +130,8 @@ export function DemoManager({
 
   const metrics = useMemo(
     () => ({
-      properties: properties.length,
-      published: properties.filter((property) => property.status === "published").length,
+      properties: currentProperties.length,
+      published: currentProperties.filter((property) => property.status === "published").length,
       unread: conversations.filter((conversation) =>
         conversation.messages.some(
           (message) => message.sender_type === "guest" && !message.read_at,
@@ -184,8 +141,8 @@ export function DemoManager({
         (order) =>
           order.status !== "completed" &&
           order.status !== "cancelled" &&
-          new Date(order.requested_for ?? order.created_at).toDateString() ===
-            new Date().toDateString(),
+          new Date(order.requested_for ?? order.created_at).getTime() >=
+            new Date().setHours(0, 0, 0, 0),
       ).length,
       requestTotal: orders
         .filter((order) => order.status !== "cancelled")
@@ -196,7 +153,7 @@ export function DemoManager({
         created_at: item.created_at,
       })),
     }),
-    [conversations, feedback, orders, properties],
+    [conversations, feedback, orders, currentProperties],
   );
 
   const navigate = (next: ManagerArea) => {
@@ -235,42 +192,21 @@ export function DemoManager({
         key={propertyForEditor.id}
         property={propertyForEditor}
         initialPreview={previewProperty}
-        onChange={(update) =>
-          setProperties((items) =>
-            items.map((item) =>
-              item.id === selectedProperty
-                ? update(
-                    item.id === "demo-villa-mare"
-                      ? {
-                          ...item,
-                          name: villaName,
-                          sections: villaSections,
-                          fields: fieldsFromDemoSections(item.fields, villaSections),
-                        }
-                      : item,
-                  )
-                : item,
-            ),
-          )
-        }
+        onChange={(update) => {
+          if (selectedProperty === villa.id) onVillaChange(update);
+          else
+            setProperties((items) =>
+              items.map((item) => (item.id === selectedProperty ? update(item) : item)),
+            );
+        }}
         onBack={() => setArea("properties")}
         onPreview={onPreview}
-        {...(propertyForEditor.id === "demo-villa-mare"
-          ? {
-              guide: editor,
-              onFieldSave: onVillaFieldSave,
-              onRename: onVillaRename,
-              onServicesChange: onVillaServicesChange,
-            }
-          : {})}
       />
     );
   } else if (area === "properties") {
     screen = (
       <ManagerPropertiesScreen
-        properties={properties.map((property) =>
-          property.id === "demo-villa-mare" ? { ...property, name: villaName } : property,
-        )}
+        properties={currentProperties}
         onAdd={() => setArea("new")}
         onEdit={(id) => {
           setPreviewProperty(false);
@@ -278,7 +214,7 @@ export function DemoManager({
           setArea("editor");
         }}
         onView={(slug) => {
-          const property = properties.find((item) => item.slug === slug);
+          const property = currentProperties.find((item) => item.slug === slug);
           if (property?.id === "demo-villa-mare") onPreview();
           else if (property) {
             setPreviewProperty(true);
@@ -303,9 +239,10 @@ export function DemoManager({
       <ManagerOrdersScreen
         orders={orders}
         onBack={() => setArea("properties")}
-        onStatusChange={(id, status) =>
-          setOrders((items) => items.map((item) => (item.id === id ? { ...item, status } : item)))
-        }
+        onStatusChange={(id, status) => {
+          updateDemoBooking(id, status);
+          setOrders((items) => items.map((item) => (item.id === id ? { ...item, status } : item)));
+        }}
       />
     );
   } else if (area === "messages") {
@@ -380,6 +317,13 @@ export function DemoManager({
     );
   } else if (area === "connections") {
     screen = <ManagerConnectionsScreen onBack={() => setArea("properties")} />;
+  } else if (area === "payments") {
+    screen = (
+      <section className="surface p-6">
+        <h1 className="text-3xl">{t("nav.payments")}</h1>
+        <p className="mt-4 text-muted-foreground">{t("payments.notConfigured")}</p>
+      </section>
+    );
   } else if (area === "team") {
     screen = (
       <ManagerTeamScreen
@@ -445,7 +389,7 @@ export function DemoManager({
               setBusy(true);
               setError("");
               try {
-                setCandidate(await rulesExtractor.extract(text));
+                setCandidate(extractDocument(text));
               } catch {
                 setError("Le texte n’a pas pu être analysé.");
               } finally {
@@ -552,7 +496,7 @@ export function DemoManager({
 
   return (
     <ManagerShell
-      embedded
+      embedded={!standalone}
       orgName="Conciergerie Azur"
       role="owner"
       active={area === "editor" ? "properties" : area}
@@ -583,7 +527,7 @@ function DemoImportFrame({
       <Button variant="ghost" className="mb-3 min-h-12 px-0 text-primary" onClick={onBack}>
         ← {t("common.back")}
       </Button>
-      <p className="font-bold text-primary">HostBuddy</p>
+      <NonaWordmark />
       <h1 className="mt-1 text-3xl font-semibold @sm:text-4xl">{title}</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
       <div className="mt-6">

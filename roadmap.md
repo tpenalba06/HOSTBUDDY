@@ -61,7 +61,7 @@
 - [x] Verify all requested preview widths and production app health
 
 ## Demo stability and presentation rescue
-- [ ] Restore and verify mobile manager scrolling on the homepage and /demo
+- [x] Restore and verify mobile manager scrolling on the homepage and /demo (wheel and touch at 360, 384 and 430px)
 - [x] Prevent broken or older local demo data from crashing homepage and /demo
 - [x] Polish shared traveler preview and responsive manager presentation
 - [x] Verify language selection, interactions, lint, tests, types and preview build

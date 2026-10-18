@@ -1,1 +1,1 @@
-{"sequence":5,"actions":[{"type":"type","text":"À quelle heure puis-je arriver ?","mission":"M3"},{"type":"key","key":"Enter","mission":"M3"},{"type":"wait","ms":600,"mission":"M3"}]}
+{"sequence":6,"actions":[{"type":"click","x":1382,"y":176,"mission":"M3"},{"type":"click","x":1303,"y":113,"mission":"M4"},{"type":"wait","ms":900,"mission":"M4"}]}

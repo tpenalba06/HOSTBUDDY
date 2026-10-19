@@ -6,9 +6,10 @@ import type { PublicGuide } from "./data/public-guide.functions";
 import type { Database } from "@/integrations/supabase/types";
 import { readPublicJson } from "./public-json";
 import { resolvePublishedMedia } from "./data/published-media.server";
+import { conciergeIdentity } from "./concierge-identity.server";
 
-// Bounded per-isolate throttle, not a distributed billable-model quota. No paid
-// provider can be enabled by an environment flag in this version.
+// Early per-isolate throttle; cloud spend additionally requires the distributed
+// ledger, a reviewed billing envelope and an explicit server-side enable gate.
 const buckets = new Map<string, { at: number; count: number }>();
 export function admitConcierge(key: string, now = Date.now()) {
   const current = buckets.get(key);
@@ -24,7 +25,22 @@ export function admitConcierge(key: string, now = Date.now()) {
   return true;
 }
 export async function conciergeResponse(request: Request) {
-  const headers = { "cache-control": "no-store", "referrer-policy": "no-referrer" };
+  const headers: Record<string, string> = {
+    "cache-control": "no-store",
+    "referrer-policy": "no-referrer",
+  };
+  const origin = request.headers.get("origin");
+  if (
+    (origin && origin !== new URL(request.url).origin) ||
+    request.headers.get("sec-fetch-site") === "cross-site"
+  )
+    return Response.json({ error: "origin_refused" }, { status: 403, headers });
+  const identity = conciergeIdentity(
+    request,
+    process.env["NONA_CONCIERGE_SESSION_SECRET"],
+    process.env["NONA_TRUSTED_PROXY"],
+  );
+  if (identity?.setCookie) headers["set-cookie"] = identity.setCookie;
   const parsed = conciergeRequestSchema.safeParse(await readPublicJson(request, 12288));
   if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400, headers });
   const ip =
@@ -47,7 +63,7 @@ export async function conciergeResponse(request: Request) {
     if (error) throw new Error("unavailable");
     if (!data) return Response.json({ error: "guide_unavailable" }, { status: 404, headers });
     const guide = data as unknown as PublicGuide;
-    const turn = await runConciergeModel(parsed.data, guide, fingerprint);
+    const turn = await runConciergeModel(parsed.data, guide, fingerprint, undefined, identity);
     // Reuse the same property-scoped media signer as the public guide. No media
     // URL, service ID or facts supplied by the browser/provider are trusted.
     const resolved = await resolvePublishedMedia(

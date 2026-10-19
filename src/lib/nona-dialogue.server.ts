@@ -27,6 +27,11 @@ export function validateNonaDialogue(
   if (questionFor !== (turn.nextStep ?? "none")) throw new Error("question-mismatch");
   const folded = normalize(text);
   if (
+    (text.match(/\?/g)?.length ?? 0) > 1 ||
+    /\b(?:euros?|dollars?|usd|eur|gbp|gratuit\w*|gratis|kostenlos\w*|offert\w*)\b/.test(folded) ||
+    /\b(?:is|are|it's)\s+(?:(?:completely|totally|entirely|all)\s+)?free\b|\bfor free\b|\b(?:is|are)\s+available\b|\b(?:est|sont)\s+disponibles?\b|\b(?:esta|estan)\s+disponi(?:ble|bles|vel|veis)\b|\b(?:ist|sind)\s+verfugbar\b/.test(
+      folded,
+    ) ||
     /https?:|www\.|<[^>]*>|\[[^\]]+\]\(|\d|[€$£¥]/i.test(text) ||
     /\b(?:euros?|dollars?|password|passwort|contrasena|senha)\s*(?:is|ist|es|e|:|=)/i.test(
       folded,

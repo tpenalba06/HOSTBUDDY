@@ -37,6 +37,7 @@ const request = () => ({
 const check = (value: unknown) =>
   assertConciergeWireRequest("https://ai-gateway.vercel.sh/v4/ai/language-model", {
     method: "POST",
+    headers: { "ai-language-model-id": "anthropic/claude-haiku-5.5" },
     body: JSON.stringify(value),
   });
 

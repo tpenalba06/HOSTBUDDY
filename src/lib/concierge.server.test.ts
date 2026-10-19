@@ -44,3 +44,9 @@ it("bounds per-isolate use without ever enabling a paid model", () => {
   expect(admitConcierge(key, 100000)).toBe(false);
   expect(admitConcierge(key, 160001)).toBe(true);
 });
+it("refuses cross-site requests before reading tenant data or contacting a model", async () => {
+  const r = message();
+  r.headers.set("origin", "https://attacker.invalid");
+  expect((await conciergeResponse(r)).status).toBe(403);
+  expect(state.rpc).not.toHaveBeenCalled();
+});

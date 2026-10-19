@@ -88,6 +88,9 @@ export function assertConciergeWireRequest(url: string | URL | Request, init?: R
   const destination = new URL(typeof url === "string" || url instanceof URL ? url : url.url);
   if (
     destination.origin !== "https://ai-gateway.vercel.sh" ||
+    destination.pathname !== "/v4/ai/language-model" ||
+    destination.search !== "" ||
+    new Headers(init?.headers).get("ai-language-model-id") !== "anthropic/claude-haiku-5.5" ||
     init?.method !== "POST" ||
     typeof init.body !== "string" ||
     Buffer.byteLength(init.body, "utf8") > MAX_GATEWAY_BODY_BYTES
@@ -102,6 +105,11 @@ export function assertConciergeWireRequest(url: string | URL | Request, init?: R
     !Array.isArray(body.providerOptions?.gateway?.only) ||
     body.providerOptions.gateway.only.length !== 1 ||
     body.providerOptions.gateway.only[0] !== "anthropic" ||
+    body.providerOptions.gateway.byok !== undefined ||
+    body.providerOptions.gateway.caching !== undefined ||
+    body.providerOptions.gateway.user !== undefined ||
+    body.providerOptions.gateway.tags !== undefined ||
+    body.providerOptions.gateway.quotaEntities !== undefined ||
     (body.providerOptions.gateway.models !== undefined &&
       (!Array.isArray(body.providerOptions.gateway.models) ||
         body.providerOptions.gateway.models.length > 0)) ||

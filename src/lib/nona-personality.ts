@@ -4,7 +4,7 @@ import type { Locale } from "./i18n";
  * Single source of Nona's voice for the guided engine AND any future model adapter.
  * Bump the version whenever tone, rules or examples change (tests pin it).
  */
-export const NONA_PERSONALITY_VERSION = "nona-voice-2026-10-15.3";
+export const NONA_PERSONALITY_VERSION = "nona-voice-2026-10-19.4";
 
 export type NonaReplyKey =
   | "welcome"
@@ -295,7 +295,7 @@ export function nonaLine(locale: Locale, key: NonaReplyKey, seed = 0): string {
 /** Shared system prompt for any future model adapter (never sent in guided mode). */
 export function nonaSystemPrompt(locale: Locale) {
   return [
-    `Persona ${NONA_PERSONALITY_VERSION}: you are Nona, the official HostBuddy mascot — an affectionate, mischievous grandmother who thinks of everything for travellers.`,
+    `Persona ${NONA_PERSONALITY_VERSION}: you are Nona, the official NONA concierge - an affectionate, mischievous grandmother who thinks of everything for travellers.`,
     "Tone: very warm, sparkling, natural, attentive, light contextual humour, never childish, always trustworthy. An emoji only when relevant, not in every sentence.",
     "In French ALWAYS use 'tu' for the person speaking. In other languages use the culturally appropriate friendly register.",
     "Emergencies, breakdowns or sensitive requests: no jokes, show empathy, direct to the manager immediately.",

@@ -117,3 +117,75 @@ it("rejects oversized context before reserving any cost", async () => {
   expect((await runConciergeModel(input(), g, "hash", deps)).mode).toBe("guided");
   expect(deps.reserve).not.toHaveBeenCalled();
 });
+
+it("redacts a known Wi-Fi secret repeated by the guest and excludes foreign drafts before inference", () => {
+  const g = guide();
+  g.sections.push({
+    id: "w",
+    key: "wifi-private",
+    title: "Wi-Fi",
+    content: { items: [{ label: "Password", text: "SECRET-WIFI-EXACT" }] },
+  });
+  const context = modelContext(
+    {
+      ...input("Is SECRET-WIFI-EXACT correct?"),
+      draft: { serviceId: "other-tenant" },
+      savedDrafts: [{ serviceId: "other-tenant" }],
+    },
+    g,
+  );
+  expect(context).not.toContain("SECRET-WIFI-EXACT");
+  expect(context).not.toContain("other-tenant");
+});
+
+it("preserves explicit ISO booking dates while redacting telephone numbers", () => {
+  const context = modelContext(input("pour le 2026-10-21, contacte +33612345678"), guide());
+  expect(context).toContain("2026-10-21");
+  expect(context).not.toContain("+33612345678");
+});
+it("rejects unsupported prices, free-service claims, availability claims and multiple questions in prose", async () => {
+  const turn = await runConciergeModel(input("coucou"), guide(), "hash", {
+    reserve: async () => false,
+    propose: async () => null,
+  });
+  for (const text of [
+    "C'est gratuit.",
+    "Ça coûte dix euros.",
+    "It is available.",
+    "Es ist verfügbar.",
+    "Está disponible.",
+    "È gratuito.",
+    "Está disponível.",
+    "Quel jour ? Et pour combien de personnes ?",
+  ])
+    expect(() => validateNonaDialogue(text, "none", turn, "fr")).toThrow();
+  expect(validateNonaDialogue("Feel free to ask; I'm here for you.", "none", turn, "en")).toBe(
+    "Feel free to ask; I'm here for you.",
+  );
+});
+it("records billed metadata after invalid prose or failure, without retrying the provider", async () => {
+  const record = vi.fn().mockResolvedValue({
+    state: "measured",
+    inputTokens: 100,
+    outputTokens: 50,
+    usdNanos: 35000,
+    eurMicros: 53,
+    latencyMs: 200,
+    generationId: null,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+  });
+  const propose = vi.fn().mockResolvedValue({
+    intent: "unknown",
+    dialogue: { text: "C'est réservé !", questionFor: "none" },
+  });
+  const result = await runConciergeModel(input("coucou"), guide(), "hash", {
+    reserve: async () => true,
+    propose,
+    record,
+  });
+  expect(result.mode).toBe("guided");
+  expect(result.usage.metering).toMatchObject({ state: "measured", costUsd: 0.000035 });
+  expect(record).toHaveBeenCalledTimes(1);
+  expect(propose).toHaveBeenCalledTimes(1);
+});

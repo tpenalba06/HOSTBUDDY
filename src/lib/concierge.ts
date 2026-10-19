@@ -74,7 +74,17 @@ export type ConciergeTurn = {
   }[];
   tracking: boolean;
   quote: { totalCents: number; revision?: string } | null;
-  usage: { modelCalls: number; estimatedCostMicros: number };
+  usage: {
+    modelCalls: number;
+    estimatedCostMicros: number;
+    metering?: {
+      state: "measured" | "estimated" | "uncertain";
+      inputTokens: number | null;
+      outputTokens: number | null;
+      costUsd: number | null;
+      latencyMs: number;
+    };
+  };
   /** Shared voice version; factual cards always come from validated sources. */
   persona: NonaReplyKey;
   personaVersion: string;

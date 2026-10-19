@@ -1,0 +1,67 @@
+{
+  "checkedAt": "2026-10-19T18:02:03.776Z",
+  "sourceCommit": "59f84c4c40574ffacfd29815d02d5000954df476",
+  "branch": "work/nona-cloud-resume-20261019",
+  "testProject": "mhhtnqfdkyudwyqlmnce",
+  "migration": {
+    "name": "concierge_metered_cloud_disabled",
+    "applied": true,
+    "source": "drizzle/migrations/0026_concierge_metered_cloud.sql",
+    "policyEnabled": false,
+    "monthlyCapEur": 20
+  },
+  "remoteChecks": {
+    "allFourTablesRls": true,
+    "allFourTablesDeniedToAnonAndAuthenticated": true,
+    "bothFunctionsServiceRoleOnly": true,
+    "disabledAttemptRefused": true,
+    "orphanObservationRefused": true,
+    "reservations": 0,
+    "observations": 0,
+    "testAuthorizationEnabled": false,
+    "testCapEur": 4,
+    "testReservedEur": 0
+  },
+  "freshTests": {
+    "vitestPassed": 81,
+    "vitestFiles": 11,
+    "nodeServiceFlowPassed": 1,
+    "typecheck": "pass",
+    "isolatedServerBuild": "pass",
+    "sharedClientBuild": "pass",
+    "compiledServerSmoke": "pass",
+    "modelOutputs": "simulated"
+  },
+  "accountUi": {
+    "plan": "Hobby",
+    "creditUsd": 0,
+    "minimumCustomTopupUsd": 10,
+    "autoReloadEnabled": false,
+    "providerKeyRows": "Add only; no configured provider credential observed",
+    "zdrSettings": "disabled; Pro/Enterprise required",
+    "changes": 0,
+    "purchases": 0
+  },
+  "browser": {
+    "localPreviewBuild": "pass",
+    "serverStarted": true,
+    "uiTest": "blocked: loopback socket access denied / browser timeout",
+    "certified": false
+  },
+  "paidModelCalls": 0,
+  "newSpendEur": 0,
+  "lovableCalls": 0,
+  "productionChanges": 0,
+  "blocked": [
+    "No available prepaid balance; minimum purchase exceeds existing 5 EUR authorization.",
+    "Prepared per-request ZDR route requires Pro/Enterprise; current account Hobby. No subscription authorized.",
+    "Real model quality, latency and billed usage still unmeasured.",
+    "Local loopback unavailable to browser; visual QA not certified."
+  ],
+  "next": [
+    "Resolve provider financing and privacy route without an unapproved subscription.",
+    "Do not treat 10 USD funding alone as resolving ZDR.",
+    "Only with verified financing: run scoped TEST first inference, compare actual bill and reservation, then live conversational and browser recipe.",
+    "Monthly activation and production rollout each require explicit authorization."
+  ]
+}

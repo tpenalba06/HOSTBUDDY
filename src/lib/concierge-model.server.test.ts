@@ -14,6 +14,25 @@ const input = (message = "un ptit dej stp") =>
   });
 const guide = () => demoGuide(createVillaMare("fr"));
 afterEach(() => vi.unstubAllEnvs());
+it("retains validated booking progress when the model voice is rejected", async () => {
+  const result = await runConciergeModel(input(), guide(), "hash", {
+    reserve: async () => true,
+    propose: async () => ({
+      intent: "services",
+      serviceIds: ["bf"],
+      draft: { serviceId: "bf", quantity: 3 },
+      dialogue: {
+        text: "Pour quel jour souhaitez-vous vos petits-déjeuners ?",
+        questionFor: "date",
+      },
+    }),
+  });
+  expect(result.mode).toBe("guided");
+  expect(result.draft).toMatchObject({ serviceId: "bf", quantity: 3 });
+  expect(result.nextStep).toBe("date");
+  expect(result.services.map((s) => s.id)).toContain("bf");
+  expect(result.text).not.toContain("souhaitez-vous");
+});
 it("uses validated structured understanding, bounded personality and catalogue truth with a simulated provider", async () => {
   const deps: ModelDependencies = {
     reserve: vi.fn().mockResolvedValue(true),

@@ -104,6 +104,9 @@ export async function runConciergeModel(
       throw new Error("unknown-source");
     const preferred = dialogue.questionFor === "none" ? null : dialogue.questionFor;
     const turn = validateConciergeTurn(input, guide, proposal, new Date(), preferred);
+    // A rejected voice must not discard already validated source cards/draft.
+    // This remains guided unless the independent dialogue guard also passes.
+    result = turn;
     if (proposal.intent === "emergency" || proposal.intent === "tracking") result = turn;
     else
       result = {
@@ -114,7 +117,8 @@ export async function runConciergeModel(
   } catch {
     // An uncertain/failed billable attempt keeps its entire reservation. Never
     // retry automatically, and never return provider errors or secrets.
-    result = guided;
+    // result is either the original guided fallback or the last fully validated
+    // server turn. Never reuse rejected generated prose.
   } finally {
     if (reserved && dependencies.record) {
       try {

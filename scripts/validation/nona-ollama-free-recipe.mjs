@@ -10,6 +10,12 @@ import { readVaultState } from "./nona-lab-vault.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const source = resolve(root, ".output/ollama-free-source");
 await mkdir(source, { recursive: true });
+// This lab always injects the direct Ollama adapter. Exclude the unused Gateway
+// loader (including OIDC/system discovery) from the portable recipe bundle.
+await writeFile(
+  resolve(source, "disabled-gateway.ts"),
+  "export function createMeteredCloudDependencies() { return undefined; }\n",
+);
 await writeFile(
   resolve(source, "entry.ts"),
   [
@@ -24,7 +30,14 @@ await build({
   root,
   publicDir: false,
   logLevel: "error",
-  resolve: { alias: { "@": resolve(root, "src") } },
+  ssr: { noExternal: true },
+  define: { "process.env.NODE_ENV": JSON.stringify("production") },
+  resolve: {
+    alias: {
+      "@": resolve(root, "src"),
+      "./concierge-cloud.server": resolve(source, "disabled-gateway.ts"),
+    },
+  },
   build: {
     ssr: resolve(source, "entry.ts"),
     target: "node22",

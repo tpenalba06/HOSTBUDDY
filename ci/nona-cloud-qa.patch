@@ -383,10 +383,10 @@ index 0000000..e73195d
 +console.log("HOSTED_TEST_PACKAGE_BUILT_NO_CREDENTIALS_NO_INFERENCE");
 diff --git a/scripts/validation/nona-beta-browser.mjs b/scripts/validation/nona-beta-browser.mjs
 new file mode 100644
-index 0000000..3cef9d1
+index 0000000..f8c4435
 --- /dev/null
 +++ b/scripts/validation/nona-beta-browser.mjs
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,123 @@
 +import assert from "node:assert/strict";
 +import { writeFile } from "node:fs/promises";
 +const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
@@ -416,6 +416,9 @@ index 0000000..3cef9d1
 +      await page.locator(".nona-launcher").click();
 +      await page.getByRole("dialog").waitFor();
 +      const send = async (message, label) => {
++        // Respect the real shared network throttle, including automatic quote
++        // refreshes. Never weaken production guards to speed up browser tests.
++        await page.waitForTimeout(5500);
 +        const pending = page.waitForResponse(
 +          (r) =>
 +            r.url().endsWith("/chat") &&

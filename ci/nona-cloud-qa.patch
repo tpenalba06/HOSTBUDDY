@@ -383,10 +383,10 @@ index 0000000..e73195d
 +console.log("HOSTED_TEST_PACKAGE_BUILT_NO_CREDENTIALS_NO_INFERENCE");
 diff --git a/scripts/validation/nona-beta-browser.mjs b/scripts/validation/nona-beta-browser.mjs
 new file mode 100644
-index 0000000..5e86160
+index 0000000..3cef9d1
 --- /dev/null
 +++ b/scripts/validation/nona-beta-browser.mjs
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,120 @@
 +import assert from "node:assert/strict";
 +import { writeFile } from "node:fs/promises";
 +const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
@@ -443,8 +443,9 @@ index 0000000..5e86160
 +        return turn;
 +      };
 +      await send("Petit-déjeuner pour demain", "breakfast-start");
-+      await send("Pour trois personnes", "breakfast-quantity");
-+      await send("À 9h", "breakfast-time");
++      const quantity = await send("Pour trois personnes", "breakfast-quantity");
++      assert.ok(quantity.choices[0]?.message, "server must offer a real slot");
++      await send(quantity.choices[0].message, "breakfast-time");
 +      const breakfast = await send("Classique", "breakfast-ready");
 +      assert.equal(breakfast.quote?.totalCents, 7500);
 +      assert.equal(breakfast.nextStep, "ready");
@@ -962,13 +963,15 @@ index 0000000..15c633b
 \ No newline at end of file
 diff --git a/scripts/validation/nona-hosted-test-entry.test.ts b/scripts/validation/nona-hosted-test-entry.test.ts
 new file mode 100644
-index 0000000..e877a5a
+index 0000000..f7077ec
 --- /dev/null
 +++ b/scripts/validation/nona-hosted-test-entry.test.ts
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,86 @@
 +import { afterEach, expect, it, vi } from "vitest";
 +import { hostedTestResponse } from "./nona-hosted-test-entry";
 +import type { ConciergeTurn } from "../../src/lib/concierge";
++import { slotTime } from "../../src/lib/concierge";
++import { localGuide } from "./nona-local-fixture";
 +afterEach(() => {
 +  vi.unstubAllGlobals();
 +  vi.unstubAllEnvs();
@@ -1023,7 +1026,10 @@ index 0000000..e877a5a
 +  for (const message of [
 +    "Petit-déjeuner pour demain",
 +    "Pour trois personnes",
-+    "À 9h",
++    slotTime(
++      localGuide().services!.find((s) => s.id === "bf")!.bookingConfig!.slots[0]!,
++      "Europe/Paris",
++    ),
 +    "Classique",
 +  ]) {
 +    const response = await hostedTestResponse(
@@ -4017,10 +4023,10 @@ index 0000000..07ecc3c
 +});
 diff --git a/src/lib/concierge-ollama-free.server.ts b/src/lib/concierge-ollama-free.server.ts
 new file mode 100644
-index 0000000..0a5dfe8
+index 0000000..df9139a
 --- /dev/null
 +++ b/src/lib/concierge-ollama-free.server.ts
-@@ -0,0 +1,298 @@
+@@ -0,0 +1,321 @@
 +import { createHash } from "node:crypto";
 +import { asSchema } from "@ai-sdk/provider-utils";
 +import { z } from "zod";
@@ -4074,7 +4080,7 @@ index 0000000..0a5dfe8
 +  retailEstimateUsd: number | null;
 +  // Never infer an account debit or a monetary saving from token counts alone.
 +  actualAccountDebitUsd: null;
-+  funding: "reviewed-included-credits";
++  funding: "reviewed-included-credits" | "reviewed-prepaid-hard-stop";
 +  state: "estimated" | "uncertain";
 +};
 +
@@ -4155,6 +4161,27 @@ index 0000000..0a5dfe8
 +    review.freeModelIds.includes(config.model) &&
 +    review.freeUsageRemainingPercent >= 5;
 +  if (!validReview()) return;
++  return createReviewedOllamaTransport(
++    { ...config, key: config.key, isAuthorized: validReview, funding: "reviewed-included-credits" },
++    fetcher,
++  );
++}
++
++/** Internal server transport shared by independently authorized TEST/monthly
++ * ledgers. This function neither grants authorization nor creates credit. Never
++ * expose its configuration or construct it from browser-supplied fields. */
++export function createReviewedOllamaTransport(
++  config: {
++    key: string;
++    model: OllamaRecipeModel;
++    ledger: OllamaFreeLedger;
++    isAuthorized: () => boolean;
++    funding: OllamaRecipeMeasurement["funding"];
++    onMeasurement?: (measurement: OllamaRecipeMeasurement) => void;
++    onDiagnostic?: ModelDependencies["onDiagnostic"];
++  },
++  fetcher: typeof fetch = fetch,
++): ModelDependencies {
 +  const headers = { authorization: `Bearer ${config.key}`, "content-type": "application/json" };
 +  let requestId: string | null = null;
 +  let attempted = false;
@@ -4163,7 +4190,8 @@ index 0000000..0a5dfe8
 +  return {
 +    ...(config.onDiagnostic ? { onDiagnostic: config.onDiagnostic } : {}),
 +    reserve: async (input, guide, fingerprint) => {
-+      if (requestId || !input.requestId || !input.conversationId || !validReview()) return false;
++      if (requestId || !input.requestId || !input.conversationId || !config.isAuthorized())
++        return false;
 +      // Read-only public metadata, never a generation or a charge.
 +      const catalogue = await boundedJson(
 +        await fetcher("https://ollama.com/api/tags", {
@@ -4191,7 +4219,8 @@ index 0000000..0a5dfe8
 +      return true;
 +    },
 +    propose: async (prompt, locale) => {
-+      if (!requestId || attempted || !validReview()) throw new Error("ollama-reservation-required");
++      if (!requestId || attempted || !config.isAuthorized())
++        throw new Error("ollama-reservation-required");
 +      attempted = true;
 +      const started = performance.now();
 +      let networkRequests: 0 | 1 = 0;
@@ -4276,7 +4305,7 @@ index 0000000..0a5dfe8
 +          networkRequests,
 +          retailEstimateUsd: nanos / 1e9,
 +          actualAccountDebitUsd: null,
-+          funding: "reviewed-included-credits",
++          funding: config.funding,
 +          state: "estimated",
 +        };
 +        const proposal = responseSchema.parse(raw);
@@ -4304,7 +4333,7 @@ index 0000000..0a5dfe8
 +          networkRequests,
 +          retailEstimateUsd: null,
 +          actualAccountDebitUsd: null,
-+          funding: "reviewed-included-credits",
++          funding: config.funding,
 +          state: "uncertain",
 +        };
 +        throw new Error("ollama-model-unavailable");
@@ -4595,6 +4624,374 @@ index 0000000..39cdc25
 +    }) ?? closed
 +  );
 +}
+diff --git a/src/lib/concierge-ollama-monthly.server.test.ts b/src/lib/concierge-ollama-monthly.server.test.ts
+new file mode 100644
+index 0000000..283f29a
+--- /dev/null
++++ b/src/lib/concierge-ollama-monthly.server.test.ts
+@@ -0,0 +1,195 @@
++import { createHash } from "node:crypto";
++import { afterEach, expect, it, vi } from "vitest";
++const state = vi.hoisted(() => ({ rpc: vi.fn(), single: vi.fn(), clients: vi.fn() }));
++vi.mock("@supabase/supabase-js", () => ({
++  createClient: (...args: unknown[]) => {
++    state.clients(...args);
++    return {
++      rpc: state.rpc,
++      from: () => ({ select: () => ({ eq: () => ({ single: state.single }) }) }),
++    };
++  },
++}));
++import {
++  checkedOllamaMonthlyReview,
++  createHostedOllamaMonthlyDependencies,
++} from "./concierge-ollama-monthly.server";
++import { conciergeRequestSchema } from "./concierge";
++import { localGuide } from "../../scripts/validation/nona-local-fixture";
++const key = "SYNTHETIC-NEVER-SENT";
++const identity = { visitorHash: "a".repeat(64), networkHash: "b".repeat(64) };
++const guide = { ...localGuide(), id: "00000000-0000-4000-8000-000000000001" };
++const input = conciergeRequestSchema.parse({
++  slug: "beta-test",
++  locale: "fr",
++  message: "Coucou",
++  requestId: crypto.randomUUID(),
++  conversationId: crypto.randomUUID(),
++});
++const review = () => ({
++  version: "nona-ollama-prepaid-monthly-v1",
++  keySha256: createHash("sha256").update(key).digest("hex"),
++  evidenceSha256: "c".repeat(64),
++  reviewedAt: new Date(Date.now() - 1000).toISOString(),
++  expiresAt: new Date(Date.now() + 60000).toISOString(),
++  model: "gemma4:31b",
++  privacyAndTermsApproved: true,
++  providerPrepaidHardStopVerified: true,
++  automaticBillingEnabled: false,
++  postpaidUsageAvailable: false,
++  totalAuthorizedEurMicros: 20_000_000,
++  eurMicrosPerUsdCeiling: 2_000_000,
++  prepaidBalanceUsd: 5,
++});
++const env = () => ({
++  NONA_OLLAMA_MONTHLY_ENABLE: "prepared-ollama-monthly-v1",
++  NONA_CLOUD_SCOPE: "monthly",
++  SUPABASE_URL: "https://mhhtnqfdkyudwyqlmnce.supabase.co",
++  OLLAMA_API_KEY: key,
++  SUPABASE_SERVICE_ROLE_KEY: "SYNTHETIC-SERVER",
++  NONA_OLLAMA_MONTHLY_REVIEW: JSON.stringify(review()),
++  NONA_OLLAMA_BETA_PROPERTIES: JSON.stringify([{ slug: input.slug, propertyId: guide.id }]),
++});
++function setup() {
++  vi.stubGlobal(
++    "fetch",
++    vi.fn(async (url: string) =>
++      url.endsWith("/tags")
++        ? Response.json({ models: [{ name: "gemma4:31b", capabilities: ["completion", "tools"] }] })
++        : Response.json({
++            model: "gemma4:31b",
++            done: true,
++            prompt_eval_count: 2000,
++            eval_count: 100,
++            message: {
++              role: "assistant",
++              tool_calls: [
++                {
++                  function: {
++                    name: "submit_nona_proposal",
++                    arguments: {
++                      intent: "greeting",
++                      dialogue: { text: "Coucou !", questionFor: "none" },
++                    },
++                  },
++                },
++              ],
++            },
++          }),
++    ),
++  );
++  state.single.mockResolvedValue({
++    data: {
++      enabled: true,
++      approved_until: new Date(Date.now() + 60000).toISOString(),
++      monthly_cap_micros: 20_000_000,
++    },
++    error: null,
++  });
++  state.rpc.mockResolvedValue({ data: true, error: null });
++}
++afterEach(() => {
++  vi.unstubAllGlobals();
++  vi.clearAllMocks();
++});
++
++it.each([
++  { automaticBillingEnabled: true },
++  { postpaidUsageAvailable: true },
++  { providerPrepaidHardStopVerified: false },
++  { privacyAndTermsApproved: false },
++  { prepaidBalanceUsd: 15 },
++  { totalAuthorizedEurMicros: 21_000_000 },
++  { expiresAt: "2026-01-01T00:00:00Z" },
++  { expiresAt: new Date(Date.now() + 40 * 86400000).toISOString() },
++  { keySha256: "d".repeat(64) },
++  { model: "another" },
++])("rejects insufficient financial/privacy evidence %j", (change) => {
++  expect(checkedOllamaMonthlyReview({ ...review(), ...change }, key)).toBeNull();
++});
++
++it.each([
++  { NONA_OLLAMA_MONTHLY_ENABLE: "" },
++  { NONA_CLOUD_SCOPE: "test" },
++  { VERCEL_ENV: "production" },
++  { SUPABASE_URL: "https://production.supabase.co" },
++  { NONA_OLLAMA_MONTHLY_REVIEW: "null" },
++  { NONA_OLLAMA_BETA_PROPERTIES: "[]" },
++])("fails closed before any access for %j", async (change) => {
++  setup();
++  const d = createHostedOllamaMonthlyDependencies(identity, { ...env(), ...change });
++  expect(await d.reserve(input, guide, "spoofed")).toBe(false);
++  expect(state.clients).not.toHaveBeenCalled();
++  expect(fetch).not.toHaveBeenCalled();
++});
++
++it("does not authorize monthly usage with an unsigned identity or an old Free review", async () => {
++  setup();
++  for (const id of [undefined, { visitorHash: "spoof", networkHash: identity.networkHash }])
++    expect(await createHostedOllamaMonthlyDependencies(id, env()).reserve(input, guide, "x")).toBe(
++      false,
++    );
++  expect(
++    checkedOllamaMonthlyReview({ ...review(), version: "nona-ollama-free-review-v1" }, key),
++  ).toBeNull();
++  expect(fetch).not.toHaveBeenCalled();
++});
++
++it("uses the existing atomic monthly ledger and signed tenant-bound identities, never the browser fingerprint", async () => {
++  setup();
++  const d = createHostedOllamaMonthlyDependencies(identity, env());
++  expect(await d.reserve(input, guide, "spoofed")).toBe(true);
++  expect(state.rpc).toHaveBeenCalledWith("nona_reserve_cloud_attempt", {
++    _property: guide.id,
++    _request: input.requestId,
++    _conversation_hash: createHash("sha256")
++      .update(guide.id + ":" + input.conversationId)
++      .digest("hex"),
++    _visitor_hash: identity.visitorHash,
++    _network_hash: identity.networkHash,
++  });
++  await d.propose("synthetic", "fr");
++  expect(await d.record!()).toMatchObject({ state: "estimated", eurMicros: null });
++  expect(state.rpc).toHaveBeenCalledWith(
++    "nona_record_model_observation",
++    expect.objectContaining({ _scope: "monthly", _eur_micros: null }),
++  );
++  await expect(d.propose("again", "fr")).rejects.toThrow();
++});
++
++it.each(["disabled", "expired", "too-high", "quota", "foreign"])(
++  "makes zero generations on %s",
++  async (kind) => {
++    setup();
++    if (kind === "disabled")
++      state.single.mockResolvedValue({ data: { enabled: false }, error: null });
++    if (kind === "expired")
++      state.single.mockResolvedValue({
++        data: {
++          enabled: true,
++          approved_until: "2026-01-01T00:00:00Z",
++          monthly_cap_micros: 20_000_000,
++        },
++        error: null,
++      });
++    if (kind === "too-high")
++      state.single.mockResolvedValue({
++        data: {
++          enabled: true,
++          approved_until: new Date(Date.now() + 60000).toISOString(),
++          monthly_cap_micros: 21_000_000,
++        },
++        error: null,
++      });
++    if (kind === "quota") state.rpc.mockResolvedValue({ data: false, error: null });
++    const d = createHostedOllamaMonthlyDependencies(identity, env());
++    expect(
++      await d.reserve(
++        { ...input, ...(kind === "foreign" ? { slug: "foreign" } : {}) },
++        guide,
++        "spoof",
++      ),
++    ).toBe(false);
++    expect(vi.mocked(fetch).mock.calls.every(([u]) => String(u).endsWith("/tags"))).toBe(true);
++  },
++);
+diff --git a/src/lib/concierge-ollama-monthly.server.ts b/src/lib/concierge-ollama-monthly.server.ts
+new file mode 100644
+index 0000000..3a8b90a
+--- /dev/null
++++ b/src/lib/concierge-ollama-monthly.server.ts
+@@ -0,0 +1,161 @@
++import { createHash } from "node:crypto";
++import { createClient } from "@supabase/supabase-js";
++import { z } from "zod";
++import type { ConciergeIdentity } from "./concierge-identity.server";
++import type { ModelDependencies } from "./concierge-model.server";
++import {
++  createReviewedOllamaTransport,
++  OLLAMA_RECIPE_MODELS,
++} from "./concierge-ollama-free.server";
++
++const project = "https://mhhtnqfdkyudwyqlmnce.supabase.co";
++const closed: ModelDependencies = {
++  reserve: async () => false,
++  propose: async () => {
++    throw new Error("monthly-closed");
++  },
++};
++// Operator evidence, never generated from possession of a key or a Free review.
++// A provider alert is explicitly insufficient. No such review is installed.
++export const ollamaMonthlyReviewSchema = z
++  .object({
++    version: z.literal("nona-ollama-prepaid-monthly-v1"),
++    keySha256: z.string().regex(/^[a-f0-9]{64}$/),
++    evidenceSha256: z.string().regex(/^[a-f0-9]{64}$/),
++    reviewedAt: z.string().datetime({ offset: true }),
++    expiresAt: z.string().datetime({ offset: true }),
++    model: z.literal("gemma4:31b"),
++    privacyAndTermsApproved: z.literal(true),
++    providerPrepaidHardStopVerified: z.literal(true),
++    automaticBillingEnabled: z.literal(false),
++    postpaidUsageAvailable: z.literal(false),
++    totalAuthorizedEurMicros: z.number().int().min(20000).max(20_000_000),
++    // Includes FX, taxes and fees, not an exchange-rate alert.
++    eurMicrosPerUsdCeiling: z.number().int().min(1_000_000).max(2_000_000),
++    prepaidBalanceUsd: z.number().finite().positive().max(20),
++  })
++  .strict();
++
++export function checkedOllamaMonthlyReview(value: unknown, key: string, now = Date.now()) {
++  const parsed = ollamaMonthlyReviewSchema.safeParse(value);
++  if (!parsed.success) return null;
++  const r = parsed.data;
++  const at = Date.parse(r.reviewedAt),
++    until = Date.parse(r.expiresAt);
++  const price = OLLAMA_RECIPE_MODELS["gemma4:31b"];
++  const worstAttempt = Math.ceil(
++    ((32768 * price.inputNanos + 800 * price.outputNanos) * r.eurMicrosPerUsdCeiling) / 1e9,
++  );
++  if (
++    r.keySha256 !== createHash("sha256").update(key).digest("hex") ||
++    at > now ||
++    until <= now ||
++    until - at > 32 * 86400000 ||
++    Math.ceil(r.prepaidBalanceUsd * r.eurMicrosPerUsdCeiling) > r.totalAuthorizedEurMicros ||
++    worstAttempt > 20000
++  )
++    return null;
++  return r;
++}
++
++/** Prepared private TEST beta only, never production. Requires independent
++ * operator funding/privacy evidence AND enabled durable monthly authorization.
++ * Never installs keys, funds credit, changes a policy or renews approval.
++ * Free-only TEST review cannot unlock this path. */
++export function createHostedOllamaMonthlyDependencies(
++  identity: ConciergeIdentity | undefined,
++  env: NodeJS.ProcessEnv = process.env,
++): ModelDependencies {
++  if (
++    env.NONA_OLLAMA_MONTHLY_ENABLE !== "prepared-ollama-monthly-v1" ||
++    env.NONA_CLOUD_SCOPE !== "monthly" ||
++    env.VERCEL_ENV === "production" ||
++    env.SUPABASE_URL !== project ||
++    !env.OLLAMA_API_KEY ||
++    !env.SUPABASE_SERVICE_ROLE_KEY ||
++    !identity ||
++    !/^[a-f0-9]{64}$/.test(identity.visitorHash) ||
++    !/^[a-f0-9]{64}$/.test(identity.networkHash)
++  )
++    return closed;
++  let review: ReturnType<typeof checkedOllamaMonthlyReview>;
++  let allowed: { slug: string; propertyId: string }[];
++  try {
++    review = checkedOllamaMonthlyReview(
++      JSON.parse(env.NONA_OLLAMA_MONTHLY_REVIEW ?? "null"),
++      env.OLLAMA_API_KEY,
++    );
++    allowed = z
++      .array(z.object({ slug: z.string().min(1).max(80), propertyId: z.string().uuid() }).strict())
++      .min(1)
++      .max(10)
++      .parse(JSON.parse(env.NONA_OLLAMA_BETA_PROPERTIES ?? "null"));
++  } catch {
++    return closed;
++  }
++  if (!review) return closed;
++  const checkedReview = review;
++  const db = createClient(project, env.SUPABASE_SERVICE_ROLE_KEY, {
++    auth: { persistSession: false, autoRefreshToken: false },
++    global: {
++      fetch: (url, init) =>
++        fetch(url, { ...init, redirect: "error", signal: AbortSignal.timeout(5000) }),
++    },
++  });
++  return createReviewedOllamaTransport({
++    key: env.OLLAMA_API_KEY,
++    model: "gemma4:31b",
++    funding: "reviewed-prepaid-hard-stop",
++    isAuthorized: () => Date.parse(checkedReview.expiresAt) > Date.now(),
++    onDiagnostic: (value) => console.info("NONA_MODEL_DIAGNOSTIC", value),
++    ledger: {
++      reserve: async (input, guide) => {
++        if (!allowed.some((a) => a.slug === input.slug && a.propertyId === guide.id)) return false;
++        const policy = await db
++          .from("nona_cloud_policy")
++          .select("enabled,approved_until,monthly_cap_micros")
++          .eq("id", "monthly")
++          .single();
++        const parsed = z
++          .object({
++            enabled: z.literal(true),
++            approved_until: z.string().datetime({ offset: true }),
++            monthly_cap_micros: z.number().int().min(20000).max(20_000_000),
++          })
++          .safeParse(policy.data);
++        if (
++          policy.error ||
++          !parsed.success ||
++          Date.parse(parsed.data.approved_until) <= Date.now() ||
++          parsed.data.monthly_cap_micros > checkedReview.totalAuthorizedEurMicros
++        )
++          return false;
++        const result = await db.rpc("nona_reserve_cloud_attempt", {
++          _property: guide.id,
++          _request: input.requestId,
++          _conversation_hash: createHash("sha256")
++            .update(guide.id + ":" + input.conversationId)
++            .digest("hex"),
++          _visitor_hash: identity.visitorHash,
++          _network_hash: identity.networkHash,
++        });
++        return !result.error && result.data === true;
++      },
++      record: async (request, observation) => {
++        // Retail estimates never release reserved financial headroom.
++        const result = await db.rpc("nona_record_model_observation", {
++          _request: request,
++          _scope: "monthly",
++          _state: observation.state,
++          _input: observation.inputTokens,
++          _output: observation.outputTokens,
++          _usd_nanos: observation.usdNanos,
++          _eur_micros: null,
++          _generation: null,
++          _latency: observation.latencyMs,
++        });
++        return !result.error && result.data === true;
++      },
++    },
++  });
++}
 diff --git a/src/lib/concierge-source-boundary.server.test.ts b/src/lib/concierge-source-boundary.server.test.ts
 new file mode 100644
 index 0000000..ab6ed29
@@ -4780,15 +5177,16 @@ index 4eaf780..7994b76 100644
 +  expect(state.rpc).not.toHaveBeenCalled();
 +});
 diff --git a/src/lib/concierge.server.ts b/src/lib/concierge.server.ts
-index fd238ce..5ce437b 100644
+index fd238ce..2708354 100644
 --- a/src/lib/concierge.server.ts
 +++ b/src/lib/concierge.server.ts
-@@ -6,9 +6,11 @@ import type { PublicGuide } from "./data/public-guide.functions";
+@@ -6,9 +6,12 @@ import type { PublicGuide } from "./data/public-guide.functions";
  import type { Database } from "@/integrations/supabase/types";
  import { readPublicJson } from "./public-json";
  import { resolvePublishedMedia } from "./data/published-media.server";
 +import { conciergeIdentity } from "./concierge-identity.server";
 +import { createHostedOllamaTestDependencies } from "./concierge-ollama-hosted.server";
++import { createHostedOllamaMonthlyDependencies } from "./concierge-ollama-monthly.server";
  
 -// Bounded per-isolate throttle, not a distributed billable-model quota. No paid
 -// provider can be enabled by an environment flag in this version.
@@ -4797,7 +5195,7 @@ index fd238ce..5ce437b 100644
  const buckets = new Map<string, { at: number; count: number }>();
  export function admitConcierge(key: string, now = Date.now()) {
    const current = buckets.get(key);
-@@ -24,7 +26,22 @@ export function admitConcierge(key: string, now = Date.now()) {
+@@ -24,7 +27,22 @@ export function admitConcierge(key: string, now = Date.now()) {
    return true;
  }
  export async function conciergeResponse(request: Request) {
@@ -4821,14 +5219,16 @@ index fd238ce..5ce437b 100644
    const parsed = conciergeRequestSchema.safeParse(await readPublicJson(request, 12288));
    if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400, headers });
    const ip =
-@@ -47,7 +64,10 @@ export async function conciergeResponse(request: Request) {
+@@ -47,7 +65,12 @@ export async function conciergeResponse(request: Request) {
      if (error) throw new Error("unavailable");
      if (!data) return Response.json({ error: "guide_unavailable" }, { status: 404, headers });
      const guide = data as unknown as PublicGuide;
 -    const turn = await runConciergeModel(parsed.data, guide, fingerprint);
 +    const dependencies = process.env["NONA_OLLAMA_TEST_ENABLE"]
 +      ? createHostedOllamaTestDependencies(identity)
-+      : undefined;
++      : process.env["NONA_OLLAMA_MONTHLY_ENABLE"]
++        ? createHostedOllamaMonthlyDependencies(identity)
++        : undefined;
 +    const turn = await runConciergeModel(parsed.data, guide, fingerprint, dependencies, identity);
      // Reuse the same property-scoped media signer as the public guide. No media
      // URL, service ID or facts supplied by the browser/provider are trusted.

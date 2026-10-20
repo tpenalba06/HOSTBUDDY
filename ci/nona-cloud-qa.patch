@@ -1859,10 +1859,10 @@ index 4c74397..2519b78 100644
        {conciergeSlug && (
 diff --git a/src/lib/concierge-beta-regression.server.test.ts b/src/lib/concierge-beta-regression.server.test.ts
 new file mode 100644
-index 0000000..31e3a36
+index 0000000..4a0fd44
 --- /dev/null
 +++ b/src/lib/concierge-beta-regression.server.test.ts
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,197 @@
 +import { afterEach, expect, it, vi } from "vitest";
 +import { conciergeRequestSchema, guidedProposal, validateConciergeTurn } from "./concierge";
 +import { modelContext, runConciergeModel, MAX_PROMPT_BYTES } from "./concierge-model.server";
@@ -1887,6 +1887,35 @@ index 0000000..31e3a36
 +    conversationId: crypto.randomUUID(),
 +  });
 +afterEach(() => vi.useRealTimers());
++
++it("redacts translated credentials and contacts when repeated in long conversation context", () => {
++  const guide = localGuide();
++  guide.sections.push({
++    id: "privacy-fixture",
++    key: "arrival-private",
++    title: "Arrival",
++    content: {},
++    translations: [
++      {
++        locale: "de",
++        title: "Anreise",
++        isStale: false,
++        sourceType: "human",
++        content: {
++          items: [{ label: "Zugangscode", text: "SYNTHETIC-PRIVATE-CREDENTIAL" }],
++          emails: ["private-host@example.invalid"],
++        },
++      },
++    ],
++  });
++  const secret = "SYNTHETIC-PRIVATE-CREDENTIAL private-host@example.invalid";
++  const context = modelContext(
++    { ...request(secret), dialogueHistory: [{ role: "user", text: secret }], history: [secret] },
++    guide,
++  );
++  expect(context).not.toContain("SYNTHETIC-PRIVATE-CREDENTIAL");
++  expect(context).not.toContain("private-host@example.invalid");
++});
 +
 +it.each([
 +  [
@@ -4827,7 +4856,7 @@ index 0000000..283f29a
 +);
 diff --git a/src/lib/concierge-ollama-monthly.server.ts b/src/lib/concierge-ollama-monthly.server.ts
 new file mode 100644
-index 0000000..3a8b90a
+index 0000000..7146d42
 --- /dev/null
 +++ b/src/lib/concierge-ollama-monthly.server.ts
 @@ -0,0 +1,161 @@
@@ -4900,12 +4929,12 @@ index 0000000..3a8b90a
 +  env: NodeJS.ProcessEnv = process.env,
 +): ModelDependencies {
 +  if (
-+    env.NONA_OLLAMA_MONTHLY_ENABLE !== "prepared-ollama-monthly-v1" ||
-+    env.NONA_CLOUD_SCOPE !== "monthly" ||
-+    env.VERCEL_ENV === "production" ||
-+    env.SUPABASE_URL !== project ||
-+    !env.OLLAMA_API_KEY ||
-+    !env.SUPABASE_SERVICE_ROLE_KEY ||
++    env["NONA_OLLAMA_MONTHLY_ENABLE"] !== "prepared-ollama-monthly-v1" ||
++    env["NONA_CLOUD_SCOPE"] !== "monthly" ||
++    env["VERCEL_ENV"] === "production" ||
++    env["SUPABASE_URL"] !== project ||
++    !env["OLLAMA_API_KEY"] ||
++    !env["SUPABASE_SERVICE_ROLE_KEY"] ||
 +    !identity ||
 +    !/^[a-f0-9]{64}$/.test(identity.visitorHash) ||
 +    !/^[a-f0-9]{64}$/.test(identity.networkHash)
@@ -4915,20 +4944,20 @@ index 0000000..3a8b90a
 +  let allowed: { slug: string; propertyId: string }[];
 +  try {
 +    review = checkedOllamaMonthlyReview(
-+      JSON.parse(env.NONA_OLLAMA_MONTHLY_REVIEW ?? "null"),
-+      env.OLLAMA_API_KEY,
++      JSON.parse(env["NONA_OLLAMA_MONTHLY_REVIEW"] ?? "null"),
++      env["OLLAMA_API_KEY"],
 +    );
 +    allowed = z
 +      .array(z.object({ slug: z.string().min(1).max(80), propertyId: z.string().uuid() }).strict())
 +      .min(1)
 +      .max(10)
-+      .parse(JSON.parse(env.NONA_OLLAMA_BETA_PROPERTIES ?? "null"));
++      .parse(JSON.parse(env["NONA_OLLAMA_BETA_PROPERTIES"] ?? "null"));
 +  } catch {
 +    return closed;
 +  }
 +  if (!review) return closed;
 +  const checkedReview = review;
-+  const db = createClient(project, env.SUPABASE_SERVICE_ROLE_KEY, {
++  const db = createClient(project, env["SUPABASE_SERVICE_ROLE_KEY"], {
 +    auth: { persistSession: false, autoRefreshToken: false },
 +    global: {
 +      fetch: (url, init) =>
@@ -4936,7 +4965,7 @@ index 0000000..3a8b90a
 +    },
 +  });
 +  return createReviewedOllamaTransport({
-+    key: env.OLLAMA_API_KEY,
++    key: env["OLLAMA_API_KEY"],
 +    model: "gemma4:31b",
 +    funding: "reviewed-prepaid-hard-stop",
 +    isAuthorized: () => Date.parse(checkedReview.expiresAt) > Date.now(),

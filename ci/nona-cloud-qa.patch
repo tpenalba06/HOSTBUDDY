@@ -230,6 +230,282 @@ index 0000000..624ea5b
 +  build: { outDir: resolve(root, "../nona-cloud-runtime/interface"), emptyOutDir: true },
 +});
 +console.log("NONA_ISOLATED_SERVER_AND_SHARED_CHAT_BUILD_OK");
+diff --git a/scripts/validation/build-nona-hosted-test.mjs b/scripts/validation/build-nona-hosted-test.mjs
+new file mode 100644
+index 0000000..e73195d
+--- /dev/null
++++ b/scripts/validation/build-nona-hosted-test.mjs
+@@ -0,0 +1,145 @@
++import { build } from "vite";
++import react from "@vitejs/plugin-react";
++import tailwindcss from "@tailwindcss/vite";
++import { mkdir, readFile, writeFile, cp } from "node:fs/promises";
++import { resolve, dirname } from "node:path";
++import { fileURLToPath } from "node:url";
++const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
++const source = resolve(root, ".output/hosted-test-source"),
++  dist = resolve(root, ".output/hosted-test-deploy");
++await mkdir(source, { recursive: true });
++await mkdir(resolve(dist, "api"), { recursive: true });
++await writeFile(
++  resolve(source, "disabled-gateway.ts"),
++  "export function createMeteredCloudDependencies(){return undefined;}\n",
++);
++await build({
++  configFile: false,
++  root,
++  publicDir: false,
++  logLevel: "warn",
++  ssr: { noExternal: true },
++  define: { "process.env.NODE_ENV": JSON.stringify("production") },
++  resolve: {
++    alias: {
++      "@": resolve(root, "src"),
++      "./concierge-cloud.server": resolve(source, "disabled-gateway.ts"),
++    },
++  },
++  build: {
++    ssr: "scripts/validation/nona-hosted-test-entry.ts",
++    target: "node22",
++    outDir: resolve(dist, "server"),
++    emptyOutDir: true,
++  },
++});
++await writeFile(
++  resolve(dist, "api/test.mjs"),
++  `import {hostedTestResponse} from '../server/nona-hosted-test-entry.js';
++export default async function handler(req,res){
++ try{
++ const origin='https://'+process.env.VERCEL_URL;
++ const kind=req.query.kind; const locale=req.query.locale||'fr';
++ const url=new URL('/api/test',origin);url.searchParams.set('kind',kind);url.searchParams.set('locale',locale);
++ const headers=new Headers();for(const [key,value] of Object.entries(req.headers))if(value)headers.set(key,Array.isArray(value)?value.join(','):value);
++ const result=await hostedTestResponse(new Request(url,{method:req.method,headers,...(req.method==='POST'?{body:typeof req.body==='string'?req.body:JSON.stringify(req.body)}:{})}));
++ res.statusCode=result.status;for(const[key,value]of result.headers)res.setHeader(key,value);res.end(Buffer.from(await result.arrayBuffer()));
++ }catch{res.statusCode=503;res.end(JSON.stringify({error:'test_unavailable'}));}
++}\n`,
++);
++let entry = await readFile(resolve(root, "scripts/validation/nona-local-ui/entry.tsx"), "utf8");
++// TEST-only diagnostics: no message, guide body, contact, receipt or secret.
++// Browser evidence can correlate a visible reply with durable server metering.
++entry = entry.replace(
++  "return response.json();",
++  `const turn = await response.json();
++  console.info("NONA_TEST_TURN " + JSON.stringify({requestId:request.requestId,locale:request.locale,mode:turn.mode,usage:turn.usage,nextStep:turn.nextStep,quote:turn.quote}));
++  return turn;`,
++);
++entry = entry
++  .replace('JSON.stringify({ ...request, mode: "local" })', "JSON.stringify(request)")
++  .replace('conciergeSlug="nona-local"', 'conciergeSlug="nona-hosted-test"')
++  .replace(
++    "{nonaVisualCopy(locale).local}",
++    "TEST : données fictives · Ollama Cloud Free quand autorisé · aucune commande ni paiement.",
++  )
++  .replace('import { nonaVisualCopy } from "@/lib/nona-visual-copy";', "")
++  .replace(
++    "Le livret local est indisponible. Relance Ouvrir-NONA.cmd.",
++    "Le guide TEST est momentanément indisponible.",
++  );
++await writeFile(resolve(source, "entry.tsx"), entry);
++await writeFile(
++  resolve(source, "index.html"),
++  '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NONA — guide TEST cloud</title></head><body><div id="root"></div><script type="module" src="./entry.tsx"></script></body></html>',
++);
++const ux = resolve(root, "../nona-lovable-sync/src");
++const overrides = new Map(
++  [
++    "components/guest/GuideView.tsx",
++    "components/guest/GuideContent.tsx",
++    "lib/ux-copy.ts",
++    "lib/i18n.tsx",
++    "styles/nona-art-direction.css",
++  ].map((f) => [resolve(root, "src", f).replaceAll("\\", "/"), resolve(ux, f)]),
++);
++await build({
++  configFile: false,
++  root: source,
++  publicDir: false,
++  logLevel: "warn",
++  base: "/",
++  plugins: [
++    {
++      name: "preserve-unpublished-ux-snapshot",
++      enforce: "pre",
++      resolveId(id) {
++        if (id.endsWith("/lib/ux-copy")) return resolve(ux, "lib/ux-copy.ts");
++      },
++      async load(id) {
++        const exact = id.split("?")[0].replaceAll("\\", "/");
++        if (overrides.has(exact)) return readFile(overrides.get(exact), "utf8");
++        if (exact === resolve(root, "src/components/guest/NonaConcierge.tsx").replaceAll("\\", "/"))
++          return (await readFile(exact, "utf8")).replace("Nona · IA locale", "Nona · TEST cloud");
++      },
++    },
++    react(),
++    tailwindcss(),
++  ],
++  resolve: { alias: { "@": resolve(root, "src") } },
++  build: { outDir: resolve(dist, "public"), emptyOutDir: true },
++});
++await cp(resolve(root, "public"), resolve(dist, "public"), { recursive: true });
++await cp(
++  resolve(root, "scripts/validation/nona-hosted-mobile.html"),
++  resolve(dist, "public/mobile.html"),
++);
++await writeFile(
++  resolve(dist, "package.json"),
++  JSON.stringify({ private: true, type: "module", engines: { node: "22.x" } }),
++);
++await writeFile(
++  resolve(dist, "vercel.json"),
++  JSON.stringify({
++    version: 2,
++    framework: null,
++    buildCommand: "",
++    installCommand: "",
++    outputDirectory: "public",
++    functions: { "api/test.mjs": { maxDuration: 30 } },
++    rewrites: [
++      { source: "/chat", destination: "/api/test?kind=chat" },
++      { source: "/local-guide", destination: "/api/test?kind=guide" },
++    ],
++    headers: [
++      {
++        source: "/(.*)",
++        headers: [
++          { key: "X-Robots-Tag", value: "noindex, nofollow" },
++          { key: "Referrer-Policy", value: "no-referrer" },
++        ],
++      },
++    ],
++  }),
++);
++console.log("HOSTED_TEST_PACKAGE_BUILT_NO_CREDENTIALS_NO_INFERENCE");
+diff --git a/scripts/validation/nona-beta-browser.mjs b/scripts/validation/nona-beta-browser.mjs
+new file mode 100644
+index 0000000..5e86160
+--- /dev/null
++++ b/scripts/validation/nona-beta-browser.mjs
+@@ -0,0 +1,119 @@
++import assert from "node:assert/strict";
++import { writeFile } from "node:fs/promises";
++const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
++const browser = await chromium.launch({ headless: true });
++const results = [];
++try {
++  for (const [name, width, height] of [
++    ["desktop", 1440, 1000],
++    ["mobile", 390, 844],
++  ]) {
++    const context = await browser.newContext({
++      viewport: { width, height },
++      locale: "fr-FR",
++      timezoneId: "Europe/Paris",
++      isMobile: name === "mobile",
++      hasTouch: name === "mobile",
++    });
++    // No provider key, customer data, remote site or billable call on the runner.
++    await context.route("**/*", (route) =>
++      new URL(route.request().url()).hostname === "127.0.0.1" ? route.continue() : route.abort(),
++    );
++    const page = await context.newPage();
++    const errors = [];
++    page.on("pageerror", (error) => errors.push(error.message));
++    try {
++      await page.goto("http://127.0.0.1:4196/", { waitUntil: "networkidle" });
++      await page.locator(".nona-launcher").click();
++      await page.getByRole("dialog").waitFor();
++      const send = async (message, label) => {
++        const pending = page.waitForResponse(
++          (r) =>
++            r.url().endsWith("/chat") &&
++            r.request().method() === "POST" &&
++            r.request().postDataJSON()?.message === message,
++        );
++        await page.locator(".nona-composer textarea").fill(message);
++        await page.locator(".nona-composer textarea").press("Enter");
++        const response = await pending;
++        assert.equal(response.status(), 200);
++        const turn = await response.json();
++        assert.equal(turn.usage.modelCalls, 0);
++        assert.equal(turn.mode, "guided");
++        await page.getByRole("dialog").getByText(turn.text, { exact: true }).last().waitFor();
++        await page.screenshot({ path: `qa-results/${name}-${label}.png` });
++        results.push({
++          name,
++          label,
++          message,
++          mode: turn.mode,
++          nextStep: turn.nextStep,
++          quote: turn.quote,
++          text: turn.text,
++        });
++        return turn;
++      };
++      await send("Petit-déjeuner pour demain", "breakfast-start");
++      await send("Pour trois personnes", "breakfast-quantity");
++      await send("À 9h", "breakfast-time");
++      const breakfast = await send("Classique", "breakfast-ready");
++      assert.equal(breakfast.quote?.totalCents, 7500);
++      assert.equal(breakfast.nextStep, "ready");
++      const social = await send(
++        "Merci. On fête notre anniversaire ici, qu’est-ce qu’on pourrait faire pour se détendre après le trajet ?",
++        "topic-change",
++      );
++      assert.equal(social.nextStep, null);
++      assert.equal(social.quote, null);
++      const massage = await send(
++        "Je change de sujet : je voudrais un massage demain, pour une personne.",
++        "massage",
++      );
++      assert.equal(massage.nextStep, "time");
++      assert.equal(massage.draft.quantity, 1);
++      assert.equal(massage.draft.date, breakfast.draft.date);
++      assert.equal(massage.draft.time, undefined);
++      const resumed = await send("Revenons au petit-déjeuner", "breakfast-resumed");
++      assert.equal(resumed.quote?.totalCents, 7500);
++      for (const [locale, message] of [
++        ["fr", "Quel est le code de la boîte à clés ?"],
++        ["en", "What is the key box code?"],
++        ["es", "¿Cuál es el código de la caja de llaves?"],
++        ["de", "Hallo Nona, wir feiern unseren Hochzeitstag. Hast du einen lieben Rat?"],
++        ["it", "Qual è il codice della cassetta delle chiavi?"],
++        ["pt", "Qual é o código da caixa de chaves?"],
++      ]) {
++        await page.locator(".nona-language select").selectOption(locale);
++        const unknown = await send(message, `language-${locale}`);
++        assert.equal(unknown.nextStep, null);
++        assert.equal(unknown.quote, null);
++      }
++      assert.deepEqual(errors, []);
++      assert.equal(
++        await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2),
++        false,
++      );
++      // Never click a booking confirmation, fill contacts or execute a payment.
++    } catch (error) {
++      results.push({ name, error: error.message, pageErrors: errors });
++      await page.screenshot({ path: `qa-results/${name}-failure.png`, fullPage: true });
++      process.exitCode = 1;
++    } finally {
++      await context.close();
++    }
++  }
++} finally {
++  await browser.close();
++  await writeFile(
++    "qa-results/browser.json",
++    JSON.stringify(
++      {
++        kind: "shared UI and compiled API, synthetic data, guided fallback only; not a live AI test",
++        actualModelCalls: 0,
++        results,
++      },
++      null,
++      2,
++    ),
++  );
++}
 diff --git a/scripts/validation/nona-cloud-preflight.mjs b/scripts/validation/nona-cloud-preflight.mjs
 new file mode 100644
 index 0000000..daf98df
@@ -676,6 +952,159 @@ index 0000000..a16d3b9
 +    actualModelCalls: 0,
 +  }),
 +);
+diff --git a/scripts/validation/nona-hosted-mobile.html b/scripts/validation/nona-hosted-mobile.html
+new file mode 100644
+index 0000000..15c633b
+--- /dev/null
++++ b/scripts/validation/nona-hosted-mobile.html
+@@ -0,0 +1 @@
++<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>NONA — contrôle mobile TEST</title><style>body{margin:0;background:#f7f0e7;color:#563936;font:16px sans-serif}header{padding:12px;text-align:center}iframe{display:block;width:390px;height:844px;border:1px solid #c9b9ac;margin:12px auto 32px;background:white}</style></head><body><header>Contrôle du guide hébergé dans une fenêtre de 390 × 844 pixels. Données fictives, aucune commande ni paiement.</header><iframe title="Guide NONA mobile TEST" src="/"></iframe></body></html>
+\ No newline at end of file
+diff --git a/scripts/validation/nona-hosted-test-entry.test.ts b/scripts/validation/nona-hosted-test-entry.test.ts
+new file mode 100644
+index 0000000..e877a5a
+--- /dev/null
++++ b/scripts/validation/nona-hosted-test-entry.test.ts
+@@ -0,0 +1,81 @@
++import { afterEach, expect, it, vi } from "vitest";
++import { hostedTestResponse } from "./nona-hosted-test-entry";
++import type { ConciergeTurn } from "../../src/lib/concierge";
++afterEach(() => {
++  vi.unstubAllGlobals();
++  vi.unstubAllEnvs();
++});
++const request = (kind = "guide", body?: unknown, headers: Record<string, string> = {}) =>
++  new Request(`https://test.example/api/test?kind=${kind}`, {
++    method: body === undefined ? "GET" : "POST",
++    headers: { "content-type": "application/json", ...headers },
++    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
++  });
++it("exposes a clearly synthetic guide without customer data or inference", async () => {
++  const fetcher = vi.fn();
++  vi.stubGlobal("fetch", fetcher);
++  const response = await hostedTestResponse(request());
++  expect(response.status).toBe(200);
++  expect(response.headers.get("cache-control")).toBe("no-store");
++  expect((await response.json()).name).toContain("données fictives");
++  expect(fetcher).not.toHaveBeenCalled();
++});
++it("refuses a production runtime and cross-site access", async () => {
++  expect(
++    (await hostedTestResponse(request("guide", undefined, { origin: "https://foreign.example" })))
++      .status,
++  ).toBe(403);
++  vi.stubEnv("VERCEL_ENV", "production");
++  expect((await hostedTestResponse(request())).status).toBe(403);
++});
++it("has no order or payment endpoint and refuses malformed and foreign guide requests", async () => {
++  expect((await hostedTestResponse(request("order", {}))).status).toBe(405);
++  expect((await hostedTestResponse(request("payment", {}))).status).toBe(405);
++  expect(
++    (
++      await hostedTestResponse(
++        request("chat", { slug: "foreign", locale: "fr", message: "Coucou" }),
++      )
++    ).status,
++  ).toBe(400);
++  expect(
++    (
++      await hostedTestResponse(
++        request("chat", { slug: "nona-hosted-test", message: "x".repeat(13000) }),
++      )
++    ).status,
++  ).toBe(400);
++});
++it("calculates the breakfast draft at 75 EUR with inactive AI, without submitting anything", async () => {
++  vi.stubEnv("OLLAMA_API_KEY", "");
++  const fetcher = vi.fn();
++  vi.stubGlobal("fetch", fetcher);
++  let draft = {};
++  let turn: ConciergeTurn | undefined;
++  for (const message of [
++    "Petit-déjeuner pour demain",
++    "Pour trois personnes",
++    "À 9h",
++    "Classique",
++  ]) {
++    const response = await hostedTestResponse(
++      request("chat", {
++        slug: "nona-hosted-test",
++        locale: "fr",
++        message,
++        draft,
++        timeZone: "Europe/Paris",
++        requestId: crypto.randomUUID(),
++        conversationId: crypto.randomUUID(),
++      }),
++    );
++    expect(response.status).toBe(200);
++    turn = await response.json();
++    draft = turn.draft;
++    expect(turn.mode).toBe("guided");
++    expect(turn.usage.modelCalls).toBe(0);
++  }
++  expect(turn?.nextStep).toBe("ready");
++  expect(turn?.quote?.totalCents).toBe(7500);
++  expect(fetcher).not.toHaveBeenCalled();
++});
+diff --git a/scripts/validation/nona-hosted-test-entry.ts b/scripts/validation/nona-hosted-test-entry.ts
+new file mode 100644
+index 0000000..034bd98
+--- /dev/null
++++ b/scripts/validation/nona-hosted-test-entry.ts
+@@ -0,0 +1,52 @@
++import { createHash } from "node:crypto";
++import { localGuide } from "./nona-local-fixture";
++import { conciergeRequestSchema } from "../../src/lib/concierge";
++import { runConciergeModel } from "../../src/lib/concierge-model.server";
++import { conciergeIdentity } from "../../src/lib/concierge-identity.server";
++import { createHostedOllamaTestDependencies } from "../../src/lib/concierge-ollama-hosted.server";
++import { readPublicJson } from "../../src/lib/public-json";
++
++// Isolated synthetic TEST only. Same shared business validator and renderer.
++// No order, payment, manager, import, customer or production endpoint exists.
++export async function hostedTestResponse(request: Request) {
++  const url = new URL(request.url);
++  const headers: Record<string, string> = {
++    "cache-control": "no-store",
++    "referrer-policy": "no-referrer",
++  };
++  if (process.env.VERCEL_ENV === "production") return new Response(null, { status: 403, headers });
++  const origin = request.headers.get("origin");
++  if ((origin && origin !== url.origin) || request.headers.get("sec-fetch-site") === "cross-site")
++    return new Response(null, { status: 403, headers });
++  const locale = url.searchParams.get("locale") || "fr";
++  if (!["fr", "en", "es", "de", "it", "pt"].includes(locale))
++    return new Response(null, { status: 400, headers });
++  const guide = localGuide(locale as "fr");
++  guide.id = process.env.NONA_OLLAMA_TEST_PROPERTY_ID || "nona-inactive-test-fixture";
++  guide.name = "Villa Mare — démonstration TEST, données fictives";
++  if (url.searchParams.get("kind") === "guide" && request.method === "GET")
++    return Response.json(guide, { headers });
++  if (url.searchParams.get("kind") !== "chat" || request.method !== "POST")
++    return new Response(null, { status: 405, headers });
++  const checked = conciergeRequestSchema.safeParse(await readPublicJson(request, 12288));
++  if (
++    !checked.success ||
++    checked.data.slug !== (process.env.NONA_OLLAMA_TEST_SLUG || "nona-hosted-test")
++  )
++    return new Response(null, { status: 400, headers });
++  const input = checked.data;
++  const localized = localGuide(input.locale);
++  localized.id = guide.id;
++  localized.name = guide.name;
++  const identity = conciergeIdentity(request, process.env.NONA_CONCIERGE_SESSION_SECRET, "vercel");
++  if (identity?.setCookie) headers["set-cookie"] = identity.setCookie;
++  const fingerprint =
++    identity?.networkHash || createHash("sha256").update("shared-closed-test").digest("hex");
++  const turn = await runConciergeModel(
++    input,
++    localized,
++    fingerprint,
++    createHostedOllamaTestDependencies(identity),
++  );
++  return Response.json(turn, { headers });
++}
 diff --git a/scripts/validation/nona-ollama-free-recipe.mjs b/scripts/validation/nona-ollama-free-recipe.mjs
 new file mode 100644
 index 0000000..bb92357
@@ -1422,6 +1851,180 @@ index 4c74397..2519b78 100644
          </>
        )}
        {conciergeSlug && (
+diff --git a/src/lib/concierge-beta-regression.server.test.ts b/src/lib/concierge-beta-regression.server.test.ts
+new file mode 100644
+index 0000000..31e3a36
+--- /dev/null
++++ b/src/lib/concierge-beta-regression.server.test.ts
+@@ -0,0 +1,168 @@
++import { afterEach, expect, it, vi } from "vitest";
++import { conciergeRequestSchema, guidedProposal, validateConciergeTurn } from "./concierge";
++import { modelContext, runConciergeModel, MAX_PROMPT_BYTES } from "./concierge-model.server";
++import { localGuide } from "../../scripts/validation/nona-local-fixture";
++
++// Synthetic provider proposals: regression coverage, NOT new Gemma evaluations.
++const ready = {
++  serviceId: "bf",
++  quantity: 3,
++  date: "2026-10-21",
++  time: "10:30",
++  optionId: localGuide().services!.find((s) => s.id === "bf")!.bookingConfig!.options[0]!.id,
++};
++const request = (message: string, locale = "fr") =>
++  conciergeRequestSchema.parse({
++    slug: "test",
++    message,
++    locale,
++    draft: ready,
++    timeZone: "Europe/Paris",
++    requestId: crypto.randomUUID(),
++    conversationId: crypto.randomUUID(),
++  });
++afterEach(() => vi.useRealTimers());
++
++it.each([
++  [
++    "fr",
++    "Merci. On fête notre anniversaire ici, qu’est-ce qu’on pourrait faire pour se détendre après le trajet ?",
++    "Quel joli moment à partager ! On peut regarder les services de détente ensemble, si tu en as envie.",
++  ],
++  [
++    "de",
++    "Hallo Nona, wir sind zum ersten Mal hier und feiern unseren Hochzeitstag. Hast du einen lieben Rat für einen entspannten Start?",
++    "Alles Liebe zum Hochzeitstag! Lass erst einmal die Seele baumeln und genießt eure gemeinsame Auszeit.",
++  ],
++  [
++    "en",
++    "Let's change the subject, it's our anniversary.",
++    "Happy anniversary! Take a little breath together and enjoy being here.",
++  ],
++  [
++    "es",
++    "Hoy es nuestro aniversario.",
++    "¡Feliz aniversario! Qué alegría compartir un momento tan bonito contigo.",
++  ],
++  [
++    "it",
++    "Festeggiamo il nostro anniversario.",
++    "Buon anniversario! Che bello ritagliarsi un momento di dolcezza insieme.",
++  ],
++  [
++    "pt",
++    "É o nosso aniversário de casamento.",
++    "Que alegria celebrar esse carinho! Desejo que aproveites este momento com muita tranquilidade.",
++  ],
++])(
++  "keeps %s social conversation separate from the saved breakfast",
++  async (locale, message, text) => {
++    vi.useFakeTimers({ now: new Date("2026-10-20T08:00:00Z") });
++    const input = request(message, locale);
++    const propose = vi.fn(async () => ({
++      intent: "services",
++      serviceIds: ["massage"],
++      draft: { serviceId: "massage", quantity: 9 },
++      dialogue: { text, questionFor: "none" },
++    }));
++    const guide = localGuide();
++    const massage = guide.services!.find((s) => /massage/i.test(s.name))!;
++    // The fixture's exact ID is authoritative.
++    const deps = {
++      reserve: async () => true,
++      propose: async () => ({ ...(await propose()), serviceIds: [massage.id] }),
++    };
++    const turn = await runConciergeModel(input, guide, "hash", deps);
++    expect(turn.mode).toBe("ai");
++    expect(turn.text).toBe(text);
++    expect(turn.nextStep).toBeNull();
++    expect(turn.quote).toBeNull();
++    expect(turn.draft).toMatchObject(ready);
++    expect(turn.services.map((s) => s.id)).toEqual([massage.id]);
++    expect(propose).toHaveBeenCalledTimes(1);
++  },
++);
++
++it("does not show a stale quote during a source lookup or an unknown topic", () => {
++  vi.useFakeTimers({ now: new Date("2026-10-20T08:00:00Z") });
++  for (const message of ["Wi-Fi", "Qui a construit la lune ?"]) {
++    const input = request(message);
++    const turn = validateConciergeTurn(input, localGuide(), guidedProposal(input, localGuide()));
++    expect(turn.nextStep).toBeNull();
++    expect(turn.quote).toBeNull();
++    expect(turn.draft.serviceId).toBe("bf");
++  }
++});
++
++it("gives the model a validated massage focus without inheriting breakfast fields", async () => {
++  vi.useFakeTimers({ now: new Date("2026-10-20T08:00:00Z") });
++  const input = request("Je change de sujet : je voudrais un massage demain, pour une personne.");
++  const guide = localGuide();
++  const context = JSON.parse(modelContext(input, guide));
++  const massage = guide.services!.find((s) => /massage/i.test(s.name))!;
++  expect(context.latestBookingHint.draft).toMatchObject({
++    serviceId: massage.id,
++    quantity: 1,
++    date: "2026-10-21",
++  });
++  expect(context.latestBookingHint.draft.optionId).toBeUndefined();
++  expect(context.latestBookingHint.draft.time).toBeUndefined();
++  const turn = await runConciergeModel(input, guide, "hash", {
++    reserve: async () => true,
++    propose: async () => ({
++      intent: "services",
++      serviceIds: [massage.id],
++      draft: context.latestBookingHint.draft,
++      dialogue: {
++        text: "Un peu de détente, ça fait du bien ! À quelle heure tu aimerais ce massage ?",
++        questionFor: "time",
++      },
++    }),
++  });
++  expect(turn.mode).toBe("ai");
++  expect(turn.nextStep).toBe("time");
++  expect(turn.quote).toBeNull();
++  expect(turn.draft.quantity).toBe(1);
++});
++
++it("retains recent dialogue and saved booking state within the prompt budget", () => {
++  const input = {
++    ...request("MESSAGE LE PLUS RÉCENT"),
++    history: Array(6).fill("DUPLICATE".repeat(100)),
++    dialogueHistory: Array.from({ length: 10 }, (_, i) => ({
++      role: "user" as const,
++      text: `${i}:` + "é".repeat(690),
++    })),
++  };
++  const prompt = modelContext(input, localGuide());
++  const context = JSON.parse(prompt);
++  expect(Buffer.byteLength(prompt)).toBeLessThanOrEqual(MAX_PROMPT_BYTES);
++  expect(context.message).toBe("MESSAGE LE PLUS RÉCENT");
++  expect(context.dialogueHistory.at(-1).text).toBe(input.dialogueHistory.at(-1)!.text);
++  expect(context.history).toEqual([]);
++  expect(context.draft).toMatchObject(ready);
++});
++
++it("diagnoses rejected prose without recording it or allowing a telemetry error to break fallback", async () => {
++  const onDiagnostic = vi.fn();
++  const deps = {
++    reserve: async () => true,
++    propose: async () => ({
++      intent: "greeting",
++      dialogue: { text: "PRIVATE prose 123", questionFor: "none" },
++    }),
++    onDiagnostic,
++  };
++  const turn = await runConciergeModel(request("coucou"), localGuide(), "hash", deps);
++  expect(turn.mode).toBe("guided");
++  expect(onDiagnostic).toHaveBeenCalledWith({ stage: "dialogue", reason: "untrusted-dialogue" });
++  expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain("PRIVATE");
++  await expect(
++    runConciergeModel(request("coucou"), localGuide(), "hash", {
++      ...deps,
++      onDiagnostic: () => {
++        throw new Error("telemetry");
++      },
++    }),
++  ).resolves.toMatchObject({ mode: "guided" });
++});
 diff --git a/src/lib/concierge-cloud-budget.test.ts b/src/lib/concierge-cloud-budget.test.ts
 new file mode 100644
 index 0000000..7f961e4
@@ -2823,7 +3426,7 @@ index 16182c6..a353ae7 100644
 +  expect(propose).toHaveBeenCalledTimes(1);
 +});
 diff --git a/src/lib/concierge-model.server.ts b/src/lib/concierge-model.server.ts
-index f86dcc0..8f3e31d 100644
+index f86dcc0..6389a89 100644
 --- a/src/lib/concierge-model.server.ts
 +++ b/src/lib/concierge-model.server.ts
 @@ -1,6 +1,3 @@
@@ -2833,7 +3436,7 @@ index f86dcc0..8f3e31d 100644
  import type { PublicGuide } from "./data/public-guide.functions";
  import {
    guidedProposal,
-@@ -9,28 +6,10 @@ import {
+@@ -9,75 +6,112 @@ import {
    type ConciergeTurn,
  } from "./concierge";
  import { nonaModelResponseSchema, validateNonaDialogue } from "./nona-dialogue.server";
@@ -2866,27 +3469,41 @@ index f86dcc0..8f3e31d 100644
  
  export const NONA_MODEL = "anthropic/claude-haiku-5.5";
  export const ATTEMPT_RESERVATION_MICROS = 20000;
-@@ -39,15 +18,33 @@ export const MAX_OUTPUT_TOKENS = 800;
+ export const MAX_PROMPT_BYTES = 12000;
+ export const MAX_OUTPUT_TOKENS = 800;
++export type ModelDiagnostic = {
++  stage: "admission" | "provider" | "schema" | "sources" | "dialogue" | "accepted";
++  reason: string;
++};
  export type ModelDependencies = {
    reserve: (input: ConciergeRequest, guide: PublicGuide, fingerprint: string) => Promise<boolean>;
    propose: (prompt: string, locale: ConciergeRequest["locale"]) => Promise<unknown>;
 +  record?: () => Promise<ConciergeObservation | null>;
++  // Server-only metadata. Never include prompts, provider error messages or prose.
++  onDiagnostic?: (diagnostic: ModelDiagnostic) => void;
  };
  // Do not send guide bodies, Wi-Fi credentials, host contacts or receipt tokens to
  // the model. It selects source keys; the server renders their exact contents.
  export function modelContext(input: ConciergeRequest, guide: PublicGuide) {
++  const inferred = guidedProposal(input, guide);
++  const focused =
++    inferred.intent === "services" ? validateConciergeTurn(input, guide, inferred) : null;
 +  const secrets = guide.sections
-+    .flatMap((section) => [
-+      ...(section.content.phones ?? []),
-+      ...(section.content.emails ?? []),
-+      ...(section.content.items ?? [])
-+        .filter(
-+          (item) =>
-+            section.key.split("-")[0] === "wifi" ||
-+            /password|passe|code|pin|senha|passwort|contrasena/i.test(item.label),
-+        )
-+        .map((item) => item.text),
-+    ])
++    .flatMap((section) =>
++      [section.content, ...(section.translations ?? []).map((t) => t.content)].flatMap(
++        (content) => [
++          ...(content.phones ?? []),
++          ...(content.emails ?? []),
++          ...(content.items ?? [])
++            .filter(
++              (item) =>
++                section.key.split("-")[0] === "wifi" ||
++                /password|passe|code|pin|senha|passwort|contrasena/i.test(item.label),
++            )
++            .map((item) => item.text),
++        ],
++      ),
++    )
 +    .filter((value) => value.length >= 3)
 +    .sort((a, b) => b.length - a.length);
    const redact = (text: string) =>
@@ -2896,13 +3513,16 @@ index f86dcc0..8f3e31d 100644
        .replace(/[a-f0-9]{64}/gi, "[private]")
        .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, "[contact]")
 -      .replace(/(?:\+?\d[\d ().-]{7,}\d)/g, "[contact]");
+-  return JSON.stringify({
 +      .replace(/(?:\+?\d[\d ().-]{7,}\d)/g, (value) =>
 +        /^\d{4}-\d{2}-\d{2}$/.test(value.trim()) ? value : "[contact]",
 +      );
-   return JSON.stringify({
++  const context = {
      message: redact(input.message),
-     history: input.history.map(redact),
-@@ -55,20 +52,23 @@ export function modelContext(input: ConciergeRequest, guide: PublicGuide) {
+-    history: input.history.map(redact),
++    // The structured dialogue already includes the recent guest turns.
++    history: input.dialogueHistory.length ? [] : input.history.map(redact),
+     dialogueHistory: input.dialogueHistory.map(({ role, text }) => ({ role, text: redact(text) })),
      locale: input.locale,
      today: new Intl.DateTimeFormat("en-CA", { timeZone: input.timeZone }).format(new Date()),
      timeZone: input.timeZone,
@@ -2913,9 +3533,20 @@ index f86dcc0..8f3e31d 100644
 +        ? {}
 +        : input.draft,
 +    savedDrafts: input.savedDrafts.filter((d) => guide.services?.some((s) => s.id === d.serviceId)),
++    // A deterministic hint, not a command: the model can choose another truly
++    // missing field, while the server still validates the final proposal.
++    latestBookingHint: focused
++      ? {
++          draft: focused.draft,
++          nextStep: focused.nextStep,
++          serviceIds: focused.services.map((s) => s.id),
++        }
++      : null,
      fieldRules:
        "Choose one missing field. For massage usually ask date first; breakfast usually quantity first. Date/time required when requestDate or slots exist; quantity and options when configured. Never ask again for a valid supplied field. ready only when all required fields are present.",
 -    facts: guide.sections.map((s) => ({ key: s.key, title: s.title.slice(0, 120) })),
++    conversationRules:
++      "The latest message determines the subject. A saved or complete draft is memory, not a command to continue booking. Social conversation, anniversary wishes and general relaxation advice use questionFor=none, no draft edits. You may select real serviceIds as suggestions without starting a booking. Only an actual booking request, correction or answer to a missing field uses intent=services and a booking questionFor. For a different service extract its own fields; do not copy quantity, date, time or option from another draft. Resume saved drafts only on request.",
 +    facts: guide.sections.map((s) => ({ key: s.key, title: redact(s.title).slice(0, 120) })),
      services: (guide.services ?? []).slice(0, 25).map((s) => ({
        id: s.id,
@@ -2931,8 +3562,19 @@ index f86dcc0..8f3e31d 100644
 +        options: s.bookingConfig?.options.map((o) => ({ id: o.id, label: redact(o.label) })),
        },
      })),
-   });
-@@ -78,6 +78,7 @@ export async function runConciergeModel(
+-  });
++  };
++  // Keep the current message, catalogue and structured drafts intact. Discard
++  // oldest dialogue first rather than abandoning long conversations altogether.
++  while (Buffer.byteLength(JSON.stringify(context), "utf8") > MAX_PROMPT_BYTES) {
++    if (context.history.length) context.history.shift();
++    else if (context.dialogueHistory.length) context.dialogueHistory.shift();
++    else break;
++  }
++  return JSON.stringify(context);
+ }
+ export async function runConciergeModel(
+   input: ConciergeRequest,
    guide: PublicGuide,
    fingerprint: string,
    deps?: ModelDependencies,
@@ -2940,7 +3582,7 @@ index f86dcc0..8f3e31d 100644
  ): Promise<ConciergeTurn> {
    const fallback = guidedProposal(input, guide);
    const guided = validateConciergeTurn(input, guide, fallback);
-@@ -85,11 +86,15 @@ export async function runConciergeModel(
+@@ -85,106 +119,112 @@ export async function runConciergeModel(
    // stays in the existing receipt transport, entirely outside model context.
    if (!input.message || fallback.intent === "emergency" || fallback.intent === "tracking")
      return guided;
@@ -2954,13 +3596,33 @@ index f86dcc0..8f3e31d 100644
    let reserved = false;
 +  let result = guided;
 +  let observation: ConciergeObservation | null = null;
++  let stage: ModelDiagnostic["stage"] = "admission";
++  const diagnostic = (reason: string) => {
++    try {
++      dependencies.onDiagnostic?.({ stage, reason });
++    } catch {
++      /* Telemetry cannot change a turn. */
++    }
++  };
    try {
      reserved = await dependencies.reserve(input, guide, fingerprint);
-     if (!reserved) return guided;
-@@ -102,89 +107,46 @@ export async function runConciergeModel(
+-    if (!reserved) return guided;
++    if (!reserved) {
++      diagnostic("reservation-refused");
++      return guided;
++    }
++    stage = "provider";
+     const raw = await dependencies.propose(prompt, input.locale);
++    stage = "schema";
+     const { dialogue, ...proposal } = nonaModelResponseSchema.parse(raw);
++    stage = "sources";
+     if (
+       proposal.serviceIds.some((id) => !guide.services?.some((s) => s.id === id)) ||
+       proposal.factKeys.some((key) => !guide.sections.some((s) => s.key === key))
+     )
        throw new Error("unknown-source");
      const preferred = dialogue.questionFor === "none" ? null : dialogue.questionFor;
-     const turn = validateConciergeTurn(input, guide, proposal, new Date(), preferred);
+-    const turn = validateConciergeTurn(input, guide, proposal, new Date(), preferred);
 -    if (proposal.intent === "emergency" || proposal.intent === "tracking")
 -      return { ...turn, usage: { modelCalls: 1, estimatedCostMicros: ATTEMPT_RESERVATION_MICROS } };
 -    const text = validateNonaDialogue(dialogue.text, dialogue.questionFor, turn, input.locale);
@@ -2970,17 +3632,50 @@ index f86dcc0..8f3e31d 100644
 -      mode: "ai",
 -      usage: { modelCalls: 1, estimatedCostMicros: ATTEMPT_RESERVATION_MICROS },
 -    };
+-  } catch {
++    // Suggestions and social turns must not reactivate a previous ready draft.
++    // IDs still pass catalogue validation; only explicit booking steps edit it.
++    const conversational = proposal.intent === "services" && dialogue.questionFor === "none";
++    const turn = validateConciergeTurn(
++      input,
++      guide,
++      conversational
++        ? { intent: "unknown", serviceIds: [], factKeys: proposal.factKeys, draft: {} }
++        : proposal,
++      new Date(),
++      preferred,
++    );
++    if (conversational)
++      turn.services = (guide.services ?? []).filter((s) => proposal.serviceIds.includes(s.id));
 +    // A rejected voice must not discard already validated source cards/draft.
 +    // This remains guided unless the independent dialogue guard also passes.
 +    result = turn;
++    stage = "dialogue";
 +    if (proposal.intent === "emergency" || proposal.intent === "tracking") result = turn;
-+    else
++    else {
 +      result = {
 +        ...turn,
 +        text: validateNonaDialogue(dialogue.text, dialogue.questionFor, turn, input.locale),
 +        mode: "ai",
 +      };
-   } catch {
++      stage = "accepted";
++      diagnostic("validated");
++    }
++  } catch (error) {
++    const allowed = new Set([
++      "question-mismatch",
++      "dialogue-language-mismatch",
++      "dialogue-question-mismatch",
++      "dialogue-extra-field",
++      "dialogue-submission-boundary-missing",
++      "dialogue-external-action-claim",
++      "dialogue-unverified-source-content",
++      "untrusted-dialogue",
++      "unknown-source",
++    ]);
++    diagnostic(
++      error instanceof Error && allowed.has(error.message) ? error.message : `${stage}-rejected`,
++    );
      // An uncertain/failed billable attempt keeps its entire reservation. Never
      // retry automatically, and never return provider errors or secrets.
 -    return {
@@ -3084,10 +3779,10 @@ index f86dcc0..8f3e31d 100644
  }
 diff --git a/src/lib/concierge-ollama-free.server.test.ts b/src/lib/concierge-ollama-free.server.test.ts
 new file mode 100644
-index 0000000..90dcc65
+index 0000000..07ecc3c
 --- /dev/null
 +++ b/src/lib/concierge-ollama-free.server.test.ts
-@@ -0,0 +1,227 @@
+@@ -0,0 +1,232 @@
 +import { createHash } from "node:crypto";
 +import { expect, it, vi } from "vitest";
 +import {
@@ -3262,7 +3957,12 @@ index 0000000..90dcc65
 +  if (kind === "invalid-metrics") raw.prompt_eval_cached_count = 9000;
 +  s.fetcher.mockResolvedValueOnce(Response.json(raw));
 +  await expect(d.propose("synthetic", "fr")).rejects.toThrow("ollama-model-unavailable");
-+  expect(await d.record!()).toMatchObject({ state: "uncertain", usdNanos: null });
++  const knownUsage = !["foreign-model", "invalid-metrics"].includes(kind);
++  expect(await d.record!()).toMatchObject(
++    knownUsage
++      ? { state: "estimated", inputTokens: 2000, outputTokens: 100, usdNanos: 275000 }
++      : { state: "uncertain", usdNanos: null },
++  );
 +  expect(s.fetcher.mock.calls.filter((c) => String(c[0]).endsWith("/chat"))).toHaveLength(1);
 +});
 +
@@ -3317,10 +4017,10 @@ index 0000000..90dcc65
 +});
 diff --git a/src/lib/concierge-ollama-free.server.ts b/src/lib/concierge-ollama-free.server.ts
 new file mode 100644
-index 0000000..e26d502
+index 0000000..0a5dfe8
 --- /dev/null
 +++ b/src/lib/concierge-ollama-free.server.ts
-@@ -0,0 +1,293 @@
+@@ -0,0 +1,298 @@
 +import { createHash } from "node:crypto";
 +import { asSchema } from "@ai-sdk/provider-utils";
 +import { z } from "zod";
@@ -3432,6 +4132,7 @@ index 0000000..e26d502
 +    review: unknown;
 +    ledger: OllamaFreeLedger;
 +    onMeasurement?: (measurement: OllamaRecipeMeasurement) => void;
++    onDiagnostic?: ModelDependencies["onDiagnostic"];
 +  },
 +  fetcher: typeof fetch = fetch,
 +): ModelDependencies | undefined {
@@ -3460,6 +4161,7 @@ index 0000000..e26d502
 +  let observation: ConciergeObservation | null = null;
 +  let measurement: OllamaRecipeMeasurement | null = null;
 +  return {
++    ...(config.onDiagnostic ? { onDiagnostic: config.onDiagnostic } : {}),
 +    reserve: async (input, guide, fingerprint) => {
 +      if (requestId || !input.requestId || !input.conversationId || !validReview()) return false;
 +      // Read-only public metadata, never a generation or a charge.
@@ -3539,10 +4241,11 @@ index 0000000..e26d502
 +            signal: AbortSignal.timeout(12000),
 +          }),
 +        );
-+        const data = responseSchema.parse(raw);
++        // Usage is independent from proposal validity: malformed tool output
++        // still consumed tokens. Preserve that estimate without accepting prose.
++        const data = responseSchema.omit({ message: true, done_reason: true }).parse(raw);
 +        if (
 +          data.model !== config.model ||
-+          data.done_reason === "length" ||
 +          (data.prompt_eval_cached_count ?? 0) > data.prompt_eval_count
 +        )
 +          throw new Error("ollama-invalid-response");
@@ -3576,9 +4279,11 @@ index 0000000..e26d502
 +          funding: "reviewed-included-credits",
 +          state: "estimated",
 +        };
-+        return data.message.tool_calls[0]!.function.arguments;
++        const proposal = responseSchema.parse(raw);
++        if (proposal.done_reason === "length") throw new Error("ollama-truncated");
++        return proposal.message.tool_calls[0]!.function.arguments;
 +      } catch {
-+        observation = {
++        observation ??= {
 +          state: "uncertain",
 +          inputTokens: null,
 +          outputTokens: null,
@@ -3589,7 +4294,7 @@ index 0000000..e26d502
 +          generationId: null,
 +          latencyMs: elapsed(),
 +        };
-+        measurement = {
++        measurement ??= {
 +          provider: "ollama-direct",
 +          model: config.model,
 +          inputTokens: null,
@@ -3613,6 +4318,282 @@ index 0000000..e26d502
 +      return (await config.ledger.record(requestId, observation)) ? observation : null;
 +    },
 +  };
++}
+diff --git a/src/lib/concierge-ollama-hosted.server.test.ts b/src/lib/concierge-ollama-hosted.server.test.ts
+new file mode 100644
+index 0000000..5a520c0
+--- /dev/null
++++ b/src/lib/concierge-ollama-hosted.server.test.ts
+@@ -0,0 +1,138 @@
++import { createHash } from "node:crypto";
++import { afterEach, expect, it, vi } from "vitest";
++const state = vi.hoisted(() => ({
++  rpc: vi.fn(),
++  single: vi.fn(),
++  clients: vi.fn(),
++}));
++vi.mock("@supabase/supabase-js", () => ({
++  createClient: (...args: unknown[]) => {
++    state.clients(...args);
++    return {
++      rpc: state.rpc,
++      from: () => ({ select: () => ({ eq: () => ({ single: state.single }) }) }),
++    };
++  },
++}));
++import { createHostedOllamaTestDependencies } from "./concierge-ollama-hosted.server";
++import { conciergeRequestSchema } from "./concierge";
++import { localGuide } from "../../scripts/validation/nona-local-fixture";
++const key = "SYNTHETIC-OLLAMA-KEY";
++const guide = { ...localGuide(), id: crypto.randomUUID() };
++const identity = { visitorHash: "a".repeat(64), networkHash: "b".repeat(64) };
++const input = conciergeRequestSchema.parse({
++  slug: "test-only",
++  locale: "fr",
++  message: "Coucou",
++  requestId: crypto.randomUUID(),
++  conversationId: crypto.randomUUID(),
++});
++const env = (): NodeJS.ProcessEnv => ({
++  NONA_OLLAMA_TEST_ENABLE: "hosted-free-test-v1",
++  NONA_CLOUD_SCOPE: "test",
++  SUPABASE_URL: "https://mhhtnqfdkyudwyqlmnce.supabase.co",
++  NONA_OLLAMA_TEST_SLUG: input.slug,
++  NONA_OLLAMA_TEST_PROPERTY_ID: guide.id,
++  OLLAMA_API_KEY: key,
++  SUPABASE_SERVICE_ROLE_KEY: "SYNTHETIC-SERVER-KEY",
++  NONA_OLLAMA_FREE_REVIEW: JSON.stringify({
++    version: "nona-ollama-free-review-v1",
++    keySha256: createHash("sha256").update(key).digest("hex"),
++    evidenceSha256: "c".repeat(64),
++    reviewedAt: new Date(Date.now() - 1000).toISOString(),
++    expiresAt: new Date(Date.now() + 60000).toISOString(),
++    existingAccountTermsAccepted: true,
++    freePlanVerified: true,
++    privacyReviewed: true,
++    paymentMethodAddedForRecipe: false,
++    paidUsageAvailable: false,
++    automaticBillingEnabled: false,
++    purchasedBalanceUsd: 0,
++    freeUsageRemainingPercent: 90,
++    freeModelIds: ["gemma4:31b"],
++    maximumNewSpendEur: 0,
++  }),
++});
++function prepare() {
++  vi.stubGlobal(
++    "fetch",
++    vi.fn(async () =>
++      Response.json({ models: [{ name: "gemma4:31b", capabilities: ["completion", "tools"] }] }),
++    ),
++  );
++  state.single.mockResolvedValue({
++    data: {
++      enabled: true,
++      expires_at: new Date(Date.now() + 60000).toISOString(),
++      cap_micros: 4000000,
++      reserved_micros: 980000,
++    },
++    error: null,
++  });
++  state.rpc.mockResolvedValue({ data: true, error: null });
++}
++afterEach(() => {
++  vi.unstubAllGlobals();
++  vi.clearAllMocks();
++});
++it.each([
++  { VERCEL_ENV: "production" },
++  { NONA_CLOUD_SCOPE: "monthly" },
++  { SUPABASE_URL: "https://production.supabase.co" },
++  { NONA_OLLAMA_TEST_PROPERTY_ID: "" },
++  { NONA_OLLAMA_FREE_REVIEW: "null" },
++])("refuses unsafe hosted configuration before database or model access: %j", async (override) => {
++  prepare();
++  const deps = createHostedOllamaTestDependencies(identity, { ...env(), ...override });
++  expect(await deps.reserve(input, guide, "untrusted")).toBe(false);
++  expect(state.clients).not.toHaveBeenCalled();
++  expect(fetch).not.toHaveBeenCalled();
++});
++it("requires a signed server identity", async () => {
++  prepare();
++  expect(
++    await createHostedOllamaTestDependencies(undefined, env()).reserve(input, guide, "x"),
++  ).toBe(false);
++  expect(fetch).not.toHaveBeenCalled();
++});
++it("binds authorization to one published TEST guide and ignores browser fingerprints", async () => {
++  prepare();
++  const deps = createHostedOllamaTestDependencies(identity, env());
++  expect(await deps.reserve(input, guide, "browser-spoof")).toBe(true);
++  expect(state.rpc).toHaveBeenCalledWith("nona_reserve_concierge_attempt", {
++    _property: guide.id,
++    _request: input.requestId,
++    _conversation_hash: createHash("sha256")
++      .update(guide.id + ":" + input.conversationId)
++      .digest("hex"),
++    _fingerprint: identity.networkHash,
++  });
++  expect(await deps.reserve(input, guide, "again")).toBe(false);
++});
++it.each(["slug", "property"])("refuses a foreign %s without reserving", async (field) => {
++  prepare();
++  const deps = createHostedOllamaTestDependencies(identity, env());
++  expect(
++    await deps.reserve(
++      { ...input, slug: field === "slug" ? "foreign" : input.slug },
++      { ...guide, id: field === "property" ? crypto.randomUUID() : guide.id },
++      "x",
++    ),
++  ).toBe(false);
++  expect(state.clients).not.toHaveBeenCalled();
++});
++it.each([
++  { enabled: false },
++  { expires_at: new Date(Date.now() - 10000).toISOString() },
++  { expires_at: "invalid-date" },
++  { reserved_micros: 4000000 },
++  { cap_micros: 5000000 },
++])("does not renew disabled, expired or exhausted authorization: %j", async (override) => {
++  prepare();
++  const current = await state.single();
++  state.single.mockResolvedValue({ data: { ...current.data, ...override }, error: null });
++  expect(await createHostedOllamaTestDependencies(identity, env()).reserve(input, guide, "x")).toBe(
++    false,
++  );
++  expect(state.rpc).not.toHaveBeenCalled();
++});
+diff --git a/src/lib/concierge-ollama-hosted.server.ts b/src/lib/concierge-ollama-hosted.server.ts
+new file mode 100644
+index 0000000..39cdc25
+--- /dev/null
++++ b/src/lib/concierge-ollama-hosted.server.ts
+@@ -0,0 +1,126 @@
++import { createHash } from "node:crypto";
++import { createClient } from "@supabase/supabase-js";
++import { z } from "zod";
++import type { ConciergeIdentity } from "./concierge-identity.server";
++import type { ModelDependencies } from "./concierge-model.server";
++import { createOllamaFreeDependencies } from "./concierge-ollama-free.server";
++
++const testProject = "https://mhhtnqfdkyudwyqlmnce.supabase.co";
++const closed: ModelDependencies = {
++  reserve: async () => false,
++  propose: async () => {
++    throw new Error("test-closed");
++  },
++};
++const authorization = z.object({
++  enabled: z.literal(true),
++  expires_at: z.string().datetime({ offset: true }),
++  cap_micros: z.number().int().positive().max(4_000_000),
++  reserved_micros: z.number().int().nonnegative(),
++});
++
++/** Server-only TEST bridge. Never creates or renews authorization or review.
++ * Invalid TEST configuration fails closed instead of selecting another provider.
++ * Neither the private key nor the account review is returned to the browser.
++ */
++export function createHostedOllamaTestDependencies(
++  identity: ConciergeIdentity | undefined,
++  env: NodeJS.ProcessEnv = process.env,
++): ModelDependencies {
++  const slug = env["NONA_OLLAMA_TEST_SLUG"];
++  const property = env["NONA_OLLAMA_TEST_PROPERTY_ID"];
++  const key = env["OLLAMA_API_KEY"];
++  const serverKey = env["SUPABASE_SERVICE_ROLE_KEY"];
++  if (
++    env["NONA_OLLAMA_TEST_ENABLE"] !== "hosted-free-test-v1" ||
++    env["VERCEL_ENV"] === "production" ||
++    env["NONA_CLOUD_SCOPE"] !== "test" ||
++    env["SUPABASE_URL"] !== testProject ||
++    !slug ||
++    !property ||
++    !z.string().uuid().safeParse(property).success ||
++    !identity ||
++    !key ||
++    !serverKey
++  )
++    return closed;
++  let review: unknown;
++  try {
++    review = JSON.parse(env["NONA_OLLAMA_FREE_REVIEW"] ?? "null");
++  } catch {
++    return closed;
++  }
++  // Instantiate the database lazily: an invalid/expired review causes no access.
++  const database = () =>
++    createClient(testProject, serverKey, {
++      auth: { persistSession: false, autoRefreshToken: false },
++      global: {
++        fetch: (destination, init) =>
++          fetch(destination, {
++            ...init,
++            redirect: "error",
++            signal: AbortSignal.timeout(5000),
++          }),
++      },
++    });
++  return (
++    createOllamaFreeDependencies({
++      enable: "ollama-free-test-v1",
++      key,
++      model: "gemma4:31b",
++      projectUrl: testProject,
++      review,
++      onDiagnostic: (diagnostic) => console.info("NONA_MODEL_DIAGNOSTIC", diagnostic),
++      ledger: {
++        reserve: async (input, guide) => {
++          if (
++            input.slug !== slug ||
++            guide.id !== property ||
++            !input.conversationId ||
++            !input.requestId
++          )
++            return false;
++          const db = database();
++          const state = await db
++            .from("nona_ai_authorization")
++            .select("enabled,expires_at,cap_micros,reserved_micros")
++            .eq("id", "concierge-test-20261015")
++            .single();
++          const checked = authorization.safeParse(state.data);
++          if (
++            state.error ||
++            !checked.success ||
++            Date.parse(checked.data.expires_at) <= Date.now() ||
++            checked.data.reserved_micros + 20000 > checked.data.cap_micros
++          )
++            return false;
++          // Server-derived network hash: caller-controlled forwarding headers cannot
++          // bypass the existing distributed TEST burst limit. Conversation is tenant-bound.
++          const result = await db.rpc("nona_reserve_concierge_attempt", {
++            _property: guide.id,
++            _request: input.requestId,
++            _conversation_hash: createHash("sha256")
++              .update(guide.id + ":" + input.conversationId)
++              .digest("hex"),
++            _fingerprint: identity.networkHash,
++          });
++          return !result.error && result.data === true;
++        },
++        record: async (requestId, observation) => {
++          const result = await database().rpc("nona_record_model_observation", {
++            _request: requestId,
++            _scope: "test",
++            _state: observation.state,
++            _input: observation.inputTokens,
++            _output: observation.outputTokens,
++            _usd_nanos: observation.usdNanos,
++            _eur_micros: null,
++            _generation: null,
++            _latency: observation.latencyMs,
++          });
++          return !result.error && result.data === true;
++        },
++      },
++    }) ?? closed
++  );
 +}
 diff --git a/src/lib/concierge-source-boundary.server.test.ts b/src/lib/concierge-source-boundary.server.test.ts
 new file mode 100644
@@ -3799,14 +4780,15 @@ index 4eaf780..7994b76 100644
 +  expect(state.rpc).not.toHaveBeenCalled();
 +});
 diff --git a/src/lib/concierge.server.ts b/src/lib/concierge.server.ts
-index fd238ce..c68695f 100644
+index fd238ce..5ce437b 100644
 --- a/src/lib/concierge.server.ts
 +++ b/src/lib/concierge.server.ts
-@@ -6,9 +6,10 @@ import type { PublicGuide } from "./data/public-guide.functions";
+@@ -6,9 +6,11 @@ import type { PublicGuide } from "./data/public-guide.functions";
  import type { Database } from "@/integrations/supabase/types";
  import { readPublicJson } from "./public-json";
  import { resolvePublishedMedia } from "./data/published-media.server";
 +import { conciergeIdentity } from "./concierge-identity.server";
++import { createHostedOllamaTestDependencies } from "./concierge-ollama-hosted.server";
  
 -// Bounded per-isolate throttle, not a distributed billable-model quota. No paid
 -// provider can be enabled by an environment flag in this version.
@@ -3815,7 +4797,7 @@ index fd238ce..c68695f 100644
  const buckets = new Map<string, { at: number; count: number }>();
  export function admitConcierge(key: string, now = Date.now()) {
    const current = buckets.get(key);
-@@ -24,7 +25,22 @@ export function admitConcierge(key: string, now = Date.now()) {
+@@ -24,7 +26,22 @@ export function admitConcierge(key: string, now = Date.now()) {
    return true;
  }
  export async function conciergeResponse(request: Request) {
@@ -3839,17 +4821,20 @@ index fd238ce..c68695f 100644
    const parsed = conciergeRequestSchema.safeParse(await readPublicJson(request, 12288));
    if (!parsed.success) return Response.json({ error: "invalid_request" }, { status: 400, headers });
    const ip =
-@@ -47,7 +63,7 @@ export async function conciergeResponse(request: Request) {
+@@ -47,7 +64,10 @@ export async function conciergeResponse(request: Request) {
      if (error) throw new Error("unavailable");
      if (!data) return Response.json({ error: "guide_unavailable" }, { status: 404, headers });
      const guide = data as unknown as PublicGuide;
 -    const turn = await runConciergeModel(parsed.data, guide, fingerprint);
-+    const turn = await runConciergeModel(parsed.data, guide, fingerprint, undefined, identity);
++    const dependencies = process.env["NONA_OLLAMA_TEST_ENABLE"]
++      ? createHostedOllamaTestDependencies(identity)
++      : undefined;
++    const turn = await runConciergeModel(parsed.data, guide, fingerprint, dependencies, identity);
      // Reuse the same property-scoped media signer as the public guide. No media
      // URL, service ID or facts supplied by the browser/provider are trusted.
      const resolved = await resolvePublishedMedia(
 diff --git a/src/lib/concierge.ts b/src/lib/concierge.ts
-index 1a4e444..4e28526 100644
+index 1a4e444..eafe09d 100644
 --- a/src/lib/concierge.ts
 +++ b/src/lib/concierge.ts
 @@ -74,7 +74,17 @@ export type ConciergeTurn = {
@@ -3886,6 +4871,28 @@ index 1a4e444..4e28526 100644
      return { intent: "emergency", draft, serviceIds: [], factKeys: sectionKeys("contact") };
    if (
      /statut|suivi|status|tracking|ou en est|where.*(?:order|breakfast)|estado|stato|pedido|bestellung/.test(
+@@ -503,6 +519,10 @@ export function validateConciergeTurn(
+     draft = {
+       ...input.savedDrafts.find((d) => d.serviceId === chosen!.id),
+       ...changed,
++      // Re-extract explicitly supplied fields against an empty draft. A date
++      // repeated for a new service is still explicit even when equal to the
++      // previous service's value; comparison alone cannot establish that.
++      ...inferDraft(input.message, {}, now, input.timeZone),
+       serviceId: chosen.id,
+     };
+   }
+@@ -652,8 +672,9 @@ export function validateConciergeTurn(
+         .map((s) => ({ label: slotTime(s, input.timeZone), message: slotTime(s, input.timeZone) }));
+     if (nextStep === "option")
+       choices = config.options.map((o) => ({ label: o.label, message: o.label }));
+-    if (nextStep !== "ready") quote = null;
+   }
++  // A saved complete draft is not an active booking during another topic.
++  if (nextStep !== "ready") quote = null;
+   const seed = [...input.history, input.message]
+     .join(" ")
+     .split("")
 diff --git a/src/lib/nona-dialogue-guards.server.test.ts b/src/lib/nona-dialogue-guards.server.test.ts
 new file mode 100644
 index 0000000..7abf206
@@ -4171,7 +5178,7 @@ index 032b9c9..6fa434f 100644
    });
    expect(turn.draft.quantity).toBe(2);
 diff --git a/src/lib/nona-personality.ts b/src/lib/nona-personality.ts
-index 23d7869..6f1cb01 100644
+index 23d7869..3dddc8d 100644
 --- a/src/lib/nona-personality.ts
 +++ b/src/lib/nona-personality.ts
 @@ -4,7 +4,7 @@ import type { Locale } from "./i18n";
@@ -4183,7 +5190,7 @@ index 23d7869..6f1cb01 100644
  
  export type NonaReplyKey =
    | "welcome"
-@@ -295,21 +295,23 @@ export function nonaLine(locale: Locale, key: NonaReplyKey, seed = 0): string {
+@@ -295,21 +295,25 @@ export function nonaLine(locale: Locale, key: NonaReplyKey, seed = 0): string {
  /** Shared system prompt for any future model adapter (never sent in guided mode). */
  export function nonaSystemPrompt(locale: Locale) {
    return [
@@ -4200,6 +5207,8 @@ index 23d7869..6f1cb01 100644
  
      "Write dialogue.text yourself: original, spontaneous conversation, never select phrases from a fixed vocabulary. Keep it brief, usually one or two sentences. Respond to the actual subject before asking a relevant next question. Do not repeat your previous wording.",
      "Food humour belongs to food; relaxation to massage. No gourmand vocabulary for a massage. An implicit gift or hunger is an invitation to clarify, not permission to invent an offering. Follow subject changes and corrections, remember previous service drafts.",
++    "A complete saved breakfast draft does not make every next message about breakfast. For social conversation, an anniversary or a change of topic, answer the latest message naturally with questionFor=none and no draft edits. You may suggest a real service card without collecting booking fields yet. In German, respond warmly to a Hochzeitstag greeting rather than announcing a previous breakfast summary. Never resume a saved draft unless the guest asks or supplies a booking field.",
++    "For an explicit massage request, select the real massage service and extract only fields supplied for that massage. Read its configuration, not the previous breakfast draft. When asking time, explicitly say heure / time / hora / Uhrzeit / ora / horas in the reply language; a vague moment is not an unambiguous time question. Do not repeat your greeting or end every social turn with a sales question.",
      "Extract only source IDs and valid draft fields. Choose questionFor for ONE genuinely missing field (quantity/date/time/option), ready only when complete, none for other conversation. Massage may start with date; breakfast with quantity. Never re-ask a supplied valid field.",
 +    "The question itself must explicitly name the selected missing field in the reply language: people, day, time or option. Ask for no other field. When questionFor is ready, invite the traveller to review the summary AND explicitly say that nothing has been sent yet. Do not announce readiness while any field is missing.",
      "Your prose contains empathy, clarifications and transitions ONLY. No prices, numeric quantities, dates, times, addresses, passwords, named restaurants, policies, factual accommodation instructions or availability claims in prose. The server displays those exact values in separate verified cards. Refer to the cards rather than paraphrasing their facts. If sources are absent, acknowledge the limit and suggest the host.",

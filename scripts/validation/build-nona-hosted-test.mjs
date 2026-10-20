@@ -48,6 +48,14 @@ export default async function handler(req,res){
 }\n`,
 );
 let entry = await readFile(resolve(root, "scripts/validation/nona-local-ui/entry.tsx"), "utf8");
+// TEST-only diagnostics: no message, guide body, contact, receipt or secret.
+// Browser evidence can correlate a visible reply with durable server metering.
+entry = entry.replace(
+  "return response.json();",
+  `const turn = await response.json();
+  console.info("NONA_TEST_TURN " + JSON.stringify({requestId:request.requestId,locale:request.locale,mode:turn.mode,usage:turn.usage,nextStep:turn.nextStep,quote:turn.quote}));
+  return turn;`,
+);
 entry = entry
   .replace('JSON.stringify({ ...request, mode: "local" })', "JSON.stringify(request)")
   .replace('conciergeSlug="nona-local"', 'conciergeSlug="nona-hosted-test"')
@@ -102,6 +110,10 @@ await build({
   build: { outDir: resolve(dist, "public"), emptyOutDir: true },
 });
 await cp(resolve(root, "public"), resolve(dist, "public"), { recursive: true });
+await cp(
+  resolve(root, "scripts/validation/nona-hosted-mobile.html"),
+  resolve(dist, "public/mobile.html"),
+);
 await writeFile(
   resolve(dist, "package.json"),
   JSON.stringify({ private: true, type: "module", engines: { node: "22.x" } }),

@@ -1021,6 +1021,407 @@ index 0000000..b1bdfde
 +  JSON.stringify(evidence, null, 2) + "\n",
 +);
 +console.log(JSON.stringify(evidence));
+diff --git a/src/components/guest/GuideView.tsx b/src/components/guest/GuideView.tsx
+index 4c74397..2519b78 100644
+--- a/src/components/guest/GuideView.tsx
++++ b/src/components/guest/GuideView.tsx
+@@ -355,208 +355,208 @@ export function GuideView({
+             </div>
+           </header>
+           <div className="nona-property-layout">
+-          <section className="nona-property-intro">
+-            <div className="nona-property-heading">
+-              <h1>{displayName ?? guide.name}</h1>
+-              {(guide.subtitle || address) && (
+-                <p>
+-                  <MapPin size={17} />
+-                  {guide.subtitle || address}
+-                </p>
+-              )}
+-            </div>
+-            <div className="nona-property-visual">
+-            <section
+-              className={`hb-cover nona-property-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}
+-            >
+-              {activePhoto && (
+-                <img
+-                  src={activePhoto}
+-                  alt={hasPropertyPhotos ? guide.name : t("media.ambience")}
+-                  className="hb-cover-image"
+-                  fetchPriority="high"
+-                />
+-              )}
+-              {!hasPropertyPhotos && <p className="hb-ambience-label">{t("media.ambience")}</p>}
+-              {photos.length > 1 && (
+-                <button
+-                  className="nona-photo-button"
+-                  onClick={() => setHeroIndex((index) => (index + 1) % photos.length)}
+-                  aria-label={visual.next}
+-                >
+-                  <ImageIcon size={16} />
+-                  {visual.photos}
+-                  <span className="sr-only">
+-                    {" "}
+-                    {(heroIndex % photos.length) + 1}/{photos.length}
+-                  </span>
+-                </button>
+-              )}
+-            </section>
+-            {photos.length > 1 && (
+-              <div className="nona-photo-navigation" aria-label={visual.photos}>
+-                <button
+-                  className="nona-gallery-arrow"
+-                  onClick={() =>
+-                    setHeroIndex((index) => (index + photos.length - 1) % photos.length)
+-                  }
+-                  aria-label={visual.previous}
++            <section className="nona-property-intro">
++              <div className="nona-property-heading">
++                <h1>{displayName ?? guide.name}</h1>
++                {(guide.subtitle || address) && (
++                  <p>
++                    <MapPin size={17} />
++                    {guide.subtitle || address}
++                  </p>
++                )}
++              </div>
++              <div className="nona-property-visual">
++                <section
++                  className={`hb-cover nona-property-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}
+                 >
+-                  <ChevronLeft />
+-                </button>
+-                <div className="nona-photo-thumbnails">
+-                  {photos.map((photo, index) => (
++                  {activePhoto && (
++                    <img
++                      src={activePhoto}
++                      alt={hasPropertyPhotos ? guide.name : t("media.ambience")}
++                      className="hb-cover-image"
++                      fetchPriority="high"
++                    />
++                  )}
++                  {!hasPropertyPhotos && <p className="hb-ambience-label">{t("media.ambience")}</p>}
++                  {photos.length > 1 && (
+                     <button
+-                      key={photo}
+-                      aria-label={`${visual.photos} ${index + 1}`}
+-                      aria-pressed={heroIndex % photos.length === index}
+-                      onClick={() => setHeroIndex(index)}
++                      className="nona-photo-button"
++                      onClick={() => setHeroIndex((index) => (index + 1) % photos.length)}
++                      aria-label={visual.next}
+                     >
+-                      <img src={photo} alt="" loading="lazy" />
++                      <ImageIcon size={16} />
++                      {visual.photos}
++                      <span className="sr-only">
++                        {" "}
++                        {(heroIndex % photos.length) + 1}/{photos.length}
++                      </span>
+                     </button>
+-                  ))}
+-                </div>
+-                <button
+-                  className="nona-gallery-arrow"
+-                  onClick={() => setHeroIndex((index) => (index + 1) % photos.length)}
+-                  aria-label={visual.next}
+-                >
+-                  <ChevronRight />
+-                </button>
+-              </div>
+-            )}
+-            </div>
+-          </section>
+-          <div className="hb-guide-body hb-index" ref={contentRef}>
+-            <div className="hb-index-content">
+-              <PresentationVideo video={resolvePropertyMedia(sections).video} />
+-              <div className="hb-index-heading">
+-                <h2>{guide.name}</h2>
+-                <button
+-                  className="hb-icon-button"
+-                  onClick={toggleMenu}
+-                  aria-label={t("guide.search")}
+-                >
+-                  <Search size={20} />
+-                </button>
+-              </div>
+-              <div className="hb-section-grid">
+-                {main.map((section) => (
+-                  <SectionCard
+-                    key={section.key}
+-                    section={section}
+-                    onClick={() => go(section.key)}
+-                  />
+-                ))}
+-              </div>
+-              {serviceSection && (
+-                <section className="nona-home-services" aria-label={t("section.services")}>
+-                  <div className="nona-services-heading">
+-                    <h2>{visual.additionalServices}</h2>
+-                    <button onClick={() => go(serviceSection.key)}>
+-                      {visual.all}
+-                      <ChevronRight size={16} />
++                  )}
++                </section>
++                {photos.length > 1 && (
++                  <div className="nona-photo-navigation" aria-label={visual.photos}>
++                    <button
++                      className="nona-gallery-arrow"
++                      onClick={() =>
++                        setHeroIndex((index) => (index + photos.length - 1) % photos.length)
++                      }
++                      aria-label={visual.previous}
++                    >
++                      <ChevronLeft />
++                    </button>
++                    <div className="nona-photo-thumbnails">
++                      {photos.map((photo, index) => (
++                        <button
++                          key={photo}
++                          aria-label={`${visual.photos} ${index + 1}`}
++                          aria-pressed={heroIndex % photos.length === index}
++                          onClick={() => setHeroIndex(index)}
++                        >
++                          <img src={photo} alt="" loading="lazy" />
++                        </button>
++                      ))}
++                    </div>
++                    <button
++                      className="nona-gallery-arrow"
++                      onClick={() => setHeroIndex((index) => (index + 1) % photos.length)}
++                      aria-label={visual.next}
++                    >
++                      <ChevronRight />
+                     </button>
+                   </div>
+-                  {(guide.services?.length ?? 0) > 0 ? (
+-                    <ServiceList
+-                      services={guide.services ?? []}
+-                      onRequest={onRequest}
+-                      t={t}
+-                      rail
+-                      discovery
+-                      onDiscover={() => go(serviceSection.key)}
+-                      actionLabel={visual.discover}
++                )}
++              </div>
++            </section>
++            <div className="hb-guide-body hb-index" ref={contentRef}>
++              <div className="hb-index-content">
++                <PresentationVideo video={resolvePropertyMedia(sections).video} />
++                <div className="hb-index-heading">
++                  <h2>{guide.name}</h2>
++                  <button
++                    className="hb-icon-button"
++                    onClick={toggleMenu}
++                    aria-label={t("guide.search")}
++                  >
++                    <Search size={20} />
++                  </button>
++                </div>
++                <div className="hb-section-grid">
++                  {main.map((section) => (
++                    <SectionCard
++                      key={section.key}
++                      section={section}
++                      onClick={() => go(section.key)}
+                     />
+-                  ) : (
+-                    <button className="hb-button" onClick={() => go(serviceSection.key)}>
+-                      {t("guide.servicesExplore")}
+-                      <ArrowRight size={17} />
++                  ))}
++                </div>
++                {serviceSection && (
++                  <section className="nona-home-services" aria-label={t("section.services")}>
++                    <div className="nona-services-heading">
++                      <h2>{visual.additionalServices}</h2>
++                      <button onClick={() => go(serviceSection.key)}>
++                        {visual.all}
++                        <ChevronRight size={16} />
++                      </button>
++                    </div>
++                    {(guide.services?.length ?? 0) > 0 ? (
++                      <ServiceList
++                        services={guide.services ?? []}
++                        onRequest={onRequest}
++                        t={t}
++                        rail
++                        discovery
++                        onDiscover={() => go(serviceSection.key)}
++                        actionLabel={visual.discover}
++                      />
++                    ) : (
++                      <button className="hb-button" onClick={() => go(serviceSection.key)}>
++                        {t("guide.servicesExplore")}
++                        <ArrowRight size={17} />
++                      </button>
++                    )}
++                  </section>
++                )}
++                {extra.length > 0 && (
++                  <details className="hb-all-info">
++                    <summary>
++                      {t("guide.allInfo")} <span>{extra.length}</span>
++                    </summary>
++                    <div className="hb-section-grid">
++                      {extra.map((section) => (
++                        <SectionCard
++                          key={section.key}
++                          section={section}
++                          onClick={() => go(section.key)}
++                        />
++                      ))}
++                    </div>
++                  </details>
++                )}
++                {sections
++                  .find((section) => sectionKind(section.key) === "welcome")
++                  ?.content.items?.some((item) => item.text) && (
++                  <details className="hb-welcome-info">
++                    <summary>{t("section.welcome")}</summary>
++                    <GenericTemplate
++                      items={
++                        sections.find((section) => sectionKind(section.key) === "welcome")?.content
++                          .items ?? []
++                      }
++                    />
++                  </details>
++                )}
++                {hasPropertyGallery && (
++                  <details className="hb-home-media">
++                    <summary>{t("media.heading")}</summary>
++                    <PropertyMediaGallery sections={sections} includeVideo={false} />
++                  </details>
++                )}
++                {!sections.length && <p className="hb-empty">{t("guest.empty")}</p>}
++                {guide.review && guide.review.destinations.length > 0 && (
++                  <section className="hb-review">
++                    <Star size={24} />
++                    <h2>{guide.review.title}</h2>
++                    <p>{guide.review.message}</p>
++                    {guide.review.destinations.map((destination) => {
++                      const href = safeWebUrl(destination.url);
++                      return href ? (
++                        <a
++                          key={destination.url}
++                          href={href}
++                          target="_blank"
++                          rel="noreferrer"
++                          className="hb-button"
++                        >
++                          {destination.label}
++                        </a>
++                      ) : null;
++                    })}
++                  </section>
++                )}
++                <div className="hb-help-actions">
++                  {guide.messagingEnabled && onMessage && (
++                    <button className="hb-button" onClick={onMessage}>
++                      <MessageCircle size={18} />
++                      {t("guest.sendMessage")}
+                     </button>
+                   )}
+-                </section>
+-              )}
+-              {extra.length > 0 && (
+-                <details className="hb-all-info">
+-                  <summary>
+-                    {t("guide.allInfo")} <span>{extra.length}</span>
+-                  </summary>
+-                  <div className="hb-section-grid">
+-                    {extra.map((section) => (
+-                      <SectionCard
+-                        key={section.key}
+-                        section={section}
+-                        onClick={() => go(section.key)}
+-                      />
+-                    ))}
++                  {onFeedback && (
++                    <button className="hb-button hb-button-light" onClick={onFeedback}>
++                      <Star size={18} />
++                      {t("guest.privateFeedback")}
++                    </button>
++                  )}
++                </div>
++                {contact && (
++                  <div className="hb-contact">
++                    <ContactButtons section={contact} t={t} />
+                   </div>
+-                </details>
+-              )}
+-              {sections
+-                .find((section) => sectionKind(section.key) === "welcome")
+-                ?.content.items?.some((item) => item.text) && (
+-                <details className="hb-welcome-info">
+-                  <summary>{t("section.welcome")}</summary>
+-                  <GenericTemplate
+-                    items={
+-                      sections.find((section) => sectionKind(section.key) === "welcome")?.content
+-                        .items ?? []
+-                    }
+-                  />
+-                </details>
+-              )}
+-              {hasPropertyGallery && (
+-                <details className="hb-home-media">
+-                  <summary>{t("media.heading")}</summary>
+-                  <PropertyMediaGallery sections={sections} includeVideo={false} />
+-                </details>
+-              )}
+-              {!sections.length && <p className="hb-empty">{t("guest.empty")}</p>}
+-              {guide.review && guide.review.destinations.length > 0 && (
+-                <section className="hb-review">
+-                  <Star size={24} />
+-                  <h2>{guide.review.title}</h2>
+-                  <p>{guide.review.message}</p>
+-                  {guide.review.destinations.map((destination) => {
+-                    const href = safeWebUrl(destination.url);
+-                    return href ? (
+-                      <a
+-                        key={destination.url}
+-                        href={href}
+-                        target="_blank"
+-                        rel="noreferrer"
+-                        className="hb-button"
+-                      >
+-                        {destination.label}
+-                      </a>
+-                    ) : null;
+-                  })}
+-                </section>
+-              )}
+-              <div className="hb-help-actions">
+-                {guide.messagingEnabled && onMessage && (
+-                  <button className="hb-button" onClick={onMessage}>
+-                    <MessageCircle size={18} />
+-                    {t("guest.sendMessage")}
+-                  </button>
+-                )}
+-                {onFeedback && (
+-                  <button className="hb-button hb-button-light" onClick={onFeedback}>
+-                    <Star size={18} />
+-                    {t("guest.privateFeedback")}
+-                  </button>
+                 )}
++                {offlineAction}
++                <p className="hb-signature">NONA · {t("guest.noInstall")}</p>
+               </div>
+-              {contact && (
+-                <div className="hb-contact">
+-                  <ContactButtons section={contact} t={t} />
+-                </div>
+-              )}
+-              {offlineAction}
+-              <p className="hb-signature">NONA · {t("guest.noInstall")}</p>
+             </div>
+           </div>
+-          </div>
+         </>
+       )}
+       {conciergeSlug && (
 diff --git a/src/lib/concierge-cloud-budget.test.ts b/src/lib/concierge-cloud-budget.test.ts
 new file mode 100644
 index 0000000..7f961e4
@@ -3809,3 +4210,25 @@ index 23d7869..6f1cb01 100644
 +    `Reply language: ${{ fr: "French", en: "English", es: "Spanish", de: "German", it: "Italian", pt: "Portuguese" }[locale]}. Every sentence in dialogue.text must use this language, even when internal labels or guest messages use another. Understand messages in other languages too. In French address the writer with tu; avoid vous, votre and vos even in questions about a group.`,
    ].join("\n");
  }
+diff --git a/src/routes/guide-preview.tsx b/src/routes/guide-preview.tsx
+index 94db635..ce9794a 100644
+--- a/src/routes/guide-preview.tsx
++++ b/src/routes/guide-preview.tsx
+@@ -10,9 +10,15 @@ export const Route = createFileRoute("/guide-preview")({
+   head: () => ({
+     meta: [
+       { title: "Aperçu du guide voyageur — NONA" },
+-      { name: "description", content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare." },
++      {
++        name: "description",
++        content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare.",
++      },
+       { property: "og:title", content: "Aperçu du guide voyageur — NONA" },
+-      { property: "og:description", content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare." },
++      {
++        property: "og:description",
++        content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare.",
++      },
+       { property: "og:type", content: "website" },
+       { name: "twitter:card", content: "summary_large_image" },
+       { name: "robots", content: "noindex" },

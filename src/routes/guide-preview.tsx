@@ -10,9 +10,15 @@ export const Route = createFileRoute("/guide-preview")({
   head: () => ({
     meta: [
       { title: "Aperçu du guide voyageur — NONA" },
-      { name: "description", content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare." },
+      {
+        name: "description",
+        content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare.",
+      },
       { property: "og:title", content: "Aperçu du guide voyageur — NONA" },
-      { property: "og:description", content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare." },
+      {
+        property: "og:description",
+        content: "Découvrez la présentation du guide voyageur NONA pour Villa Mare.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },

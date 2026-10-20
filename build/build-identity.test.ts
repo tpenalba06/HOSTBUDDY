@@ -46,6 +46,9 @@ describe("compiled checkout identity", () => {
   });
   it("reports unknown when the builder has no Git checkout", () => {
     const cwd = mkdtempSync(join(tmpdir(), "nona-no-git-"));
+    // The test runner may put TEMP beneath a checkout. Prevent Git from walking
+    // up into that parent: this fixture intentionally has no repository.
+    writeFileSync(join(cwd, ".git"), "gitdir: ./missing-test-repository\n");
     folders.push(cwd);
     expect(buildIdentity(cwd)).toEqual({ revision: "unknown", state: "unknown" });
   });

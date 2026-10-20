@@ -29,6 +29,19 @@ it.each([
 });
 
 it.each([
+  [
+    "en",
+    "A lovely way to start the day! I've noted the number of people; what time would you like your breakfast delivered?",
+  ],
+  [
+    "es",
+    "¡Qué alegría empezar el día con un buen festín! Ya tengo anotado el número de personas y la fecha, pero dime, ¿a qué hora prefieres que lo traigan?",
+  ],
+])("distinguishes acknowledgements from the actual %s question", (locale, text) => {
+  expect(validateNonaDialogue(text, "time", turn("time"), locale)).toBe(text);
+});
+
+it.each([
   ["quantity", "Quel jour te ferait plaisir ?"],
   ["date", "Pour combien de personnes ?"],
   ["time", "Quelle formule te ferait plaisir ?"],

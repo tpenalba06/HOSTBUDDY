@@ -52,7 +52,7 @@ it("accepts a natural question naming only published breakfast options", async (
     },
   });
   const turn = await runLocalNona(input, guide, async () =>
-    response({ text: "Tu préfères Classique ou Végétarien ?" }),
+    response({ text: "Quelle formule préfères-tu, Classique ou Végétarien ?" }),
   );
   expect(turn.nextStep).toBe("option");
   expect(turn.usage.modelCalls).toBe(1);
@@ -133,7 +133,7 @@ it("keeps a supplied instant in the authoritative draft without sending its nume
   const turn = await runLocalNona(input, localGuide(), async (url, options) => {
     wire = options?.body as string;
     return response({
-      text: "Tu peux vérifier le récapitulatif avant de poursuivre, l’hôte devra encore vérifier la demande.",
+      text: "Tu peux vérifier le récapitulatif : rien n'est envoyé avant ta confirmation.",
     });
   });
   expect(turn.draft.quantity).toBe(2);

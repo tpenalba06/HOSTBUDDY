@@ -51,7 +51,7 @@ export function validateDialogueCoherence(text: string, turn: ConciergeTurn, loc
   if (hasForeignLanguageSegment(text, locale)) throw new Error("dialogue-language-mismatch");
   if (turn.nextStep && fieldCues[turn.nextStep]) {
     // Metadata alone cannot prove that the actual question asks the right field.
-    const question = folded.split(/[.!]/).find((sentence) => sentence.includes("?")) ?? "";
+    const question = folded.split(/[.!;¿]/).find((sentence) => sentence.includes("?")) ?? "";
     if (!fieldCues[turn.nextStep]!.test(question)) throw new Error("dialogue-question-mismatch");
     if (
       Object.entries(fieldCues).some(

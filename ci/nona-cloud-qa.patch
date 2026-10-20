@@ -383,10 +383,10 @@ index 0000000..e73195d
 +console.log("HOSTED_TEST_PACKAGE_BUILT_NO_CREDENTIALS_NO_INFERENCE");
 diff --git a/scripts/validation/nona-beta-browser.mjs b/scripts/validation/nona-beta-browser.mjs
 new file mode 100644
-index 0000000..4322c33
+index 0000000..c8eddfa
 --- /dev/null
 +++ b/scripts/validation/nona-beta-browser.mjs
-@@ -0,0 +1,130 @@
+@@ -0,0 +1,138 @@
 +import assert from "node:assert/strict";
 +import { writeFile } from "node:fs/promises";
 +const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
@@ -422,7 +422,15 @@ index 0000000..4322c33
 +    const errors = [];
 +    page.on("pageerror", (error) => errors.push(error.message));
 +    try {
++      const guideResponse = page.waitForResponse(
++        (r) => new URL(r.url()).pathname === "/local-guide",
++      );
 +      await page.goto("http://127.0.0.1:4196/", { waitUntil: "networkidle" });
++      const source = await (await guideResponse).json();
++      const slot = source.services.find((s) => s.id === "bf").bookingConfig.slots[0];
++      const sourceDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(
++        new Date(slot),
++      );
 +      await page.locator(".nona-launcher").click();
 +      await page.getByRole("dialog").waitFor();
 +      const send = async (message, label) => {
@@ -452,7 +460,7 @@ index 0000000..4322c33
 +        });
 +        return turn;
 +      };
-+      await send("Petit-déjeuner pour demain", "breakfast-start");
++      await send(`Petit-déjeuner pour le ${sourceDate}`, "breakfast-start");
 +      const quantity = await send("Pour trois personnes", "breakfast-quantity");
 +      assert.ok(quantity.choices[0]?.message, "server must offer a real slot");
 +      await send(quantity.choices[0].message, "breakfast-time");
@@ -466,7 +474,7 @@ index 0000000..4322c33
 +      assert.equal(social.nextStep, null);
 +      assert.equal(social.quote, null);
 +      const massage = await send(
-+        "Je change de sujet : je voudrais un massage demain, pour une personne.",
++        `Je change de sujet : je voudrais un massage pour le ${sourceDate}, pour une personne.`,
 +        "massage",
 +      );
 +      assert.equal(massage.nextStep, "time");
@@ -973,14 +981,14 @@ index 0000000..15c633b
 \ No newline at end of file
 diff --git a/scripts/validation/nona-hosted-test-entry.test.ts b/scripts/validation/nona-hosted-test-entry.test.ts
 new file mode 100644
-index 0000000..f7077ec
+index 0000000..0dc7ae2
 --- /dev/null
 +++ b/scripts/validation/nona-hosted-test-entry.test.ts
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,84 @@
 +import { afterEach, expect, it, vi } from "vitest";
 +import { hostedTestResponse } from "./nona-hosted-test-entry";
 +import type { ConciergeTurn } from "../../src/lib/concierge";
-+import { slotTime } from "../../src/lib/concierge";
++import { slotTime, zonedDate } from "../../src/lib/concierge";
 +import { localGuide } from "./nona-local-fixture";
 +afterEach(() => {
 +  vi.unstubAllGlobals();
@@ -1033,13 +1041,11 @@ index 0000000..f7077ec
 +  vi.stubGlobal("fetch", fetcher);
 +  let draft = {};
 +  let turn: ConciergeTurn | undefined;
++  const slot = localGuide().services!.find((s) => s.id === "bf")!.bookingConfig!.slots[0]!;
 +  for (const message of [
-+    "Petit-déjeuner pour demain",
++    `Petit-déjeuner pour le ${zonedDate(new Date(slot), "Europe/Paris")}`,
 +    "Pour trois personnes",
-+    slotTime(
-+      localGuide().services!.find((s) => s.id === "bf")!.bookingConfig!.slots[0]!,
-+      "Europe/Paris",
-+    ),
++    slotTime(slot, "Europe/Paris"),
 +    "Classique",
 +  ]) {
 +    const response = await hostedTestResponse(

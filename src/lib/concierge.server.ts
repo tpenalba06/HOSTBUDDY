@@ -8,6 +8,7 @@ import { readPublicJson } from "./public-json";
 import { resolvePublishedMedia } from "./data/published-media.server";
 import { conciergeIdentity } from "./concierge-identity.server";
 import { createHostedOllamaTestDependencies } from "./concierge-ollama-hosted.server";
+import { createHostedOllamaMonthlyDependencies } from "./concierge-ollama-monthly.server";
 
 // Early per-isolate throttle; cloud spend additionally requires the distributed
 // ledger, a reviewed billing envelope and an explicit server-side enable gate.
@@ -66,7 +67,9 @@ export async function conciergeResponse(request: Request) {
     const guide = data as unknown as PublicGuide;
     const dependencies = process.env["NONA_OLLAMA_TEST_ENABLE"]
       ? createHostedOllamaTestDependencies(identity)
-      : undefined;
+      : process.env["NONA_OLLAMA_MONTHLY_ENABLE"]
+        ? createHostedOllamaMonthlyDependencies(identity)
+        : undefined;
     const turn = await runConciergeModel(parsed.data, guide, fingerprint, dependencies, identity);
     // Reuse the same property-scoped media signer as the public guide. No media
     // URL, service ID or facts supplied by the browser/provider are trusted.

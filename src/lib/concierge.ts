@@ -519,6 +519,10 @@ export function validateConciergeTurn(
     draft = {
       ...input.savedDrafts.find((d) => d.serviceId === chosen!.id),
       ...changed,
+      // Re-extract explicitly supplied fields against an empty draft. A date
+      // repeated for a new service is still explicit even when equal to the
+      // previous service's value; comparison alone cannot establish that.
+      ...inferDraft(input.message, {}, now, input.timeZone),
       serviceId: chosen.id,
     };
   }
@@ -668,8 +672,9 @@ export function validateConciergeTurn(
         .map((s) => ({ label: slotTime(s, input.timeZone), message: slotTime(s, input.timeZone) }));
     if (nextStep === "option")
       choices = config.options.map((o) => ({ label: o.label, message: o.label }));
-    if (nextStep !== "ready") quote = null;
   }
+  // A saved complete draft is not an active booking during another topic.
+  if (nextStep !== "ready") quote = null;
   const seed = [...input.history, input.message]
     .join(" ")
     .split("")

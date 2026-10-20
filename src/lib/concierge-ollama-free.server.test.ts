@@ -172,7 +172,12 @@ it.each([
   if (kind === "invalid-metrics") raw.prompt_eval_cached_count = 9000;
   s.fetcher.mockResolvedValueOnce(Response.json(raw));
   await expect(d.propose("synthetic", "fr")).rejects.toThrow("ollama-model-unavailable");
-  expect(await d.record!()).toMatchObject({ state: "uncertain", usdNanos: null });
+  const knownUsage = !["foreign-model", "invalid-metrics"].includes(kind);
+  expect(await d.record!()).toMatchObject(
+    knownUsage
+      ? { state: "estimated", inputTokens: 2000, outputTokens: 100, usdNanos: 275000 }
+      : { state: "uncertain", usdNanos: null },
+  );
   expect(s.fetcher.mock.calls.filter((c) => String(c[0]).endsWith("/chat"))).toHaveLength(1);
 });
 

@@ -1,6 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { hostedTestResponse } from "./nona-hosted-test-entry";
 import type { ConciergeTurn } from "../../src/lib/concierge";
+import { slotTime, zonedDate } from "../../src/lib/concierge";
+import { localGuide } from "./nona-local-fixture";
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -52,10 +54,11 @@ it("calculates the breakfast draft at 75 EUR with inactive AI, without submittin
   vi.stubGlobal("fetch", fetcher);
   let draft = {};
   let turn: ConciergeTurn | undefined;
+  const slot = localGuide().services!.find((s) => s.id === "bf")!.bookingConfig!.slots[0]!;
   for (const message of [
-    "Petit-déjeuner pour demain",
+    `Petit-déjeuner pour le ${zonedDate(new Date(slot), "Europe/Paris")}`,
     "Pour trois personnes",
-    "À 9h",
+    slotTime(slot, "Europe/Paris"),
     "Classique",
   ]) {
     const response = await hostedTestResponse(

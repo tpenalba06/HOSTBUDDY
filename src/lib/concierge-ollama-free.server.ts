@@ -51,7 +51,7 @@ export type OllamaRecipeMeasurement = {
   retailEstimateUsd: number | null;
   // Never infer an account debit or a monetary saving from token counts alone.
   actualAccountDebitUsd: null;
-  funding: "reviewed-included-credits";
+  funding: "reviewed-included-credits" | "reviewed-prepaid-hard-stop";
   state: "estimated" | "uncertain";
 };
 
@@ -109,6 +109,7 @@ export function createOllamaFreeDependencies(
     review: unknown;
     ledger: OllamaFreeLedger;
     onMeasurement?: (measurement: OllamaRecipeMeasurement) => void;
+    onDiagnostic?: ModelDependencies["onDiagnostic"];
   },
   fetcher: typeof fetch = fetch,
 ): ModelDependencies | undefined {
@@ -131,14 +132,37 @@ export function createOllamaFreeDependencies(
     review.freeModelIds.includes(config.model) &&
     review.freeUsageRemainingPercent >= 5;
   if (!validReview()) return;
+  return createReviewedOllamaTransport(
+    { ...config, key: config.key, isAuthorized: validReview, funding: "reviewed-included-credits" },
+    fetcher,
+  );
+}
+
+/** Internal server transport shared by independently authorized TEST/monthly
+ * ledgers. This function neither grants authorization nor creates credit. Never
+ * expose its configuration or construct it from browser-supplied fields. */
+export function createReviewedOllamaTransport(
+  config: {
+    key: string;
+    model: OllamaRecipeModel;
+    ledger: OllamaFreeLedger;
+    isAuthorized: () => boolean;
+    funding: OllamaRecipeMeasurement["funding"];
+    onMeasurement?: (measurement: OllamaRecipeMeasurement) => void;
+    onDiagnostic?: ModelDependencies["onDiagnostic"];
+  },
+  fetcher: typeof fetch = fetch,
+): ModelDependencies {
   const headers = { authorization: `Bearer ${config.key}`, "content-type": "application/json" };
   let requestId: string | null = null;
   let attempted = false;
   let observation: ConciergeObservation | null = null;
   let measurement: OllamaRecipeMeasurement | null = null;
   return {
+    ...(config.onDiagnostic ? { onDiagnostic: config.onDiagnostic } : {}),
     reserve: async (input, guide, fingerprint) => {
-      if (requestId || !input.requestId || !input.conversationId || !validReview()) return false;
+      if (requestId || !input.requestId || !input.conversationId || !config.isAuthorized())
+        return false;
       // Read-only public metadata, never a generation or a charge.
       const catalogue = await boundedJson(
         await fetcher("https://ollama.com/api/tags", {
@@ -166,7 +190,8 @@ export function createOllamaFreeDependencies(
       return true;
     },
     propose: async (prompt, locale) => {
-      if (!requestId || attempted || !validReview()) throw new Error("ollama-reservation-required");
+      if (!requestId || attempted || !config.isAuthorized())
+        throw new Error("ollama-reservation-required");
       attempted = true;
       const started = performance.now();
       let networkRequests: 0 | 1 = 0;
@@ -216,10 +241,11 @@ export function createOllamaFreeDependencies(
             signal: AbortSignal.timeout(12000),
           }),
         );
-        const data = responseSchema.parse(raw);
+        // Usage is independent from proposal validity: malformed tool output
+        // still consumed tokens. Preserve that estimate without accepting prose.
+        const data = responseSchema.omit({ message: true, done_reason: true }).parse(raw);
         if (
           data.model !== config.model ||
-          data.done_reason === "length" ||
           (data.prompt_eval_cached_count ?? 0) > data.prompt_eval_count
         )
           throw new Error("ollama-invalid-response");
@@ -250,12 +276,14 @@ export function createOllamaFreeDependencies(
           networkRequests,
           retailEstimateUsd: nanos / 1e9,
           actualAccountDebitUsd: null,
-          funding: "reviewed-included-credits",
+          funding: config.funding,
           state: "estimated",
         };
-        return data.message.tool_calls[0]!.function.arguments;
+        const proposal = responseSchema.parse(raw);
+        if (proposal.done_reason === "length") throw new Error("ollama-truncated");
+        return proposal.message.tool_calls[0]!.function.arguments;
       } catch {
-        observation = {
+        observation ??= {
           state: "uncertain",
           inputTokens: null,
           outputTokens: null,
@@ -266,7 +294,7 @@ export function createOllamaFreeDependencies(
           generationId: null,
           latencyMs: elapsed(),
         };
-        measurement = {
+        measurement ??= {
           provider: "ollama-direct",
           model: config.model,
           inputTokens: null,
@@ -276,7 +304,7 @@ export function createOllamaFreeDependencies(
           networkRequests,
           retailEstimateUsd: null,
           actualAccountDebitUsd: null,
-          funding: "reviewed-included-credits",
+          funding: config.funding,
           state: "uncertain",
         };
         throw new Error("ollama-model-unavailable");

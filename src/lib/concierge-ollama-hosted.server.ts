@@ -70,6 +70,7 @@ export function createHostedOllamaTestDependencies(
       model: "gemma4:31b",
       projectUrl: testProject,
       review,
+      onDiagnostic: (diagnostic) => console.info("NONA_MODEL_DIAGNOSTIC", diagnostic),
       ledger: {
         reserve: async (input, guide) => {
           if (

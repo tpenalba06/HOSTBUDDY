@@ -22,6 +22,7 @@ await writeFile(
     'export { createOllamaFreeDependencies } from "../../src/lib/concierge-ollama-free.server";',
     'export { runConciergeModel } from "../../src/lib/concierge-model.server";',
     'export { conciergeRequestSchema } from "../../src/lib/concierge";',
+    'export { validateNonaDialogue } from "../../src/lib/nona-dialogue.server";',
     'export { localGuide } from "../../scripts/validation/nona-local-fixture";',
   ].join("\n"),
 );
@@ -45,6 +46,10 @@ await build({
     emptyOutDir: true,
   },
 });
+if (process.argv.includes("--compile-only")) {
+  console.log(JSON.stringify({ compiled: true, actualModelCalls: 0, vaultRead: false }));
+  process.exit(0);
+}
 const { createOllamaFreeDependencies, runConciergeModel, conciergeRequestSchema, localGuide } =
   await import("../../.output/ollama-free-recipe/entry.js");
 const vault = await readVaultState(resolve(root, "../nona-private/credentials.dpapi"));

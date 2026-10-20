@@ -98,7 +98,7 @@ it("prepares breakfast and massage with exact catalogue totals and no booking/pa
       propose: async () => ({
         ...p,
         dialogue: {
-          text: "Je prépare ta demande avec plaisir. Vérifie le récapitulatif avant de l'envoyer à ton hôte.",
+          text: "Je prépare ta demande avec plaisir. Vérifie le récapitulatif : rien n'est envoyé avant ta confirmation.",
           questionFor: "ready",
         },
       }),

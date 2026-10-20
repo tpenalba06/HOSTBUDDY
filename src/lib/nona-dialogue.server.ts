@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { conciergeProposalSchema, normalize, type ConciergeTurn } from "./concierge";
+import { validateDialogueCoherence } from "./nona-dialogue-guards.server";
 
 /** Free conversation, separated from the server's source cards and booking engine. */
 export const nonaModelResponseSchema = conciergeProposalSchema
@@ -25,6 +26,7 @@ export function validateNonaDialogue(
   locale: string,
 ) {
   if (questionFor !== (turn.nextStep ?? "none")) throw new Error("question-mismatch");
+  validateDialogueCoherence(text, turn, locale);
   const folded = normalize(text);
   if (
     (text.match(/\?/g)?.length ?? 0) > 1 ||

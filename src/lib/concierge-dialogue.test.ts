@@ -225,7 +225,7 @@ describe("Nona complete conversations, guided fallback only", () => {
     },
   );
   it("keeps French voice familiar, versioned and free of false confirmation", () => {
-    expect(NONA_PERSONALITY_VERSION).toContain(".4");
+    expect(NONA_PERSONALITY_VERSION).toBe("nona-voice-2026-10-20.1");
     expect(nonaLine("fr", "welcome")).toContain("t’aider");
     const s = session();
     for (const text of ["Bonjour", "Petit-déjeuner", "3", "demain", "9 h", "Classique", "suivi"]) {

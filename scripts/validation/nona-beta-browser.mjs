@@ -59,6 +59,16 @@ try {
         assert.equal(turn.usage.modelCalls, 0);
         assert.equal(turn.mode, "guided");
         await page.getByRole("dialog").getByText(turn.text, { exact: true }).last().waitFor();
+        if (turn.nextStep === "ready") {
+          assert.equal(turn.quote?.totalCents, 7500);
+          // The form independently refreshes its server quote. An API success
+          // alone is not proof that its rendered total has finished loading.
+          await page
+            .getByRole("dialog")
+            .getByText("Total demandé : 75.00 €", { exact: true })
+            .last()
+            .waitFor({ state: "visible", timeout: 30000 });
+        }
         await page.screenshot({ path: `qa-results/${name}-${label}.png` });
         results.push({
           name,

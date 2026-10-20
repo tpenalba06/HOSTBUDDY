@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-20T21:52:29.430Z",
+  "kind": "read-only-live-TEST-ledger-and-privileges",
+  "newModelCalls": 0,
+  "rows": [
+    {
+      "test_enabled": false,
+      "expires_at": "2026-10-20 17:21:38.308+00",
+      "cap_micros": 1380000,
+      "reserved_micros": 1260000,
+      "monthly_enabled": false,
+      "monthly_cap_micros": 20000000,
+      "test_attempts": 63,
+      "observations": 63,
+      "anon_can_reserve_monthly": false,
+      "authenticated_can_reserve_monthly": false,
+      "anon_can_read_observations": false
+    }
+  ]
+}

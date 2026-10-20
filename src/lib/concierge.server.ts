@@ -7,6 +7,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { readPublicJson } from "./public-json";
 import { resolvePublishedMedia } from "./data/published-media.server";
 import { conciergeIdentity } from "./concierge-identity.server";
+import { createHostedOllamaTestDependencies } from "./concierge-ollama-hosted.server";
 
 // Early per-isolate throttle; cloud spend additionally requires the distributed
 // ledger, a reviewed billing envelope and an explicit server-side enable gate.
@@ -63,7 +64,10 @@ export async function conciergeResponse(request: Request) {
     if (error) throw new Error("unavailable");
     if (!data) return Response.json({ error: "guide_unavailable" }, { status: 404, headers });
     const guide = data as unknown as PublicGuide;
-    const turn = await runConciergeModel(parsed.data, guide, fingerprint, undefined, identity);
+    const dependencies = process.env["NONA_OLLAMA_TEST_ENABLE"]
+      ? createHostedOllamaTestDependencies(identity)
+      : undefined;
+    const turn = await runConciergeModel(parsed.data, guide, fingerprint, dependencies, identity);
     // Reuse the same property-scoped media signer as the public guide. No media
     // URL, service ID or facts supplied by the browser/provider are trusted.
     const resolved = await resolvePublishedMedia(

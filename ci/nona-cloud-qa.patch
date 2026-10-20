@@ -383,15 +383,16 @@ index 0000000..e73195d
 +console.log("HOSTED_TEST_PACKAGE_BUILT_NO_CREDENTIALS_NO_INFERENCE");
 diff --git a/scripts/validation/nona-beta-browser.mjs b/scripts/validation/nona-beta-browser.mjs
 new file mode 100644
-index 0000000..f8c4435
+index 0000000..4322c33
 --- /dev/null
 +++ b/scripts/validation/nona-beta-browser.mjs
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,130 @@
 +import assert from "node:assert/strict";
 +import { writeFile } from "node:fs/promises";
 +const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
 +const browser = await chromium.launch({ headless: true });
 +const results = [];
++let nextChatAt = 0;
 +try {
 +  for (const [name, width, height] of [
 +    ["desktop", 1440, 1000],
@@ -405,9 +406,18 @@ index 0000000..f8c4435
 +      hasTouch: name === "mobile",
 +    });
 +    // No provider key, customer data, remote site or billable call on the runner.
-+    await context.route("**/*", (route) =>
-+      new URL(route.request().url()).hostname === "127.0.0.1" ? route.continue() : route.abort(),
-+    );
++    await context.route("**/*", async (route) => {
++      const url = new URL(route.request().url());
++      if (url.hostname !== "127.0.0.1") return route.abort();
++      if (url.pathname === "/chat" && route.request().method() === "POST") {
++        // Pace EVERY request, including form quote refreshes and both devices,
++        // within the real 20/minute shared network limit. No guard is disabled.
++        const at = Math.max(Date.now(), nextChatAt);
++        nextChatAt = at + 3200;
++        await new Promise((resolve) => setTimeout(resolve, Math.max(0, at - Date.now())));
++      }
++      return route.continue();
++    });
 +    const page = await context.newPage();
 +    const errors = [];
 +    page.on("pageerror", (error) => errors.push(error.message));
@@ -416,9 +426,6 @@ index 0000000..f8c4435
 +      await page.locator(".nona-launcher").click();
 +      await page.getByRole("dialog").waitFor();
 +      const send = async (message, label) => {
-+        // Respect the real shared network throttle, including automatic quote
-+        // refreshes. Never weaken production guards to speed up browser tests.
-+        await page.waitForTimeout(5500);
 +        const pending = page.waitForResponse(
 +          (r) =>
 +            r.url().endsWith("/chat") &&

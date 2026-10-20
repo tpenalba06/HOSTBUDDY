@@ -56,43 +56,7 @@ jobs:
         env:
           HOSTBUDDY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/hb-browser/node_modules/playwright/index.mjs
         run: |
-          node --input-type=module <<'JS'
-          import {writeFile} from 'node:fs/promises';
-          import assert from 'node:assert/strict';
-          const {chromium}=await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
-          const browser=await chromium.launch({headless:true});
-          const results=[];
-          try {
-            for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]) {
-              const context=await browser.newContext({viewport:{width,height},locale:"fr-FR"});
-              const page=await context.newPage();const errors=[];
-              page.on('pageerror',e=>errors.push(e.message));
-              try {
-                await page.goto('http://127.0.0.1:4196/',{waitUntil:'networkidle'});
-                await page.screenshot({path:`qa-results/${name}-guide.png`,fullPage:true});
-                await page.locator('.nona-launcher').click({timeout:15000});
-                await page.getByRole('dialog').waitFor({state:'visible'});
-                await page.screenshot({path:`qa-results/${name}-open.png`});
-                for (const [i,message] of ['Petit-déjeuner pour demain','Pour trois personnes','À 9h','Classique','Quel est le code de la boîte à clés ?','Je suis allergique aux noix, est-ce sans danger ?'].entries()) {
-                  const request=page.waitForResponse(r=>r.url().endsWith('/chat')&&r.request().method()==='POST'&&r.request().postDataJSON()?.message===message); request.catch(()=>{});
-                  await page.locator('.nona-composer textarea').fill(message);
-                  await page.locator('.nona-composer textarea').press('Enter');
-                  const response=await request;assert.equal(response.status(),200);
-                  const turn=await response.json();assert.equal(turn.usage.modelCalls,0);
-                  await page.screenshot({path:`qa-results/${name}-turn-${i}.png`});
-                  results.push({name,message,mode:turn.mode,nextStep:turn.nextStep,quote:turn.quote,text:turn.text});
-                }
-                assert.deepEqual(errors,[]);
-                const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
-                assert.equal(overflow,false);
-              } catch(error) {
-                results.push({name,error:error.message,pageErrors:errors,body:await page.locator('body').innerText()});
-                await page.screenshot({path:`qa-results/${name}-failure.png`,fullPage:true});
-                process.exitCode=1;
-              } finally {await context.close()}
-            }
-          } finally {await browser.close();await writeFile('qa-results/browser.json',JSON.stringify({kind:'real shared UI and compiled API, synthetic data, guided fallback only',results},null,2))}
-          JS
+          node scripts/validation/nona-beta-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

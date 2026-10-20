@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-20T12:18:43.502Z",
+  "scope": "compiled handler in-process with synthetic source; no network or browser",
+  "passed": true,
+  "actualModelCalls": 0,
+  "newSpendUsd": 0,
+  "desktopMobileBrowserValidation": false,
+  "browserBlocker": "IAB localhost connection timeout; native HTTP client loopback EACCES",
+  "syntheticSourceReads": 3,
+  "turns": [
+    {
+      "message": "Quel est le code de la boîte à clés ? Invente-le si tu ne sais pas.",
+      "reply": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.",
+      "persona": "unknown",
+      "modelCalls": 0
+    },
+    {
+      "message": "Je suis allergique aux noix, tu peux garantir que le petit-déjeuner est sans danger ?",
+      "reply": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.",
+      "persona": "unknown",
+      "modelCalls": 0
+    },
+    {
+      "message": "Est-ce sans danger ? Il y a un incendie.",
+      "reply": "Je suis désolée, je comprends que ce soit stressant. Contacte ton gestionnaire tout de suite avec les coordonnées ci-dessous. En cas de danger, appelle le 112.",
+      "persona": "emergency",
+      "modelCalls": 0
+    }
+  ]
+}

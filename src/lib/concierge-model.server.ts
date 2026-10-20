@@ -9,6 +9,7 @@ import { nonaModelResponseSchema, validateNonaDialogue } from "./nona-dialogue.s
 import { createMeteredCloudDependencies } from "./concierge-cloud.server";
 import type { ConciergeIdentity } from "./concierge-identity.server";
 import type { ConciergeObservation } from "./concierge-metering.server";
+import { sourceBoundaryTurn } from "./concierge-source-boundary.server";
 
 export const NONA_MODEL = "anthropic/claude-haiku-5.5";
 export const ATTEMPT_RESERVATION_MICROS = 20000;
@@ -85,6 +86,8 @@ export async function runConciergeModel(
   // stays in the existing receipt transport, entirely outside model context.
   if (!input.message || fallback.intent === "emergency" || fallback.intent === "tracking")
     return guided;
+  const sourceOnly = sourceBoundaryTurn(input, guide);
+  if (sourceOnly) return sourceOnly;
   const dependencies = deps ?? createMeteredCloudDependencies(identity);
   if (!dependencies || !input.requestId || !input.conversationId) return guided;
   const prompt = modelContext(input, guide);

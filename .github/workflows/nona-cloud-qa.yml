@@ -2,7 +2,7 @@ name: NONA isolated cloud QA
 on:
   push:
     branches: [qa/nona-cloud-free-20261020]
-    paths: [ci/nona-cloud-qa.patch, .github/workflows/nona-cloud-qa.yml]
+    paths: [ci/nona-cloud-qa.patch]
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,7 +19,8 @@ jobs:
         with:
           node-version: 22
       - name: Apply exact isolated source patch
-        run: git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch
+        id: source
+        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch
       - run: bun install --frozen-lockfile
       - name: Full non-regression without provider credentials
         run: |
@@ -72,7 +73,7 @@ jobs:
                 await page.locator('.nona-launcher').click({timeout:15000});
                 await page.getByRole('dialog').waitFor({state:'visible'});
                 await page.screenshot({path:`qa-results/${name}-open.png`});
-                for (const [i,message] of ['Petit-d�jeuner pour demain','Pour trois personnes','� 9h','Classique','Quel est le code de la bo�te � cl�s ?','Je suis allergique aux noix, est-ce sans danger ?'].entries()) {
+                for (const [i,message] of ['Petit-déjeuner pour demain','Pour trois personnes','À 9h','Classique','Quel est le code de la boîte à clés ?','Je suis allergique aux noix, est-ce sans danger ?'].entries()) {
                   const request=page.waitForResponse(r=>r.url().endsWith('/chat')&&r.request().method()==='POST');
                   await page.locator('.nona-panel textarea').fill(message);
                   await page.locator('.nona-panel textarea').press('Enter');

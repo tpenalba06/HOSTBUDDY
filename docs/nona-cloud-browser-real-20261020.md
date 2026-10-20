@@ -46,6 +46,8 @@ La fenêtre expire **le 20 octobre à 19 h 21 min 38 s Paris** (`2026-10-20T17:2
 
 Le plafond mensuel de 20 EUR reste désactivé. Les URL continuent en guidé après expiration. Cette fenêtre n'autorise pas une IA permanente.
 
+**Clôture vérifiée après expiration :** autorisation explicitement désactivée, 63 tentatives et 63 observations cumulées, réserve 1 260 000 sur 1 380 000 micro-EUR, politique mensuelle désactivée. Une nouvelle réservation est refusée (`false`). Les six tentatives non utilisées ne sont pas renouvelées automatiquement.
+
 ## Limites de qualité et état bêta
 
 Trois générations ont été remplacées par le guidé : demande implicite de détente après un petit-déjeuner prêt, massage explicite et conversation sociale allemande. La première a renvoyé un texte de préparation du petit-déjeuner hors sujet. Le massage a sélectionné la bonne carte et demandé l'heure. Une demande allemande explicite de récapitulatif a ensuite réussi en IA. La dernière réponse Wi-Fi a une mesure incertaine ; la carte source est correcte, la réserve reste retenue, sans retry.

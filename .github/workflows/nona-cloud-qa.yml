@@ -64,7 +64,7 @@ jobs:
           const results=[];
           try {
             for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]]) {
-              const context=await browser.newContext({viewport:{width,height}});
+              const context=await browser.newContext({viewport:{width,height},locale:"fr-FR"});
               const page=await context.newPage();const errors=[];
               page.on('pageerror',e=>errors.push(e.message));
               try {
@@ -74,9 +74,9 @@ jobs:
                 await page.getByRole('dialog').waitFor({state:'visible'});
                 await page.screenshot({path:`qa-results/${name}-open.png`});
                 for (const [i,message] of ['Petit-déjeuner pour demain','Pour trois personnes','À 9h','Classique','Quel est le code de la boîte à clés ?','Je suis allergique aux noix, est-ce sans danger ?'].entries()) {
-                  const request=page.waitForResponse(r=>r.url().endsWith('/chat')&&r.request().method()==='POST');
-                  await page.locator('.nona-panel textarea').fill(message);
-                  await page.locator('.nona-panel textarea').press('Enter');
+                  const request=page.waitForResponse(r=>r.url().endsWith('/chat')&&r.request().method()==='POST'&&r.request().postDataJSON()?.message===message); request.catch(()=>{});
+                  await page.locator('.nona-composer textarea').fill(message);
+                  await page.locator('.nona-composer textarea').press('Enter');
                   const response=await request;assert.equal(response.status(),200);
                   const turn=await response.json();assert.equal(turn.usage.modelCalls,0);
                   await page.screenshot({path:`qa-results/${name}-turn-${i}.png`});
@@ -99,4 +99,5 @@ jobs:
           name: nona-cloud-qa-evidence
           path: qa-results/
           retention-days: 7
+
 

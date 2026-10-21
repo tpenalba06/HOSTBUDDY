@@ -26,9 +26,7 @@ try {
       await context.route("**/*", (route) => {
         const url = new URL(route.request().url());
         if (url.pathname === "/chat") results.chatCalls++;
-        return url.origin === "http://127.0.0.1:4196"
-          ? route.continue()
-          : route.abort();
+        return url.origin === "http://127.0.0.1:4196" ? route.continue() : route.abort();
       });
       await page.addInitScript(
         (language) => localStorage.setItem("hostbuddy.locale", language),
@@ -36,10 +34,7 @@ try {
       );
       const localized = page.waitForResponse((response) => {
         const url = new URL(response.url());
-        return (
-          url.pathname === "/local-guide" &&
-          url.searchParams.get("locale") === locale
-        );
+        return url.pathname === "/local-guide" && url.searchParams.get("locale") === locale;
       });
       await page.goto("http://127.0.0.1:4196/");
       await localized;
@@ -56,11 +51,8 @@ try {
         ]);
       });
       const layout = await page.evaluate(() => {
-        const box = (selector) =>
-          document.querySelector(selector).getBoundingClientRect();
-        const grid = document.querySelector(
-          ".hb-index-content > .hb-section-grid",
-        );
+        const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+        const grid = document.querySelector(".hb-index-content > .hb-section-grid");
         return {
           overflow: document.documentElement.scrollWidth > innerWidth,
           coverBottom: box(".nona-property-visual").bottom,
@@ -68,15 +60,10 @@ try {
           columns: getComputedStyle(grid).gridTemplateColumns.split(" ").length,
           sectionCount: grid.children.length,
           servicesAfterSections:
-            box(".nona-home-services").top >=
-            grid.getBoundingClientRect().bottom,
+            box(".nona-home-services").top >= grid.getBoundingClientRect().bottom,
         };
       });
-      assert.equal(
-        layout.overflow,
-        false,
-        `${width}/${locale}: horizontal overflow`,
-      );
+      assert.equal(layout.overflow, false, `${width}/${locale}: horizontal overflow`);
       assert.equal(layout.columns, 2);
       assert.ok(
         layout.sectionsTop >= layout.coverBottom,
@@ -97,10 +84,7 @@ try {
   assert.equal(results.chatCalls, 0);
   results.passed = true;
 } finally {
-  await writeFile(
-    "qa-results/design-layout.json",
-    JSON.stringify(results, null, 2),
-  );
+  await writeFile("qa-results/design-layout.json", JSON.stringify(results, null, 2));
   clearTimeout(deadline);
   await browser.close();
 }

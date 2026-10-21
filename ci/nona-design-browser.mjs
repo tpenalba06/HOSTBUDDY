@@ -104,4 +104,3 @@ try {
   clearTimeout(deadline);
   await browser.close();
 }
-

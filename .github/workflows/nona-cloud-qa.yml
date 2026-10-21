@@ -1,8 +1,8 @@
-name: NONA isolated cloud QA
+name: NONA isolated guide and concierge regression
 on:
   push:
-    branches: [qa/nona-cloud-free-20261020]
-    paths: [ci/nona-cloud-qa.patch]
+    branches: [work/nona-design-stabilisation-20261021]
+    paths: [ci/nona-cloud-qa.patch, ci/nona-guide-layout.patch, ci/nona-design-browser.mjs, .github/workflows/nona-cloud-qa.yml]
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
           node-version: 22
       - name: Apply exact isolated source patch
         id: source
-        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch
+        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch && git apply --check ci/nona-guide-layout.patch && git apply ci/nona-guide-layout.patch
       - run: bun install --frozen-lockfile
       - name: Full non-regression without provider credentials
         run: |
@@ -57,6 +57,7 @@ jobs:
           HOSTBUDDY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/hb-browser/node_modules/playwright/index.mjs
         run: |
           node scripts/validation/nona-beta-browser.mjs
+          node ci/nona-design-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

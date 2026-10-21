@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
 const browser = await chromium.launch({ headless: true });
+const deadline = setTimeout(() => {
+  console.error("Design browser time limit exceeded");
+  process.exit(1);
+}, 180000);
+deadline.unref();
 const results = {
   scope: "Synthetic shared GuideView, guided backend; no real AI validation",
   checks: [],
@@ -41,9 +46,14 @@ try {
       await page.locator(".hb-section-card").first().waitFor();
       await page.evaluate(async () => {
         await document.fonts.ready;
-        await Promise.all(
-          [...document.images].map((image) => image.decode().catch(() => {})),
-        );
+        const images = [...document.images];
+        images.forEach((image) => {
+          image.loading = "eager";
+        });
+        await Promise.race([
+          Promise.all(images.map((image) => image.decode().catch(() => {}))),
+          new Promise((resolve) => setTimeout(resolve, 10000)),
+        ]);
       });
       const layout = await page.evaluate(() => {
         const box = (selector) =>
@@ -91,6 +101,7 @@ try {
     "qa-results/design-layout.json",
     JSON.stringify(results, null, 2),
   );
+  clearTimeout(deadline);
   await browser.close();
 }
 

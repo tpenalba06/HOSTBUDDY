@@ -7,6 +7,9 @@ import type { ConciergeRequest, ConciergeTurn } from "@/lib/concierge";
 import type { GuideViewData } from "@/components/guest/guide-model";
 import "@/styles.css";
 import "@/styles/nona-art-direction.css";
+import "@/styles/ux-foundations.css";
+import "@/styles/manager-ux.css";
+import "@/styles/guest-ux.css";
 import { nonaVisualCopy } from "@/lib/nona-visual-copy";
 import { DemoServiceBooking } from "@/components/demo/DemoServiceBooking";
 

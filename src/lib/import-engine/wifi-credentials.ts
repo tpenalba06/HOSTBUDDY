@@ -3,7 +3,7 @@ export function wifiCredentials(text: string): { network?: string; password?: st
   // A slash in legacy prose is ambiguous; retain the complete original value.
   if (/\s\/\s*(?:mot de passe|password|contrase[nñ]a|passwort|senha)\b/i.test(text)) return null;
   const labelled = text.replace(
-    /;\s*(?=(?:r[eé]seau(?: wi[ -]?fi)?|ssid|network(?: name)?|red(?: wi[ -]?fi)?|netzwerk(?:name)?|rete(?: wi[ -]?fi)?|mot de passe(?: wi[ -]?fi)?|mdp|password(?: wi[ -]?fi)?|contrase[nñ]a|passwort|senha)(?:\s*[:=]|\s+))/gi,
+    /(?:;\s*|[.,]\s+)(?=(?:r[eé]seau(?: wi[ -]?fi)?|ssid|network(?: name)?|red(?: wi[ -]?fi)?|netzwerk(?:name)?|rete(?: wi[ -]?fi)?|mot de passe(?: wi[ -]?fi)?|mdp|password(?: wi[ -]?fi)?|contrase[nñ]a|passwort|senha)(?:\s*[:=]|\s+))/gi,
     "\n",
   );
   const values = (labels: string) =>

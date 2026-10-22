@@ -23,7 +23,7 @@ const RAW_RULES: Record<string, RegExp> = {
     /(clim|climatisation|air conditioning|air conditioner|aire acondicionado|klimaanlage|aria condizionata|ar condicionado|chauffage|heating|calefacción|heizung|riscaldamento|aquecimento|thermostat)/i,
   pool: /(piscine|pool\b|swimming pool|piscina|schwimmbad|spa\b|jacuzzi|baignade)/i,
   rules:
-    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
+    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?(?![\p{L}\d_])|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/iu,
   trash:
     /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?(?!\p{L})|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/iu,
   departure:
@@ -57,6 +57,32 @@ const AMBIGUOUS =
 
 const TIME_FIELDS = new Set(["arrival", "departure"]);
 
+// Explicit topic markers disambiguate arrival/departure clauses. Generic phrases
+// such as "before 18h" cannot safely identify a departure when arrival is named.
+const TIME_MARKERS =
+  /(?<![\p{L}\d_])(?:(arriv[ée]e?|check[ .-]?in|arrival|llegada|ankunft|arrivo|chegada)|(d[ée]part|check[ .-]?out|departure|salida|abreise|partenza|partida))(?![\p{L}\d_])/giu;
+
+function timeMarkers(text: string) {
+  return [...text.matchAll(TIME_MARKERS)].map((match) => ({
+    index: match.index,
+    key: match[1] ? "arrival" : "departure",
+  }));
+}
+
+function splitMixedTimeClauses(snippet: string): string[] {
+  const markers = timeMarkers(snippet);
+  if (new Set(markers.map((marker) => marker.key)).size !== 2) return [snippet];
+  const clauses = markers.map((marker, index) =>
+    snippet
+      .slice(index === 0 ? 0 : marker.index, markers[index + 1]?.index)
+      .replace(/\s+(?:et|and|y|und|e)\s*$/iu, "")
+      .replace(/[,;\s]+$/u, ""),
+  );
+  // Only split clear timed clauses. Retain ambiguous wording intact for review.
+  // Each returned clause remains an exact substring, never a rewritten fact.
+  return clauses.every((clause) => normalizedTimes(clause).length) ? clauses : [snippet];
+}
+
 function normalizedTimes(text: string) {
   return [
     ...text.matchAll(/\b([01]?\d|2[0-3])(?:\s*h(?:\s*([0-5]\d))?|\s*:\s*([0-5]\d)|\s*(am|pm)\b)/gi),
@@ -78,8 +104,11 @@ function hasConflictingEvidence(key: string, hits: string[]) {
 export function splitSnippets(text: string): string[] {
   return text
     .replace(/\r/g, "")
-    .split(/\n+|(?<=[.!?])\s+(?=[A-ZÀ-Ý])/)
+    .split(
+      /\n+|(?<=[.!?])\s+(?=[A-ZÀ-Ý]|\d+\s*(?:personnes|voyageurs|guests?|people|personas|gäste|ospiti|hóspedes|couchages|chambres?|bedrooms?|habitaciones?|schlafzimmer|camere|quartos|lits?|beds?)\b)/,
+    )
     .map((s) => s.replace(/^[\s•\-*–]+/, "").trim())
+    .flatMap(splitMixedTimeClauses)
     .filter((s) => s.length > 1);
 }
 
@@ -125,7 +154,14 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
 
   const fields: ExtractedField[] = FIELD_DEFS.map((def) => {
     const rule = RULES[def.key];
-    const hits = rule ? snippets.filter((snippet) => rule.test(snippet)) : [];
+    const hits = rule
+      ? snippets.filter((snippet) => {
+          if (!rule.test(snippet)) return false;
+          if (!TIME_FIELDS.has(def.key)) return true;
+          const markers = timeMarkers(snippet);
+          return !markers.length || markers.some((marker) => marker.key === def.key);
+        })
+      : [];
 
     if (!hits.length) {
       return {

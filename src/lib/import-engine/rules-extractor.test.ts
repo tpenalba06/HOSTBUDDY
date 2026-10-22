@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { extractFromText } from "./rules-extractor";
+import { extractDocument } from "./document-extractor";
 // Entirely fictional fixtures: no real addresses, contacts or Wi-Fi credentials.
 describe("rules extractor provenance", () => {
   it("retains the smoking prohibition from the audited pasted paragraph", () => {
@@ -67,6 +68,89 @@ Air conditioning not available.`);
     const result = extractFromText("Villa fictive\nCheck-in from 16:00.\nPrivate pool.", 0.6);
     expect(result.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
     expect(result.fields.find((field) => field.key === "pool")?.status).toBe("to_verify");
+  });
+});
+
+describe("audited synthetic guest-note classifications", () => {
+  const source = `Nom du logement : Maison des Tests
+Arrivée à partir de 17 h, départ avant 10 h.
+Wi-Fi TEST-NONA, mot de passe uniquement-fictif.
+Contact : Camille, camille@example.test. 2 chambres, 4 voyageurs.
+Petit-déjeuner sur demande 12 euros.`;
+
+  it("keeps a breakfast offer out of house rules without losing actual pet rules", () => {
+    const fields = extractDocument(source).fields;
+    expect(fields.find((field) => field.key === "services")).toMatchObject({
+      value: "Petit-déjeuner sur demande 12 euros.",
+      status: "found",
+    });
+    expect(fields.find((field) => field.key === "rules")?.status).toBe("missing");
+    const pets = extractFromText("Synthetic House\nPets are not allowed.");
+    expect(pets.fields.find((field) => field.key === "rules")).toMatchObject({
+      value: "Pets are not allowed.",
+      status: "found",
+    });
+  });
+
+  it("separates a numbered capacity sentence from its preceding contact", () => {
+    const fields = extractDocument(source).fields;
+    const contact = fields.find((field) => field.key === "contact");
+    const capacity = fields.find((field) => field.key === "capacity");
+    expect(contact?.value).toBe("Contact : Camille, camille@example.test.");
+    expect(capacity?.value).toBe("2 chambres, 4 voyageurs.");
+    for (const field of [contact, capacity]) {
+      expect(field?.status).toBe("found");
+      expect(source).toContain(field!.rawValue);
+      expect(field?.evidence?.[0]?.quote).toBe(field?.rawValue);
+    }
+  });
+
+  it.each([
+    ["Arrivée à partir de 17 h, départ avant 10 h.", "17 h", "10 h"],
+    ["Check-in from 4pm and check-out before 10am.", "4pm", "10am"],
+    ["Llegada a las 16:00; salida antes de las 10:00.", "16:00", "10:00"],
+  ])("keeps each explicitly named time in its own field: %s", (notes, arrival, departure) => {
+    const fields = extractDocument("Synthetic House\n" + notes).fields;
+    for (const [key, included, excluded] of [
+      ["arrival", arrival, departure],
+      ["departure", departure, arrival],
+    ]) {
+      const field = fields.find((item) => item.key === key)!;
+      expect(field.status).toBe("found");
+      expect(field.value).toContain(included);
+      expect(field.value).not.toContain(excluded);
+      expect(notes).toContain(field.rawValue);
+      expect(field.evidence?.every((item) => notes.includes(item.quote))).toBe(true);
+    }
+  });
+
+  it("still requires review when two arrival claims differ within a mixed paragraph", () => {
+    const result = extractDocument(
+      "Synthetic House\nArrivée à 15h, départ avant 10h, arrivée à 17h.",
+    );
+    const arrival = result.fields.find((field) => field.key === "arrival")!;
+    expect(arrival.status).toBe("to_verify");
+    expect(arrival.issues).toContain("conflicting_sources");
+    expect(arrival.rawValue).toContain("15h");
+    expect(arrival.rawValue).toContain("17h");
+    expect(arrival.rawValue).not.toContain("10h");
+    expect(result.fields.find((field) => field.key === "departure")?.status).toBe("found");
+  });
+
+  it("does not interpret a named arrival deadline as a generic departure deadline", () => {
+    const fields = extractDocument("Synthetic House\nArrivée avant 18h.").fields;
+    expect(fields.find((field) => field.key === "arrival")?.status).toBe("found");
+    expect(fields.find((field) => field.key === "departure")?.status).toBe("missing");
+  });
+
+  it("keeps uncertainty and low-trust URL evidence subject to review", () => {
+    const uncertain = extractDocument(
+      "Synthetic House\nArrivée peut-être à 17h, départ avant 10h.",
+    );
+    expect(uncertain.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
+    const website = extractDocument(source, "https://synthetic.example.invalid/guide");
+    expect(website.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
+    expect(website.fields.find((field) => field.key === "departure")?.status).toBe("to_verify");
   });
 });
 

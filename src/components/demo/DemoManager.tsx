@@ -377,6 +377,7 @@ export function DemoManager({
           error={error}
         >
           <textarea
+            aria-label={t("import.textTitle")}
             className="field min-h-64 text-base"
             value={text}
             onChange={(event) => setText(event.target.value)}

@@ -37,6 +37,16 @@ describe("explicit property and Wi-Fi import normalization", () => {
       password: "sun;moon",
     });
   });
+  it("separates explicit labels in the inline prose observed in the real editor", () => {
+    expect(wifiCredentials("Réseau : Pins_Test_UX. Mot de passe : bienvenue-test-2026.")).toEqual({
+      network: "Pins_Test_UX",
+      password: "bienvenue-test-2026.",
+    });
+    expect(wifiCredentials("Network: Apartment, Password: sun.moon,2026!")).toEqual({
+      network: "Apartment",
+      password: "sun.moon,2026!",
+    });
+  });
   it("never invents missing credentials or extracts unrelated passwords", () => {
     expect(wifiCredentials("Réseau : VillaWifi")).toEqual({ network: "VillaWifi" });
     expect(wifiCredentials("Mot de passe : CompteGestionnaire")).toBeNull();

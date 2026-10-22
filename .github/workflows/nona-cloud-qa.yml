@@ -2,7 +2,7 @@ name: NONA consolidated private beta regression
 on:
   push:
     branches: [work/nona-beta-consolidated-20261022]
-    paths: [ci/nona-cloud-qa.patch, ci/nona-guide-layout.patch, ci/nona-consolidation.patch, ci/nona-packaging.patch, ci/nona-design-browser.mjs, .github/workflows/nona-cloud-qa.yml]
+    paths: [ci/nona-cloud-qa.patch, ci/nona-guide-layout.patch, ci/nona-consolidation.patch, ci/nona-packaging.patch, ci/nona-system-browser.patch, ci/nona-design-browser.mjs, .github/workflows/nona-cloud-qa.yml]
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
           node-version: 22
       - name: Apply exact isolated source patch
         id: source
-        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch && git apply --check ci/nona-guide-layout.patch && git apply ci/nona-guide-layout.patch && git apply --check ci/nona-consolidation.patch && git apply ci/nona-consolidation.patch && git apply --check ci/nona-packaging.patch && git apply ci/nona-packaging.patch
+        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch && git apply --check ci/nona-guide-layout.patch && git apply ci/nona-guide-layout.patch && git apply --check ci/nona-consolidation.patch && git apply ci/nona-consolidation.patch && git apply --check ci/nona-packaging.patch && git apply ci/nona-packaging.patch && git apply --check ci/nona-system-browser.patch && git apply ci/nona-system-browser.patch
       - run: bun install --frozen-lockfile
       - name: Full non-regression without provider credentials
         run: |
@@ -38,11 +38,18 @@ jobs:
         run: |
           node scripts/validation/build-nona-cloud-isolated.mjs
           node scripts/validation/build-nona-hosted-test.mjs
-      - name: Install browser runtime already used by this repository
+      - name: Use installed GitHub runner browser with bounded fallback
+        timeout-minutes: 3
         if: ${{ !cancelled() }}
         run: |
           npm install --prefix "$RUNNER_TEMP/hb-browser" --no-package-lock playwright@1.62.1
-          "$RUNNER_TEMP/hb-browser/node_modules/.bin/playwright" install --with-deps chromium
+          browser_path="$(command -v google-chrome || command -v google-chrome-stable || true)"
+          if [ -n "$browser_path" ]; then
+            echo "NONA_CHROME_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+            "$browser_path" --version
+          else
+            "$RUNNER_TEMP/hb-browser/node_modules/.bin/playwright" install chromium
+          fi
       - name: Start isolated synthetic application
         if: ${{ !cancelled() }}
         run: |

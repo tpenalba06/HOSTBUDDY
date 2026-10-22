@@ -1,0 +1,92 @@
+diff --git a/scripts/validation/build-nona-hosted-test.mjs b/scripts/validation/build-nona-hosted-test.mjs
+index e73195d..9c5fd68 100644
+--- a/scripts/validation/build-nona-hosted-test.mjs
++++ b/scripts/validation/build-nona-hosted-test.mjs
+@@ -1,3 +1,4 @@
++import { testModeLabel } from "./test-mode-label.mjs";
+ import { build } from "vite";
+ import react from "@vitejs/plugin-react";
+ import tailwindcss from "@tailwindcss/vite";
+@@ -73,39 +74,13 @@ await writeFile(
+   resolve(source, "index.html"),
+   '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NONA — guide TEST cloud</title></head><body><div id="root"></div><script type="module" src="./entry.tsx"></script></body></html>',
+ );
+-const ux = resolve(root, "../nona-lovable-sync/src");
+-const overrides = new Map(
+-  [
+-    "components/guest/GuideView.tsx",
+-    "components/guest/GuideContent.tsx",
+-    "lib/ux-copy.ts",
+-    "lib/i18n.tsx",
+-    "styles/nona-art-direction.css",
+-  ].map((f) => [resolve(root, "src", f).replaceAll("\\", "/"), resolve(ux, f)]),
+-);
+ await build({
+   configFile: false,
+   root: source,
+   publicDir: false,
+   logLevel: "warn",
+   base: "/",
+-  plugins: [
+-    {
+-      name: "preserve-unpublished-ux-snapshot",
+-      enforce: "pre",
+-      resolveId(id) {
+-        if (id.endsWith("/lib/ux-copy")) return resolve(ux, "lib/ux-copy.ts");
+-      },
+-      async load(id) {
+-        const exact = id.split("?")[0].replaceAll("\\", "/");
+-        if (overrides.has(exact)) return readFile(overrides.get(exact), "utf8");
+-        if (exact === resolve(root, "src/components/guest/NonaConcierge.tsx").replaceAll("\\", "/"))
+-          return (await readFile(exact, "utf8")).replace("Nona · IA locale", "Nona · TEST cloud");
+-      },
+-    },
+-    react(),
+-    tailwindcss(),
+-  ],
++  plugins: [testModeLabel(root), react(), tailwindcss()],
+   resolve: { alias: { "@": resolve(root, "src") } },
+   build: { outDir: resolve(dist, "public"), emptyOutDir: true },
+ });
+diff --git a/scripts/validation/nona-cloud-preview.mjs b/scripts/validation/nona-cloud-preview.mjs
+index be2e2f8..9f69023 100644
+--- a/scripts/validation/nona-cloud-preview.mjs
++++ b/scripts/validation/nona-cloud-preview.mjs
+@@ -1,3 +1,4 @@
++import { testModeLabel } from "./test-mode-label.mjs";
+ import { build } from "vite";
+ import react from "@vitejs/plugin-react";
+ import tailwindcss from "@tailwindcss/vite";
+@@ -48,7 +49,7 @@ await build({
+   logLevel: "error",
+   publicDir: false,
+   base: "/nona-ui/",
+-  plugins: [react(), tailwindcss()],
++  plugins: [testModeLabel(root), react(), tailwindcss()],
+   resolve: { alias: { "@": resolve(root, "src") } },
+   build: { outDir: resolve(dist, "interface"), emptyOutDir: true },
+ });
+diff --git a/scripts/validation/test-mode-label.mjs b/scripts/validation/test-mode-label.mjs
+new file mode 100644
+index 0000000..34e245c
+--- /dev/null
++++ b/scripts/validation/test-mode-label.mjs
+@@ -0,0 +1,18 @@
++import { readFile } from "node:fs/promises";
++import { resolve } from "node:path";
++// TEST packaging only. The product's local Ollama labels remain unchanged.
++export function testModeLabel(root) {
++  return {
++    name: "nona-isolated-test-mode-label",
++    enforce: "pre",
++    async load(id) {
++      const exact = id.split("?")[0].replaceAll("\\", "/");
++      if (exact !== resolve(root, "src/components/guest/NonaConcierge.tsx").replaceAll("\\", "/"))
++        return;
++      return (await readFile(exact, "utf8")).replace(
++        '"Nona \u00b7 IA locale"',
++        '(lastMode === "ai" ? "Nona \u00b7 IA cloud TEST" : "Nona \u00b7 TEST guid\u00e9")',
++      );
++    },
++  };
++}

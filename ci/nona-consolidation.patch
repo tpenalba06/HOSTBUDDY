@@ -1,0 +1,4462 @@
+diff --git a/scripts/e2e/demo-scroll.mjs b/scripts/e2e/demo-scroll.mjs
+index 904efe4..c285896 100644
+--- a/scripts/e2e/demo-scroll.mjs
++++ b/scripts/e2e/demo-scroll.mjs
+@@ -1,16 +1,42 @@
+-// Run with a local dev/preview server and Playwright Chromium installed.
+-// HOSTBUDDY_PLAYWRIGHT_MODULE may point to the runtime's playwright-core module.
++// Browser regression coverage; this is not an unassisted UX discovery experiment.
+ import assert from "node:assert/strict";
+-import { writeFile } from "node:fs/promises";
+-import process from "node:process";
++import { mkdir, writeFile } from "node:fs/promises";
++import { join } from "node:path";
+ const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE || "playwright-core");
+ const browser = await chromium.launch({
+   headless: true,
+   ...(process.env.HOSTBUDDY_CHROMIUM ? { executablePath: process.env.HOSTBUDDY_CHROMIUM } : {}),
+ });
+ const origin = process.env.HOSTBUDDY_TEST_ORIGIN || "http://127.0.0.1:5173";
+-const evidence = [];
+-const boundaryFailures = [];
++const output = process.env.RUNNER_TEMP || "/tmp";
++await mkdir(output, { recursive: true });
++const evidence = [],
++  failures = [];
++const metrics = (target) =>
++  target.evaluate(() => ({
++    top: scrollY,
++    height: innerHeight,
++    width: innerWidth,
++    scrollHeight: document.documentElement.scrollHeight,
++    scrollWidth: document.documentElement.scrollWidth,
++  }));
++async function swipe(context, page, x, y) {
++  const cdp = await context.newCDPSession(page);
++  try {
++    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
++    for (let step = 1; step <= 12; step++) {
++      await cdp.send("Input.dispatchTouchEvent", {
++        type: "touchMove",
++        touchPoints: [{ x, y: y - step * 12 }],
++      });
++      await page.waitForTimeout(20);
++    }
++    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
++    await page.waitForTimeout(350);
++  } finally {
++    await cdp.detach();
++  }
++}
+ try {
+   for (const [width, height] of [
+     [360, 800],
+@@ -21,280 +47,131 @@ try {
+     [1024, 900],
+     [1440, 1000],
+   ]) {
+-    const context = await browser.newContext({
+-      viewport: { width, height },
+-      locale: "fr-FR",
+-      isMobile: width < 500,
+-      hasTouch: width < 500,
+-    });
+-    const page = await context.newPage();
+-    for (const route of ["/", "/demo"]) {
+-      await page.goto(origin + route);
+-      const demo = page.locator(".demo-container");
+-      await demo.waitFor({ state: "visible" });
+-      // Vite serves CSS asynchronously on a cold start; test only the rendered layout.
+-      await page.waitForFunction(() => {
+-        const viewport = document.querySelector(".demo-viewport");
+-        return (
+-          viewport && getComputedStyle(viewport).height !== "auto" && viewport.clientHeight >= 420
+-        );
++    for (const [label, route] of [
++      ["home", "/"],
++      ["guest", "/demo?mode=guest"],
++      ["manager", "/demo?mode=manager"],
++    ]) {
++      const context = await browser.newContext({
++        viewport: { width, height },
++        locale: "fr-FR",
++        isMobile: width < 500,
++        hasTouch: width < 500,
+       });
+-      await page.waitForLoadState("networkidle");
+-      for (const mode of ["guest", "manager"]) {
+-        await demo
+-          .getByRole("tab")
+-          .nth(mode === "guest" ? 0 : 1)
+-          .click();
+-        const owner =
+-          mode === "guest"
+-            ? demo.locator(".demo-viewport")
+-            : demo.locator(".manager-shell-content");
+-        if (mode === "manager" && width >= 768) {
+-          // The desktop property list can fit; open the existing editor for long content.
+-          await demo.locator(".manager-property-card").first().getByRole("button").first().click();
+-        }
+-        await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+-        await page.waitForTimeout(150);
+-        const state = await owner.evaluate((el) => ({
+-          h: el.clientHeight,
+-          sh: el.scrollHeight,
+-          overflow: getComputedStyle(el).overflowY,
+-          chain: getComputedStyle(el).overscrollBehaviorY,
+-        }));
+-        console.error(JSON.stringify({ stage: "layout", route, mode, width, state }));
+-        assert.equal(state.overflow, "auto");
+-        assert.equal(state.chain, "auto");
+-        assert.ok(state.h > 0 && state.sh > state.h, `scrollable ${route} ${mode} ${width}`);
+-        await owner.evaluate((el) => {
+-          el.scrollTop = 0;
+-        });
+-        const box = await owner.boundingBox();
+-        const x = box.x + box.width / 2,
+-          y = Math.min(height - 110, Math.max(150, box.y + 100));
+-        console.error(
+-          JSON.stringify({
+-            route,
+-            mode,
+-            width,
+-            state,
+-            box,
+-            x,
+-            y,
+-            hit: await page.evaluate(
+-              ({ x, y }) => ({
+-                tag: document.elementFromPoint(x, y)?.tagName,
+-                classes: document.elementFromPoint(x, y)?.className,
+-                inside: !!document.elementFromPoint(x, y)?.closest(".demo-viewport"),
+-                sy: scrollY,
+-              }),
+-              { x, y },
+-            ),
+-          }),
+-        );
+-        await page.screenshot({
+-          path:
+-            (process.env.RUNNER_TEMP || "/tmp") +
+-            `/hb-scroll-${route === "/" ? "home" : "demo"}-${width}-${mode}.png`,
+-        });
+-        await page.mouse.move(x, y);
+-        await page.mouse.wheel(0, 250);
+-        await page.waitForTimeout(250);
+-        console.error(
+-          JSON.stringify({
+-            afterWheel: await owner.evaluate((el) => ({ top: el.scrollTop, sy: window.scrollY })),
+-            route,
+-            mode,
+-            width,
+-          }),
+-        );
+-        assert.ok(
+-          (await owner.evaluate((el) => el.scrollTop)) > 0,
+-          `internal scroll moves ${route} ${mode} ${width}`,
+-        );
+-        let boundaryWheelEvents;
+-        if (route === "/") {
+-          // Reach the boundary with real wheel input, rather than a main-thread
+-          // scrollTop jump that can race the compositor's wheel target.
+-          for (let step = 0; step < 32; step++) {
+-            const atBottom = await owner.evaluate(
+-              (el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1,
+-            );
+-            if (atBottom) break;
+-            await page.mouse.wheel(0, 300);
+-            await page.waitForTimeout(100);
++      await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
++      const page = await context.newPage();
++      const record = { route, width, height, clicks: 0, pageErrors: [] };
++      page.on("pageerror", (error) => record.pageErrors.push(error.message));
++      const stem = join(output, `hb-scroll-${label}-${width}`);
++      try {
++        await page.goto(origin + route);
++        if (label === "home") {
++          const iframe = page.locator('.hb-marketing-phone iframe[src^="/phone-preview"]');
++          await iframe.scrollIntoViewIfNeeded();
++          await iframe.waitFor({ state: "visible" });
++          const phone = await (await iframe.elementHandle()).contentFrame();
++          await phone.locator(".hb-cover").waitFor();
++          await page.waitForTimeout(300);
++          const before = await metrics(phone);
++          assert.equal(before.width, 390, "Phone keeps real 390 CSS-pixel viewport");
++          assert.equal(before.height, 844, "Phone keeps real 844 CSS-pixel viewport");
++          assert.ok(before.scrollHeight > before.height, "Phone content exists below cover");
++          const box = await iframe.boundingBox();
++          assert.ok(box && box.width > 0);
++          const x = box.x + box.width * 0.5;
++          const y = Math.min(height - 100, Math.max(120, box.y + box.height * 0.5));
++          await page.mouse.move(x, y);
++          await page.mouse.wheel(0, 300);
++          await page.waitForTimeout(350);
++          record.phoneBefore = before;
++          record.phoneAfterWheel = await metrics(phone);
++          assert.ok(record.phoneAfterWheel.top > before.top, "Wheel moves phone document");
++          if (width < 500) {
++            await phone.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
++            await swipe(context, page, x, y);
++            record.phoneAfterTouch = await metrics(phone);
++            assert.ok(record.phoneAfterTouch.top > 0, "Touch moves phone document");
+           }
++          assert.ok((await metrics(phone)).scrollWidth <= 391, "No horizontal phone overflow");
++          await page.screenshot({ path: `${stem}.png`, fullPage: true });
++          await page.mouse.move(8, height * 0.5);
++          const outerBefore = (await metrics(page)).top;
++          await page.mouse.wheel(0, 300);
++          await page.waitForTimeout(350);
++          record.outerAfterWheel = await metrics(page);
+           assert.ok(
+-            await owner.evaluate((el) => el.scrollTop >= el.scrollHeight - el.clientHeight - 1),
+-            "reached bottom with wheel",
++            record.outerAfterWheel.top > outerBefore,
++            "Marketing page scrolls outside phone",
+           );
+-          // End the previous wheel gesture before starting a new gesture at the boundary.
+-          // Chromium otherwise keeps its compositor scroll latch on the inner scroller.
+-          await page.waitForTimeout(1000);
+-          const before = await page.evaluate(() => scrollY);
+-          const beforeOwner = await owner.evaluate((el) => ({
+-            top: el.scrollTop,
+-            max: el.scrollHeight - el.clientHeight,
+-          }));
+-          // A wheel sequence can consume its first event at the inner boundary.
+-          // Require actual document motion within a bounded sequence of native events.
+-          for (boundaryWheelEvents = 1; boundaryWheelEvents <= 3; boundaryWheelEvents++) {
+-            await page.mouse.wheel(0, 250);
+-            await page.waitForTimeout(250);
+-            if ((await page.evaluate(() => scrollY)) > before) break;
+-          }
+-          console.error(
+-            JSON.stringify({
+-              stage: "bottom",
+-              boundaryWheelEvents,
+-              route,
+-              mode,
+-              width,
+-              before,
+-              beforeOwner,
+-              after: await page.evaluate(() => scrollY),
+-              owner: await owner.evaluate((el) => ({
+-                top: el.scrollTop,
+-                max: el.scrollHeight - el.clientHeight,
+-              })),
+-              ancestors: await page.evaluate(
+-                ({ x, y }) => {
+-                  const result = [];
+-                  for (let el = document.elementFromPoint(x, y); el; el = el.parentElement) {
+-                    const css = getComputedStyle(el);
+-                    result.push({
+-                      cls: el.className,
+-                      overflow: css.overflowY,
+-                      chain: css.overscrollBehaviorY,
+-                      top: el.scrollTop,
+-                      height: el.clientHeight,
+-                      scrollHeight: el.scrollHeight,
+-                    });
+-                  }
+-                  return result;
+-                },
+-                { x, y },
+-              ),
+-              hit: await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.className, {
+-                x,
+-                y,
+-              }),
+-            }),
++        } else {
++          const demo = page.locator(".demo-container");
++          await demo.waitFor({ state: "visible" });
++          assert.equal(
++            await demo.getAttribute("data-layout"),
++            "page",
++            "Full demo uses document scrolling",
+           );
+-          const chained = (await page.evaluate(() => scrollY)) > before;
+-          if (!chained) {
+-            boundaryFailures.push({ route, mode, width, edge: "bottom" });
+-            await page.waitForTimeout(1000);
+-            await page.mouse.wheel(0, 250);
+-            await page.waitForTimeout(300);
+-            console.error(
+-              JSON.stringify({
+-                stage: "boundary-repeat",
+-                width,
+-                mode,
+-                sy: await page.evaluate(() => scrollY),
+-                top: await owner.evaluate((el) => el.scrollTop),
+-              }),
+-            );
+-            await page.waitForTimeout(300);
+-            const edgeBox = await owner.boundingBox();
+-            await page.mouse.move(edgeBox.x + 3, edgeBox.y + 100);
+-            await page.mouse.wheel(0, 250);
+-            await page.waitForTimeout(300);
+-            console.error(
+-              JSON.stringify({
+-                stage: "boundary-padding",
+-                width,
+-                mode,
+-                sy: await page.evaluate(() => scrollY),
+-                top: await owner.evaluate((el) => el.scrollTop),
+-              }),
+-            );
+-            const actualMax = await owner.evaluate((el) => {
+-              el.scrollTop = 1e7;
+-              return {
+-                top: el.scrollTop,
+-                max: el.scrollHeight - el.clientHeight,
+-                rect: el.getBoundingClientRect().toJSON(),
+-                css: getComputedStyle(el).height,
+-              };
+-            });
+-            console.error(JSON.stringify({ stage: "boundary-actual-max", width, mode, actualMax }));
++          if (label === "manager") {
++            await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
++            record.clicks++;
++            await page.locator(".section-organizer").waitFor();
++          } else await demo.locator(".hb-cover").waitFor();
++          await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
++          await page.waitForTimeout(300);
++          record.before = await metrics(page);
++          assert.ok(record.before.scrollHeight > height, "Demo content exists below fold");
++          // Right-side content avoids the intentionally scrollable manager section rail.
++          await page.mouse.move(width * 0.8, height * 0.6);
++          await page.mouse.wheel(0, 300);
++          await page.waitForTimeout(350);
++          record.afterWheel = await metrics(page);
++          assert.ok(record.afterWheel.top > 0, "Wheel moves full demo document");
++          if (width < 500) {
++            await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
++            await swipe(context, page, width * 0.8, height * 0.65);
++            record.afterTouch = await metrics(page);
++            assert.ok(record.afterTouch.top > 0, "Touch moves full demo document");
++          }
++          await page.screenshot({ path: `${stem}.png`, fullPage: true });
++          for (let step = 0; step < 40; step++) {
++            const state = await metrics(page);
++            if (state.top + state.height >= state.scrollHeight - 2) break;
++            await page.mouse.wheel(0, 1000);
++            await page.waitForTimeout(70);
+           }
+-          await owner.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+-          await page.waitForTimeout(150);
+-          await owner.evaluate((el) => {
+-            el.scrollTop = 0;
+-          });
+-          const next = await owner.boundingBox();
+-          await page.mouse.move(
+-            next.x + next.width / 2,
+-            Math.min(height - 110, Math.max(150, next.y + 100)),
++          record.bottom = await metrics(page);
++          assert.ok(
++            record.bottom.top + height >= record.bottom.scrollHeight - 2,
++            "Bottom reachable with native wheel",
++          );
++          await page.mouse.wheel(0, -400);
++          await page.waitForTimeout(350);
++          assert.ok(
++            (await metrics(page)).top < record.bottom.top,
++            "Can leave bottom without scroll trap",
+           );
+-          const up = await page.evaluate(() => scrollY);
+-          await page.mouse.wheel(0, -250);
+-          await page.waitForTimeout(250);
+-          assert.ok((await page.evaluate(() => scrollY)) < up, "top chains to document");
+         }
+-        assert.equal(
+-          await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
+-          false,
+-          "no horizontal overflow",
++        assert.ok(
++          (await metrics(page)).scrollWidth <= width + 1,
++          "No horizontal document overflow",
+         );
+-        evidence.push({
+-          route,
+-          mode,
+-          width,
+-          height,
+-          ...state,
+-          boundaryWheelEvents,
+-          wheelPassed: !boundaryFailures.some(
+-            (failure) =>
+-              failure.route === route && failure.mode === mode && failure.width === width,
+-          ),
+-        });
+-      }
+-    }
+-    if (width === 390) {
+-      await page.goto(origin + "/");
+-      const demo = page.locator(".demo-container");
+-      await demo.waitFor({ state: "visible" });
+-      await page.waitForLoadState("networkidle");
+-      const cdp = await context.newCDPSession(page);
+-      for (const mode of ["guest", "manager"]) {
+-        await demo
+-          .getByRole("tab")
+-          .nth(mode === "guest" ? 0 : 1)
+-          .click();
+-        const owner = demo.locator(mode === "guest" ? ".demo-viewport" : ".manager-shell-content");
+-        await owner.evaluate((el) => {
+-          el.scrollIntoView({ block: "center", behavior: "instant" });
+-          el.scrollTop = 0;
+-        });
+-        const box = await owner.boundingBox();
+-        const x = Math.round(box.x + box.width / 2),
+-          y = Math.min(height - 180, Math.round(box.y + 180));
+-        await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+-        for (let i = 1; i <= 10; i++) {
+-          await cdp.send("Input.dispatchTouchEvent", {
+-            type: "touchMove",
+-            touchPoints: [{ x, y: y - i * 10 }],
+-          });
+-          await page.waitForTimeout(16);
+-        }
+-        await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+-        await page.waitForTimeout(300);
+-        assert.ok((await owner.evaluate((el) => el.scrollTop)) > 0, `touch swipe scrolls ${mode}`);
+-        evidence.push({ width, mode, touchPassed: true });
++        assert.deepEqual(record.pageErrors, [], "No uncaught browser errors");
++        record.passed = true;
++      } catch (error) {
++        record.passed = false;
++        record.error = String(error);
++        failures.push(record);
++        await page.screenshot({ path: `${stem}-failure.png`, fullPage: true }).catch(() => {});
++      } finally {
++        evidence.push(record);
++        console.log(JSON.stringify(record));
++        await context.tracing.stop({ path: `${stem}-trace.zip` });
++        await context.close();
+       }
+     }
+-    await context.close();
+   }
+-  console.log(JSON.stringify(evidence, null, 2));
+-  await writeFile(
+-    (process.env.RUNNER_TEMP || "/tmp") + "/demo-scroll-results.json",
+-    JSON.stringify(evidence, null, 2),
+-  );
+-  assert.deepEqual(boundaryFailures, [], "Every native boundary gesture must chain");
+ } finally {
++  await writeFile(join(output, "demo-scroll-results.json"), JSON.stringify(evidence, null, 2));
+   await browser.close();
+ }
++assert.deepEqual(failures, [], "Every viewport and demo scroll contract must pass");
+diff --git a/scripts/e2e/editor-ux.mjs b/scripts/e2e/editor-ux.mjs
+index 8174ca8..41b8e5d 100644
+--- a/scripts/e2e/editor-ux.mjs
++++ b/scripts/e2e/editor-ux.mjs
+@@ -1,13 +1,17 @@
+ // Public local demo only. No live accounts, payment, mail or production mutation.
+ import assert from "node:assert/strict";
+-import { writeFile } from "node:fs/promises";
++import { mkdir, writeFile } from "node:fs/promises";
+ import { execFileSync } from "node:child_process";
+ const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE || "playwright-core");
+-const browser = await chromium.launch({ headless: true });
++const browser = await chromium.launch({
++  headless: true,
++  ...(process.env.HOSTBUDDY_CHROMIUM ? { executablePath: process.env.HOSTBUDDY_CHROMIUM } : {}),
++});
++const output = process.env.RUNNER_TEMP || "/tmp";
++await mkdir(output, { recursive: true });
+ const origin = process.env.HOSTBUDDY_TEST_ORIGIN || "http://127.0.0.1:5173";
+ const evidence = [];
+-let currentPage;
+-let currentWidth;
++const failures = [];
+ try {
+   for (const width of [360, 390, 430, 768, 1440]) {
+     const context = await browser.newContext({
+@@ -16,372 +20,402 @@ try {
+       isMobile: width < 500,
+       locale: "fr-FR",
+     });
++    await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+     const page = await context.newPage();
+-    currentPage = page;
+-    currentWidth = width;
+     const errors = [];
+-    page.on("pageerror", (e) => errors.push(e.message));
+-    await page.goto(origin + "/demo");
+-    await page.waitForLoadState("networkidle");
+-    const demo = page.locator(".demo-container");
+-    const guest = demo.locator(".demo-viewport > div").first();
+-    await demo.getByRole("tab").nth(1).click();
+-    await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
+-    const rail = page.locator(".section-organizer");
+-    await rail.waitFor();
+-    await page.waitForFunction(
+-      () => getComputedStyle(document.querySelector(".section-drag-handle")).touchAction === "none",
+-    );
+-    const order = () =>
+-      rail.locator("[data-section-id]").evaluateAll((rows) => rows.map((r) => r.dataset.sectionId));
+-    const initial = await order();
+-    assert(initial.length >= 3);
+-    const first = rail.locator(".section-drag-handle").nth(0);
+-    const third = rail.locator(".section-drag-handle").nth(2);
+-    await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+-    await third.scrollIntoViewIfNeeded();
+-    await first.scrollIntoViewIfNeeded();
+-    const from = await first.boundingBox(),
+-      to = await third.boundingBox();
+-    assert(from && to);
+-    if (width < 500) {
+-      const cdp = await context.newCDPSession(page);
+-      const touch = (type, x, y) =>
+-        cdp.send("Input.dispatchTouchEvent", {
+-          type,
+-          touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+-        });
+-      const x = from.x + from.width / 2,
+-        y = from.y + from.height / 2;
+-      await touch("touchStart", x, y);
+-      for (let i = 1; i <= 12; i++) {
+-        await touch("touchMove", x, y + ((to.y + to.height / 2 - y) * i) / 12);
+-        await page.waitForTimeout(30);
+-      }
+-      await touch("touchEnd");
+-    } else {
+-      await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+-      await page.mouse.down();
+-      await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 16 });
+-      await page.mouse.up();
+-    }
+-    const expected = [...initial];
+-    expected.splice(2, 0, expected.splice(0, 1)[0]);
+-    await page.waitForFunction(
+-      (expected) =>
+-        JSON.stringify(
+-          [...document.querySelectorAll(".section-organizer [data-section-id]")].map(
+-            (r) => r.dataset.sectionId,
+-          ),
+-        ) === JSON.stringify(expected),
+-      expected,
+-    );
+-    assert.deepEqual(await order(), expected);
+-    const titles = await rail.locator(".section-select").allTextContents();
+-    // Same local data and renderer feed the traveler after manager edits.
+-    await demo.getByRole("tab").nth(0).click();
+-    const guestTitles = await guest
+-      .locator(".hb-section-grid .hb-section-card-label")
+-      .allTextContents();
+-    assert(guestTitles.length > 0, "Traveler cards must render");
+-    assert.deepEqual(
+-      guestTitles.map((t) => t.trim()),
+-      titles.map((t) => t.trim()),
+-      "Traveler must follow manager order",
+-    );
+-    // No video fixture: no empty placeholder or video control.
+-    assert.equal(await guest.locator("[data-presentation-video]").count(), 0);
+-    await demo.getByRole("tab").nth(1).click();
+-    assert.deepEqual(await order(), expected);
+-    // The demo persists plain section data in sessionStorage; no media blob is involved yet.
+-    await page.reload();
+-    await page.waitForLoadState("networkidle");
+-    await demo.getByRole("tab").nth(1).click();
+-    await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
+-    await rail.waitFor();
+-    assert.deepEqual(await order(), expected);
+-    // Keyboard drag moves one position; Escape and accessible fallback are separate controls.
+-    await rail.evaluate((el) => {
+-      el.scrollTop = 0;
+-      el.scrollIntoView({ block: "center", behavior: "instant" });
+-    });
+-    const handle = rail.locator(".section-drag-handle").first();
+-    await handle.focus();
+-    await page.keyboard.press("Space");
+-    await page.waitForFunction(
+-      () => !!document.querySelector(".section-organizer-row.is-dragging"),
+-    );
+-    // KeyboardSensor installs document listeners after activation; wait for that frame.
+-    await page.waitForTimeout(100);
+-    await page.keyboard.press("ArrowDown");
+-    await page.waitForTimeout(150);
+-    await page.keyboard.press("Space");
+-    await page.waitForFunction(() => !document.querySelector(".section-organizer-row.is-dragging"));
+-    const keyboardExpected = [...expected];
+-    [keyboardExpected[0], keyboardExpected[1]] = [keyboardExpected[1], keyboardExpected[0]];
+-    await page.waitForFunction(
+-      (expected) =>
+-        JSON.stringify(
+-          [...document.querySelectorAll(".section-organizer [data-section-id]")].map(
+-            (r) => r.dataset.sectionId,
+-          ),
+-        ) === JSON.stringify(expected),
+-      keyboardExpected,
+-    );
+-    const moveWithMenu = async (index, direction, wanted) => {
+-      await page.waitForFunction(() => !document.querySelector(".section-menu[disabled]"));
+-      await page.getByRole("menu").waitFor({ state: "hidden" });
+-      await page.waitForTimeout(200);
++    let stage = "open-manager";
++    try {
++      page.on("pageerror", (e) => errors.push(e.message));
++      await page.goto(origin + "/demo?mode=manager");
++      await page.waitForLoadState("networkidle");
++      const demo = page.locator(".demo-container");
++      const guest = demo.locator(".demo-viewport > div").first();
++      await demo.getByRole("tab").nth(1).click();
++      await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
++      const rail = page.locator(".section-organizer");
++      await rail.waitFor();
++      await page.waitForFunction(
++        () =>
++          getComputedStyle(document.querySelector(".section-drag-handle")).touchAction === "none",
++      );
++      const order = () =>
++        rail
++          .locator("[data-section-id]")
++          .evaluateAll((rows) => rows.map((r) => r.dataset.sectionId));
++      const initial = await order();
++      assert(initial.length >= 3);
++      const first = rail.locator(".section-drag-handle").nth(0);
++      const third = rail.locator(".section-drag-handle").nth(2);
+       await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+-      await rail.locator(".section-menu").nth(index).click();
+-      await page.getByRole("menu").waitFor({ state: "visible" });
+-      await page.getByRole("menuitem", { name: direction, exact: true }).click();
++      await third.scrollIntoViewIfNeeded();
++      await first.scrollIntoViewIfNeeded();
++      const from = await first.boundingBox(),
++        to = await third.boundingBox();
++      assert(from && to);
++      if (width < 500) {
++        const cdp = await context.newCDPSession(page);
++        const touch = (type, x, y) =>
++          cdp.send("Input.dispatchTouchEvent", {
++            type,
++            touchPoints: type === "touchEnd" ? [] : [{ x, y }],
++          });
++        const x = from.x + from.width / 2,
++          y = from.y + from.height / 2;
++        await touch("touchStart", x, y);
++        for (let i = 1; i <= 12; i++) {
++          await touch("touchMove", x, y + ((to.y + to.height / 2 - y) * i) / 12);
++          await page.waitForTimeout(30);
++        }
++        await touch("touchEnd");
++      } else {
++        await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
++        await page.mouse.down();
++        await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 16 });
++        await page.mouse.up();
++      }
++      stage = "pointer-reorder";
++      const expected = [...initial];
++      expected.splice(2, 0, expected.splice(0, 1)[0]);
+       await page.waitForFunction(
+-        (wanted) =>
++        (expected) =>
+           JSON.stringify(
+             [...document.querySelectorAll(".section-organizer [data-section-id]")].map(
+               (r) => r.dataset.sectionId,
+             ),
+-          ) === JSON.stringify(wanted),
+-        wanted,
++          ) === JSON.stringify(expected),
++        expected,
+       );
+-      await page.getByRole("menu").waitFor({ state: "hidden" });
+-    };
+-    await moveWithMenu(0, "Descendre", expected);
+-    await moveWithMenu(1, "Monter", keyboardExpected);
+-    await moveWithMenu(0, "Descendre", expected);
+-    let mobileScroll;
+-    if (width < 500) {
+-      await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+-      await rail.evaluate((el) => (el.scrollTop = 0));
+-      const cdp = await context.newCDPSession(page);
+-      const touch = (type, x, y) =>
+-        cdp.send("Input.dispatchTouchEvent", {
+-          type,
+-          touchPoints: ["touchEnd", "touchCancel"].includes(type) ? [] : [{ x, y }],
+-        });
+-      const box = await rail.boundingBox();
+-      const grip = await rail.locator(".section-drag-handle").first().boundingBox();
+-      assert(box && grip);
+-      assert(
+-        await rail.evaluate((el) => el.scrollHeight > el.clientHeight),
+-        "Mobile organizer must have scrollable content",
++      assert.deepEqual(await order(), expected);
++      stage = "traveler-order";
++      const titles = await rail.locator(".section-select").allTextContents();
++      // Same local data and renderer feed the traveler after manager edits.
++      await demo.getByRole("tab").nth(0).click();
++      const guestTitles = await guest
++        .locator(".hb-section-grid .hb-section-card-label")
++        .allTextContents();
++      assert(guestTitles.length > 0, "Traveler cards must render");
++      assert.deepEqual(
++        guestTitles.map((t) => t.trim()),
++        titles.map((t) => t.trim()),
++        "Traveler must follow manager order",
+       );
+-      const x = grip.x + grip.width / 2,
+-        y = grip.y + grip.height / 2;
+-      await touch("touchStart", x, y);
+-      const edge = Math.min(box.y + box.height - 5, 950);
+-      for (let i = 1; i <= 15; i++) {
+-        await touch("touchMove", x, y + ((edge - y) * i) / 15);
+-        await page.waitForTimeout(40);
+-      }
+-      await page.waitForFunction(() => document.querySelector(".section-organizer").scrollTop > 0);
+-      mobileScroll = { duringDrag: await rail.evaluate((el) => el.scrollTop) };
+-      await touch("touchCancel");
++      // The labels are visible user content: keep this strict assertion.
++      // No video fixture: no empty placeholder or video control.
++      assert.equal(await guest.locator("[data-presentation-video]").count(), 0);
++      await demo.getByRole("tab").nth(1).click();
++      assert.deepEqual(await order(), expected);
++      // The demo persists plain section data in sessionStorage; no media blob is involved yet.
++      await page.reload();
++      await page.waitForLoadState("networkidle");
++      await demo.getByRole("tab").nth(1).click();
++      await demo.getByRole("button", { name: "Modifier Villa Mare", exact: true }).click();
++      await rail.waitFor();
++      assert.deepEqual(await order(), expected);
++      stage = "keyboard-reorder";
++      // Keyboard drag moves one position; Escape and accessible fallback are separate controls.
++      await rail.evaluate((el) => {
++        el.scrollTop = 0;
++        el.scrollIntoView({ block: "center", behavior: "instant" });
++      });
++      const handle = rail.locator(".section-drag-handle").first();
++      await handle.focus();
++      await page.keyboard.press("Space");
++      await page.waitForFunction(
++        () => !!document.querySelector(".section-organizer-row.is-dragging"),
++      );
++      // KeyboardSensor installs document listeners after activation; wait for that frame.
++      await page.waitForTimeout(100);
++      await page.keyboard.press("ArrowDown");
++      await page.waitForTimeout(150);
++      await page.keyboard.press("Space");
+       await page.waitForFunction(
+         () => !document.querySelector(".section-organizer-row.is-dragging"),
+       );
+-      await page.locator(".section-organizer-overlay").waitFor({ state: "hidden" });
+-      await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+-      assert.deepEqual(await order(), expected, "Cancelled drag must not persist a new order");
+-      await rail.evaluate((el) => (el.scrollTop = 0));
+-      // Swipe on a row body: only the handle activates sorting, normal scrolling must still work.
+-      const swipeBox = await rail.boundingBox();
+-      assert(swipeBox);
+-      const bodyX = swipeBox.x + swipeBox.width * 0.65,
+-        bodyY = swipeBox.y + swipeBox.height * 0.7;
+-      assert(
+-        await page.evaluate(
+-          ({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".section-organizer"),
+-          { x: bodyX, y: bodyY },
+-        ),
+-        "Swipe must start on the organizer body",
++      const keyboardExpected = [...expected];
++      [keyboardExpected[0], keyboardExpected[1]] = [keyboardExpected[1], keyboardExpected[0]];
++      await page.waitForFunction(
++        (expected) =>
++          JSON.stringify(
++            [...document.querySelectorAll(".section-organizer [data-section-id]")].map(
++              (r) => r.dataset.sectionId,
++            ),
++          ) === JSON.stringify(expected),
++        keyboardExpected,
+       );
+-      await touch("touchStart", bodyX, bodyY);
+-      for (let i = 1; i <= 10; i++) {
+-        await touch("touchMove", bodyX, bodyY - i * 10);
+-        await page.waitForTimeout(25);
+-      }
+-      await touch("touchEnd");
+-      await page.waitForFunction(() => document.querySelector(".section-organizer").scrollTop > 0);
+-      mobileScroll.normalSwipe = await rail.evaluate((el) => el.scrollTop);
+-      assert.deepEqual(await order(), expected, "Normal scrolling must not sort");
+-    }
+-    assert.equal(
+-      await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+-      false,
+-    );
+-    await page.screenshot({ path: `/tmp/hb-editor-${width}.png`, fullPage: true });
+-    const videoEvidence = [];
+-    // Upload through the real browser preparation pipeline, then verify inline playback.
+-    {
+-      // Verify landscape, portrait, replacement and removal at every requested viewport.
+-      await page
+-        .locator(".guide-editor-rail")
+-        .getByRole("button", { name: "Général", exact: true })
+-        .click();
+-      for (const [name, size] of [
+-        ["landscape", "320x180"],
+-        ["portrait", "180x320"],
+-      ]) {
+-        const file = `/tmp/hb-intro-${name}.mp4`;
+-        execFileSync(
+-          "ffmpeg",
+-          [
+-            "-y",
+-            "-f",
+-            "lavfi",
+-            "-i",
+-            `color=c=0x7a8f7b:s=${size}:d=2`,
+-            "-f",
+-            "lavfi",
+-            "-i",
+-            "anullsrc=r=44100:cl=stereo",
+-            "-shortest",
+-            "-c:v",
+-            "libx264",
+-            "-pix_fmt",
+-            "yuv420p",
+-            "-c:a",
+-            "aac",
+-            "-movflags",
+-            "+faststart",
+-            file,
+-          ],
+-          { stdio: "ignore" },
+-        );
+-        await page.locator(".presentation-video-editor input[type=file]").setInputFiles(file);
++      const moveWithMenu = async (index, direction, wanted) => {
++        await page.waitForFunction(() => !document.querySelector(".section-menu[disabled]"));
++        await page.getByRole("menu").waitFor({ state: "hidden" });
++        await page.waitForTimeout(200);
++        await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
++        await rail.locator(".section-menu").nth(index).click();
++        await page.getByRole("menu").waitFor({ state: "visible" });
++        await page.getByRole("menuitem", { name: direction, exact: true }).click();
+         await page.waitForFunction(
+-          () => {
+-            const player = document.querySelector(".presentation-video-editor video");
+-            return (
+-              document.querySelector(".property-media-editor [role=alert]") ||
+-              (player &&
+-                player.readyState >= 1 &&
+-                !document.querySelector(".presentation-video-editor input")?.disabled)
+-            );
+-          },
+-          undefined,
+-          { timeout: 120000 },
++          (wanted) =>
++            JSON.stringify(
++              [...document.querySelectorAll(".section-organizer [data-section-id]")].map(
++                (r) => r.dataset.sectionId,
++              ),
++            ) === JSON.stringify(wanted),
++          wanted,
+         );
+-        assert.equal(
+-          await page.locator(".property-media-editor [role=alert]").count(),
+-          0,
+-          await page.locator(".property-media-editor").innerText(),
++        await page.getByRole("menu").waitFor({ state: "hidden" });
++      };
++      await moveWithMenu(0, "Descendre", expected);
++      await moveWithMenu(1, "Monter", keyboardExpected);
++      await moveWithMenu(0, "Descendre", expected);
++      stage = "touch-scroll-and-cancel";
++      let mobileScroll;
++      if (width < 500) {
++        await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
++        await rail.evaluate((el) => (el.scrollTop = 0));
++        const cdp = await context.newCDPSession(page);
++        const touch = (type, x, y) =>
++          cdp.send("Input.dispatchTouchEvent", {
++            type,
++            touchPoints: ["touchEnd", "touchCancel"].includes(type) ? [] : [{ x, y }],
++          });
++        const box = await rail.boundingBox();
++        const grip = await rail.locator(".section-drag-handle").first().boundingBox();
++        assert(box && grip);
++        assert(
++          await rail.evaluate((el) => el.scrollHeight > el.clientHeight),
++          "Mobile organizer must have scrollable content",
+         );
+-        await demo.getByRole("tab").nth(0).click();
+-        const video = guest.locator("[data-presentation-video] video");
+-        await video.waitFor();
++        const x = grip.x + grip.width / 2,
++          y = grip.y + grip.height / 2;
++        await touch("touchStart", x, y);
++        const edge = Math.min(box.y + box.height - 5, 950);
++        for (let i = 1; i <= 15; i++) {
++          await touch("touchMove", x, y + ((edge - y) * i) / 15);
++          await page.waitForTimeout(40);
++        }
+         await page.waitForFunction(
+-          () => document.querySelector("[data-presentation-video] video")?.readyState >= 1,
++          () => document.querySelector(".section-organizer").scrollTop > 0,
+         );
+-        assert.equal(
+-          await video.evaluate((v) => v.videoWidth > v.videoHeight),
+-          name === "landscape",
+-        );
+-        assert.equal(await video.evaluate((v) => v.autoplay), false);
+-        assert.equal(await video.evaluate((v) => v.playsInline), true);
+-        await video.evaluate((v) => v.play());
++        mobileScroll = { duringDrag: await rail.evaluate((el) => el.scrollTop) };
++        await touch("touchCancel");
+         await page.waitForFunction(
+-          () => document.querySelector("[data-presentation-video] video")?.currentTime > 0,
++          () => !document.querySelector(".section-organizer-row.is-dragging"),
+         );
+-        assert.equal(await video.evaluate((v) => v.error), null);
+-        await video.evaluate((v) => v.pause());
+-        assert(await video.evaluate((v) => v.getBoundingClientRect().height <= innerHeight * 0.71));
++        await page.locator(".section-organizer-overlay").waitFor({ state: "hidden" });
++        await rail.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
++        assert.deepEqual(await order(), expected, "Cancelled drag must not persist a new order");
++        await rail.evaluate((el) => (el.scrollTop = 0));
++        // Swipe on a row body: only the handle activates sorting, normal scrolling must still work.
++        const swipeBox = await rail.boundingBox();
++        assert(swipeBox);
++        const bodyX = swipeBox.x + swipeBox.width * 0.65,
++          bodyY = swipeBox.y + swipeBox.height * 0.7;
+         assert(
+-          await page.evaluate(() => {
+-            const intro = document.querySelector("[data-presentation-video]"),
+-              services = document.querySelector(".hb-services-feature"),
+-              cover = document.querySelector(".hb-cover");
+-            return (
+-              intro &&
+-              services &&
+-              cover &&
+-              !!(cover.compareDocumentPosition(intro) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+-              !!(intro.compareDocumentPosition(services) & Node.DOCUMENT_POSITION_FOLLOWING)
+-            );
+-          }),
+-        );
+-        videoEvidence.push(
+-          await video.evaluate(
+-            (v, name) => ({
+-              name,
+-              width: v.videoWidth,
+-              height: v.videoHeight,
+-              currentTime: v.currentTime,
+-              autoplay: v.autoplay,
+-              playsInline: v.playsInline,
+-              renderedHeight: v.getBoundingClientRect().height,
+-              placement: "after-cover-before-services",
+-            }),
+-            name,
++          await page.evaluate(
++            ({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".section-organizer"),
++            { x: bodyX, y: bodyY },
+           ),
++          "Swipe must start on the organizer body",
++        );
++        await touch("touchStart", bodyX, bodyY);
++        for (let i = 1; i <= 10; i++) {
++          await touch("touchMove", bodyX, bodyY - i * 10);
++          await page.waitForTimeout(25);
++        }
++        await touch("touchEnd");
++        await page.waitForFunction(
++          () => document.querySelector(".section-organizer").scrollTop > 0,
+         );
+-        await video.scrollIntoViewIfNeeded();
+-        await video.screenshot({ path: `/tmp/hb-intro-${name}-${width}-player.png` });
+-        await page.screenshot({ path: `/tmp/hb-intro-${name}-${width}.png`, fullPage: true });
+-        await demo.getByRole("tab").nth(1).click();
++        mobileScroll.normalSwipe = await rail.evaluate((el) => el.scrollTop);
++        assert.deepEqual(await order(), expected, "Normal scrolling must not sort");
++      }
++      assert.equal(
++        await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
++        false,
++      );
++      await page.screenshot({ path: `${output}/hb-editor-${width}.png`, fullPage: true });
++      stage = "video-upload-playback";
++      const videoEvidence = [];
++      // Upload through the real browser preparation pipeline, then verify inline playback.
++      {
++        // Verify landscape, portrait, replacement and removal at every requested viewport.
++        await page
++          .locator(".guide-editor-rail")
++          .getByRole("button", { name: "G\u00e9n\u00e9ral", exact: true })
++          .click();
++        for (const [name, size] of [
++          ["landscape", "320x180"],
++          ["portrait", "180x320"],
++        ]) {
++          const file = `${output}/hb-intro-${name}.mp4`;
++          execFileSync(
++            "ffmpeg",
++            [
++              "-y",
++              "-f",
++              "lavfi",
++              "-i",
++              `color=c=0x7a8f7b:s=${size}:d=2`,
++              "-f",
++              "lavfi",
++              "-i",
++              "anullsrc=r=44100:cl=stereo",
++              "-shortest",
++              "-c:v",
++              "libx264",
++              "-pix_fmt",
++              "yuv420p",
++              "-c:a",
++              "aac",
++              "-movflags",
++              "+faststart",
++              file,
++            ],
++            { stdio: "ignore" },
++          );
++          await page.locator(".presentation-video-editor input[type=file]").setInputFiles(file);
++          await page.waitForFunction(
++            () => {
++              const player = document.querySelector(".presentation-video-editor video");
++              return (
++                document.querySelector(".property-media-editor [role=alert]") ||
++                (player &&
++                  player.readyState >= 1 &&
++                  !document.querySelector(".presentation-video-editor input")?.disabled)
++              );
++            },
++            undefined,
++            { timeout: 120000 },
++          );
++          assert.equal(
++            await page.locator(".property-media-editor [role=alert]").count(),
++            0,
++            await page.locator(".property-media-editor").innerText(),
++          );
++          await demo.getByRole("tab").nth(0).click();
++          const video = guest.locator("[data-presentation-video] video");
++          await video.waitFor();
++          await page.waitForFunction(
++            () => document.querySelector("[data-presentation-video] video")?.readyState >= 1,
++          );
++          assert.equal(
++            await video.evaluate((v) => v.videoWidth > v.videoHeight),
++            name === "landscape",
++          );
++          assert.equal(await video.evaluate((v) => v.autoplay), false);
++          assert.equal(await video.evaluate((v) => v.playsInline), true);
++          await video.evaluate((v) => v.play());
++          await page.waitForFunction(
++            () => document.querySelector("[data-presentation-video] video")?.currentTime > 0,
++          );
++          assert.equal(await video.evaluate((v) => v.error), null);
++          await video.evaluate((v) => v.pause());
++          assert(
++            await video.evaluate((v) => v.getBoundingClientRect().height <= innerHeight * 0.71),
++          );
++          assert(
++            await page.evaluate(() => {
++              const intro = document.querySelector("[data-presentation-video]"),
++                services = document.querySelector(".hb-services-feature"),
++                cover = document.querySelector(".hb-cover");
++              return (
++                intro &&
++                services &&
++                cover &&
++                !!(cover.compareDocumentPosition(intro) & Node.DOCUMENT_POSITION_FOLLOWING) &&
++                !!(intro.compareDocumentPosition(services) & Node.DOCUMENT_POSITION_FOLLOWING)
++              );
++            }),
++          );
++          videoEvidence.push(
++            await video.evaluate(
++              (v, name) => ({
++                name,
++                width: v.videoWidth,
++                height: v.videoHeight,
++                currentTime: v.currentTime,
++                autoplay: v.autoplay,
++                playsInline: v.playsInline,
++                renderedHeight: v.getBoundingClientRect().height,
++                placement: "after-cover-before-services",
++              }),
++              name,
++            ),
++          );
++          await video.scrollIntoViewIfNeeded();
++          await video.screenshot({ path: `${output}/hb-intro-${name}-${width}-player.png` });
++          await page.screenshot({
++            path: `${output}/hb-intro-${name}-${width}.png`,
++            fullPage: true,
++          });
++          await demo.getByRole("tab").nth(1).click();
++        }
++        await page
++          .locator(".presentation-video-editor")
++          .getByRole("button", { name: "Supprimer", exact: true })
++          .click();
++        await demo.getByRole("tab").nth(0).click();
++        await page.waitForFunction(() => !document.querySelector("[data-presentation-video]"));
+       }
++      assert.deepEqual(errors, []);
++      evidence.push({
++        width,
++        input: width < 500 ? "touch" : "mouse",
++        initial,
++        final: expected,
++        titles,
++        guestTitles,
++        keyboard: true,
++        fallback: true,
++        mobileScroll,
++        video: true,
++        videoEvidence,
++      });
++    } catch (error) {
++      failures.push({ width, stage, error: String(error), pageErrors: errors });
+       await page
+-        .locator(".presentation-video-editor")
+-        .getByRole("button", { name: "Supprimer", exact: true })
+-        .click();
+-      await demo.getByRole("tab").nth(0).click();
+-      await page.waitForFunction(() => !document.querySelector("[data-presentation-video]"));
++        .screenshot({ path: `${output}/hb-editor-failure-${width}.png`, fullPage: true })
++        .catch(() => {});
++      await writeFile(
++        `${output}/hb-editor-failure-${width}.json`,
++        JSON.stringify(
++          {
++            width,
++            stage,
++            error: String(error),
++            dom: await page.locator("body").innerText(),
++            layout: await page.evaluate(() =>
++              [
++                ...document.querySelectorAll(
++                  ".section-organizer, .section-organizer-row, .section-drag-handle",
++                ),
++              ].map((el) => ({
++                cls: el.className,
++                id: el.dataset.sectionId,
++                rect: el.getBoundingClientRect().toJSON(),
++                scrollTop: el.scrollTop,
++                height: el.clientHeight,
++                scrollHeight: el.scrollHeight,
++                touchAction: getComputedStyle(el).touchAction,
++              })),
++            ),
++          },
++          null,
++          2,
++        ),
++      );
++    } finally {
++      console.log(
++        JSON.stringify({ width, failed: failures.some((f) => f.width === width), stage }),
++      );
++      await context.tracing.stop({ path: `${output}/hb-editor-${width}-trace.zip` });
++      await context.close();
+     }
+-    assert.deepEqual(errors, []);
+-    evidence.push({
+-      width,
+-      input: width < 500 ? "touch" : "mouse",
+-      initial,
+-      final: expected,
+-      titles,
+-      guestTitles,
+-      keyboard: true,
+-      fallback: true,
+-      mobileScroll,
+-      video: true,
+-      videoEvidence,
+-    });
+-    await context.close();
+-  }
+-} catch (error) {
+-  if (currentPage && !currentPage.isClosed()) {
+-    await currentPage.screenshot({
+-      path: `/tmp/hb-editor-failure-${currentWidth}.png`,
+-      fullPage: true,
+-    });
+-    await writeFile(
+-      "/tmp/hb-editor-failure.json",
+-      JSON.stringify(
+-        {
+-          width: currentWidth,
+-          error: String(error),
+-          dom: await currentPage.locator("body").innerText(),
+-          layout: await currentPage.evaluate(() =>
+-            [
+-              ...document.querySelectorAll(
+-                ".section-organizer, .section-organizer-row, .section-drag-handle",
+-              ),
+-            ].map((el) => ({
+-              cls: el.className,
+-              id: el.dataset.sectionId,
+-              rect: el.getBoundingClientRect().toJSON(),
+-              scrollTop: el.scrollTop,
+-              height: el.clientHeight,
+-              scrollHeight: el.scrollHeight,
+-              touchAction: getComputedStyle(el).touchAction,
+-            })),
+-          ),
+-        },
+-        null,
+-        2,
+-      ),
+-    );
+   }
+-  throw error;
+ } finally {
+-  await writeFile("/tmp/hb-editor-evidence.json", JSON.stringify(evidence, null, 2));
++  await writeFile(
++    `${output}/hb-editor-evidence.json`,
++    JSON.stringify({ evidence, failures }, null, 2),
++  );
+   await browser.close();
+ }
+ console.log(JSON.stringify(evidence, null, 2));
++
++assert.deepEqual(failures, [], "All editor viewport contracts must pass");
+diff --git a/scripts/validation/nona-local-ui/entry.tsx b/scripts/validation/nona-local-ui/entry.tsx
+index 720766b..562818d 100644
+--- a/scripts/validation/nona-local-ui/entry.tsx
++++ b/scripts/validation/nona-local-ui/entry.tsx
+@@ -7,6 +7,9 @@ import type { ConciergeRequest, ConciergeTurn } from "@/lib/concierge";
+ import type { GuideViewData } from "@/components/guest/guide-model";
+ import "@/styles.css";
+ import "@/styles/nona-art-direction.css";
++import "@/styles/ux-foundations.css";
++import "@/styles/manager-ux.css";
++import "@/styles/guest-ux.css";
+ import { nonaVisualCopy } from "@/lib/nona-visual-copy";
+ import { DemoServiceBooking } from "@/components/demo/DemoServiceBooking";
+ 
+diff --git a/src/components/app/ManagerScreens.tsx b/src/components/app/ManagerScreens.tsx
+index dad1fed..23b547e 100644
+--- a/src/components/app/ManagerScreens.tsx
++++ b/src/components/app/ManagerScreens.tsx
+@@ -15,6 +15,8 @@ import {
+   ClipboardList,
+   Eye,
+   Home,
++  Link2,
++  FileText,
+   MailPlus,
+   MapPin,
+   MoreHorizontal,
+@@ -31,6 +33,7 @@ import {
+ import { Button } from "@/components/ui/button";
+ import { useI18n } from "@/lib/i18n";
+ import { nonaVisualCopy } from "@/lib/nona-visual-copy";
++import { uxCopy } from "@/lib/ux-copy";
+ import { ambienceFor } from "@/components/guest/visual-library";
+ import { INTEGRATIONS } from "@/lib/integrations/registry";
+ import { DeletePropertyDialog } from "./DeletePropertyDialog";
+@@ -166,6 +169,7 @@ export function ManagerPropertiesScreen({
+ }) {
+   const { t, locale } = useI18n();
+   const visual = nonaVisualCopy(locale);
++  const copy = uxCopy(locale);
+   const [qr, setQr] = useState<string | null>(null);
+   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
+   const [search, setSearch] = useState("");
+@@ -207,7 +211,15 @@ export function ManagerPropertiesScreen({
+         ))}
+       <div className="manager-properties-heading grid gap-4 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-end">
+         <PageHeading title={t("app.myProperties")} />
+-        <div className="manager-property-tools">
++        {role !== "member" && onAdd && (
++          <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
++            <Plus />
++            {t("app.add")}
++          </Button>
++        )}
++      </div>
++      {!!properties.length && (
++        <div className="manager-property-tools manager-property-toolbar">
+           <label className="manager-property-search">
+             <Search size={16} />
+             <input
+@@ -230,13 +242,7 @@ export function ManagerPropertiesScreen({
+             <option value="oldest">{t("manager.sortOldest")}</option>
+           </select>
+         </div>
+-        {role !== "member" && onAdd && (
+-          <Button className="min-h-12 w-full @sm:w-auto" onClick={onAdd}>
+-            <Plus />
+-            {t("app.add")}
+-          </Button>
+-        )}
+-      </div>
++      )}
+ 
+       <div className="manager-property-filters" role="group" aria-label={t("app.myProperties")}>
+         {(["all", "published", "draft"] as const).map((value) => (
+@@ -269,7 +275,22 @@ export function ManagerPropertiesScreen({
+ 
+       {properties.length ? (
+         <div className="manager-property-grid">
+-          {!shown.length && <p className="text-muted-foreground">{t("manager.noResults")}</p>}
++          {!shown.length && (
++            <div className="manager-property-no-results surface p-6 text-center" role="status">
++              <Search className="mx-auto h-6 w-6 text-muted-foreground" />
++              <p className="mt-3 font-semibold">{copy.emptySearch}</p>
++              <Button
++                variant="outline"
++                className="mt-4 min-h-12"
++                onClick={() => {
++                  setSearch("");
++                  setStatus("all");
++                }}
++              >
++                {copy.resetSearch}
++              </Button>
++            </div>
++          )}
+           {shown.map((property) => (
+             <article
+               key={property.id}
+@@ -316,27 +337,35 @@ export function ManagerPropertiesScreen({
+                 {renderEdit ? (
+                   renderEdit(
+                     property,
+-                    "btn btn-secondary",
+-                    role === "member" ? t("common.view") : t("common.edit"),
++                    "btn btn-primary manager-property-edit",
++                    role === "member" ? t("common.view") : copy.editGuide,
+                   )
+                 ) : (
+-                  <Button variant="outline" onClick={() => onEdit(property.id)}>
++                  <Button className="manager-property-edit" onClick={() => onEdit(property.id)}>
+                     <Pencil size={16} />
+-                    {role === "member" ? t("common.view") : t("common.edit")}
++                    {role === "member" ? t("common.view") : copy.editGuide}
+                   </Button>
+                 )}
+                 {property.status === "published" &&
+                   (renderView ? (
+-                    renderView(property, "btn btn-secondary", visual.card)
++                    renderView(
++                      property,
++                      "btn btn-secondary manager-property-preview",
++                      copy.guestPreview,
++                    )
+                   ) : (
+-                    <Button variant="outline" onClick={() => onView(property.slug)}>
++                    <Button
++                      variant="outline"
++                      className="manager-property-preview"
++                      onClick={() => onView(property.slug)}
++                    >
+                       <Eye size={16} />
+-                      {visual.card}
++                      {copy.guestPreview}
+                     </Button>
+                   ))}
+               </div>
+               <details className="manager-property-menu">
+-                <summary aria-label={t(role === "member" ? "common.view" : "common.edit")}>
++                <summary aria-label={`${copy.managerMore} · ${property.name}`}>
+                   <MoreHorizontal size={19} />
+                 </summary>
+                 <div className="manager-property-actions grid gap-2 p-3">
+@@ -404,6 +433,12 @@ export function ManagerPropertiesScreen({
+         <div className="mt-8 rounded-xl border border-dashed bg-card p-6 text-center">
+           <Home className="mx-auto h-9 w-9 text-primary" />
+           <p className="mt-3 font-semibold">{t("app.first")}</p>
++          {role !== "member" && onAdd && (
++            <Button className="mt-5 min-h-12" onClick={onAdd}>
++              <Plus />
++              {t("app.add")}
++            </Button>
++          )}
+         </div>
+       )}
+       {deleting && onDelete && (role === "owner" || role === "admin") && (
+@@ -1088,10 +1123,11 @@ export function ManagerNewPropertyOptions({
+   onManual: () => void;
+   onConnectSoftware?: (() => void) | undefined;
+ }) {
+-  const { t } = useI18n();
++  const { t, locale } = useI18n();
++  const copy = uxCopy(locale);
+   const options = [
+     {
+-      icon: "🔗",
++      icon: Link2,
+       title: t("app.importUrl"),
+       description: t("app.importUrlD"),
+       onClick: onImportUrl,
+@@ -1100,16 +1136,16 @@ export function ManagerNewPropertyOptions({
+     ...(onConnectSoftware
+       ? [
+           {
+-            icon: "↔",
+-            title: "Connecter mon logiciel",
+-            description: "Récupérez les logements de votre PMS, avec vos accès autorisés.",
++            icon: Cable,
++            title: copy.connectSoftware,
++            description: copy.connectSoftwareDescription,
+             onClick: onConnectSoftware,
+             recommended: false,
+           },
+         ]
+       : []),
+     {
+-      icon: "📝",
++      icon: FileText,
+       title: t("app.paste"),
+       description: t("app.pasteD"),
+       onClick: onPasteText,
+@@ -1117,7 +1153,7 @@ export function ManagerNewPropertyOptions({
+     ...(!onConnectSoftware
+       ? [
+           {
+-            icon: "✏️",
++            icon: Pencil,
+             title: t("app.manual"),
+             description: t("app.manualD"),
+             onClick: onManual,
+@@ -1143,7 +1179,7 @@ export function ManagerNewPropertyOptions({
+                 {t("app.recommended")}
+               </span>
+             )}
+-            <span className="text-3xl">{option.icon}</span>
++            <option.icon className="h-7 w-7 text-primary" aria-hidden="true" />
+             <h2 className="mt-3 text-xl font-semibold">{option.title}</h2>
+             <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+           </button>
+diff --git a/src/components/app/ManagerShell.tsx b/src/components/app/ManagerShell.tsx
+index ca8eb02..03cb6ee 100644
+--- a/src/components/app/ManagerShell.tsx
++++ b/src/components/app/ManagerShell.tsx
+@@ -20,6 +20,7 @@ import { Logo } from "@/components/shared/Logo";
+ import { NonaMascot, NonaWordmark } from "@/components/shared/NonaBrand";
+ import { LanguageSelect } from "@/components/i18n/LanguageSelect";
+ import { useI18n } from "@/lib/i18n";
++import { uxCopy } from "@/lib/ux-copy";
+ 
+ export type ManagerArea =
+   | "properties"
+@@ -65,7 +66,8 @@ export function ManagerShell({
+   viewKey?: string;
+   pendingOrders?: number;
+ }) {
+-  const { t } = useI18n();
++  const { t, locale } = useI18n();
++  const copy = uxCopy(locale);
+   const [more, setMore] = useState(false);
+   const contentRef = useRef<HTMLElement>(null);
+   const pathname = useRouterState({ select: (state) => state.location.pathname });
+@@ -114,6 +116,16 @@ export function ManagerShell({
+     label: t("nav.properties"),
+     icon: Home,
+   };
++  const addProperty: NavItem = {
++    id: "new",
++    to: "/app/new",
++    label: copy.addProperty,
++    icon: Plus,
++  };
++  const mobileItems =
++    role === "member"
++      ? [properties, ...operational]
++      : [properties, addProperty, ...operational.filter((item) => item.id !== "feedback")];
+   const routeArea: ManagerArea = pathname.startsWith("/app/payments")
+     ? "payments"
+     : pathname.startsWith("/app/messages")
+@@ -132,9 +144,22 @@ export function ManagerShell({
+                   ? "new"
+                   : "properties";
+   const current = onNavigate ? active : routeArea;
++  const screenKey = `${current}:${viewKey ?? pathname}`;
++  const previousScreen = useRef(screenKey);
+   useEffect(() => {
+-    if (embedded) contentRef.current?.scrollTo({ top: 0 });
+-  }, [current, embedded, viewKey, pathname]);
++    if (screenKey === previousScreen.current) return;
++    previousScreen.current = screenKey;
++    const frame = requestAnimationFrame(() => {
++      if (embedded) contentRef.current?.scrollTo({ top: 0 });
++      else window.scrollTo({ top: 0, behavior: "instant" });
++      const heading = contentRef.current?.querySelector<HTMLElement>("h1");
++      if (heading) {
++        heading.tabIndex = -1;
++        heading.focus({ preventScroll: true });
++      }
++    });
++    return () => cancelAnimationFrame(frame);
++  }, [screenKey, embedded]);
+   const navigate = (area: ManagerArea) => {
+     setMore(false);
+     onNavigate?.(area);
+@@ -180,11 +205,21 @@ export function ManagerShell({
+             <NonaWordmark />
+           </div>
+           <nav className="space-y-1" aria-label={t("demo.manager")}>
++            {role !== "member" && (
++              <ShellItem
++                item={addProperty}
++                active={current === "new"}
++                primary
++                onNavigate={onNavigate ? navigate : undefined}
++              />
++            )}
++            <p className="manager-nav-group">{copy.managerWorkspace}</p>
+             <ShellItem
+               item={properties}
+               active={current === properties.id}
+               onNavigate={onNavigate ? navigate : undefined}
+             />
++            <p className="manager-nav-group">{copy.managerActivity}</p>
+             {operational.map((item) => (
+               <ShellItem
+                 key={item.id}
+@@ -193,6 +228,7 @@ export function ManagerShell({
+                 onNavigate={onNavigate ? navigate : undefined}
+               />
+             ))}
++            {!!management.length && <p className="manager-nav-group">{copy.managerSettings}</p>}
+             {management.map((item) => (
+               <ShellItem
+                 key={item.id}
+@@ -201,19 +237,12 @@ export function ManagerShell({
+                 onNavigate={onNavigate ? navigate : undefined}
+               />
+             ))}
+-            {role !== "member" && (
+-              <ShellItem
+-                item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
+-                active={current === "new"}
+-                primary
+-                onNavigate={onNavigate ? navigate : undefined}
+-              />
+-            )}
+           </nav>
+           <NonaMascot className="manager-sidebar-mascot" />
+         </aside>
+         <main
+           ref={contentRef}
++          data-nona-scroll-area={embedded || undefined}
+           className={`manager-shell-content min-h-0 min-w-0 overflow-x-hidden px-4 pb-24 pt-5 @sm:px-6 ${embedded ? "overflow-y-auto" : ""}`}
+         >
+           {children}
+@@ -223,12 +252,7 @@ export function ManagerShell({
+         className={`manager-shell-mobile ${embedded ? "absolute" : "fixed"} inset-x-0 bottom-0 z-40 grid-cols-5 border-t bg-background/95 px-1 pb-1 shadow-[0_-8px_28px_-18px_rgba(0,0,0,.35)] backdrop-blur`}
+         aria-label={t("demo.manager")}
+       >
+-        <MobileItem
+-          item={properties}
+-          active={current === "properties"}
+-          onNavigate={onNavigate ? navigate : undefined}
+-        />
+-        {operational.map((item) => (
++        {mobileItems.map((item) => (
+           <MobileItem
+             key={item.id}
+             item={item}
+@@ -239,10 +263,13 @@ export function ManagerShell({
+         <Button
+           variant="ghost"
+           onClick={() => setMore(true)}
++          aria-current={!mobileItems.some((item) => item.id === current) ? "page" : undefined}
++          aria-haspopup="dialog"
++          aria-expanded={more}
+           className="h-16 min-w-0 flex-col gap-1 rounded-none px-1 text-[11px] font-semibold"
+         >
+           <Menu className="h-5 w-5" />
+-          <span className="truncate">{t("nav.more")}</span>
++          <span className="truncate">{copy.managerMore}</span>
+         </Button>
+       </nav>
+       <Dialog open={more} onOpenChange={setMore}>
+@@ -250,14 +277,18 @@ export function ManagerShell({
+           className="top-auto bottom-0 translate-y-0 rounded-t-2xl p-5"
+           aria-describedby={undefined}
+         >
+-          <DialogTitle className="font-display text-2xl">{t("nav.more")}</DialogTitle>
++          <DialogTitle className="font-display text-2xl">{copy.managerMore}</DialogTitle>
+           <div className="mt-4 grid gap-2" onClick={() => setMore(false)}>
+-            {role !== "member" && (
+-              <DrawerItem
+-                item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
+-                onNavigate={onNavigate ? navigate : undefined}
+-              />
+-            )}{" "}
++            {role !== "member" &&
++              operational
++                .filter((item) => item.id === "feedback")
++                .map((item) => (
++                  <DrawerItem
++                    key={item.id}
++                    item={item}
++                    onNavigate={onNavigate ? navigate : undefined}
++                  />
++                ))}
+             {management.map((item) => (
+               <DrawerItem
+                 key={item.id}
+@@ -293,7 +324,7 @@ function ShellItem({
+   primary?: boolean;
+   onNavigate?: ((area: ManagerArea) => void) | undefined;
+ }) {
+-  const classes = `flex min-h-12 w-full items-center gap-3 rounded-lg px-3 font-semibold transition ${primary ? "mt-5 bg-primary text-primary-foreground" : active ? "bg-secondary text-primary" : "hover:bg-muted"}`;
++  const classes = `flex min-h-12 w-full items-center gap-3 rounded-lg px-3 font-semibold transition ${primary ? "manager-nav-add bg-primary text-primary-foreground" : active ? "bg-secondary text-primary" : "hover:bg-muted"}`;
+   if (onNavigate)
+     return (
+       <Button
+@@ -330,13 +361,23 @@ function MobileItem({
+   const classes = `flex h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-none px-1 text-[11px] font-semibold ${active ? "text-primary" : "text-foreground"}`;
+   if (onNavigate)
+     return (
+-      <Button variant="ghost" className={classes} onClick={() => onNavigate(item.id)}>
++      <Button
++        variant="ghost"
++        className={classes}
++        aria-current={active ? "page" : undefined}
++        onClick={() => onNavigate(item.id)}
++      >
+         <item.icon className="h-5 w-5" />
+         <span className="max-w-full truncate">{item.label}</span>
+       </Button>
+     );
+   return (
+-    <Link to={item.to} preload="intent" className={classes}>
++    <Link
++      to={item.to}
++      preload="intent"
++      className={classes}
++      aria-current={active ? "page" : undefined}
++    >
+       <item.icon className="h-5 w-5" />
+       <span className="max-w-full truncate">{item.label}</span>
+     </Link>
+diff --git a/src/components/demo/DemoExperience.tsx b/src/components/demo/DemoExperience.tsx
+index e87fcb7..d1758d2 100644
+--- a/src/components/demo/DemoExperience.tsx
++++ b/src/components/demo/DemoExperience.tsx
+@@ -1,28 +1,59 @@
+-import { useEffect, useState } from "react";
++import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from "react";
+ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+ import { Button } from "@/components/ui/button";
+ import { GuideView } from "@/components/guest/GuideView";
+-import { DemoManager } from "./DemoManager";
++const DemoManager = lazy(() =>
++  import("./DemoManager").then((module) => ({ default: module.DemoManager })),
++);
+ import { createVillaMare, demoGuide } from "./villa-mare-fixture";
+ import { validStoredDemoProperty } from "./demo-storage";
+ import { useI18n } from "@/lib/i18n";
+ import { NonaConcierge } from "@/components/guest/NonaConcierge";
+ import { DemoServiceBooking } from "./DemoServiceBooking";
++import { uxCopy } from "@/lib/ux-copy";
+ 
+ export function DemoExperience({
+   compact = false,
+   standalone = false,
+   initialMode = "guest",
++  onModeChange,
++  action,
+ }: {
+   compact?: boolean;
+   standalone?: boolean;
+   initialMode?: "guest" | "manager";
++  onModeChange?: (mode: "guest" | "manager") => void;
++  action?: ReactNode;
+ }) {
+   const { locale, t } = useI18n();
++  const ux = uxCopy(locale);
++  const tabsId = useId();
++  const toolbar = useRef<HTMLDivElement>(null);
++  const previewRequested = useRef(false);
+   const storageKey = `hostbuddy.demo.v2.${locale}`;
+   const [villa, setVilla] = useState(() => createVillaMare(locale));
+   const [restoredLocale, setRestoredLocale] = useState<string | null>(null);
+   const [mode, setMode] = useState<"guest" | "manager">(initialMode);
++  const [managerVisited, setManagerVisited] = useState(initialMode === "manager");
++  useEffect(() => {
++    if (mode !== "guest" || !previewRequested.current) return;
++    previewRequested.current = false;
++    const frame = requestAnimationFrame(() => {
++      toolbar.current?.scrollIntoView({ block: "start" });
++      document.getElementById(`${tabsId}-guest`)?.focus({ preventScroll: true });
++    });
++    return () => cancelAnimationFrame(frame);
++  }, [mode, tabsId]);
++  useEffect(() => {
++    setMode(initialMode);
++    if (initialMode === "manager") setManagerVisited(true);
++  }, [initialMode]);
++  const changeMode = (next: "guest" | "manager") => {
++    if (next === "manager") setManagerVisited(true);
++    setMode(next);
++    setNotice(false);
++    onModeChange?.(next);
++  };
+   const [section, setSection] = useState<string | null>(null);
+   const [notice, setNotice] = useState(false);
+   const [messageOpen, setMessageOpen] = useState(false);
+@@ -53,35 +84,69 @@ export function DemoExperience({
+     }
+   }, [villa, locale, restoredLocale, storageKey]);
+   return (
+-    <div className={`demo-container w-full ${standalone ? "nona-standalone-demo" : ""}`}>
+-      <div
+-        className="mx-auto mb-4 grid max-w-md grid-cols-2 rounded-full border bg-card/95 p-1.5 py-2.5 shadow-soft"
+-        role="tablist"
+-        aria-label={t("demo.pageTitle")}
+-      >
+-        {(["guest", "manager"] as const).map((next) => (
+-          <Button
+-            key={next}
+-            role="tab"
+-            aria-selected={mode === next}
+-            variant={mode === next ? "default" : "ghost"}
+-            className="min-h-12 whitespace-nowrap text-sm text-foreground hover:text-foreground"
+-            onClick={() => {
+-              setMode(next);
+-              setNotice(false);
+-            }}
+-          >
+-            {t(next === "guest" ? "demo.guest" : "demo.manager")}
+-          </Button>
+-        ))}
++    <div
++      className={`demo-container w-full ${!compact ? "nona-standalone-demo" : ""}`}
++      data-layout={compact ? "embedded" : "page"}
++      data-mode={mode}
++    >
++      <div className="nona-demo-toolbar" ref={toolbar}>
++        <div
++          className="nona-demo-tabs"
++          role="tablist"
++          aria-label={t("demo.pageTitle")}
++          onKeyDown={(event) => {
++            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
++            event.preventDefault();
++            const next =
++              event.key === "Home"
++                ? "guest"
++                : event.key === "End"
++                  ? "manager"
++                  : mode === "guest"
++                    ? "manager"
++                    : "guest";
++            changeMode(next);
++            document.getElementById(`${tabsId}-${next}`)?.focus();
++          }}
++        >
++          {(["guest", "manager"] as const).map((next) => (
++            <Button
++              key={next}
++              role="tab"
++              id={`${tabsId}-${next}`}
++              aria-controls={`${tabsId}-panel-${next}`}
++              aria-selected={mode === next}
++              tabIndex={mode === next ? 0 : -1}
++              variant={mode === next ? "default" : "ghost"}
++              className="nona-demo-tab min-h-12 whitespace-nowrap text-sm"
++              onClick={() => changeMode(next)}
++            >
++              {next === "guest" ? ux.demoGuest : ux.demoManager}
++            </Button>
++          ))}
++        </div>
++        {!compact && !standalone && action}
+       </div>
++      {!compact && !standalone && (
++        <div className="nona-demo-context">
++          <p>{mode === "guest" ? ux.demoGuestHint : ux.demoManagerHint}</p>
++          <small>{ux.demoSafe}</small>
++        </div>
++      )}
+       <div
+         className={`demo-frame relative mx-auto w-full overflow-clip rounded-xl border bg-background shadow-soft ${compact ? "" : "max-w-6xl"}`}
+       >
+         <div
++          data-nona-scroll-area={compact || undefined}
+           className={`demo-viewport bg-background text-foreground ${mode === "manager" ? "overflow-visible" : "overflow-x-hidden overflow-y-auto"}`}
+         >
+-          <div hidden={mode !== "guest"}>
++          <div
++            hidden={mode !== "guest"}
++            role="tabpanel"
++            id={`${tabsId}-panel-guest`}
++            aria-labelledby={`${tabsId}-guest`}
++            tabIndex={0}
++          >
+             <GuideView
+               guide={demoGuide(villa)}
+               sectionKey={section}
+@@ -97,17 +162,42 @@ export function DemoExperience({
+               onFeedback={() => setNotice(true)}
+             />
+           </div>
+-          <div hidden={mode !== "manager"} className="h-full">
+-            <DemoManager
+-              standalone={standalone}
+-              key={locale}
+-              villa={villa}
+-              onVillaChange={setVilla}
+-              onPreview={() => {
+-                setSection(null);
+-                setMode("guest");
+-              }}
+-            />
++          <div
++            hidden={mode !== "manager"}
++            className="h-full"
++            role="tabpanel"
++            id={`${tabsId}-panel-manager`}
++            aria-labelledby={`${tabsId}-manager`}
++            tabIndex={0}
++          >
++            {managerVisited && (
++              <Suspense
++                fallback={
++                  <div
++                    className="nona-workspace-skeleton"
++                    role="status"
++                    aria-label={t("common.loading")}
++                  >
++                    <span />
++                    <span />
++                    <span />
++                    <p>{t("common.loading")}</p>
++                  </div>
++                }
++              >
++                <DemoManager
++                  standalone={!compact}
++                  key={locale}
++                  villa={villa}
++                  onVillaChange={setVilla}
++                  onPreview={() => {
++                    setSection(null);
++                    previewRequested.current = true;
++                    changeMode("guest");
++                  }}
++                />
++              </Suspense>
++            )}
+           </div>
+           {notice && (
+             <p className="hb-empty" role="status">
+diff --git a/src/components/demo/DemoManager.tsx b/src/components/demo/DemoManager.tsx
+index 3c6b3c2..106cf83 100644
+--- a/src/components/demo/DemoManager.tsx
++++ b/src/components/demo/DemoManager.tsx
+@@ -377,6 +377,7 @@ export function DemoManager({
+           error={error}
+         >
+           <textarea
++            aria-label={t("import.textTitle")}
+             className="field min-h-64 text-base"
+             value={text}
+             onChange={(event) => setText(event.target.value)}
+diff --git a/src/components/guest/GuideContent.tsx b/src/components/guest/GuideContent.tsx
+index 0ea993c..d12dbe1 100644
+--- a/src/components/guest/GuideContent.tsx
++++ b/src/components/guest/GuideContent.tsx
+@@ -16,6 +16,8 @@ import { useState } from "react";
+ import { wifiCredentials } from "@/lib/import-engine/wifi-credentials";
+ import { Button } from "@/components/ui/button";
+ import type { PublicSection } from "@/lib/data/public-guide.functions";
++import { useI18n } from "@/lib/i18n";
++import { uxCopy } from "@/lib/ux-copy";
+ export const GenericTemplate = ({ items }: { items: { label: string; text: string }[] }) => (
+   <div className="space-y-4">
+     {items.map((item, index) => (
+@@ -74,6 +76,9 @@ export function WifiTemplate({
+   onCopy: () => void;
+ }) {
+   const [copyError, setCopyError] = useState(false);
++  const [copyPending, setCopyPending] = useState(false);
++  const { locale } = useI18n();
++  const ux = uxCopy(locale);
+   const explicit = wifiCredentials(items.map((item) => item.text).join("\n"));
+   // A recognized password does not mean the remaining source can be discarded.
+   // Keep the original information visible when no explicit network label parsed.
+@@ -85,7 +90,7 @@ export function WifiTemplate({
+     <div className="mx-auto max-w-xl rounded-2xl bg-ink p-6 text-ink-foreground shadow-phone">
+       <Wifi className="h-8 w-8 text-accent" />
+       <p className="mt-5 text-sm font-bold text-ink-foreground/70">{t("guest.network")}</p>
+-      <p className="text-2xl font-semibold">{network}</p>
++      <p className="break-words text-2xl font-semibold">{network}</p>
+       {password && (
+         <>
+           <p className="mt-5 text-sm font-bold text-ink-foreground/70">{t("guest.wifiPassword")}</p>
+@@ -94,8 +99,11 @@ export function WifiTemplate({
+       )}
+       <Button
+         className="mt-6 w-full"
+-        disabled={!copyText}
++        disabled={!copyText || copyPending}
++        aria-busy={copyPending}
+         onClick={async () => {
++          setCopyPending(true);
++          setCopyError(false);
+           try {
+             if (!navigator.clipboard || !copyText) throw new Error("clipboard unavailable");
+             await navigator.clipboard.writeText(copyText);
+@@ -103,17 +111,17 @@ export function WifiTemplate({
+             onCopy();
+           } catch {
+             setCopyError(true);
++          } finally {
++            setCopyPending(false);
+           }
+         }}
+       >
+         <Copy />
+-        {copied ? t("guest.copied") : t("guest.copy")}
++        {copied && !copyError ? t("guest.copied") : t("guest.copy")}
+       </Button>
+-      {copyError && (
+-        <p role="status" className="mt-3">
+-          {t("guide.copyFailed")}
+-        </p>
+-      )}
++      <p role="status" aria-live="polite" className={copyError ? "mt-3" : "sr-only"}>
++        {copyError ? ux.copyFailed : copied ? ux.copied : ""}
++      </p>
+     </div>
+   );
+ }
+@@ -256,6 +264,8 @@ export function ServiceList({
+   discovery?: boolean;
+   onDiscover?: (id: string) => void;
+ }) {
++  const { locale } = useI18n();
++  const ux = uxCopy(locale);
+   if (!services.length) return <p className="rounded-xl bg-muted p-4">{t("guest.noServices")}</p>;
+   return (
+     <div
+@@ -300,7 +310,9 @@ export function ServiceList({
+               {actionLabel ?? t("guest.request")}
+             </Button>
+             {!discovery && (
+-              <p className="mt-2 text-center text-xs text-muted-foreground">{t("guest.unpaid")}</p>
++              <p className="mt-2 text-center text-xs text-muted-foreground">
++                {onRequest ? t("guest.unpaid") : ux.previewBookings}
++              </p>
+             )}
+           </div>
+         </article>
+@@ -330,6 +342,7 @@ export function ContactButtons({
+         <a
+           className="btn btn-secondary px-1 text-sm"
+           href={`https://wa.me/${phone.replace(/\D/g, "")}`}
++          aria-label={t("guest.whatsapp")}
+         >
+           <MessageCircle className="h-4 w-4" />
+           <span className="hidden min-[390px]:inline">{t("guest.whatsapp")}</span>
+diff --git a/src/components/guest/GuideView.tsx b/src/components/guest/GuideView.tsx
+index 2519b78..4bf2542 100644
+--- a/src/components/guest/GuideView.tsx
++++ b/src/components/guest/GuideView.tsx
+@@ -52,6 +52,68 @@ import { resolvePropertyMedia } from "./property-media";
+ import { PropertyMediaGallery } from "./PropertyMediaGallery";
+ import { NonaWordmark } from "@/components/shared/NonaBrand";
+ import { nonaVisualCopy } from "@/lib/nona-visual-copy";
++import { uxCopy } from "@/lib/ux-copy";
++
++type GuideScrollPosition = {
++  container: HTMLElement | null;
++  top: number;
++  left: number;
++  trigger: HTMLElement | null;
++  triggerKey: string | null;
++};
++
++// Embedded guides own their scroll area: navigating them must not move the host page.
++function guideScrollContainer(element: HTMLElement | null): HTMLElement | null {
++  for (let parent = element?.parentElement; parent; parent = parent.parentElement) {
++    if (parent === document.body || parent === document.documentElement) continue;
++    // Explicit embedded areas stay authoritative even when a short section fits.
++    if (parent.matches("[data-nona-scroll-area], .guide-editor-phone")) return parent;
++    if (
++      /(auto|scroll)/.test(getComputedStyle(parent).overflowY) &&
++      parent.scrollHeight > parent.clientHeight + 1
++    )
++      return parent;
++  }
++  return null;
++}
++
++function rememberGuidePosition(element: HTMLElement | null): GuideScrollPosition {
++  const container = guideScrollContainer(element);
++  return {
++    container,
++    top: container ? container.scrollTop : window.scrollY,
++    left: container ? container.scrollLeft : window.scrollX,
++    trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null,
++    triggerKey: document.activeElement?.getAttribute("data-guide-target") ?? null,
++  };
++}
++
++function restoreGuidePosition(position: GuideScrollPosition | null, root: HTMLElement | null) {
++  if (!position) return;
++  (position.container ?? window).scrollTo({
++    top: position.top,
++    left: position.left,
++    behavior: "instant",
++  });
++  const trigger = position.trigger?.isConnected
++    ? position.trigger
++    : Array.from(root?.querySelectorAll<HTMLElement>("[data-guide-target]") ?? []).find(
++        (element) => element.getAttribute("data-guide-target") === position.triggerKey,
++      );
++  (trigger ?? root?.querySelector<HTMLElement>("h1"))?.focus({ preventScroll: true });
++}
++
++function focusGuideStart(element: HTMLElement | null) {
++  if (!element) return;
++  const container = guideScrollContainer(element);
++  const top =
++    element.getBoundingClientRect().top +
++    (container
++      ? container.scrollTop - container.getBoundingClientRect().top - container.clientTop
++      : window.scrollY);
++  (container ?? window).scrollTo({ top, behavior: "instant" });
++  element.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
++}
+ 
+ const sectionTone = (key: string) => {
+   const kind = sectionKind(key);
+@@ -88,16 +150,18 @@ export function GuideView({
+ }) {
+   const { locale, t } = useI18n();
+   const visual = nonaVisualCopy(locale);
++  const ux = uxCopy(locale);
+   const [heroIndex, setHeroIndex] = useState(0);
+   const [localKey, setLocalKey] = useState<string | null>(null);
+   const [entryId, setEntryId] = useState<string | null>(null);
++  const [entryCategory, setEntryCategory] = useState<string | null>(null);
+   const [menu, setMenu] = useState(false);
+   const [query, setQuery] = useState("");
+   const [copied, setCopied] = useState(false);
+-  const contentRef = useRef<HTMLDivElement>(null);
+   const topRef = useRef<HTMLDivElement>(null);
+-  const listScroll = useRef(0);
+-  const indexScroll = useRef(false);
++  const listScroll = useRef<GuideScrollPosition | null>(null);
++  const indexScroll = useRef<GuideScrollPosition | null>(null);
++  const navigationIntent = useRef<"start" | "index" | "list" | null>(null);
+   const sections = localizedSections(guide, locale, t);
+   const hasPropertyPhotos =
+     guide.sections.some(
+@@ -122,15 +186,9 @@ export function GuideView({
+       icon: "✨",
+       content: { items: [] },
+     });
+-  const { services: serviceSection, main: allMain, extra: other } = homeSections(sections);
+-  const primaryKeys = ["arrival", "wifi", "house", "contact"];
+-  const main = primaryKeys.flatMap((key) =>
+-    allMain.filter((section) => sectionKind(section.key) === key),
+-  );
+-  const extra = [
+-    ...allMain.filter((section) => !primaryKeys.includes(sectionKind(section.key))),
+-    ...other,
+-  ];
++  // The manager's order is authoritative; quick shortcuts provide access to essentials
++  // without silently rearranging the guide or hiding reordered cards in another group.
++  const { services: serviceSection, main, extra } = homeSections(sections);
+   const photos = [
+     ...new Set(
+       [cover, ...resolvePropertyMedia(sections).gallery.map((photo) => photo.url)].filter(
+@@ -146,28 +204,35 @@ export function GuideView({
+     )?.text;
+   const contact = sections.find((item) => sectionKind(item.key) === "contact");
+   const go = (key: string | null) => {
++    if (key && !open) indexScroll.current = rememberGuidePosition(topRef.current);
++    navigationIntent.current = key === null && open ? "index" : "start";
+     setLocalKey(key);
+     onSectionChange?.(key);
+     setEntryId(null);
++    setEntryCategory(null);
+     setCopied(false);
+     setMenu(false);
+-    if (key === null) indexScroll.current = true;
+-    else topRef.current?.scrollIntoView({ block: "start" });
+   };
+   useEffect(() => {
+-    if (!open && indexScroll.current) {
+-      contentRef.current?.scrollIntoView({ block: "start" });
+-      indexScroll.current = false;
+-    }
+-  }, [open]);
++    const intent = navigationIntent.current;
++    if (!intent) return;
++    const frame = requestAnimationFrame(() => {
++      if (intent === "index" && indexScroll.current)
++        restoreGuidePosition(indexScroll.current, topRef.current);
++      else if (intent === "list") restoreGuidePosition(listScroll.current, topRef.current);
++      else focusGuideStart(topRef.current);
++      navigationIntent.current = null;
++    });
++    return () => cancelAnimationFrame(frame);
++  }, [open?.key, entryId]);
+   const selectEntry = (id: string | null) => {
+     if (id) {
+-      listScroll.current = window.scrollY;
++      listScroll.current = rememberGuidePosition(topRef.current);
++      navigationIntent.current = "start";
+       setEntryId(id);
+-      topRef.current?.scrollIntoView({ block: "start" });
+     } else {
++      navigationIntent.current = "list";
+       setEntryId(null);
+-      requestAnimationFrame(() => window.scrollTo({ top: listScroll.current }));
+     }
+   };
+   const toggleMenu = () => {
+@@ -177,11 +242,12 @@ export function GuideView({
+   const navigation = (
+     <>
+       <button
+-        className="hb-icon-button"
++        className={open ? "hb-icon-button nona-guest-back" : "hb-icon-button"}
+         onClick={open ? () => go(null) : toggleMenu}
+         aria-label={open ? t("guest.back") : t("guide.menu")}
+       >
+         {open ? <ArrowLeft size={20} /> : <Menu size={20} />}
++        {open && <span>{t("common.back")}</span>}
+       </button>
+       <div className="hb-top-actions">
+         <button className="hb-icon-button" onClick={toggleMenu} aria-label={t("guide.search")}>
+@@ -193,6 +259,15 @@ export function GuideView({
+   );
+   const entries = open ? sectionEntries(open) : [];
+   const selected = entries.find((item) => item.id === entryId);
++  const matchingSections = sections.filter((section) =>
++    `${section.title} ${(section.content.items ?? []).map((item) => `${item.label} ${item.text}`).join(" ")} ${sectionEntries(
++      section,
++    )
++      .map((entry) => `${entry.title} ${entry.text}`)
++      .join(" ")}`
++      .toLocaleLowerCase(locale)
++      .includes(query.trim().toLocaleLowerCase(locale)),
++  );
+   return (
+     <div className="hb-guide" ref={topRef}>
+       {open ? (
+@@ -208,7 +283,9 @@ export function GuideView({
+           ) : (
+             <div className="hb-guide-body hb-section-page">
+               <div className="hb-list-heading">
+-                <h1 className="hb-page-title">{cleanTitle(open.title)}</h1>
++                <h1 className="hb-page-title" tabIndex={-1}>
++                  {cleanTitle(open.title)}
++                </h1>
+                 <button
+                   className="hb-icon-button"
+                   onClick={toggleMenu}
+@@ -224,6 +301,8 @@ export function GuideView({
+                     entries={entries}
+                     section={open}
+                     onSelect={selectEntry}
++                    category={entryCategory}
++                    onCategoryChange={setEntryCategory}
+                   />
+                 ) : (
+                   <div
+@@ -357,7 +436,7 @@ export function GuideView({
+           <div className="nona-property-layout">
+             <section className="nona-property-intro">
+               <div className="nona-property-heading">
+-                <h1>{displayName ?? guide.name}</h1>
++                <h1 tabIndex={-1}>{displayName ?? guide.name}</h1>
+                 {(guide.subtitle || address) && (
+                   <p>
+                     <MapPin size={17} />
+@@ -365,6 +444,30 @@ export function GuideView({
+                   </p>
+                 )}
+               </div>
++              {sections.some((section) =>
++                ["arrival", "wifi", "places"].includes(sectionKind(section.key)),
++              ) && (
++                <nav className="nona-guest-shortcuts" aria-label={ux.quickAccess}>
++                  {["arrival", "wifi", "places"].flatMap((kind) => {
++                    const section = sections.find(
++                      (candidate) => sectionKind(candidate.key) === kind,
++                    );
++                    if (!section) return [];
++                    const Icon =
++                      kind === "arrival" ? CalendarDays : kind === "wifi" ? Wifi : MapPin;
++                    return [
++                      <button
++                        key={section.key}
++                        data-guide-target={`shortcut:${section.key}`}
++                        onClick={() => go(section.key)}
++                      >
++                        <Icon size={17} aria-hidden="true" />
++                        {cleanTitle(section.title)}
++                      </button>,
++                    ];
++                  })}
++                </nav>
++              )}
+               <div className="nona-property-visual">
+                 <section
+                   className={`hb-cover nona-property-cover ${cover ? "hb-cover-photo" : "hb-cover-empty"}`}
+@@ -427,7 +530,7 @@ export function GuideView({
+                 )}
+               </div>
+             </section>
+-            <div className="hb-guide-body hb-index" ref={contentRef}>
++            <div className="hb-guide-body hb-index">
+               <div className="hb-index-content">
+                 <PresentationVideo video={resolvePropertyMedia(sections).video} />
+                 <div className="hb-index-heading">
+@@ -591,22 +694,22 @@ export function GuideView({
+             />
+           </label>
+           <div className="hb-menu-results">
+-            {sections
+-              .filter((section) =>
+-                `${section.title} ${(section.content.items ?? []).map((item) => `${item.label} ${item.text}`).join(" ")} ${sectionEntries(
+-                  section,
+-                )
+-                  .map((entry) => `${entry.title} ${entry.text}`)
+-                  .join(" ")}`
+-                  .toLocaleLowerCase(locale)
+-                  .includes(query.toLocaleLowerCase(locale)),
+-              )
+-              .map((section) => (
+-                <button key={section.key} onClick={() => go(section.key)}>
+-                  {cleanTitle(section.title)}
+-                  <ArrowRight size={18} />
+-                </button>
+-              ))}
++            {matchingSections.map((section) => (
++              <button key={section.key} onClick={() => go(section.key)}>
++                {cleanTitle(section.title)}
++                <ArrowRight size={18} />
++              </button>
++            ))}
++            {matchingSections.length === 0 && (
++              <div className="hb-menu-empty">
++                <p role="status">{ux.emptyGuideSearch}</p>
++                {query && (
++                  <button className="hb-button hb-button-light" onClick={() => setQuery("")}>
++                    {ux.resetSearch}
++                  </button>
++                )}
++              </div>
++            )}
+           </div>
+         </DialogContent>
+       </Dialog>
+@@ -615,7 +718,6 @@ export function GuideView({
+ }
+ 
+ function SectionCard({ section, onClick }: { section: PublicSection; onClick: () => void }) {
+-  const { locale, t } = useI18n();
+   const kind = sectionKind(section.key);
+   const Icon =
+     kind === "wifi"
+@@ -625,12 +727,13 @@ function SectionCard({ section, onClick }: { section: PublicSection; onClick: ()
+         : kind === "contact"
+           ? Phone
+           : Luggage;
+-  const title =
+-    kind === "house" && section.title === t("section.house")
+-      ? nonaVisualCopy(locale).equipment
+-      : cleanTitle(section.title);
++  const title = cleanTitle(section.title);
+   return (
+-    <button className={`hb-section-card hb-tone-${sectionTone(section.key)} `} onClick={onClick}>
++    <button
++      className={`hb-section-card hb-tone-${sectionTone(section.key)} `}
++      data-guide-target={`section:${section.key}`}
++      onClick={onClick}
++    >
+       <Icon className="nona-section-icon" strokeWidth={1.8} aria-hidden="true" />
+       <span className="hb-section-card-label">{title}</span>
+       <span className="hb-card-arrow">
+@@ -644,13 +747,16 @@ function EntryList({
+   entries,
+   section,
+   onSelect,
++  category,
++  onCategoryChange,
+ }: {
+   entries: GuideEntry[];
+   section: PublicSection;
+   onSelect: (id: string) => void;
++  category: string | null;
++  onCategoryChange: (category: string | null) => void;
+ }) {
+   const { t } = useI18n();
+-  const [category, setCategory] = useState<string | null>(null);
+   const categories = [
+     ...new Set(entries.flatMap((entry) => (entry.category ? [entry.category] : []))),
+   ];
+@@ -658,14 +764,14 @@ function EntryList({
+     <>
+       {categories.length > 0 && (
+         <div className="hb-filters">
+-          <button aria-pressed={category === null} onClick={() => setCategory(null)}>
++          <button aria-pressed={category === null} onClick={() => onCategoryChange(null)}>
+             {t("guide.all")}
+           </button>
+           {categories.map((value) => (
+             <button
+               key={value}
+               aria-pressed={category === value}
+-              onClick={() => setCategory(value)}
++              onClick={() => onCategoryChange(value)}
+             >
+               {value}
+             </button>
+@@ -687,7 +793,11 @@ function EntryList({
+                 className={`hb-entry-card ${photo ? "hb-entry-illustrated" : ""}`}
+                 key={entry.id}
+               >
+-                <button className="hb-entry-open" onClick={() => onSelect(entry.id)}>
++                <button
++                  className="hb-entry-open"
++                  data-guide-target={`entry:${entry.id}`}
++                  onClick={() => onSelect(entry.id)}
++                >
+                   {photo?.url && <img src={photo.url} alt="" loading="lazy" />}
+                   <span className="hb-entry-title">{entry.title}</span>
+                   {entry.category && <span className="hb-entry-meta">{entry.category}</span>}
+@@ -737,13 +847,20 @@ function EntryDetail({
+         <img className="hb-detail-cover" src={cover.url} alt={cover.altText || entry.title} />
+       )}
+       <div className="hb-detail-controls">
+-        <button className="hb-icon-button" onClick={onBack} aria-label={t("common.back")}>
++        <button
++          className="hb-icon-button nona-guest-back"
++          onClick={onBack}
++          aria-label={t("common.back")}
++        >
+           <ArrowLeft size={20} />
++          <span>{t("common.back")}</span>
+         </button>
+         <SaveEntry sectionId={section.id} entryId={entry.id} />
+       </div>
+       <div className="hb-detail-panel">
+-        <h1 className="hb-page-title">{entry.title}</h1>
++        <h1 className="hb-page-title" tabIndex={-1}>
++          {entry.title}
++        </h1>
+         {entry.category && <p className="hb-entry-meta">{entry.category}</p>}
+         {entry.address && (
+           <p className="hb-entry-meta">
+diff --git a/src/components/guest/NonaConcierge.tsx b/src/components/guest/NonaConcierge.tsx
+index fdf645c..78eeae7 100644
+--- a/src/components/guest/NonaConcierge.tsx
++++ b/src/components/guest/NonaConcierge.tsx
+@@ -1,4 +1,4 @@
+-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
++import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+ import { LocalConciergeTransport } from "@/lib/concierge-transport";
+ import { MessageCircle, Send, X, Wifi, KeyRound, MapPin, Coffee, LoaderCircle } from "lucide-react";
+ import type { PublicGuide } from "@/lib/data/public-guide.functions";
+@@ -19,6 +19,8 @@ import { NonaWordmark } from "@/components/shared/NonaBrand";
+ import { demoBookingTransport } from "@/components/demo/demo-bookings";
+ import { ServiceBookingForm } from "./GuestActions";
+ import { Button } from "@/components/ui/button";
++import { CopyButton } from "@/components/shared/CopyButton";
++import { uxCopy } from "@/lib/ux-copy";
+ import { LanguageSelect } from "@/components/i18n/LanguageSelect";
+ import {
+   Message as ChatMessageView,
+@@ -56,6 +58,8 @@ export function NonaConcierge({
+   const demo = demoProp || Boolean(localTransport);
+   const { locale, t } = useI18n();
+   const c = conciergeCopy(locale);
++  const ux = uxCopy(locale);
++  const panelId = useId();
+   const [open, setOpen] = useState(false);
+   const [waving, setWaving] = useState(false);
+   const [invited, setInvited] = useState(false);
+@@ -145,6 +149,7 @@ export function NonaConcierge({
+   const [message, setMessage] = useState("");
+   const [showHelp, setShowHelp] = useState(false);
+   const [messages, setMessages] = useState<Message[]>([]);
++  const showShortcuts = showHelp;
+   const messagesRef = useRef(messages);
+   messagesRef.current = messages;
+   const offeredServices = useRef("");
+@@ -399,12 +404,17 @@ export function NonaConcierge({
+         className="nona-launcher"
+         aria-label={c.open}
+         aria-expanded={open}
+-        aria-controls={`nona-chat-${guide.id}`}
++        aria-controls={`nona-chat-${panelId}`}
+         onClick={() => {
+           dismissInvitation();
+           setOpen(!open);
+         }}
+       >
++        {!open && !invited && (
++          <span className="nona-launcher-caption" aria-hidden="true">
++            {ux.askNona}
++          </span>
++        )}
+         {image ? (
+           <img src={image} alt="Nona" />
+         ) : (
+@@ -415,7 +425,7 @@ export function NonaConcierge({
+         )}
+       </Button>
+       <section
+-        id={`nona-chat-${guide.id}`}
++        id={`nona-chat-${panelId}`}
+         role="dialog"
+         aria-modal="false"
+         aria-label={c.title}
+@@ -503,16 +513,9 @@ export function NonaConcierge({
+                         <strong>{fact.title}</strong>
+                         {fact.original && <small>{c.original}</small>}
+                         {fact.copyValue && (
+-                          <Button
+-                            type="button"
+-                            variant="outline"
+-                            onClick={() => {
+-                              void navigator.clipboard
+-                                ?.writeText(fact.copyValue!)
+-                                .catch(() => setError(c.error));
+-                            }}
+-                          >
+-                            {
++                          <CopyButton
++                            value={fact.copyValue}
++                            label={
+                               {
+                                 fr: "Copier le mot de passe",
+                                 en: "Copy password",
+@@ -522,7 +525,7 @@ export function NonaConcierge({
+                                 pt: "Copiar palavra-passe",
+                               }[locale]
+                             }
+-                          </Button>
++                          />
+                         )}
+                         {fact.text.length > 500 ? (
+                           <>
+@@ -616,7 +619,23 @@ export function NonaConcierge({
+                 </ChatMessageView>
+               ))}
+             </div>
+-            {showHelp && (
++            {busy && (
++              <p className="nona-thinking" role="status">
++                <LoaderCircle className="animate-spin" size={16} aria-hidden="true" />
++                {t("common.loading")}
++              </p>
++            )}
++            {!showShortcuts && messages.length === 0 && (
++              <Button
++                type="button"
++                variant="outline"
++                className="nona-help-discover"
++                onClick={() => setShowHelp(true)}
++              >
++                {ux.helpIdeas}
++              </Button>
++            )}
++            {showShortcuts && (
+               <div className="nona-suggestions">
+                 {suggestions.map(({ label, query, icon: Icon }) => (
+                   <Button
+@@ -631,7 +650,7 @@ export function NonaConcierge({
+                 ))}
+               </div>
+             )}
+-            {showHelp && available.length > 0 && (
++            {showShortcuts && available.length > 0 && (
+               <Button
+                 type="button"
+                 variant="outline"
+@@ -643,7 +662,7 @@ export function NonaConcierge({
+               </Button>
+             )}
+             {error && <p role="alert">{error}</p>}
+-            {showHelp && onContact && (
++            {showShortcuts && onContact && (
+               <Button
+                 type="button"
+                 variant="outline"
+diff --git a/src/components/marketing/MarketingPhoto.tsx b/src/components/marketing/MarketingPhoto.tsx
+new file mode 100644
+index 0000000..01635e3
+--- /dev/null
++++ b/src/components/marketing/MarketingPhoto.tsx
+@@ -0,0 +1,20 @@
++import { useState, type ImgHTMLAttributes } from "react";
++
++/** Original hosted artwork when available, bundled approved imagery otherwise. */
++export function MarketingPhoto({
++  src,
++  fallback,
++  fallbackAlt,
++  alt,
++  ...props
++}: ImgHTMLAttributes<HTMLImageElement> & { fallback: string; fallbackAlt?: string }) {
++  const [failed, setFailed] = useState(false);
++  return (
++    <img
++      {...props}
++      src={failed ? fallback : src}
++      alt={failed ? (fallbackAlt ?? alt) : alt}
++      onError={() => setFailed(true)}
++    />
++  );
++}
+diff --git a/src/components/shared/CopyButton.tsx b/src/components/shared/CopyButton.tsx
+new file mode 100644
+index 0000000..e369004
+--- /dev/null
++++ b/src/components/shared/CopyButton.tsx
+@@ -0,0 +1,39 @@
++import { useEffect, useState } from "react";
++import { Button } from "@/components/ui/button";
++import { useI18n } from "@/lib/i18n";
++import { uxCopy } from "@/lib/ux-copy";
++
++export function CopyButton({ value, label }: { value: string; label: string }) {
++  const { locale } = useI18n();
++  const ux = uxCopy(locale);
++  const [status, setStatus] = useState<"idle" | "pending" | "copied" | "error">("idle");
++  useEffect(() => {
++    if (status !== "copied") return;
++    const timer = setTimeout(() => setStatus("idle"), 2500);
++    return () => clearTimeout(timer);
++  }, [status]);
++  return (
++    <div>
++      <Button
++        type="button"
++        variant="outline"
++        disabled={status === "pending"}
++        onClick={async () => {
++          setStatus("pending");
++          try {
++            if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
++            await navigator.clipboard.writeText(value);
++            setStatus("copied");
++          } catch {
++            setStatus("error");
++          }
++        }}
++      >
++        {status === "copied" ? ux.copied : label}
++      </Button>
++      <span role="status" className={status === "error" ? "mt-2 block text-sm" : "sr-only"}>
++        {status === "error" ? ux.copyFailed : status === "copied" ? ux.copied : ""}
++      </span>
++    </div>
++  );
++}
+diff --git a/src/components/shared/NavigationFeedback.tsx b/src/components/shared/NavigationFeedback.tsx
+new file mode 100644
+index 0000000..ab0a043
+--- /dev/null
++++ b/src/components/shared/NavigationFeedback.tsx
+@@ -0,0 +1,23 @@
++import { useEffect, useState } from "react";
++import { useRouterState } from "@tanstack/react-router";
++import { useI18n } from "@/lib/i18n";
++
++/** Delayed feedback avoids a flash on instant navigation and announces slower loads. */
++export function NavigationFeedback() {
++  const pending = useRouterState({ select: (state) => state.status === "pending" });
++  const [visible, setVisible] = useState(false);
++  const { t } = useI18n();
++  useEffect(() => {
++    if (!pending) {
++      setVisible(false);
++      return;
++    }
++    const timer = setTimeout(() => setVisible(true), 180);
++    return () => clearTimeout(timer);
++  }, [pending]);
++  return visible ? (
++    <div className="nona-navigation-progress" role="status">
++      <span className="sr-only">{t("common.loading")}</span>
++    </div>
++  ) : null;
++}
+diff --git a/src/components/shared/copy-button.test.tsx b/src/components/shared/copy-button.test.tsx
+new file mode 100644
+index 0000000..3caca2f
+--- /dev/null
++++ b/src/components/shared/copy-button.test.tsx
+@@ -0,0 +1,52 @@
++// @vitest-environment jsdom
++import { act } from "react";
++import { createRoot, type Root } from "react-dom/client";
++import { afterEach, beforeEach, expect, it, vi } from "vitest";
++vi.mock("@/lib/i18n", () => ({ useI18n: () => ({ locale: "en" }) }));
++import { CopyButton } from "./CopyButton";
++let root: Root;
++let host: HTMLDivElement;
++const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
++beforeEach(() => {
++  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
++  host = document.createElement("div");
++  document.body.append(host);
++  root = createRoot(host);
++});
++afterEach(async () => {
++  await act(async () => root.unmount());
++  host.remove();
++  if (clipboardDescriptor) Object.defineProperty(navigator, "clipboard", clipboardDescriptor);
++  else Reflect.deleteProperty(navigator, "clipboard");
++  vi.unstubAllGlobals();
++});
++it("announces success only after the clipboard has accepted the value", async () => {
++  let finish!: () => void;
++  const writeText = vi.fn(
++    () =>
++      new Promise<void>((resolve) => {
++        finish = resolve;
++      }),
++  );
++  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
++  await act(async () => root.render(<CopyButton value="Villa-secret" label="Copy password" />));
++  const button = host.querySelector("button")!;
++  await act(async () => button.click());
++  expect(writeText).toHaveBeenCalledExactlyOnceWith("Villa-secret");
++  expect(button.disabled).toBe(true);
++  expect(host.querySelector('[role="status"]')?.textContent).toBe("");
++  await act(async () => finish());
++  expect(button.disabled).toBe(false);
++  expect(host.querySelector('[role="status"]')?.textContent).toBe("Copied!");
++});
++it("keeps copy available and explains a denied clipboard without claiming success", async () => {
++  Object.defineProperty(navigator, "clipboard", {
++    configurable: true,
++    value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) },
++  });
++  await act(async () => root.render(<CopyButton value="Villa-secret" label="Copy password" />));
++  await act(async () => host.querySelector("button")!.click());
++  expect(host.querySelector("button")!.disabled).toBe(false);
++  expect(host.querySelector('[role="status"]')?.textContent).toContain("Could not copy");
++  expect(host.textContent).not.toContain("Copied!");
++});
+diff --git a/src/lib/i18n.tsx b/src/lib/i18n.tsx
+index f3b675d..00b2af5 100644
+--- a/src/lib/i18n.tsx
++++ b/src/lib/i18n.tsx
+@@ -32,7 +32,7 @@ export const translations: Record<Locale, Copy> = {
+       "Le logement est supprimé. Le recalcul de l’abonnement reste en attente.",
+     "property.deleteRetry": "Réessayer le nettoyage",
+     "property.deleteFailed": "La suppression a échoué.",
+-    "media.ambience": "Image d’ambiance HostBuddy",
++    "media.ambience": "Image d’ambiance NONA",
+     "guide.servicesEyebrow": "Pour profiter du séjour",
+     "guide.servicesExplore": "Découvrir les services",
+     "guide.allInfo": "Toutes les infos",
+@@ -60,8 +60,8 @@ export const translations: Record<Locale, Copy> = {
+     "common.optional": "facultatif",
+     "marketing.title": "Votre accueil voyageur, prêt en quelques minutes.",
+     "marketing.subtitle":
+-      "Importez vos contenus existants. HostBuddy les organise en un guide clair, élégant et immédiatement utile.",
+-    "marketing.badge": "Collez un lien. HostBuddy prépare le logement.",
++      "Importez vos contenus existants. NONA les organise en un guide clair, élégant et immédiatement utile.",
++    "marketing.badge": "Collez un lien. NONA prépare le logement.",
+     "marketing.benefit1": "Import automatique de vos logements",
+     "marketing.benefit2": "Moins de questions répétitives",
+     "marketing.benefit3": "Plus de services vendus",
+@@ -75,7 +75,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.importTitle": "Passez de vos contenus existants à un guide prêt à vérifier",
+     "marketing.step1": "Collez votre lien",
+     "marketing.step1d": "Ou collez vos notes, e-mails et anciens livrets.",
+-    "marketing.step2": "HostBuddy récupère et range",
++    "marketing.step2": "NONA récupère et range",
+     "marketing.step2d": "Les informations utiles sont classées sans rien inventer.",
+     "marketing.step3": "Vérifiez et publiez",
+     "marketing.step3d": "Répondez seulement aux questions qui manquent.",
+@@ -84,7 +84,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.arrivalD": "Accès, Wi-Fi et informations essentielles restent simples à trouver.",
+     "marketing.creation": "Gagnez du temps dès la création",
+     "marketing.creationD":
+-      "Importez un lien ou un texte. HostBuddy prépare l’essentiel et montre ce qui manque.",
++      "Importez un lien ou un texte. NONA prépare l’essentiel et montre ce qui manque.",
+     "marketing.services": "Vendez vos services simplement",
+     "marketing.servicesD":
+       "Petit-déjeuner, massage, transfert ou départ tardif depuis le guide. Paiement en ligne lorsque le gestionnaire l’a activé.",
+@@ -152,7 +152,7 @@ export const translations: Record<Locale, Copy> = {
+     "guest.unavailable": "Ce guide n’est pas encore disponible",
+     "guest.unavailableD":
+       "Il est peut-être en cours de préparation. Contactez votre hôte ou réessayez plus tard.",
+-    "guest.discover": "Découvrir HostBuddy",
++    "guest.discover": "Découvrir NONA",
+     "guest.review": "Partager mon avis",
+     "guest.stay": "Tout pour profiter de votre séjour",
+     "guest.noInstall": "Sans compte · Sans application",
+@@ -201,7 +201,7 @@ export const translations: Record<Locale, Copy> = {
+     "demo.serviceHint": "Ajoutez un service simple visible dans le guide.",
+     "demo.addBasket": "Ajouter « Panier de bienvenue »",
+     "demo.saved": "Enregistré",
+-    "demo.pageTitle": "Essayez HostBuddy, des deux côtés.",
++    "demo.pageTitle": "Essayez NONA, des deux côtés.",
+     "demo.pageDesc":
+       "Modifiez l’arrivée, le Wi-Fi, une photo ou un service, puis regardez le résultat côté voyageur.",
+     "manager.guide": "Guide voyageur",
+@@ -297,7 +297,7 @@ export const translations: Record<Locale, Copy> = {
+     "property.deleteBilling": "The property is deleted. Subscription recalculation is pending.",
+     "property.deleteRetry": "Retry cleanup",
+     "property.deleteFailed": "Deletion failed.",
+-    "media.ambience": "HostBuddy ambience image",
++    "media.ambience": "NONA ambience image",
+     "guide.servicesEyebrow": "Make the most of your stay",
+     "guide.servicesExplore": "Explore services",
+     "guide.allInfo": "All information",
+@@ -325,8 +325,8 @@ export const translations: Record<Locale, Copy> = {
+     "common.optional": "optional",
+     "marketing.title": "Your guest welcome, ready in minutes.",
+     "marketing.subtitle":
+-      "Import your existing content. HostBuddy turns it into a clear, elegant guide guests can use right away.",
+-    "marketing.badge": "Paste a link. HostBuddy prepares the property.",
++      "Import your existing content. NONA turns it into a clear, elegant guide guests can use right away.",
++    "marketing.badge": "Paste a link. NONA prepares the property.",
+     "marketing.benefit1": "Automatic property import",
+     "marketing.benefit2": "Fewer repetitive questions",
+     "marketing.benefit3": "More services sold",
+@@ -340,7 +340,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.importTitle": "Turn existing content into a guide ready to review",
+     "marketing.step1": "Paste your link",
+     "marketing.step1d": "Or paste notes, emails and old guides.",
+-    "marketing.step2": "HostBuddy retrieves and sorts",
++    "marketing.step2": "NONA retrieves and sorts",
+     "marketing.step2d": "Useful information is organized without inventing anything.",
+     "marketing.step3": "Review and publish",
+     "marketing.step3d": "Answer only what is still missing.",
+@@ -349,7 +349,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.arrivalD": "Access, Wi-Fi and essentials stay easy to find.",
+     "marketing.creation": "Save time from the start",
+     "marketing.creationD":
+-      "Import a link or text. HostBuddy prepares the essentials and shows what is missing.",
++      "Import a link or text. NONA prepares the essentials and shows what is missing.",
+     "marketing.services": "Sell services simply",
+     "marketing.servicesD":
+       "Breakfast, massage, transfer or late checkout from the guide. Online payment when enabled by the manager.",
+@@ -385,7 +385,7 @@ export const translations: Record<Locale, Copy> = {
+     "auth.checkTitle": "Check your inbox",
+     "auth.checkBody": "We sent a link. Open it to activate your account.",
+     "auth.existing": "Already have an account?",
+-    "auth.new": "New to HostBuddy?",
++    "auth.new": "New to NONA?",
+     "nav.properties": "Properties",
+     "nav.messages": "Messages",
+     "nav.orders": "Orders",
+@@ -415,7 +415,7 @@ export const translations: Record<Locale, Copy> = {
+     "guest.email": "Email",
+     "guest.unavailable": "This guide is not available yet",
+     "guest.unavailableD": "It may still be in preparation. Contact your host or try again later.",
+-    "guest.discover": "Discover HostBuddy",
++    "guest.discover": "Discover NONA",
+     "guest.review": "Leave a review",
+     "guest.stay": "Everything for a great stay",
+     "guest.noInstall": "No account · No app",
+@@ -464,7 +464,7 @@ export const translations: Record<Locale, Copy> = {
+     "demo.serviceHint": "Add a simple service visible in the guide.",
+     "demo.addBasket": "Add “Welcome basket”",
+     "demo.saved": "Saved",
+-    "demo.pageTitle": "Try HostBuddy from both sides.",
++    "demo.pageTitle": "Try NONA from both sides.",
+     "demo.pageDesc": "Edit arrival, Wi-Fi, a photo or service, then see the guest result.",
+     "manager.guide": "Guest guide",
+     "manager.editContent": "Edit content",
+@@ -559,7 +559,7 @@ export const translations: Record<Locale, Copy> = {
+       "Alojamiento eliminado. El recálculo de la suscripción está pendiente.",
+     "property.deleteRetry": "Reintentar limpieza",
+     "property.deleteFailed": "No se pudo eliminar.",
+-    "media.ambience": "Imagen de ambiente HostBuddy",
++    "media.ambience": "Imagen de ambiente NONA",
+     "guide.servicesEyebrow": "Disfruta de tu estancia",
+     "guide.servicesExplore": "Descubrir servicios",
+     "guide.allInfo": "Toda la información",
+@@ -587,8 +587,8 @@ export const translations: Record<Locale, Copy> = {
+     "common.optional": "opcional",
+     "marketing.title": "La bienvenida de sus huéspedes, lista en minutos.",
+     "marketing.subtitle":
+-      "Importe su contenido actual. HostBuddy lo convierte en una guía clara y elegante.",
+-    "marketing.badge": "Pegue un enlace. HostBuddy prepara el alojamiento.",
++      "Importe su contenido actual. NONA lo convierte en una guía clara y elegante.",
++    "marketing.badge": "Pegue un enlace. NONA prepara el alojamiento.",
+     "marketing.benefit1": "Importación automática de alojamientos",
+     "marketing.benefit2": "Menos preguntas repetitivas",
+     "marketing.benefit3": "Más servicios vendidos",
+@@ -602,7 +602,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.importTitle": "Convierta su contenido en una guía lista para revisar",
+     "marketing.step1": "Pegue su enlace",
+     "marketing.step1d": "O pegue notas, correos y guías antiguas.",
+-    "marketing.step2": "HostBuddy recupera y ordena",
++    "marketing.step2": "NONA recupera y ordena",
+     "marketing.step2d": "La información se organiza sin inventar nada.",
+     "marketing.step3": "Revise y publique",
+     "marketing.step3d": "Responda solo a lo que falta.",
+@@ -611,7 +611,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.arrivalD": "Acceso, Wi-Fi e información esencial siempre a mano.",
+     "marketing.creation": "Ahorre tiempo desde el principio",
+     "marketing.creationD":
+-      "Importe un enlace o texto. HostBuddy prepara lo esencial y muestra lo que falta.",
++      "Importe un enlace o texto. NONA prepara lo esencial y muestra lo que falta.",
+     "marketing.services": "Venda sus servicios fácilmente",
+     "marketing.servicesD":
+       "Desayuno, masaje, traslado o salida tardía desde la guía. Pago en línea cuando lo activa el gestor.",
+@@ -677,7 +677,7 @@ export const translations: Record<Locale, Copy> = {
+     "guest.unavailable": "Esta guía aún no está disponible",
+     "guest.unavailableD":
+       "Puede estar en preparación. Contacte a su anfitrión o inténtelo más tarde.",
+-    "guest.discover": "Descubrir HostBuddy",
++    "guest.discover": "Descubrir NONA",
+     "guest.review": "Dejar una reseña",
+     "guest.stay": "Todo para disfrutar de su estancia",
+     "guest.noInstall": "Sin cuenta · Sin aplicación",
+@@ -726,7 +726,7 @@ export const translations: Record<Locale, Copy> = {
+     "demo.serviceHint": "Añada un servicio visible en la guía.",
+     "demo.addBasket": "Añadir «Cesta de bienvenida»",
+     "demo.saved": "Guardado",
+-    "demo.pageTitle": "Pruebe HostBuddy desde ambos lados.",
++    "demo.pageTitle": "Pruebe NONA desde ambos lados.",
+     "demo.pageDesc": "Edite llegada, Wi-Fi, foto o servicio y vea el resultado como huésped.",
+     "manager.guide": "Guía del huésped",
+     "manager.editContent": "Editar contenido",
+@@ -820,7 +820,7 @@ export const translations: Record<Locale, Copy> = {
+     "property.deleteBilling": "Unterkunft gelöscht. Die Neuberechnung des Abonnements steht aus.",
+     "property.deleteRetry": "Bereinigung erneut versuchen",
+     "property.deleteFailed": "Löschen fehlgeschlagen.",
+-    "media.ambience": "HostBuddy Stimmungsbild",
++    "media.ambience": "NONA Stimmungsbild",
+     "guide.servicesEyebrow": "Den Aufenthalt genießen",
+     "guide.servicesExplore": "Services entdecken",
+     "guide.allInfo": "Alle Informationen",
+@@ -848,8 +848,8 @@ export const translations: Record<Locale, Copy> = {
+     "common.optional": "optional",
+     "marketing.title": "Ihr Gästeempfang, in wenigen Minuten bereit.",
+     "marketing.subtitle":
+-      "Importieren Sie vorhandene Inhalte. HostBuddy macht daraus einen klaren, eleganten Gästeguide.",
+-    "marketing.badge": "Link einfügen. HostBuddy bereitet die Unterkunft vor.",
++      "Importieren Sie vorhandene Inhalte. NONA macht daraus einen klaren, eleganten Gästeguide.",
++    "marketing.badge": "Link einfügen. NONA bereitet die Unterkunft vor.",
+     "marketing.benefit1": "Automatischer Unterkunftsimport",
+     "marketing.benefit2": "Weniger wiederkehrende Fragen",
+     "marketing.benefit3": "Mehr verkaufte Services",
+@@ -862,7 +862,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.importTitle": "Machen Sie aus Inhalten einen prüfbereiten Guide",
+     "marketing.step1": "Link einfügen",
+     "marketing.step1d": "Oder Notizen, E-Mails und alte Guides einfügen.",
+-    "marketing.step2": "HostBuddy sammelt und sortiert",
++    "marketing.step2": "NONA sammelt und sortiert",
+     "marketing.step2d": "Informationen werden geordnet, ohne etwas zu erfinden.",
+     "marketing.step3": "Prüfen und veröffentlichen",
+     "marketing.step3d": "Beantworten Sie nur fehlende Fragen.",
+@@ -870,8 +870,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.arrival": "Machen Sie die Anreise mühelos",
+     "marketing.arrivalD": "Zugang, WLAN und Wichtiges bleiben leicht auffindbar.",
+     "marketing.creation": "Sparen Sie von Anfang an Zeit",
+-    "marketing.creationD":
+-      "Importieren Sie Link oder Text. HostBuddy bereitet das Wesentliche vor.",
++    "marketing.creationD": "Importieren Sie Link oder Text. NONA bereitet das Wesentliche vor.",
+     "marketing.services": "Services einfach verkaufen",
+     "marketing.servicesD":
+       "Frühstück, Massage, Transfer oder später Check-out im Guide. Online-Zahlung, wenn vom Gastgeber aktiviert.",
+@@ -906,7 +905,7 @@ export const translations: Record<Locale, Copy> = {
+     "auth.checkTitle": "Posteingang prüfen",
+     "auth.checkBody": "Wir haben einen Link gesendet. Öffnen Sie ihn zur Aktivierung.",
+     "auth.existing": "Schon ein Konto?",
+-    "auth.new": "Neu bei HostBuddy?",
++    "auth.new": "Neu bei NONA?",
+     "nav.properties": "Unterkünfte",
+     "nav.messages": "Nachrichten",
+     "nav.orders": "Bestellungen",
+@@ -937,7 +936,7 @@ export const translations: Record<Locale, Copy> = {
+     "guest.email": "E-Mail",
+     "guest.unavailable": "Dieser Guide ist noch nicht verfügbar",
+     "guest.unavailableD": "Er wird vielleicht noch vorbereitet. Kontaktieren Sie Ihren Gastgeber.",
+-    "guest.discover": "HostBuddy entdecken",
++    "guest.discover": "NONA entdecken",
+     "guest.review": "Bewertung abgeben",
+     "guest.stay": "Alles für einen schönen Aufenthalt",
+     "guest.noInstall": "Kein Konto · Keine App",
+@@ -986,7 +985,7 @@ export const translations: Record<Locale, Copy> = {
+     "demo.serviceHint": "Fügen Sie einen sichtbaren Service hinzu.",
+     "demo.addBasket": "„Willkommenskorb“ hinzufügen",
+     "demo.saved": "Gespeichert",
+-    "demo.pageTitle": "Testen Sie HostBuddy von beiden Seiten.",
++    "demo.pageTitle": "Testen Sie NONA von beiden Seiten.",
+     "demo.pageDesc":
+       "Bearbeiten Sie Anreise, WLAN, Foto oder Service und sehen Sie das Ergebnis als Gast.",
+     "manager.guide": "Gästeguide",
+@@ -1081,7 +1080,7 @@ export const translations: Record<Locale, Copy> = {
+     "property.deleteBilling": "Alloggio eliminato. Ricalcolo dell’abbonamento in attesa.",
+     "property.deleteRetry": "Riprova pulizia",
+     "property.deleteFailed": "Eliminazione non riuscita.",
+-    "media.ambience": "Immagine d’atmosfera HostBuddy",
++    "media.ambience": "Immagine d’atmosfera NONA",
+     "guide.servicesEyebrow": "Vivi il tuo soggiorno",
+     "guide.servicesExplore": "Scopri i servizi",
+     "guide.allInfo": "Tutte le informazioni",
+@@ -1109,8 +1108,8 @@ export const translations: Record<Locale, Copy> = {
+     "common.optional": "facoltativo",
+     "marketing.title": "L’accoglienza degli ospiti, pronta in pochi minuti.",
+     "marketing.subtitle":
+-      "Importa i contenuti esistenti. HostBuddy li trasforma in una guida chiara ed elegante.",
+-    "marketing.badge": "Incolla un link. HostBuddy prepara l’alloggio.",
++      "Importa i contenuti esistenti. NONA li trasforma in una guida chiara ed elegante.",
++    "marketing.badge": "Incolla un link. NONA prepara l’alloggio.",
+     "marketing.benefit1": "Importazione automatica degli alloggi",
+     "marketing.benefit2": "Meno domande ripetitive",
+     "marketing.benefit3": "Più servizi venduti",
+@@ -1123,7 +1122,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.importTitle": "Trasforma i contenuti in una guida pronta da verificare",
+     "marketing.step1": "Incolla il link",
+     "marketing.step1d": "Oppure incolla note, e-mail e vecchie guide.",
+-    "marketing.step2": "HostBuddy recupera e organizza",
++    "marketing.step2": "NONA recupera e organizza",
+     "marketing.step2d": "Le informazioni vengono organizzate senza inventare nulla.",
+     "marketing.step3": "Verifica e pubblica",
+     "marketing.step3d": "Rispondi solo alle domande mancanti.",
+@@ -1131,7 +1130,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.arrival": "Rendi l’arrivo senza intoppi",
+     "marketing.arrivalD": "Accesso, Wi-Fi e informazioni essenziali sempre a portata di mano.",
+     "marketing.creation": "Risparmia tempo fin dall’inizio",
+-    "marketing.creationD": "Importa un link o testo. HostBuddy prepara l’essenziale.",
++    "marketing.creationD": "Importa un link o testo. NONA prepara l’essenziale.",
+     "marketing.services": "Vendi i servizi con semplicità",
+     "marketing.servicesD":
+       "Colazione, massaggio, transfer o check-out posticipato dalla guida. Pagamento online quando attivato dal gestore.",
+@@ -1166,7 +1165,7 @@ export const translations: Record<Locale, Copy> = {
+     "auth.checkTitle": "Controlla la posta",
+     "auth.checkBody": "Abbiamo inviato un link. Aprilo per attivare l’account.",
+     "auth.existing": "Hai già un account?",
+-    "auth.new": "Nuovo su HostBuddy?",
++    "auth.new": "Nuovo su NONA?",
+     "nav.properties": "Alloggi",
+     "nav.messages": "Messaggi",
+     "nav.orders": "Ordini",
+@@ -1196,7 +1195,7 @@ export const translations: Record<Locale, Copy> = {
+     "guest.email": "E-mail",
+     "guest.unavailable": "Questa guida non è ancora disponibile",
+     "guest.unavailableD": "Potrebbe essere in preparazione. Contatta l’host o riprova più tardi.",
+-    "guest.discover": "Scopri HostBuddy",
++    "guest.discover": "Scopri NONA",
+     "guest.review": "Lascia una recensione",
+     "guest.stay": "Tutto per un ottimo soggiorno",
+     "guest.noInstall": "Senza account · Senza app",
+@@ -1245,7 +1244,7 @@ export const translations: Record<Locale, Copy> = {
+     "demo.serviceHint": "Aggiungi un servizio visibile nella guida.",
+     "demo.addBasket": "Aggiungi “Cesto di benvenuto”",
+     "demo.saved": "Salvato",
+-    "demo.pageTitle": "Prova HostBuddy da entrambi i lati.",
++    "demo.pageTitle": "Prova NONA da entrambi i lati.",
+     "demo.pageDesc": "Modifica arrivo, Wi-Fi, foto o servizio e guarda il risultato come ospite.",
+     "manager.guide": "Guida ospite",
+     "manager.editContent": "Modifica contenuto",
+@@ -1339,7 +1338,7 @@ export const translations: Record<Locale, Copy> = {
+     "property.deleteBilling": "Alojamento eliminado. Recálculo da subscrição pendente.",
+     "property.deleteRetry": "Repetir limpeza",
+     "property.deleteFailed": "Falha ao eliminar.",
+-    "media.ambience": "Imagem de ambiente HostBuddy",
++    "media.ambience": "Imagem de ambiente NONA",
+     "guide.servicesEyebrow": "Aproveite a estadia",
+     "guide.servicesExplore": "Descobrir serviços",
+     "guide.allInfo": "Todas as informações",
+@@ -1367,8 +1366,8 @@ export const translations: Record<Locale, Copy> = {
+     "common.optional": "opcional",
+     "marketing.title": "A receção dos seus hóspedes, pronta em minutos.",
+     "marketing.subtitle":
+-      "Importe o conteúdo existente. A HostBuddy transforma-o num guia claro e elegante.",
+-    "marketing.badge": "Cole um link. A HostBuddy prepara o alojamento.",
++      "Importe o conteúdo existente. A NONA transforma-o num guia claro e elegante.",
++    "marketing.badge": "Cole um link. A NONA prepara o alojamento.",
+     "marketing.benefit1": "Importação automática de alojamentos",
+     "marketing.benefit2": "Menos perguntas repetitivas",
+     "marketing.benefit3": "Mais serviços vendidos",
+@@ -1381,7 +1380,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.importTitle": "Transforme o conteúdo num guia pronto a verificar",
+     "marketing.step1": "Cole o link",
+     "marketing.step1d": "Ou cole notas, e-mails e guias antigos.",
+-    "marketing.step2": "A HostBuddy recolhe e organiza",
++    "marketing.step2": "A NONA recolhe e organiza",
+     "marketing.step2d": "A informação é organizada sem inventar nada.",
+     "marketing.step3": "Verifique e publique",
+     "marketing.step3d": "Responda apenas ao que falta.",
+@@ -1389,7 +1388,7 @@ export const translations: Record<Locale, Copy> = {
+     "marketing.arrival": "Torne a chegada simples",
+     "marketing.arrivalD": "Acesso, Wi-Fi e informações essenciais sempre fáceis de encontrar.",
+     "marketing.creation": "Poupe tempo desde o início",
+-    "marketing.creationD": "Importe um link ou texto. A HostBuddy prepara o essencial.",
++    "marketing.creationD": "Importe um link ou texto. A NONA prepara o essencial.",
+     "marketing.services": "Venda serviços facilmente",
+     "marketing.servicesD":
+       "Pequeno-almoço, massagem, transfer ou saída tardia no guia. Pagamento online quando ativado pelo gestor.",
+@@ -1452,7 +1451,7 @@ export const translations: Record<Locale, Copy> = {
+     "guest.email": "E-mail",
+     "guest.unavailable": "Este guia ainda não está disponível",
+     "guest.unavailableD": "Pode estar em preparação. Contacte o anfitrião ou tente mais tarde.",
+-    "guest.discover": "Descobrir HostBuddy",
++    "guest.discover": "Descobrir NONA",
+     "guest.review": "Deixar avaliação",
+     "guest.stay": "Tudo para aproveitar a estadia",
+     "guest.noInstall": "Sem conta · Sem aplicação",
+@@ -1501,7 +1500,7 @@ export const translations: Record<Locale, Copy> = {
+     "demo.serviceHint": "Adicione um serviço visível no guia.",
+     "demo.addBasket": "Adicionar “Cabaz de boas-vindas”",
+     "demo.saved": "Guardado",
+-    "demo.pageTitle": "Experimente HostBuddy dos dois lados.",
++    "demo.pageTitle": "Experimente NONA dos dois lados.",
+     "demo.pageDesc": "Edite chegada, Wi-Fi, foto ou serviço e veja o resultado como hóspede.",
+     "manager.guide": "Guia do hóspede",
+     "manager.editContent": "Editar conteúdo",
+@@ -1602,11 +1601,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
+     "app.operator": "Votre activité",
+     "app.operatorHint": "Facultatif · vous pourrez changer ce choix à tout moment.",
+     "import.textTitle": "Collez tout ce que vous avez. Même si c’est mal rangé.",
+-    "import.textHelp": "HostBuddy s’occupe du reste.",
++    "import.textHelp": "NONA s’occupe du reste.",
+     "import.textAction": "Ranger mes informations",
+     "import.manualTitle": "Comment s’appelle votre hébergement ?",
+     "import.fallbackTitle": "Nous n’avons pas pu récupérer assez d’informations.",
+-    "import.fallbackText": "Collez le texte de l’annonce et HostBuddy l’organisera.",
++    "import.fallbackText": "Collez le texte de l’annonce et NONA l’organisera.",
+     "import.fallbackPrimary": "Coller le texte de l’annonce",
+     "import.fallbackSecondary": "Ajouter les informations moi-même",
+   },
+@@ -1624,11 +1623,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
+     "app.operator": "Your business",
+     "app.operatorHint": "Optional · change this at any time.",
+     "import.textTitle": "Paste everything you have, even if it is messy.",
+-    "import.textHelp": "HostBuddy takes care of the rest.",
++    "import.textHelp": "NONA takes care of the rest.",
+     "import.textAction": "Organize my information",
+     "import.manualTitle": "What is your property called?",
+     "import.fallbackTitle": "We could not retrieve enough information.",
+-    "import.fallbackText": "Paste the listing text and HostBuddy will organize it.",
++    "import.fallbackText": "Paste the listing text and NONA will organize it.",
+     "import.fallbackPrimary": "Paste listing text",
+     "import.fallbackSecondary": "Add information myself",
+   },
+@@ -1646,11 +1645,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
+     "app.operator": "Su actividad",
+     "app.operatorHint": "Opcional · puede cambiarlo en cualquier momento.",
+     "import.textTitle": "Pegue todo lo que tenga, aunque esté desordenado.",
+-    "import.textHelp": "HostBuddy se ocupa del resto.",
++    "import.textHelp": "NONA se ocupa del resto.",
+     "import.textAction": "Organizar mi información",
+     "import.manualTitle": "¿Cómo se llama su alojamiento?",
+     "import.fallbackTitle": "No pudimos recuperar suficiente información.",
+-    "import.fallbackText": "Pegue el texto del anuncio y HostBuddy lo organizará.",
++    "import.fallbackText": "Pegue el texto del anuncio y NONA lo organizará.",
+     "import.fallbackPrimary": "Pegar texto del anuncio",
+     "import.fallbackSecondary": "Añadir información manualmente",
+   },
+@@ -1668,11 +1667,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
+     "app.operator": "Ihr Betrieb",
+     "app.operatorHint": "Optional · jederzeit änderbar.",
+     "import.textTitle": "Fügen Sie alles ein, auch wenn es unsortiert ist.",
+-    "import.textHelp": "HostBuddy kümmert sich um den Rest.",
++    "import.textHelp": "NONA kümmert sich um den Rest.",
+     "import.textAction": "Informationen ordnen",
+     "import.manualTitle": "Wie heißt Ihre Unterkunft?",
+     "import.fallbackTitle": "Wir konnten nicht genug Informationen abrufen.",
+-    "import.fallbackText": "Fügen Sie den Anzeigentext ein und HostBuddy ordnet ihn.",
++    "import.fallbackText": "Fügen Sie den Anzeigentext ein und NONA ordnet ihn.",
+     "import.fallbackPrimary": "Anzeigentext einfügen",
+     "import.fallbackSecondary": "Informationen selbst hinzufügen",
+   },
+@@ -1690,11 +1689,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
+     "app.operator": "La tua attività",
+     "app.operatorHint": "Facoltativo · modificabile in qualsiasi momento.",
+     "import.textTitle": "Incolla tutto, anche se è disordinato.",
+-    "import.textHelp": "HostBuddy si occupa del resto.",
++    "import.textHelp": "NONA si occupa del resto.",
+     "import.textAction": "Organizza le informazioni",
+     "import.manualTitle": "Come si chiama il tuo alloggio?",
+     "import.fallbackTitle": "Non abbiamo recuperato abbastanza informazioni.",
+-    "import.fallbackText": "Incolla il testo dell’annuncio e HostBuddy lo organizzerà.",
++    "import.fallbackText": "Incolla il testo dell’annuncio e NONA lo organizzerà.",
+     "import.fallbackPrimary": "Incolla testo annuncio",
+     "import.fallbackSecondary": "Aggiungi informazioni manualmente",
+   },
+@@ -1712,11 +1711,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
+     "app.operator": "A sua atividade",
+     "app.operatorHint": "Opcional · altere a qualquer momento.",
+     "import.textTitle": "Cole tudo, mesmo desorganizado.",
+-    "import.textHelp": "A HostBuddy trata do resto.",
++    "import.textHelp": "A NONA trata do resto.",
+     "import.textAction": "Organizar informações",
+     "import.manualTitle": "Como se chama o alojamento?",
+     "import.fallbackTitle": "Não foi possível obter informação suficiente.",
+-    "import.fallbackText": "Cole o texto do anúncio e a HostBuddy organiza-o.",
++    "import.fallbackText": "Cole o texto do anúncio e a NONA organiza-o.",
+     "import.fallbackPrimary": "Colar texto do anúncio",
+     "import.fallbackSecondary": "Adicionar informação manualmente",
+   },
+@@ -1898,7 +1897,7 @@ const operationsCopy: Record<Locale, Copy> = {
+     "messages.placeholder": "Écrivez votre réponse…",
+     "connections.title": "Connexions",
+     "connections.desc":
+-      "Retrouvez ici les outils reliés à HostBuddy. Rien à configurer avant d’en avoir besoin.",
++      "Retrouvez ici les outils reliés à NONA. Rien à configurer avant d’en avoir besoin.",
+     "connections.connected": "Outils connectés",
+     "connections.none": "Aucun outil connecté",
+     "connections.upcoming": "Connexions à venir",
+@@ -1940,8 +1939,7 @@ const operationsCopy: Record<Locale, Copy> = {
+     "messages.reply": "Your reply",
+     "messages.placeholder": "Write your reply…",
+     "connections.title": "Connections",
+-    "connections.desc":
+-      "Find tools connected to HostBuddy here. Nothing to configure until needed.",
++    "connections.desc": "Find tools connected to NONA here. Nothing to configure until needed.",
+     "connections.connected": "Connected tools",
+     "connections.none": "No connected tools",
+     "connections.upcoming": "Upcoming connections",
+@@ -2127,7 +2125,7 @@ for (const locale of LOCALES) Object.assign(translations[locale], operationsCopy
+ const finishingCopy: Record<Locale, Copy> = {
+   fr: {
+     "integrations.login": "Se connecter",
+-    "integrations.eyebrow": "Connexions HostBuddy",
++    "integrations.eyebrow": "Connexions NONA",
+     "integrations.hero": "Vos outils alimentent le même accueil voyageur.",
+     "integrations.heroD":
+       "Commencez par un lien ou un texte. Les futures connexions suivront le même parcours simple : importer, vérifier, publier.",
+@@ -2141,7 +2139,7 @@ const finishingCopy: Record<Locale, Copy> = {
+     "integrations.beta": "Bêta",
+     "integrations.planned": "Prévu",
+     "integrations.fallbackPlanned": "Connexion préparée, non disponible aujourd’hui.",
+-    "integrations.fallbackLive": "Fonction prise en charge par HostBuddy.",
++    "integrations.fallbackLive": "Fonction prise en charge par NONA.",
+     "integrations.simpleTitle": "Connecter un PMS, sans complexité",
+     "integrations.simpleD":
+       "Connecter mon outil → choisir les logements → créer les guides → vérifier les informations manquantes.",
+@@ -2171,7 +2169,7 @@ const finishingCopy: Record<Locale, Copy> = {
+   },
+   en: {
+     "integrations.login": "Sign in",
+-    "integrations.eyebrow": "HostBuddy connections",
++    "integrations.eyebrow": "NONA connections",
+     "integrations.hero": "Your tools power one guest welcome.",
+     "integrations.heroD":
+       "Start with a link or text. Future connections follow the same simple path: import, review, publish.",
+@@ -2185,7 +2183,7 @@ const finishingCopy: Record<Locale, Copy> = {
+     "integrations.beta": "Beta",
+     "integrations.planned": "Planned",
+     "integrations.fallbackPlanned": "Connection prepared, not available today.",
+-    "integrations.fallbackLive": "Feature supported by HostBuddy.",
++    "integrations.fallbackLive": "Feature supported by NONA.",
+     "integrations.simpleTitle": "Connect a PMS, without complexity",
+     "integrations.simpleD":
+       "Connect my tool → choose properties → create guides → review missing information.",
+@@ -2213,7 +2211,7 @@ const finishingCopy: Record<Locale, Copy> = {
+   },
+   es: {
+     "integrations.login": "Iniciar sesión",
+-    "integrations.eyebrow": "Conexiones HostBuddy",
++    "integrations.eyebrow": "Conexiones NONA",
+     "integrations.hero": "Sus herramientas alimentan una misma bienvenida.",
+     "integrations.heroD":
+       "Empiece con un enlace o texto. Las futuras conexiones seguirán el mismo camino: importar, revisar y publicar.",
+@@ -2227,7 +2225,7 @@ const finishingCopy: Record<Locale, Copy> = {
+     "integrations.beta": "Beta",
+     "integrations.planned": "Previsto",
+     "integrations.fallbackPlanned": "Conexión preparada, no disponible hoy.",
+-    "integrations.fallbackLive": "Función compatible con HostBuddy.",
++    "integrations.fallbackLive": "Función compatible con NONA.",
+     "integrations.simpleTitle": "Conecte un PMS sin complejidad",
+     "integrations.simpleD":
+       "Conectar mi herramienta → elegir alojamientos → crear guías → revisar lo que falta.",
+@@ -2255,7 +2253,7 @@ const finishingCopy: Record<Locale, Copy> = {
+   },
+   de: {
+     "integrations.login": "Anmelden",
+-    "integrations.eyebrow": "HostBuddy-Verbindungen",
++    "integrations.eyebrow": "NONA-Verbindungen",
+     "integrations.hero": "Ihre Tools speisen einen Gästeempfang.",
+     "integrations.heroD":
+       "Starten Sie mit Link oder Text. Künftige Verbindungen folgen demselben Weg: importieren, prüfen, veröffentlichen.",
+@@ -2269,7 +2267,7 @@ const finishingCopy: Record<Locale, Copy> = {
+     "integrations.beta": "Beta",
+     "integrations.planned": "Geplant",
+     "integrations.fallbackPlanned": "Verbindung vorbereitet, heute nicht verfügbar.",
+-    "integrations.fallbackLive": "Von HostBuddy unterstützte Funktion.",
++    "integrations.fallbackLive": "Von NONA unterstützte Funktion.",
+     "integrations.simpleTitle": "PMS verbinden, ohne Komplexität",
+     "integrations.simpleD":
+       "Tool verbinden → Unterkünfte wählen → Guides erstellen → Fehlendes prüfen.",
+@@ -2298,7 +2296,7 @@ const finishingCopy: Record<Locale, Copy> = {
+   },
+   it: {
+     "integrations.login": "Accedi",
+-    "integrations.eyebrow": "Connessioni HostBuddy",
++    "integrations.eyebrow": "Connessioni NONA",
+     "integrations.hero": "I tuoi strumenti alimentano un’unica accoglienza.",
+     "integrations.heroD":
+       "Inizia con un link o testo. Le connessioni future seguiranno lo stesso percorso: importa, verifica, pubblica.",
+@@ -2312,7 +2310,7 @@ const finishingCopy: Record<Locale, Copy> = {
+     "integrations.beta": "Beta",
+     "integrations.planned": "Previsto",
+     "integrations.fallbackPlanned": "Connessione preparata, non disponibile oggi.",
+-    "integrations.fallbackLive": "Funzione supportata da HostBuddy.",
++    "integrations.fallbackLive": "Funzione supportata da NONA.",
+     "integrations.simpleTitle": "Collega un PMS senza complessità",
+     "integrations.simpleD":
+       "Collega lo strumento → scegli gli alloggi → crea le guide → verifica ciò che manca.",
+@@ -2340,7 +2338,7 @@ const finishingCopy: Record<Locale, Copy> = {
+   },
+   pt: {
+     "integrations.login": "Entrar",
+-    "integrations.eyebrow": "Ligações HostBuddy",
++    "integrations.eyebrow": "Ligações NONA",
+     "integrations.hero": "As suas ferramentas alimentam o mesmo acolhimento.",
+     "integrations.heroD":
+       "Comece com um link ou texto. As futuras ligações seguirão o mesmo caminho: importar, verificar, publicar.",
+@@ -2354,7 +2352,7 @@ const finishingCopy: Record<Locale, Copy> = {
+     "integrations.beta": "Beta",
+     "integrations.planned": "Planeado",
+     "integrations.fallbackPlanned": "Ligação preparada, indisponível hoje.",
+-    "integrations.fallbackLive": "Funcionalidade suportada pelo HostBuddy.",
++    "integrations.fallbackLive": "Funcionalidade suportada pelo NONA.",
+     "integrations.simpleTitle": "Ligue um PMS sem complexidade",
+     "integrations.simpleD":
+       "Ligar a ferramenta → escolher alojamentos → criar guias → verificar o que falta.",
+@@ -2847,7 +2845,7 @@ Object.assign(translations.fr, {
+   "legal.privacyMissing":
+     "À compléter : responsable et contact, données et finalités, durées de conservation, prestataires et modalités d’exercice des droits.",
+   "legal.terms": "Conditions d’utilisation et d’abonnement",
+-  "legal.fees": "Commission HostBuddy : 2 % sur les services payés, distincte des frais Stripe.",
++  "legal.fees": "Commission NONA : 2 % sur les services payés, distincte des frais Stripe.",
+   "legal.termsMissing":
+     "À compléter : renouvellement, annulation, traitement des impayés, conditions des services et politique de remboursement.",
+ });
+@@ -2862,7 +2860,7 @@ Object.assign(translations.en, {
+   "legal.privacyMissing":
+     "To complete: controller and contact, data and purposes, retention periods, providers and rights request process.",
+   "legal.terms": "Usage and subscription terms",
+-  "legal.fees": "HostBuddy commission: 2% on paid services, separate from Stripe fees.",
++  "legal.fees": "NONA commission: 2% on paid services, separate from Stripe fees.",
+   "legal.termsMissing":
+     "To complete: renewal, cancellation, unpaid invoices, service terms and refund policy.",
+ });
+@@ -2877,7 +2875,7 @@ Object.assign(translations.es, {
+   "legal.privacyMissing":
+     "Por completar: responsable, contacto, datos, finalidades, conservación, proveedores y ejercicio de derechos.",
+   "legal.terms": "Condiciones de uso y suscripción",
+-  "legal.fees": "Comisión HostBuddy: 2 % sobre servicios pagados, aparte de las tarifas Stripe.",
++  "legal.fees": "Comisión NONA: 2 % sobre servicios pagados, aparte de las tarifas Stripe.",
+   "legal.termsMissing":
+     "Por completar: renovación, cancelación, impagos, condiciones de servicios y reembolsos.",
+ });
+@@ -2892,7 +2890,7 @@ Object.assign(translations.de, {
+   "legal.privacyMissing":
+     "Ergänzen: Verantwortlicher, Kontakt, Daten, Zwecke, Speicherfristen, Anbieter und Rechteanfragen.",
+   "legal.terms": "Nutzungs- und Abobedingungen",
+-  "legal.fees": "HostBuddy-Provision: 2 % auf bezahlte Services, getrennt von Stripe-Gebühren.",
++  "legal.fees": "NONA-Provision: 2 % auf bezahlte Services, getrennt von Stripe-Gebühren.",
+   "legal.termsMissing":
+     "Ergänzen: Verlängerung, Kündigung, Zahlungsausfälle, Servicebedingungen und Erstattungen.",
+ });
+@@ -2907,7 +2905,7 @@ Object.assign(translations.it, {
+   "legal.privacyMissing":
+     "Da completare: titolare, contatto, dati, finalità, conservazione, fornitori e richieste sui diritti.",
+   "legal.terms": "Condizioni d’uso e abbonamento",
+-  "legal.fees": "Commissione HostBuddy: 2 % sui servizi pagati, separata dalle tariffe Stripe.",
++  "legal.fees": "Commissione NONA: 2 % sui servizi pagati, separata dalle tariffe Stripe.",
+   "legal.termsMissing":
+     "Da completare: rinnovo, cancellazione, mancati pagamenti, condizioni dei servizi e rimborsi.",
+ });
+@@ -2922,7 +2920,7 @@ Object.assign(translations.pt, {
+   "legal.privacyMissing":
+     "A completar: responsável, contacto, dados, finalidades, conservação, fornecedores e exercício de direitos.",
+   "legal.terms": "Condições de uso e assinatura",
+-  "legal.fees": "Comissão HostBuddy: 2 % sobre serviços pagos, separada das taxas Stripe.",
++  "legal.fees": "Comissão NONA: 2 % sobre serviços pagos, separada das taxas Stripe.",
+   "legal.termsMissing":
+     "A completar: renovação, cancelamento, incumprimento, condições dos serviços e reembolsos.",
+ });
+diff --git a/src/lib/import-engine/rules-extractor.test.ts b/src/lib/import-engine/rules-extractor.test.ts
+index 7ca0d7a..138e552 100644
+--- a/src/lib/import-engine/rules-extractor.test.ts
++++ b/src/lib/import-engine/rules-extractor.test.ts
+@@ -1,5 +1,6 @@
+ import { describe, it, expect } from "vitest";
+ import { extractFromText } from "./rules-extractor";
++import { extractDocument } from "./document-extractor";
+ // Entirely fictional fixtures: no real addresses, contacts or Wi-Fi credentials.
+ describe("rules extractor provenance", () => {
+   it("retains the smoking prohibition from the audited pasted paragraph", () => {
+@@ -70,6 +71,89 @@ Air conditioning not available.`);
+   });
+ });
+ 
++describe("audited synthetic guest-note classifications", () => {
++  const source = `Nom du logement : Maison des Tests
++Arrivée à partir de 17 h, départ avant 10 h.
++Wi-Fi TEST-NONA, mot de passe uniquement-fictif.
++Contact : Camille, camille@example.test. 2 chambres, 4 voyageurs.
++Petit-déjeuner sur demande 12 euros.`;
++
++  it("keeps a breakfast offer out of house rules without losing actual pet rules", () => {
++    const fields = extractDocument(source).fields;
++    expect(fields.find((field) => field.key === "services")).toMatchObject({
++      value: "Petit-déjeuner sur demande 12 euros.",
++      status: "found",
++    });
++    expect(fields.find((field) => field.key === "rules")?.status).toBe("missing");
++    const pets = extractFromText("Synthetic House\nPets are not allowed.");
++    expect(pets.fields.find((field) => field.key === "rules")).toMatchObject({
++      value: "Pets are not allowed.",
++      status: "found",
++    });
++  });
++
++  it("separates a numbered capacity sentence from its preceding contact", () => {
++    const fields = extractDocument(source).fields;
++    const contact = fields.find((field) => field.key === "contact");
++    const capacity = fields.find((field) => field.key === "capacity");
++    expect(contact?.value).toBe("Contact : Camille, camille@example.test.");
++    expect(capacity?.value).toBe("2 chambres, 4 voyageurs.");
++    for (const field of [contact, capacity]) {
++      expect(field?.status).toBe("found");
++      expect(source).toContain(field!.rawValue);
++      expect(field?.evidence?.[0]?.quote).toBe(field?.rawValue);
++    }
++  });
++
++  it.each([
++    ["Arrivée à partir de 17 h, départ avant 10 h.", "17 h", "10 h"],
++    ["Check-in from 4pm and check-out before 10am.", "4pm", "10am"],
++    ["Llegada a las 16:00; salida antes de las 10:00.", "16:00", "10:00"],
++  ])("keeps each explicitly named time in its own field: %s", (notes, arrival, departure) => {
++    const fields = extractDocument("Synthetic House\n" + notes).fields;
++    for (const [key, included, excluded] of [
++      ["arrival", arrival, departure],
++      ["departure", departure, arrival],
++    ]) {
++      const field = fields.find((item) => item.key === key)!;
++      expect(field.status).toBe("found");
++      expect(field.value).toContain(included);
++      expect(field.value).not.toContain(excluded);
++      expect(notes).toContain(field.rawValue);
++      expect(field.evidence?.every((item) => notes.includes(item.quote))).toBe(true);
++    }
++  });
++
++  it("still requires review when two arrival claims differ within a mixed paragraph", () => {
++    const result = extractDocument(
++      "Synthetic House\nArrivée à 15h, départ avant 10h, arrivée à 17h.",
++    );
++    const arrival = result.fields.find((field) => field.key === "arrival")!;
++    expect(arrival.status).toBe("to_verify");
++    expect(arrival.issues).toContain("conflicting_sources");
++    expect(arrival.rawValue).toContain("15h");
++    expect(arrival.rawValue).toContain("17h");
++    expect(arrival.rawValue).not.toContain("10h");
++    expect(result.fields.find((field) => field.key === "departure")?.status).toBe("found");
++  });
++
++  it("does not interpret a named arrival deadline as a generic departure deadline", () => {
++    const fields = extractDocument("Synthetic House\nArrivée avant 18h.").fields;
++    expect(fields.find((field) => field.key === "arrival")?.status).toBe("found");
++    expect(fields.find((field) => field.key === "departure")?.status).toBe("missing");
++  });
++
++  it("keeps uncertainty and low-trust URL evidence subject to review", () => {
++    const uncertain = extractDocument(
++      "Synthetic House\nArrivée peut-être à 17h, départ avant 10h.",
++    );
++    expect(uncertain.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
++    const website = extractDocument(source, "https://synthetic.example.invalid/guide");
++    expect(website.fields.find((field) => field.key === "arrival")?.status).toBe("to_verify");
++    expect(website.fields.find((field) => field.key === "departure")?.status).toBe("to_verify");
++  });
++});
++
+ it("recognizes the audited introductory property name without its location", () => {
+   expect(
+     extractFromText(
+diff --git a/src/lib/import-engine/rules-extractor.ts b/src/lib/import-engine/rules-extractor.ts
+index a936c57..401a359 100644
+--- a/src/lib/import-engine/rules-extractor.ts
++++ b/src/lib/import-engine/rules-extractor.ts
+@@ -23,7 +23,7 @@ const RAW_RULES: Record<string, RegExp> = {
+     /(clim|climatisation|air conditioning|air conditioner|aire acondicionado|klimaanlage|aria condizionata|ar condicionado|chauffage|heating|calefacción|heizung|riscaldamento|aquecimento|thermostat)/i,
+   pool: /(piscine|pool\b|swimming pool|piscina|schwimmbad|spa\b|jacuzzi|baignade)/i,
+   rules:
+-    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/i,
++    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?(?![\p{L}\d_])|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/iu,
+   trash:
+     /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?(?!\p{L})|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/iu,
+   departure:
+@@ -57,6 +57,32 @@ const AMBIGUOUS =
+ 
+ const TIME_FIELDS = new Set(["arrival", "departure"]);
+ 
++// Explicit topic markers disambiguate arrival/departure clauses. Generic phrases
++// such as "before 18h" cannot safely identify a departure when arrival is named.
++const TIME_MARKERS =
++  /(?<![\p{L}\d_])(?:(arriv[ée]e?|check[ .-]?in|arrival|llegada|ankunft|arrivo|chegada)|(d[ée]part|check[ .-]?out|departure|salida|abreise|partenza|partida))(?![\p{L}\d_])/giu;
++
++function timeMarkers(text: string) {
++  return [...text.matchAll(TIME_MARKERS)].map((match) => ({
++    index: match.index,
++    key: match[1] ? "arrival" : "departure",
++  }));
++}
++
++function splitMixedTimeClauses(snippet: string): string[] {
++  const markers = timeMarkers(snippet);
++  if (new Set(markers.map((marker) => marker.key)).size !== 2) return [snippet];
++  const clauses = markers.map((marker, index) =>
++    snippet
++      .slice(index === 0 ? 0 : marker.index, markers[index + 1]?.index)
++      .replace(/\s+(?:et|and|y|und|e)\s*$/iu, "")
++      .replace(/[,;\s]+$/u, ""),
++  );
++  // Only split clear timed clauses. Retain ambiguous wording intact for review.
++  // Each returned clause remains an exact substring, never a rewritten fact.
++  return clauses.every((clause) => normalizedTimes(clause).length) ? clauses : [snippet];
++}
++
+ function normalizedTimes(text: string) {
+   return [
+     ...text.matchAll(/\b([01]?\d|2[0-3])(?:\s*h(?:\s*([0-5]\d))?|\s*:\s*([0-5]\d)|\s*(am|pm)\b)/gi),
+@@ -78,8 +104,11 @@ function hasConflictingEvidence(key: string, hits: string[]) {
+ export function splitSnippets(text: string): string[] {
+   return text
+     .replace(/\r/g, "")
+-    .split(/\n+|(?<=[.!?])\s+(?=[A-ZÀ-Ý])/)
++    .split(
++      /\n+|(?<=[.!?])\s+(?=[A-ZÀ-Ý]|\d+\s*(?:personnes|voyageurs|guests?|people|personas|gäste|ospiti|hóspedes|couchages|chambres?|bedrooms?|habitaciones?|schlafzimmer|camere|quartos|lits?|beds?)\b)/,
++    )
+     .map((s) => s.replace(/^[\s•\-*–]+/, "").trim())
++    .flatMap(splitMixedTimeClauses)
+     .filter((s) => s.length > 1);
+ }
+ 
+@@ -125,7 +154,14 @@ export function extractFromText(text: string, baseConfidence = 0.85): Extraction
+ 
+   const fields: ExtractedField[] = FIELD_DEFS.map((def) => {
+     const rule = RULES[def.key];
+-    const hits = rule ? snippets.filter((snippet) => rule.test(snippet)) : [];
++    const hits = rule
++      ? snippets.filter((snippet) => {
++          if (!rule.test(snippet)) return false;
++          if (!TIME_FIELDS.has(def.key)) return true;
++          const markers = timeMarkers(snippet);
++          return !markers.length || markers.some((marker) => marker.key === def.key);
++        })
++      : [];
+ 
+     if (!hits.length) {
+       return {
+diff --git a/src/lib/import-engine/wifi-credentials.test.ts b/src/lib/import-engine/wifi-credentials.test.ts
+index e45b980..1caa371 100644
+--- a/src/lib/import-engine/wifi-credentials.test.ts
++++ b/src/lib/import-engine/wifi-credentials.test.ts
+@@ -37,6 +37,16 @@ describe("explicit property and Wi-Fi import normalization", () => {
+       password: "sun;moon",
+     });
+   });
++  it("separates explicit labels in the inline prose observed in the real editor", () => {
++    expect(wifiCredentials("Réseau : Pins_Test_UX. Mot de passe : bienvenue-test-2026.")).toEqual({
++      network: "Pins_Test_UX",
++      password: "bienvenue-test-2026.",
++    });
++    expect(wifiCredentials("Network: Apartment, Password: sun.moon,2026!")).toEqual({
++      network: "Apartment",
++      password: "sun.moon,2026!",
++    });
++  });
+   it("never invents missing credentials or extracts unrelated passwords", () => {
+     expect(wifiCredentials("Réseau : VillaWifi")).toEqual({ network: "VillaWifi" });
+     expect(wifiCredentials("Mot de passe : CompteGestionnaire")).toBeNull();
+diff --git a/src/lib/import-engine/wifi-credentials.ts b/src/lib/import-engine/wifi-credentials.ts
+index b18e65d..8924b6c 100644
+--- a/src/lib/import-engine/wifi-credentials.ts
++++ b/src/lib/import-engine/wifi-credentials.ts
+@@ -3,7 +3,7 @@ export function wifiCredentials(text: string): { network?: string; password?: st
+   // A slash in legacy prose is ambiguous; retain the complete original value.
+   if (/\s\/\s*(?:mot de passe|password|contrase[nñ]a|passwort|senha)\b/i.test(text)) return null;
+   const labelled = text.replace(
+-    /;\s*(?=(?:r[eé]seau(?: wi[ -]?fi)?|ssid|network(?: name)?|red(?: wi[ -]?fi)?|netzwerk(?:name)?|rete(?: wi[ -]?fi)?|mot de passe(?: wi[ -]?fi)?|mdp|password(?: wi[ -]?fi)?|contrase[nñ]a|passwort|senha)(?:\s*[:=]|\s+))/gi,
++    /(?:;\s*|[.,]\s+)(?=(?:r[eé]seau(?: wi[ -]?fi)?|ssid|network(?: name)?|red(?: wi[ -]?fi)?|netzwerk(?:name)?|rete(?: wi[ -]?fi)?|mot de passe(?: wi[ -]?fi)?|mdp|password(?: wi[ -]?fi)?|contrase[nñ]a|passwort|senha)(?:\s*[:=]|\s+))/gi,
+     "\n",
+   );
+   const values = (labels: string) =>
+diff --git a/src/lib/ux-copy.ts b/src/lib/ux-copy.ts
+new file mode 100644
+index 0000000..3563969
+--- /dev/null
++++ b/src/lib/ux-copy.ts
+@@ -0,0 +1,258 @@
++import type { Locale } from "./i18n";
++
++const keys = [
++  "managerWorkspace",
++  "managerActivity",
++  "managerSettings",
++  "managerMore",
++  "addProperty",
++  "guestPreview",
++  "editGuide",
++  "emptySearch",
++  "resetSearch",
++  "explore",
++  "demoHint",
++  "createGuide",
++  "demoGuest",
++  "demoManager",
++  "demoGuestHint",
++  "demoManagerHint",
++  "demoSafe",
++  "skipContent",
++  "askNona",
++  "quickAccess",
++  "copied",
++  "copyFailed",
++  "demoPreviewTitle",
++  "demoPreviewBody",
++] as const;
++const copy: Record<Locale, readonly string[]> = {
++  fr: [
++    "Mes logements",
++    "Au quotidien",
++    "Mon organisation",
++    "Plus",
++    "Ajouter un logement",
++    "Voir le guide",
++    "Modifier le livret",
++    "Aucun logement ne correspond à votre recherche.",
++    "Effacer les filtres",
++    "Explorer la démo",
++    "Explorez librement, sans compte",
++    "Créer mon livret",
++    "Côté voyageur",
++    "Côté gestionnaire",
++    "Découvrez Villa Mare comme si vous y séjourniez. Les informations, les services et NONA sont à portée de main.",
++    "Essayez le véritable éditeur : modifiez Villa Mare, puis regardez le résultat côté voyageur.",
++    "Vos essais restent dans cette démo. Aucun paiement réel.",
++    "Aller au contenu",
++    "Une question ?",
++    "L’essentiel de votre séjour",
++    "Copié !",
++    "Copie impossible. Sélectionnez le texte pour le copier.",
++    "Un seul livret, deux points de vue",
++    "Explorez le séjour de vos voyageurs, puis passez côté gestionnaire pour personnaliser le même livret.",
++  ],
++  en: [
++    "My properties",
++    "Daily activity",
++    "My organisation",
++    "More",
++    "Add a property",
++    "View guide",
++    "Edit guide",
++    "No properties match your search.",
++    "Clear filters",
++    "Explore the demo",
++    "Explore freely, no account needed",
++    "Create my guide",
++    "Guest view",
++    "Manager view",
++    "Explore Villa Mare as if you were staying there. Information, services and NONA are close at hand.",
++    "Try the real editor: change Villa Mare, then see the result as a guest.",
++    "Your changes stay in this demo. No real payments.",
++    "Skip to content",
++    "Any questions?",
++    "Your stay essentials",
++    "Copied!",
++    "Could not copy. Select the text to copy it.",
++    "One guide, two perspectives",
++    "Explore your guests’ stay, then switch to the manager view to customise the same guide.",
++  ],
++  es: [
++    "Mis alojamientos",
++    "Día a día",
++    "Mi organización",
++    "Más",
++    "Añadir alojamiento",
++    "Ver guía",
++    "Editar guía",
++    "Ningún alojamiento coincide con la búsqueda.",
++    "Borrar filtros",
++    "Explorar la demo",
++    "Explora libremente, sin cuenta",
++    "Crear mi guía",
++    "Vista del viajero",
++    "Vista del gestor",
++    "Descubre Villa Mare como si te alojaras allí. Información, servicios y NONA a mano.",
++    "Prueba el editor real: modifica Villa Mare y mira el resultado como viajero.",
++    "Los cambios se quedan en esta demo. Sin pagos reales.",
++    "Ir al contenido",
++    "¿Alguna pregunta?",
++    "Lo esencial de tu estancia",
++    "¡Copiado!",
++    "No se pudo copiar. Selecciona el texto para copiarlo.",
++    "Una guía, dos perspectivas",
++    "Explora la estancia de tus viajeros y pasa a la vista del gestor para personalizar la misma guía.",
++  ],
++  de: [
++    "Meine Unterkünfte",
++    "Tagesgeschäft",
++    "Meine Organisation",
++    "Mehr",
++    "Unterkunft hinzufügen",
++    "Guide ansehen",
++    "Guide bearbeiten",
++    "Keine Unterkunft entspricht Ihrer Suche.",
++    "Filter löschen",
++    "Demo erkunden",
++    "Frei erkunden, ohne Konto",
++    "Meinen Guide erstellen",
++    "Gastansicht",
++    "Verwalteransicht",
++    "Entdecken Sie Villa Mare wie bei einem Aufenthalt. Informationen, Services und NONA sind schnell erreichbar.",
++    "Testen Sie den echten Editor: Ändern Sie Villa Mare und sehen Sie das Ergebnis als Gast.",
++    "Änderungen bleiben in dieser Demo. Keine echten Zahlungen.",
++    "Zum Inhalt",
++    "Eine Frage?",
++    "Das Wichtigste für Ihren Aufenthalt",
++    "Kopiert!",
++    "Kopieren fehlgeschlagen. Wählen Sie den Text zum Kopieren aus.",
++    "Ein Guide, zwei Perspektiven",
++    "Entdecken Sie den Aufenthalt Ihrer Gäste und wechseln Sie zur Verwaltung desselben Guides.",
++  ],
++  it: [
++    "I miei alloggi",
++    "Attività quotidiana",
++    "La mia organizzazione",
++    "Altro",
++    "Aggiungi alloggio",
++    "Vedi guida",
++    "Modifica guida",
++    "Nessun alloggio corrisponde alla ricerca.",
++    "Cancella filtri",
++    "Esplora la demo",
++    "Esplora liberamente, senza account",
++    "Crea la mia guida",
++    "Vista viaggiatore",
++    "Vista gestore",
++    "Scopri Villa Mare come se soggiornassi lì. Informazioni, servizi e NONA a portata di mano.",
++    "Prova il vero editor: modifica Villa Mare e guarda il risultato come viaggiatore.",
++    "Le modifiche restano in questa demo. Nessun pagamento reale.",
++    "Vai al contenuto",
++    "Una domanda?",
++    "L’essenziale del soggiorno",
++    "Copiato!",
++    "Impossibile copiare. Seleziona il testo per copiarlo.",
++    "Una guida, due punti di vista",
++    "Esplora il soggiorno dei tuoi viaggiatori, poi passa alla vista gestore per personalizzare la stessa guida.",
++  ],
++  pt: [
++    "Os meus alojamentos",
++    "Dia a dia",
++    "A minha organização",
++    "Mais",
++    "Adicionar alojamento",
++    "Ver guia",
++    "Editar guia",
++    "Nenhum alojamento corresponde à pesquisa.",
++    "Limpar filtros",
++    "Explorar a demo",
++    "Explora livremente, sem conta",
++    "Criar o meu guia",
++    "Vista do viajante",
++    "Vista do gestor",
++    "Descobre Villa Mare como se estivesses lá. Informações, serviços e NONA à mão.",
++    "Experimenta o editor real: altera Villa Mare e vê o resultado como viajante.",
++    "As alterações ficam nesta demo. Sem pagamentos reais.",
++    "Ir para o conteúdo",
++    "Uma pergunta?",
++    "O essencial da estadia",
++    "Copiado!",
++    "Não foi possível copiar. Seleciona o texto para copiar.",
++    "Um guia, duas perspetivas",
++    "Explora a estadia dos teus viajantes e muda para a vista do gestor para personalizar o mesmo guia.",
++  ],
++};
++
++const software: Record<Locale, { connectSoftware: string; connectSoftwareDescription: string }> = {
++  fr: {
++    connectSoftware: "Connecter mon logiciel",
++    connectSoftwareDescription:
++      "Récupérez vos logements avec les accès autorisés de votre logiciel.",
++  },
++  en: {
++    connectSoftware: "Connect my software",
++    connectSoftwareDescription: "Import properties using your software’s authorised access.",
++  },
++  es: {
++    connectSoftware: "Conectar mi software",
++    connectSoftwareDescription: "Importa alojamientos con los accesos autorizados de tu software.",
++  },
++  de: {
++    connectSoftware: "Meine Software verbinden",
++    connectSoftwareDescription: "Importieren Sie Unterkünfte mit autorisiertem Softwarezugang.",
++  },
++  it: {
++    connectSoftware: "Collega il mio software",
++    connectSoftwareDescription: "Importa gli alloggi con gli accessi autorizzati del tuo software.",
++  },
++  pt: {
++    connectSoftware: "Ligar o meu software",
++    connectSoftwareDescription: "Importa alojamentos com os acessos autorizados do teu software.",
++  },
++};
++
++const emptyGuideSearch: Record<Locale, string> = {
++  fr: "Aucune rubrique ne correspond à votre recherche.",
++  en: "No sections match your search.",
++  es: "Ninguna sección coincide con tu búsqueda.",
++  de: "Keine Rubrik entspricht Ihrer Suche.",
++  it: "Nessuna sezione corrisponde alla ricerca.",
++  pt: "Nenhuma secção corresponde à pesquisa.",
++};
++
++export function uxCopy(locale: Locale) {
++  return {
++    ...(Object.fromEntries(keys.map((key, index) => [key, copy[locale][index]])) as Record<
++      (typeof keys)[number],
++      string
++    >),
++    ...software[locale],
++    emptyGuideSearch: emptyGuideSearch[locale],
++    previewBookings: {
++      fr: "Aperçu uniquement : les réservations sont disponibles dans le guide voyageur.",
++      en: "Preview only: booking is available in the guest guide.",
++      es: "Solo vista previa: las reservas están disponibles en la guía del viajero.",
++      de: "Nur Vorschau: Buchungen sind im Gästeguide verfügbar.",
++      it: "Solo anteprima: le prenotazioni sono disponibili nella guida ospiti.",
++      pt: "Apenas pré-visualização: as reservas estão disponíveis no guia do hóspede.",
++    }[locale],
++    poolPhoto: {
++      fr: "Espace détente au bord d’une piscine",
++      en: "Relaxation by a swimming pool",
++      es: "Zona de descanso junto a una piscina",
++      de: "Entspannung am Pool",
++      it: "Area relax a bordo piscina",
++      pt: "Espaço de descanso junto à piscina",
++    }[locale],
++    helpIdeas: {
++      fr: "Que peut faire NONA pour moi ?",
++      en: "How can NONA help me?",
++      es: "¿Cómo puede ayudarme NONA?",
++      de: "Wie kann NONA mir helfen?",
++      it: "Come può aiutarmi NONA?",
++      pt: "Como me pode ajudar a NONA?",
++    }[locale],
++  };
++}
+diff --git a/src/routes/__root.tsx b/src/routes/__root.tsx
+index d42418f..0c1bb55 100644
+--- a/src/routes/__root.tsx
++++ b/src/routes/__root.tsx
+@@ -12,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
+ 
+ import appCss from "../styles.css?url";
+ import nonaCss from "../styles/nona-art-direction.css?url";
++import uxCss from "../styles/ux-foundations.css?url";
++import managerUxCss from "../styles/manager-ux.css?url";
++import guestUxCss from "../styles/guest-ux.css?url";
++import { NavigationFeedback } from "../components/shared/NavigationFeedback";
+ import { reportLovableError } from "../lib/lovable-error-reporting";
+ import { hasSupabaseConfig, supabase } from "../integrations/supabase/client";
+ import { LocaleProvider } from "../lib/i18n";
+@@ -93,6 +97,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+         href: appCss,
+       },
+       { rel: "stylesheet", href: nonaCss },
++      { rel: "stylesheet", href: uxCss },
++      { rel: "stylesheet", href: managerUxCss },
++      { rel: "stylesheet", href: guestUxCss },
+       { rel: "icon", href: "/favicon.png", type: "image/png" },
+     ],
+   }),
+@@ -134,6 +141,7 @@ function RootComponent() {
+   return (
+     <QueryClientProvider client={queryClient}>
+       <LocaleProvider>
++        <NavigationFeedback />
+         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+         <Outlet />
+       </LocaleProvider>
+diff --git a/src/routes/demo.tsx b/src/routes/demo.tsx
+index 2333691..da67138 100644
+--- a/src/routes/demo.tsx
++++ b/src/routes/demo.tsx
+@@ -4,12 +4,14 @@ import { DemoExperience } from "@/components/demo/DemoExperience";
+ import { Logo } from "@/components/shared/Logo";
+ import { LanguageSelect } from "@/components/i18n/LanguageSelect";
+ import { useI18n } from "@/lib/i18n";
++import { uxCopy } from "@/lib/ux-copy";
+ const title = "Démo interactive NONA";
+ const description = "Essayez le guide voyageur et le même éditeur que les gestionnaires HostBuddy.";
+ export const Route = createFileRoute("/demo")({
+   validateSearch: (
+     search: Record<string, unknown>,
+-  ): { device?: "mobile"; preview?: "guide" | "manager" } => ({
++  ): { device?: "mobile"; preview?: "guide" | "manager"; mode?: "guest" | "manager" } => ({
++    ...(search["mode"] === "guest" || search["mode"] === "manager" ? { mode: search["mode"] } : {}),
+     ...(search["device"] === "mobile" ? { device: "mobile" as const } : {}),
+     ...(search["preview"] === "manager" || search["preview"] === "guide"
+       ? { preview: search["preview"] }
+@@ -28,31 +30,50 @@ export const Route = createFileRoute("/demo")({
+   component: DemoPage,
+ });
+ function DemoPage() {
+-  const { t } = useI18n();
+-  const { device, preview } = Route.useSearch();
++  const { t, locale } = useI18n();
++  const ux = uxCopy(locale);
++  const { device, preview, mode } = Route.useSearch();
++  const navigate = Route.useNavigate();
+   if (preview)
+     return <DemoExperience standalone initialMode={preview === "manager" ? "manager" : "guest"} />;
+   return (
+-    <div className="min-h-screen bg-ink px-3 py-4 text-ink-foreground sm:px-6 sm:py-6">
+-      <header className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
++    <div className="nona-demo-page min-h-screen bg-background text-foreground">
++      <a href="#demo-content" className="nona-skip-link">
++        {ux.skipContent}
++      </a>
++      <header className="nona-demo-header">
+         <Link to="/" className="inline-flex min-h-12 min-w-0 items-center gap-2 font-semibold">
+           <ArrowLeft className="shrink-0" />
+           <span>{t("common.backSite")}</span>
+         </Link>
+         <div className="flex shrink-0 items-center gap-2">
+           <LanguageSelect compact />
+-          <div className="hidden rounded-full bg-background px-4 py-2 text-foreground sm:block">
++          <div className="hidden sm:block">
+             <Logo />
+           </div>
+         </div>
+       </header>
+-      <main className="mx-auto max-w-6xl py-6 sm:py-10">
+-        <div className="mb-7 max-w-2xl">
+-          <h1 className="text-4xl font-semibold sm:text-5xl">{t("demo.pageTitle")}</h1>
+-          <p className="mt-3 text-lg text-ink-foreground/80">{t("demo.pageDesc")}</p>
+-        </div>
++      <main id="demo-content" className="mx-auto max-w-7xl" tabIndex={-1}>
++        <h1 className="sr-only">{t("demo.pageTitle")}</h1>
+         <div style={device === "mobile" ? { maxWidth: 390, marginInline: "auto" } : undefined}>
+-          <DemoExperience />
++          <DemoExperience
++            action={
++              <Link
++                to="/auth"
++                search={{ mode: "signup" }}
++                className="btn btn-primary nona-demo-create"
++              >
++                {ux.createGuide}
++              </Link>
++            }
++            initialMode={mode ?? "guest"}
++            onModeChange={(next) => {
++              void navigate({
++                search: (previous) => ({ ...previous, mode: next }),
++                resetScroll: false,
++              });
++            }}
++          />
+         </div>
+       </main>
+     </div>
+diff --git a/src/routes/index.tsx b/src/routes/index.tsx
+index d961af7..8de5cab 100644
+--- a/src/routes/index.tsx
++++ b/src/routes/index.tsx
+@@ -1,4 +1,5 @@
+ import { VillaMarePhone } from "@/components/marketing/VillaMarePhone";
++import { MarketingPhoto } from "@/components/marketing/MarketingPhoto";
+ import { createFileRoute, Link } from "@tanstack/react-router";
+ import {
+   ArrowRight,
+@@ -13,10 +14,10 @@ import {
+ } from "lucide-react";
+ import { Logo } from "@/components/shared/Logo";
+ import { NonaWordmark } from "@/components/shared/NonaBrand";
+-import { PhoneDemo } from "@/components/marketing/PhoneDemo";
+ import { SocialProof } from "@/components/marketing/SocialProof";
+ import { LanguageSelect } from "@/components/i18n/LanguageSelect";
+ import { useI18n } from "@/lib/i18n";
++import { uxCopy } from "@/lib/ux-copy";
+ import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
+ import breakfastAsset from "@/assets/hostbuddy-breakfast.jpg.asset.json";
+ import spaAsset from "@/assets/hostbuddy-spa.jpg.asset.json";
+@@ -42,12 +43,22 @@ export const Route = createFileRoute("/")({
+ const sourceLabels = ["Airbnb", "Booking", "Sunver"];
+ 
+ function Landing() {
+-  const { t } = useI18n();
++  const { t, locale } = useI18n();
++  const ux = uxCopy(locale);
+   return (
+-    <div className="overflow-clip">
+-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
++    <div className="nona-marketing-page">
++      <a href="#main-content" className="nona-skip-link">
++        {ux.skipContent}
++      </a>
++      <header className="nona-marketing-header mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:px-5">
+         <Logo />
+         <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
++          <Link
++            to="/demo"
++            className="hidden min-h-12 items-center px-3 text-sm font-semibold text-primary sm:inline-flex"
++          >
++            {ux.explore}
++          </Link>
+           <Link
+             to="/integrations"
+             className="hidden min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:inline-flex sm:px-2 sm:text-base"
+@@ -65,10 +76,11 @@ function Landing() {
+         </nav>
+       </header>
+ 
+-      <main>
++      <main id="main-content" tabIndex={-1}>
+         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
+-          <img
++          <MarketingPhoto
+             src={arrivalAsset.url}
++            fallback="/hostbuddy-media/arrival.webp"
+             fetchPriority="high"
+             alt={t("marketing.arrivalAlt")}
+             width={1536}
+@@ -104,17 +116,19 @@ function Landing() {
+                 ))}
+               </ul>
+               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+-                <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">
+-                  {t("common.try")}
++                <Link to="/demo" className="btn btn-primary text-lg">
++                  {ux.explore}
+                   <ArrowRight className="h-5 w-5" />
+                 </Link>
+                 <Link
+-                  to="/demo"
++                  to="/auth"
++                  search={{ mode: "signup" }}
+                   className="btn border-2 border-ink-foreground/60 bg-ink/20 text-ink-foreground backdrop-blur hover:bg-ink/35"
+                 >
+-                  {t("common.demo")}
++                  {ux.createGuide}
+                 </Link>
+               </div>
++              <p className="mt-3 text-sm text-ink-foreground/90">{ux.demoHint}</p>
+               <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
+                 {t("marketing.paidTier")} ·{" "}
+                 <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
+@@ -197,13 +211,25 @@ function Landing() {
+                 {t("marketing.qrLine")}
+               </div>
+             </div>
+-            <div id="demo" className="mt-9">
+-              <div className="mx-auto w-full max-w-6xl">
+-                <PhoneDemo />
++            <div id="demo" className="nona-demo-entry mt-9">
++              <div>
++                <h3 className="text-3xl">{ux.demoPreviewTitle}</h3>
++                <p className="mt-3 text-ink-foreground/80">{ux.demoPreviewBody}</p>
++              </div>
++              <div className="grid gap-3 sm:grid-cols-2">
++                <Link to="/demo" search={{ mode: "guest" }} className="btn btn-primary">
++                  {ux.demoGuest}
++                  <ArrowRight size={18} />
++                </Link>
++                <Link
++                  to="/demo"
++                  search={{ mode: "manager" }}
++                  className="btn border border-ink-foreground/60 text-ink-foreground hover:bg-ink-foreground/10"
++                >
++                  {ux.demoManager}
++                  <ArrowRight size={18} />
++                </Link>
+               </div>
+-              <Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">
+-                {t("marketing.openDemo")}
+-              </Link>
+             </div>
+           </div>
+         </section>
+@@ -211,8 +237,9 @@ function Landing() {
+         <section className="mx-auto max-w-6xl px-5 py-24">
+           <div className="grid gap-12 lg:grid-cols-2">
+             <div className="overflow-hidden rounded-2xl">
+-              <img
++              <MarketingPhoto
+                 src={breakfastAsset.url}
++                fallback="/demo-guide/breakfast.webp"
+                 alt={t("marketing.breakfastAlt")}
+                 loading="lazy"
+                 width={1200}
+@@ -245,8 +272,10 @@ function Landing() {
+               </p>
+             </div>
+             <div className="overflow-hidden rounded-2xl lg:order-4">
+-              <img
++              <MarketingPhoto
+                 src={spaAsset.url}
++                fallback="/demo-guide/pool.webp"
++                fallbackAlt={ux.poolPhoto}
+                 alt={t("marketing.spaAlt")}
+                 loading="lazy"
+                 width={1200}
+diff --git a/src/styles/guest-ux.css b/src/styles/guest-ux.css
+new file mode 100644
+index 0000000..29159b2
+--- /dev/null
++++ b/src/styles/guest-ux.css
+@@ -0,0 +1,82 @@
++/* Shared by public, preview and demo guides; no change to brand artwork or palette. */
++.hb-guide .nona-guest-shortcuts {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 8px;
++  margin: 0 0 18px;
++}
++
++.hb-guide .nona-guest-shortcuts button {
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  gap: 7px;
++  min-height: 44px;
++  max-width: 100%;
++  padding: 9px 13px;
++  border: 1px solid currentColor;
++  border-radius: 999px;
++  color: var(--nona-burgundy);
++  background: transparent;
++  text-align: center;
++  font-size: 13px;
++  font-weight: 600;
++  line-height: 1.3;
++  overflow-wrap: anywhere;
++}
++
++.hb-guide .nona-guest-shortcuts svg {
++  flex-shrink: 0;
++}
++
++.hb-guide .hb-icon-button.nona-guest-back {
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  width: auto;
++  min-height: 44px;
++  padding-inline: 12px;
++  gap: 7px;
++  font-size: 13px;
++  font-weight: 600;
++}
++
++.hb-guide
++  :is(
++    .nona-guest-shortcuts button,
++    .hb-entry-open,
++    .hb-section-card,
++    .hb-menu-results button
++  ):focus-visible {
++  outline: 3px solid currentColor;
++  outline-offset: 4px;
++}
++
++.hb-guide h1[tabindex="-1"]:focus-visible {
++  outline: 2px solid currentColor;
++  outline-offset: 5px;
++}
++.hb-guide .hb-menu-empty {
++  padding: 20px 0;
++  line-height: 1.6;
++}
++.hb-guide .hb-menu-empty button {
++  margin-top: 12px;
++}
++
++@media (hover: hover) {
++  .hb-guide .nona-guest-shortcuts button:hover {
++    background: color-mix(in srgb, currentColor 7%, transparent);
++  }
++}
++
++@media (prefers-reduced-motion: no-preference) {
++  .hb-guide .nona-guest-shortcuts button {
++    transition:
++      background-color 140ms ease,
++      transform 140ms ease;
++  }
++  .hb-guide .nona-guest-shortcuts button:active {
++    transform: scale(0.98);
++  }
++}
+diff --git a/src/styles/manager-ux.css b/src/styles/manager-ux.css
+new file mode 100644
+index 0000000..256d4fd
+--- /dev/null
++++ b/src/styles/manager-ux.css
+@@ -0,0 +1,96 @@
++/* Manager navigation and card hierarchy. Business actions stay in their adapters. */
++.manager-shell .manager-shell-sidebar nav > .manager-nav-group {
++  margin: 18px 12px 5px;
++  color: var(--muted-foreground);
++  font-size: 11px;
++  font-weight: 600;
++  letter-spacing: 0.04em;
++}
++.manager-shell .manager-shell-sidebar nav > :is(a, button):not(.manager-nav-add) {
++  margin-top: 0;
++  border: 0;
++  color: var(--foreground);
++  background: transparent;
++}
++.manager-shell .manager-shell-sidebar nav > .manager-nav-add {
++  margin: 0 0 4px;
++  background: var(--primary);
++  color: var(--primary-foreground);
++  font-weight: 600;
++}
++.manager-shell .manager-shell-sidebar nav > .manager-nav-add svg {
++  color: currentColor;
++}
++.manager-shell
++  .manager-shell-sidebar
++  nav
++  > :is(a, button):not(.manager-nav-add)[aria-current="page"] {
++  background: var(--secondary);
++  color: var(--primary);
++  font-weight: 600;
++}
++.manager-shell
++  .manager-shell-sidebar
++  nav
++  > :is(a, button):not(.manager-nav-add)[aria-current="page"]
++  svg {
++  color: currentColor;
++}
++.manager-shell .manager-shell-mobile [aria-current="page"] {
++  background: var(--secondary);
++  color: var(--primary);
++}
++.manager-shell .manager-property-toolbar {
++  margin-top: 22px;
++}
++.manager-shell .manager-properties-heading {
++  grid-template-columns: minmax(0, 1fr) auto;
++}
++.manager-shell .manager-property-no-results {
++  grid-column: 1 / -1;
++}
++.manager-shell .manager-property-quick-actions {
++  flex-wrap: wrap;
++}
++.manager-shell .manager-property-quick-actions :is(a, button) {
++  min-height: 44px;
++  white-space: normal;
++  text-align: center;
++  line-height: 1.35;
++}
++.manager-shell .manager-property-quick-actions .manager-property-edit {
++  background: var(--primary);
++  border-color: var(--primary);
++  color: var(--primary-foreground);
++}
++.manager-shell .manager-property-menu summary {
++  width: 44px;
++  height: 44px;
++}
++.manager-shell .manager-property-menu summary:focus-visible {
++  outline: 2px solid var(--primary);
++  outline-offset: 2px;
++  border-radius: 8px;
++}
++.manager-shell .manager-property-search:focus-within {
++  outline: 2px solid var(--primary);
++  outline-offset: 2px;
++}
++@media (hover: hover) {
++  .manager-shell .manager-shell-sidebar nav > :is(a, button):not(.manager-nav-add):hover {
++    background: var(--secondary);
++  }
++}
++@container (max-width: 1000px) {
++  .manager-shell .manager-properties-heading {
++    grid-template-columns: minmax(0, 1fr);
++  }
++}
++@container (max-width: 450px) {
++  .manager-shell .manager-property-toolbar {
++    gap: 8px;
++  }
++  .manager-shell .manager-property-sort {
++    max-width: 120px;
++  }
++}
+diff --git a/src/styles/ux-foundations.css b/src/styles/ux-foundations.css
+new file mode 100644
+index 0000000..6db2ee0
+--- /dev/null
++++ b/src/styles/ux-foundations.css
+@@ -0,0 +1,265 @@
++/* Shared feedback: preserve official tokens, animate only composited properties. */
++:root {
++  --nona-duration-fast: 140ms;
++  --nona-duration-panel: 220ms;
++  --nona-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
++}
++:where(button, a, input, select, textarea, summary) {
++  -webkit-tap-highlight-color: transparent;
++}
++:where(button:not(:disabled), a[href], summary) {
++  touch-action: manipulation;
++}
++:where(button, a, input, select, textarea, summary):focus-visible {
++  outline: 2px solid var(--primary);
++  outline-offset: 4px;
++}
++:where(button:disabled, [aria-disabled="true"]) {
++  cursor: not-allowed;
++}
++:where(.btn, .hb-button, .hb-icon-button, .nona-demo-tab, button) {
++  transition:
++    background-color var(--nona-duration-fast) ease,
++    color var(--nona-duration-fast) ease,
++    border-color var(--nona-duration-fast) ease,
++    box-shadow var(--nona-duration-fast) ease,
++    transform var(--nona-duration-fast) var(--nona-ease);
++}
++:where(.btn, .hb-button, .hb-icon-button, .nona-demo-tab, .manager-property-card button):active:not(
++    :disabled
++  ) {
++  transform: translateY(1px) scale(0.985);
++}
++@media (hover: hover) and (prefers-reduced-motion: no-preference) {
++  :where(.hb-tile, .hb-service-card):hover {
++    box-shadow: 0 5px 18px #4b413814;
++  }
++}
++.nona-skip-link {
++  position: fixed;
++  inset: 8px auto auto 8px;
++  z-index: 100;
++  transform: translateY(-180%);
++  padding: 12px 20px;
++  border-radius: 10px;
++  background: var(--card);
++  color: var(--primary);
++  box-shadow: var(--shadow-soft);
++}
++.nona-skip-link:focus {
++  transform: none;
++}
++.nona-navigation-progress {
++  position: fixed;
++  inset: 0 0 auto;
++  height: 3px;
++  background: var(--primary);
++  z-index: 100;
++  animation: nona-progress 1s ease-in-out infinite alternate;
++  transform-origin: left;
++}
++@keyframes nona-progress {
++  from {
++    transform: scaleX(0.15);
++  }
++  to {
++    transform: scaleX(0.9);
++  }
++}
++.nona-workspace-skeleton {
++  display: grid;
++  gap: 20px;
++  padding: 32px;
++  min-height: 420px;
++}
++.nona-workspace-skeleton > span {
++  display: block;
++  height: 72px;
++  border-radius: 12px;
++  background: var(--muted);
++  animation: nona-skeleton 1.2s ease-in-out infinite alternate;
++}
++.nona-workspace-skeleton > span:first-child {
++  width: 45%;
++  height: 38px;
++}
++@keyframes nona-skeleton {
++  to {
++    opacity: 0.45;
++  }
++}
++.nona-marketing-header {
++  position: relative;
++  z-index: 30;
++}
++.nona-demo-entry {
++  display: grid;
++  align-items: center;
++  gap: 28px;
++  max-width: 1000px;
++  margin-inline: auto;
++  padding: clamp(20px, 4vw, 48px);
++  border: 1px solid #ffffff35;
++  border-radius: 20px;
++}
++.nona-demo-entry .btn {
++  white-space: normal;
++  text-align: center;
++}
++.nona-demo-header {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: 12px;
++  min-height: 68px;
++  padding: 8px max(16px, calc((100vw - 1300px) / 2));
++  border-bottom: 1px solid var(--border);
++  background: var(--background);
++}
++.nona-demo-toolbar {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: 16px;
++  padding: 16px;
++  background: var(--background);
++}
++.nona-demo-tabs {
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  padding: 4px;
++  gap: 4px;
++  border-radius: 14px;
++  background: var(--secondary);
++}
++.nona-demo-tabs .nona-demo-tab {
++  color: var(--foreground);
++  background: transparent;
++  border-radius: 10px;
++  padding-inline: clamp(12px, 2vw, 24px);
++}
++.nona-demo-tabs .nona-demo-tab[aria-selected="true"] {
++  background: var(--primary);
++  color: var(--primary-foreground);
++  box-shadow: 0 2px 8px #4b413816;
++}
++.nona-demo-context {
++  padding: 0 20px 20px;
++  max-width: 800px;
++  color: var(--foreground);
++}
++.nona-demo-context small {
++  display: block;
++  margin-top: 6px;
++  color: var(--muted-foreground);
++}
++.demo-container[data-layout="page"] > .demo-frame {
++  overflow: visible;
++}
++.demo-container[data-layout="page"] .demo-viewport {
++  height: auto;
++  min-height: 65dvh;
++  overflow: visible;
++}
++.demo-container[data-layout="page"] > .relative > .nona-concierge[data-demo] {
++  position: fixed;
++  bottom: 0;
++}
++.demo-container [role="tabpanel"][hidden] {
++  display: none;
++}
++.demo-container [role="tabpanel"] {
++  outline-offset: -3px;
++}
++.demo-container[data-layout="embedded"] .nona-demo-toolbar {
++  justify-content: center;
++}
++.nona-demo-page .manager-shell:not(.manager-shell-embedded) {
++  min-height: 75dvh;
++}
++.nona-demo-page .demo-frame {
++  border-radius: 16px 16px 0 0;
++}
++.nona-concierge .nona-launcher {
++  position: relative;
++  overflow: visible;
++}
++.nona-launcher-caption {
++  position: absolute;
++  bottom: calc(100% + 5px);
++  right: 0;
++  width: max-content;
++  max-width: 170px;
++  white-space: normal;
++  padding: 7px 12px;
++  border: 1px solid var(--border);
++  border-radius: 14px 14px 3px 14px;
++  background: var(--card);
++  color: #4b4138;
++  font-size: 13px;
++  line-height: 1.3;
++  font-weight: 600;
++  box-shadow: var(--shadow-soft);
++}
++.nona-thinking {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  padding: 10px 0;
++  color: var(--muted-foreground);
++  font-size: 14px;
++}
++@media (prefers-reduced-motion: no-preference) {
++  .nona-concierge .nona-panel:not([hidden]) {
++    animation: nona-panel-enter var(--nona-duration-panel) var(--nona-ease) both;
++  }
++  @keyframes nona-panel-enter {
++    from {
++      opacity: 0;
++      transform: translateY(8px);
++    }
++    to {
++      opacity: 1;
++      transform: none;
++    }
++  }
++}
++@media (max-width: 600px) {
++  .nona-demo-toolbar {
++    flex-wrap: wrap;
++    gap: 10px;
++    padding: 12px;
++  }
++  .nona-demo-tabs {
++    flex: 1 1 100%;
++  }
++  .nona-demo-create {
++    min-height: 44px;
++    width: 100%;
++    font-size: 14px;
++  }
++  .nona-demo-context {
++    padding: 0 16px 16px;
++    font-size: 14px;
++  }
++  .nona-demo-page .demo-frame {
++    border-radius: 0;
++  }
++}
++@media (prefers-reduced-motion: reduce) {
++  *,
++  *::before,
++  *::after {
++    scroll-behavior: auto !important;
++  }
++  :where(.btn, button, a, .hb-tile, .hb-button, .hb-icon-button, .nona-demo-tab) {
++    transition-duration: 0s !important;
++  }
++  :where(.btn, button, a):active {
++    transform: none !important;
++  }
++  .nona-navigation-progress,
++  .nona-workspace-skeleton > span {
++    animation: none;
++  }
++}

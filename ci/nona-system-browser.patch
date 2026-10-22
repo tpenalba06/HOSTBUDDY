@@ -1,0 +1,32 @@
+diff --git a/ci/nona-design-browser.mjs b/ci/nona-design-browser.mjs
+index 92ca826..697e73d 100644
+--- a/ci/nona-design-browser.mjs
++++ b/ci/nona-design-browser.mjs
+@@ -1,7 +1,10 @@
+ import assert from "node:assert/strict";
+ import { writeFile } from "node:fs/promises";
+ const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
+-const browser = await chromium.launch({ headless: true });
++const browser = await chromium.launch({
++  headless: true,
++  executablePath: process.env.NONA_CHROME_EXECUTABLE || undefined,
++});
+ const deadline = setTimeout(() => {
+   console.error("Design browser time limit exceeded");
+   process.exit(1);
+diff --git a/scripts/validation/nona-beta-browser.mjs b/scripts/validation/nona-beta-browser.mjs
+index 726c333..25084f5 100644
+--- a/scripts/validation/nona-beta-browser.mjs
++++ b/scripts/validation/nona-beta-browser.mjs
+@@ -1,7 +1,10 @@
+ import assert from "node:assert/strict";
+ import { writeFile } from "node:fs/promises";
+ const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
+-const browser = await chromium.launch({ headless: true });
++const browser = await chromium.launch({
++  headless: true,
++  executablePath: process.env.NONA_CHROME_EXECUTABLE || undefined,
++});
+ const results = [];
+ let nextChatAt = 0;
+ try {

@@ -2,7 +2,7 @@ name: NONA consolidated private beta regression
 on:
   push:
     branches: [work/nona-beta-consolidated-20261022]
-    paths: [ci/nona-cloud-qa.patch, ci/nona-guide-layout.patch, ci/nona-consolidation.patch, ci/nona-design-browser.mjs, .github/workflows/nona-cloud-qa.yml]
+    paths: [ci/nona-cloud-qa.patch, ci/nona-guide-layout.patch, ci/nona-consolidation.patch, ci/nona-packaging.patch, ci/nona-design-browser.mjs, .github/workflows/nona-cloud-qa.yml]
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
           node-version: 22
       - name: Apply exact isolated source patch
         id: source
-        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch && git apply --check ci/nona-guide-layout.patch && git apply ci/nona-guide-layout.patch && git apply --check ci/nona-consolidation.patch && git apply ci/nona-consolidation.patch
+        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch && git apply --check ci/nona-guide-layout.patch && git apply ci/nona-guide-layout.patch && git apply --check ci/nona-consolidation.patch && git apply ci/nona-consolidation.patch && git apply --check ci/nona-packaging.patch && git apply ci/nona-packaging.patch
       - run: bun install --frozen-lockfile
       - name: Full non-regression without provider credentials
         run: |
@@ -35,7 +35,9 @@ jobs:
           npm run lint 2>&1 | tee qa-results/lint.log
       - name: Build isolated real renderer and compiled backend
         if: ${{ !cancelled() }}
-        run: node scripts/validation/build-nona-cloud-isolated.mjs
+        run: |
+          node scripts/validation/build-nona-cloud-isolated.mjs
+          node scripts/validation/build-nona-hosted-test.mjs
       - name: Install browser runtime already used by this repository
         if: ${{ !cancelled() }}
         run: |
@@ -63,6 +65,11 @@ jobs:
         with:
           name: nona-cloud-qa-evidence
           path: qa-results/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nona-consolidated-test-package
+          path: .output/hosted-test-deploy/
           retention-days: 7
 
 

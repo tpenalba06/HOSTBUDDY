@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-22",
+  "sourceRefs": {
+    "ia": "ee6734118ff9de3e25935d2b4759f2e55dace28b",
+    "layout": "75360070f8366e98dfa9a972706700c32cbaefba",
+    "ux": "aeacc4d plus preserved working tree",
+    "commonAncestor": "036a5ac3bf471ebb1859d4cfa32ef3d6a87dae79"
+  },
+  "originalSourceUnchanged": true,
+  "protectedBackendUnchanged": true,
+  "files": [
+    {
+      "path": "scripts/e2e/demo-scroll.mjs",
+      "sourceSha256": "9387fbb55e0eb226d163475de4132a491b189ea4c5a9ae685d659837738ea81d",
+      "baselineSha256": "c2bada046784fc2b796f73786255f23931dacb03d0ae5b8d30706148bcff5461",
+      "state": "merged",
+      "finalSha256": "9387fbb55e0eb226d163475de4132a491b189ea4c5a9ae685d659837738ea81d",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "scripts/e2e/editor-ux.mjs",
+      "sourceSha256": "2f9fbc10df2420691812ae12807b100f26aa7de9e36d6f15e67e6088ea9e8522",
+      "baselineSha256": "9e843b9ef5289113a74b3fda4cdd757750f8e5a18dde2f25fd1240e267ad92c8",
+      "state": "merged",
+      "finalSha256": "2f9fbc10df2420691812ae12807b100f26aa7de9e36d6f15e67e6088ea9e8522",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "scripts/e2e/manager-mobile-scroll.py",
+      "sourceSha256": "996a098c1ddfcd85c337e6c8bd6ccad75dd7bce37a3223b6af3978905dad0168",
+      "baselineSha256": "996a098c1ddfcd85c337e6c8bd6ccad75dd7bce37a3223b6af3978905dad0168",
+      "state": "already_present",
+      "finalSha256": "996a098c1ddfcd85c337e6c8bd6ccad75dd7bce37a3223b6af3978905dad0168",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/app/ManagerScreens.tsx",
+      "sourceSha256": "0e0127316cf56e9196254f86adcf5874ea3bd171c88840a1078fe281f18d2766",
+      "baselineSha256": "3eae0752447672af0331069c6aa1b78738dfa28c7412b597973958a21bebe0c2",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 7,
+      "finalSha256": "0e0127316cf56e9196254f86adcf5874ea3bd171c88840a1078fe281f18d2766",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/app/ManagerShell.tsx",
+      "sourceSha256": "e1f492a0da05eb9f6df47ce3ef162bb4ed578c90baeff1d8f142c2fd6dc8826f",
+      "baselineSha256": "c7b9568fb6b5311d5be88d64ef242c3e4e74036bd97d3fe17664d32596a04644",
+      "state": "merged",
+      "finalSha256": "e1f492a0da05eb9f6df47ce3ef162bb4ed578c90baeff1d8f142c2fd6dc8826f",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/demo/DemoExperience.tsx",
+      "sourceSha256": "931076bfd999d3822df182f5160b15e10ed971b5fca9c14634f8f1ca0342a6d7",
+      "baselineSha256": "d70990cfe31441b0b4d273d1c7dabeb8cce526c64c3856b2d5fb34e54dd10014",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 6,
+      "finalSha256": "931076bfd999d3822df182f5160b15e10ed971b5fca9c14634f8f1ca0342a6d7",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/demo/DemoManager.tsx",
+      "sourceSha256": "2a8c7bf8d77de7e9907a6e7a2a371cc5085a5f1c82171ef1027cd8040495c2f6",
+      "baselineSha256": "7e086c5d09d284c3f501b3dc51388e9562a7eb4b1182577c20452a3cff91ad1c",
+      "state": "merged",
+      "finalSha256": "2a8c7bf8d77de7e9907a6e7a2a371cc5085a5f1c82171ef1027cd8040495c2f6",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/guest/GuideContent.tsx",
+      "sourceSha256": "180bac546313fec1b404a4500f92b26f13b8a1dfa84ca40f3684ff7ad1244797",
+      "baselineSha256": "88ee5e0fd5ad8a3d10fb836063839832c6bd9b62ad4f87b62b9ab815b42db272",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 1,
+      "finalSha256": "180bac546313fec1b404a4500f92b26f13b8a1dfa84ca40f3684ff7ad1244797",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/guest/GuideView.tsx",
+      "sourceSha256": "2eb716576eadd71f9d93a807129323a375c1313108cbb6ff020c89eba5802e83",
+      "baselineSha256": "062833dd3adc6d2164c4ad7ed3b55efad8982944285a18c54af576b4761deef9",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 8,
+      "finalSha256": "2eb716576eadd71f9d93a807129323a375c1313108cbb6ff020c89eba5802e83",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/guest/NonaConcierge.tsx",
+      "sourceSha256": "ac3884112c04ce809561b546b169ab27454de7a833c81d08049227fcbf3fcaff",
+      "baselineSha256": "769a5fedfc7f04a9e2a61616741be13bf648345d0b5e62830c0bc7e4c04afe4e",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 6,
+      "finalSha256": "ac3884112c04ce809561b546b169ab27454de7a833c81d08049227fcbf3fcaff",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/shared/CopyButton.tsx",
+      "sourceSha256": "af9f21ce26b1d2bd627a8223468a1193d06c78dfcc32c0e035e7b3e46ec8fc49",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "af9f21ce26b1d2bd627a8223468a1193d06c78dfcc32c0e035e7b3e46ec8fc49",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/shared/NavigationFeedback.tsx",
+      "sourceSha256": "a10e0da0274132cb6199e0775be838ee2a068ba8cb0c651f98302869e221ebc1",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "a10e0da0274132cb6199e0775be838ee2a068ba8cb0c651f98302869e221ebc1",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/shared/copy-button.test.tsx",
+      "sourceSha256": "df4e1a83908b9f37e9c2ad0632d6d2ef2dd458c0a09fe3d97150b46a30c4ad70",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "df4e1a83908b9f37e9c2ad0632d6d2ef2dd458c0a09fe3d97150b46a30c4ad70",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/lib/i18n.tsx",
+      "sourceSha256": "d3a0df43a309df3704f571ba915efa092de79ac0b68167f4d504aa95ac4b0afe",
+      "baselineSha256": "2cff720bf57993daafeeb60967a68591a44cb531153ccaccb31afbe438918a69",
+      "state": "merged",
+      "finalSha256": "d3a0df43a309df3704f571ba915efa092de79ac0b68167f4d504aa95ac4b0afe",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/lib/import-engine/rules-extractor.test.ts",
+      "sourceSha256": "20e314d375b0d38a777dac9cffe0c4ecca20865282cf0a76469a35d7eb5ef2cc",
+      "baselineSha256": "a74cdb8fbb21bf9211747c9d09f522366baf44bb29a35b12bdde140467df0185",
+      "state": "merged",
+      "finalSha256": "20e314d375b0d38a777dac9cffe0c4ecca20865282cf0a76469a35d7eb5ef2cc",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/lib/import-engine/rules-extractor.ts",
+      "sourceSha256": "1fa11b105c670f61d5549e3466cc22dc146f2dd530092ea1b899d52b014ca315",
+      "baselineSha256": "d73ce8e0f5de8e816595146bc38ec44de206514eee4bc75e16186557dcd98db2",
+      "state": "merged",
+      "finalSha256": "1fa11b105c670f61d5549e3466cc22dc146f2dd530092ea1b899d52b014ca315",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/lib/import-engine/wifi-credentials.test.ts",
+      "sourceSha256": "7899a37076b0eff6b7a950eb063ab00febe886574751d861e7cff1830e774469",
+      "baselineSha256": "6b8ed8aa0c033d87d4f92689a57a904d546892128c4a677466003c8d8428de58",
+      "state": "merged",
+      "finalSha256": "7899a37076b0eff6b7a950eb063ab00febe886574751d861e7cff1830e774469",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/lib/import-engine/wifi-credentials.ts",
+      "sourceSha256": "0afd0b3dd673d1c8af420a5bc5a3f4c8c959164b837e648b56cf574ba6454a52",
+      "baselineSha256": "8eb8234b48ce99212868d65f49b22c0abae5e0981264df750b268774e99181c3",
+      "state": "merged",
+      "finalSha256": "0afd0b3dd673d1c8af420a5bc5a3f4c8c959164b837e648b56cf574ba6454a52",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/lib/ux-copy.ts",
+      "sourceSha256": "cc847d774ad03105303fc61324d8d1e43417d7b80261af6736094e5c7b028f7d",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "cc847d774ad03105303fc61324d8d1e43417d7b80261af6736094e5c7b028f7d",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/routes/__root.tsx",
+      "sourceSha256": "45c78bfd5278426a2bcf11d59a501cfb8fb2ff3a07b9ce31b8285b28eb423411",
+      "baselineSha256": "31cfdafa55025873d8acc75dab3b78d6cbfb78dde487590067bf0d0a2f69042e",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 2,
+      "finalSha256": "45c78bfd5278426a2bcf11d59a501cfb8fb2ff3a07b9ce31b8285b28eb423411",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/routes/demo.tsx",
+      "sourceSha256": "7bb92e6b0f952c07a1599f67e0047859d53b32e6d9edbf692e8f583ebeab13ae",
+      "baselineSha256": "aeeaf2f58e7f5aa7b155cf0dd4e615dd334f2365a244d50d6c19803be07b81c7",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 3,
+      "finalSha256": "7bb92e6b0f952c07a1599f67e0047859d53b32e6d9edbf692e8f583ebeab13ae",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/routes/guide-preview.tsx",
+      "sourceSha256": "f751105daa84ad5da49ee162cf7f15d01d629f8f2122185614fd9f4a16036b81",
+      "baselineSha256": "f751105daa84ad5da49ee162cf7f15d01d629f8f2122185614fd9f4a16036b81",
+      "state": "already_present",
+      "finalSha256": "f751105daa84ad5da49ee162cf7f15d01d629f8f2122185614fd9f4a16036b81",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/routes/index.tsx",
+      "sourceSha256": "463f90213a81c52d6580ff300e394864425d3adbca1601e005d555a5ceb94319",
+      "baselineSha256": "5ab923d34ba274a268f50353c339163a2760e160d98b6c179388d1184854685e",
+      "state": "reviewed_UX_blocks_merged",
+      "exit": 1,
+      "finalSha256": "463f90213a81c52d6580ff300e394864425d3adbca1601e005d555a5ceb94319",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/styles/guest-ux.css",
+      "sourceSha256": "6a46e971198ea3fe28e473ee8638330c127f4bba1bc0613b73a441623de3aaeb",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "6a46e971198ea3fe28e473ee8638330c127f4bba1bc0613b73a441623de3aaeb",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/styles/manager-ux.css",
+      "sourceSha256": "9cce9dc2288a48fd0fb41a746d4e7ae29db09f4f7b2793d5494d3385615e6d6e",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "9cce9dc2288a48fd0fb41a746d4e7ae29db09f4f7b2793d5494d3385615e6d6e",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/styles/ux-foundations.css",
+      "sourceSha256": "7ae0fba6406d8012eb225840d8060ff931c6ff43ed646428ec7fcdb10ce87d9f",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "7ae0fba6406d8012eb225840d8060ff931c6ff43ed646428ec7fcdb10ce87d9f",
+      "originalSourceUnchanged": true
+    },
+    {
+      "path": "src/components/marketing/MarketingPhoto.tsx",
+      "sourceSha256": "e779155a5bd2a89820dd4a8a82a1f5befea525e30a95e4b8da961f8d503df633",
+      "baselineSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "state": "new_file",
+      "finalSha256": "e779155a5bd2a89820dd4a8a82a1f5befea525e30a95e4b8da961f8d503df633",
+      "originalSourceUnchanged": true
+    }
+  ]
+}

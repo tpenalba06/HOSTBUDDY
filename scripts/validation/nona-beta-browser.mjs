@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 const { chromium } = await import(process.env.HOSTBUDDY_PLAYWRIGHT_MODULE);
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  executablePath: process.env.NONA_CHROME_EXECUTABLE || undefined,
+});
 const results = [];
 let nextChatAt = 0;
 try {

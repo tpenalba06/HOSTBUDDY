@@ -1,3 +1,4 @@
+import { testModeLabel } from "./test-mode-label.mjs";
 import { build } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -73,39 +74,13 @@ await writeFile(
   resolve(source, "index.html"),
   '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>NONA — guide TEST cloud</title></head><body><div id="root"></div><script type="module" src="./entry.tsx"></script></body></html>',
 );
-const ux = resolve(root, "../nona-lovable-sync/src");
-const overrides = new Map(
-  [
-    "components/guest/GuideView.tsx",
-    "components/guest/GuideContent.tsx",
-    "lib/ux-copy.ts",
-    "lib/i18n.tsx",
-    "styles/nona-art-direction.css",
-  ].map((f) => [resolve(root, "src", f).replaceAll("\\", "/"), resolve(ux, f)]),
-);
 await build({
   configFile: false,
   root: source,
   publicDir: false,
   logLevel: "warn",
   base: "/",
-  plugins: [
-    {
-      name: "preserve-unpublished-ux-snapshot",
-      enforce: "pre",
-      resolveId(id) {
-        if (id.endsWith("/lib/ux-copy")) return resolve(ux, "lib/ux-copy.ts");
-      },
-      async load(id) {
-        const exact = id.split("?")[0].replaceAll("\\", "/");
-        if (overrides.has(exact)) return readFile(overrides.get(exact), "utf8");
-        if (exact === resolve(root, "src/components/guest/NonaConcierge.tsx").replaceAll("\\", "/"))
-          return (await readFile(exact, "utf8")).replace("Nona · IA locale", "Nona · TEST cloud");
-      },
-    },
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [testModeLabel(root), react(), tailwindcss()],
   resolve: { alias: { "@": resolve(root, "src") } },
   build: { outDir: resolve(dist, "public"), emptyOutDir: true },
 });

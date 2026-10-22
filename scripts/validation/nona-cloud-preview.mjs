@@ -1,3 +1,4 @@
+import { testModeLabel } from "./test-mode-label.mjs";
 import { build } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -48,7 +49,7 @@ await build({
   logLevel: "error",
   publicDir: false,
   base: "/nona-ui/",
-  plugins: [react(), tailwindcss()],
+  plugins: [testModeLabel(root), react(), tailwindcss()],
   resolve: { alias: { "@": resolve(root, "src") } },
   build: { outDir: resolve(dist, "interface"), emptyOutDir: true },
 });

@@ -11,6 +11,30 @@ function turn(nextStep: "quantity" | "date" | "time" | "option" | "ready" | null
 }
 
 it.each([
+  ["fr", "Je te suggère un massage au bord de la piscine."],
+  ["en", "A relaxing massage by the pool would be lovely."],
+  ["es", "Un masaje junto a la piscina sería maravilloso."],
+  ["de", "Eine Massage am Pool wäre zauberhaft."],
+  ["it", "Un massaggio a bordo piscina sarebbe ideale."],
+  ["pt", "Uma massagem junto à piscina seria um mimo."],
+])("rejects an unverified service location in %s", (locale, text) => {
+  expect(() => validateNonaDialogue(text, "none", turn(), locale)).toThrow(
+    "dialogue-unverified-service-location",
+  );
+});
+
+it("rejects the English insertion observed in the real Portuguese recipe", () => {
+  expect(() =>
+    validateNonaDialogue(
+      "Para esquecerem o cansaço da viagem e relaxarem a Seriously, uma massagem seria um mimo.",
+      "none",
+      turn(),
+      "pt",
+    ),
+  ).toThrow("dialogue-language-mismatch");
+});
+
+it.each([
   "Oh, je comprends tellement, conducting eight hours of driving is exhausting! Un petit massage bien mérité pour dénouer tout ça, qu'en penses-tu ?",
   "I'd love to get that sorted for you! How many people will be joining in for breakfast?",
 ])("rejects foreign-language segments in a French reply: %s", (text) => {

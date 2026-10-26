@@ -49,6 +49,18 @@ const notSent: Record<string, RegExp> = {
 export function validateDialogueCoherence(text: string, turn: ConciergeTurn, locale: string) {
   const folded = normalize(text);
   if (hasForeignLanguageSegment(text, locale)) throw new Error("dialogue-language-mismatch");
+  // A single English discourse marker can leak through an otherwise localized
+  // reply; the segment heuristic deliberately needs several matching words.
+  if (locale !== "en" && /\bseriously\b/.test(folded))
+    throw new Error("dialogue-language-mismatch");
+  // A property's pool does not establish a service location. Keep location
+  // promises out of model prose; the verified service card is authoritative.
+  if (
+    /\b(?:au bord de la piscine|pres de la piscine|by the pool|poolside|am pool|junto a la piscina|a bordo piscina|junto a piscina)\b/.test(
+      folded,
+    )
+  )
+    throw new Error("dialogue-unverified-service-location");
   if (turn.nextStep && fieldCues[turn.nextStep]) {
     // Metadata alone cannot prove that the actual question asks the right field.
     const question = folded.split(/[.!;¿]/).find((sentence) => sentence.includes("?")) ?? "";

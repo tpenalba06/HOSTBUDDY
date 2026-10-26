@@ -1,0 +1,257 @@
+Browser tab: 1, Title: "Usage · Settings", URL: "https://ollama.com/settings".
+1 AXWebArea Usage · Settings, URL: ollama.com/settings
+	2 container
+		3 link Description: Ollama home, Value: ollama.com/
+		4 container Settings
+			5 content list
+				6 link Description: Dashboard, Value: ollama.com/dashboard
+				7 link Description: Usage, Value: ollama.com/settings
+				8 link Description: Keys, Value: ollama.com/settings/keys
+				9 link Description: Billing, Value: ollama.com/settings/billing
+				10 link Description: Profile, Value: ollama.com/settings/profile
+			11 content list
+				12 link Description: Models (opens in a new tab), Value: ollama.com/search
+				13 link Description: Documentation (opens in a new tab), Value: docs.ollama.com/
+		14 button (collapsed) profile [masqué] [masqué], Secondary Actions: Expand
+			15 image Description: profile, ID: headerProfileImg
+			16 text [masqué]
+			17 text [masqué]
+	18 container settings-sections
+		19 container extra-usage
+			20 heading Usage credits Free, Value: 2
+				21 text Usage credits Free
+			22 text $0
+			23 text Add usage credits to pay as you go on any cloud model.
+			24 pop up button Add funds, ID: extra-usage-buy-more
+			25 container extra-usage-auto-reload-controls
+				26 heading Auto-reload, Value: 3
+					27 text Auto-reload
+				28 text Off
+				29 switch Description: Auto-reload, Value: 0, ID: extra-usage-reload-toggle
+		30 heading Usage breakdown, Value: 2
+			31 text Usage breakdown
+		32 text Cloud models and capabilities such as web search draw from your free usage.
+		33 container free-plan-models
+			34 text Free usage credits can be used with the following cloud models:
+			35 content list
+				36 container
+					37 AXListMarker • 
+					38 link Description: beam, Value: ollama.com/library/beam
+				39 container
+					40 AXListMarker • 
+					41 link Description: gemma4:31b, Value: ollama.com/library/gemma4:31b
+				42 container
+					43 AXListMarker • 
+					44 link Description: gpt-oss:120b, Value: ollama.com/library/gpt-oss:120b
+				45 container
+					46 AXListMarker • 
+					47 link Description: gpt-oss:20b, Value: ollama.com/library/gpt-oss:20b
+				48 container
+					49 AXListMarker • 
+					50 link Description: nemotron-3-nano:30b, Value: ollama.com/library/nemotron-3-nano:30b
+				51 container
+					52 AXListMarker • 
+					53 link Description: nemotron-3-super, Value: ollama.com/library/nemotron-3-super
+				54 container
+					55 AXListMarker • 
+					56 link Description: nemotron-3-ultra, Value: ollama.com/library/nemotron-3-ultra
+			57 container
+				58 text Add usage credits to pay as you go, or 
+				59 link Description: upgrade, Value: ollama.com/upgrade
+				60 text  to use any cloud model.
+		61 text Free usage 0.7% used
+		62 container Free usage: 0.7%
+			63 container
+				64 button gemma4:31b: 72 requests
+				65 button gpt-oss:20b: 1 request
+		66 text Refills in 3 weeks.
+		67 container monthly-usage-models
+			68 text Models used this month
+			69 text gemma4:31b
+			70 text 72 requests
+			71 text gpt-oss:20b
+			72 text 1 request
+		73 container recent-requests-self
+			74 heading Recent requests, Value: 2
+				75 text Recent requests
+			76 table
+				77 row
+					78 cell dim. 25 oct., 18:57
+						79 text 6 hours ago
+					80 cell
+						81 text gemma4:31b
+					82 cell $0.00027
+						83 text <$0.01
+				84 row
+					85 cell dim. 25 oct., 18:57
+						86 text 6 hours ago
+					87 cell
+						88 text gemma4:31b
+					89 cell $0.00026
+						90 text <$0.01
+				91 row
+					92 cell dim. 25 oct., 18:57
+						93 text 6 hours ago
+					94 cell
+						95 text gemma4:31b
+					96 cell $0.00031
+						97 text <$0.01
+				98 row
+					99 cell dim. 25 oct., 18:57
+						100 text 6 hours ago
+					101 cell
+						102 text gemma4:31b
+					103 cell $0.00031
+						104 text <$0.01
+				105 row
+					106 cell dim. 25 oct., 18:57
+						107 text 6 hours ago
+					108 cell
+						109 text gemma4:31b
+					110 cell $0.0003
+						111 text <$0.01
+				112 row
+					113 cell dim. 25 oct., 18:57
+						114 text 6 hours ago
+					115 cell
+						116 text gemma4:31b
+					117 cell $0.0003
+						118 text <$0.01
+				119 row
+					120 cell dim. 25 oct., 18:57
+						121 text 6 hours ago
+					122 cell
+						123 text gemma4:31b
+					124 cell $0.00028
+						125 text <$0.01
+				126 row
+					127 cell dim. 25 oct., 18:56
+						128 text 6 hours ago
+					129 cell
+						130 text gemma4:31b
+					131 cell $0.00023
+						132 text <$0.01
+				133 row
+					134 cell dim. 25 oct., 18:56
+						135 text 6 hours ago
+					136 cell
+						137 text gemma4:31b
+					138 cell $0.00022
+						139 text <$0.01
+				140 row
+					141 cell dim. 25 oct., 18:56
+						142 text 6 hours ago
+					143 cell
+						144 text gemma4:31b
+					145 cell $0.00033
+						146 text <$0.01
+				147 row
+					148 cell mar. 20 oct., 19:17
+						149 text 5 days ago
+					150 cell
+						151 text gemma4:31b
+					152 cell $0.00036
+						153 text <$0.01
+				154 row
+					155 cell mar. 20 oct., 19:14
+						156 text 5 days ago
+					157 cell
+						158 text gemma4:31b
+					159 cell $0.00033
+						160 text <$0.01
+				161 row
+					162 cell mar. 20 oct., 19:14
+						163 text 5 days ago
+					164 cell
+						165 text gemma4:31b
+					166 cell $0.00032
+						167 text <$0.01
+				168 row
+					169 cell mar. 20 oct., 19:13
+						170 text 5 days ago
+					171 cell
+						172 text gemma4:31b
+					173 cell $0.00026
+						174 text <$0.01
+				175 row
+					176 cell mar. 20 oct., 19:11
+						177 text 5 days ago
+					178 cell
+						179 text gemma4:31b
+					180 cell $0.00031
+						181 text <$0.01
+				182 row
+					183 cell mar. 20 oct., 19:10
+						184 text 5 days ago
+					185 cell
+						186 text gemma4:31b
+					187 cell $0.00031
+						188 text <$0.01
+				189 row
+					190 cell mar. 20 oct., 19:10
+						191 text 5 days ago
+					192 cell
+						193 text gemma4:31b
+					194 cell $0.00031
+						195 text <$0.01
+				196 row
+					197 cell mar. 20 oct., 19:10
+						198 text 5 days ago
+					199 cell
+						200 text gemma4:31b
+					201 cell $0.00032
+						202 text <$0.01
+				203 row
+					204 cell mar. 20 oct., 19:09
+						205 text 5 days ago
+					206 cell
+						207 text gemma4:31b
+					208 cell $0.00026
+						209 text <$0.01
+				210 row
+					211 cell mar. 20 oct., 19:09
+						212 text 5 days ago
+					213 cell
+						214 text gemma4:31b
+					215 cell $0.00025
+						216 text <$0.01
+				217 row
+					218 cell mar. 20 oct., 19:08
+						219 text 5 days ago
+					220 cell
+						221 text gemma4:31b
+					222 cell $0.00026
+						223 text <$0.01
+				224 row
+					225 cell mar. 20 oct., 19:08
+						226 text 5 days ago
+					227 cell
+						228 text gemma4:31b
+					229 cell $0.00022
+						230 text <$0.01
+				231 row
+					232 cell mar. 20 oct., 19:08
+						233 text 5 days ago
+					234 cell
+						235 text gemma4:31b
+					236 cell $0.00019
+						237 text <$0.01
+				238 row
+					239 cell mar. 20 oct., 19:07
+						240 text 5 days ago
+					241 cell
+						242 text gemma4:31b
+					243 cell $0.00029
+						244 text <$0.01
+				245 row
+					246 cell mar. 20 oct., 14:58
+						247 text 5 days ago
+					248 cell
+						249 text gemma4:31b
+					250 cell $0.00023
+						251 text <$0.01
+				252 row recent-requests-more-self
+					253 cell
+						254 button Load more
+
+The focused UI element is 1 AXWebArea Usage · Settings, URL: ollama.com/settings

@@ -306,6 +306,8 @@
 }
 .nona-composer-footer {
   position: absolute;
+  /* The shared footer is full-width by default; keep it off the text input. */
+  width: auto;
   right: 4px;
   bottom: 4px;
   justify-content: flex-end;

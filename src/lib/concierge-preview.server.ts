@@ -27,7 +27,12 @@ export async function conciergePreviewResponse(request: Request) {
   // Keep product Supabase credentials and all generic/monthly adapters out of
   // this path. Separate private TEST credentials are deliberately required.
   const env: NodeJS.ProcessEnv = {
-    ...process.env,
+    // Read each binding explicitly: hosted env adapters need not enumerate
+    // private bindings when process.env is spread. Never pass product secrets.
+    VERCEL_ENV: process.env["VERCEL_ENV"],
+    OLLAMA_API_KEY: process.env["OLLAMA_API_KEY"],
+    NONA_OLLAMA_FREE_REVIEW: process.env["NONA_OLLAMA_FREE_REVIEW"],
+    NONA_OLLAMA_TEST_PROPERTY_ID: process.env["NONA_OLLAMA_TEST_PROPERTY_ID"],
     SUPABASE_URL: "https://mhhtnqfdkyudwyqlmnce.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: process.env["NONA_TEST_SUPABASE_SERVICE_ROLE_KEY"],
     NONA_CLOUD_SCOPE: "test",
@@ -37,6 +42,14 @@ export async function conciergePreviewResponse(request: Request) {
         ? process.env["NONA_OLLAMA_TEST_ENABLE"]
         : "closed",
   };
+  console.info("NONA_PREVIEW_ADMISSION", {
+    testKey: Boolean(env["SUPABASE_SERVICE_ROLE_KEY"]),
+    providerKey: Boolean(env["OLLAMA_API_KEY"]),
+    property: Boolean(env["NONA_OLLAMA_TEST_PROPERTY_ID"]),
+    review: Boolean(env["NONA_OLLAMA_FREE_REVIEW"]),
+    enabled: env["NONA_OLLAMA_TEST_ENABLE"] === "hosted-free-test-v1",
+    session: Boolean(process.env["NONA_TEST_CONCIERGE_SESSION_SECRET"]),
+  });
   // Before configuration, preserve the existing demo without touching a ledger.
   if (!env["SUPABASE_SERVICE_ROLE_KEY"] || !env["NONA_OLLAMA_TEST_PROPERTY_ID"])
     return Response.json(validateConciergeTurn(input, guide, guidedProposal(input, guide)), {

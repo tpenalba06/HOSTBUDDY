@@ -193,9 +193,25 @@ export async function runConciergeModel(
       "dialogue-unverified-service-location",
       "untrusted-dialogue",
       "unknown-source",
+      "ollama-unavailable",
+      "ollama-response-too-large",
     ]);
+    const failureClass =
+      error instanceof Error &&
+      [
+        "TypeError",
+        "ReferenceError",
+        "SyntaxError",
+        "TimeoutError",
+        "AbortError",
+        "ZodError",
+      ].includes(error.name)
+        ? error.name
+        : "rejected";
     diagnostic(
-      error instanceof Error && allowed.has(error.message) ? error.message : `${stage}-rejected`,
+      error instanceof Error && allowed.has(error.message)
+        ? error.message
+        : `${stage}-${failureClass}`,
     );
     // An uncertain/failed billable attempt keeps its entire reservation. Never
     // retry automatically, and never return provider errors or secrets.

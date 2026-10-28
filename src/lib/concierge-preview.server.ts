@@ -42,14 +42,17 @@ export async function conciergePreviewResponse(request: Request) {
         ? process.env["NONA_OLLAMA_TEST_ENABLE"]
         : "closed",
   };
-  console.info("NONA_PREVIEW_ADMISSION", {
-    testKey: Boolean(env["SUPABASE_SERVICE_ROLE_KEY"]),
-    providerKey: Boolean(env["OLLAMA_API_KEY"]),
-    property: Boolean(env["NONA_OLLAMA_TEST_PROPERTY_ID"]),
-    review: Boolean(env["NONA_OLLAMA_FREE_REVIEW"]),
-    enabled: env["NONA_OLLAMA_TEST_ENABLE"] === "hosted-free-test-v1",
-    session: Boolean(process.env["NONA_TEST_CONCIERGE_SESSION_SECRET"]),
-  });
+  console.info(
+    "NONA_PREVIEW_ADMISSION",
+    JSON.stringify({
+      testKey: Boolean(env["SUPABASE_SERVICE_ROLE_KEY"]),
+      providerKey: Boolean(env["OLLAMA_API_KEY"]),
+      property: Boolean(env["NONA_OLLAMA_TEST_PROPERTY_ID"]),
+      review: Boolean(env["NONA_OLLAMA_FREE_REVIEW"]),
+      enabled: env["NONA_OLLAMA_TEST_ENABLE"] === "hosted-free-test-v1",
+      session: Boolean(process.env["NONA_TEST_CONCIERGE_SESSION_SECRET"]),
+    }),
+  );
   // Before configuration, preserve the existing demo without touching a ledger.
   if (!env["SUPABASE_SERVICE_ROLE_KEY"] || !env["NONA_OLLAMA_TEST_PROPERTY_ID"])
     return Response.json(validateConciergeTurn(input, guide, guidedProposal(input, guide)), {

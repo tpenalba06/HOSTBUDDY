@@ -1,0 +1,58 @@
+Browser tab: 4, Title: "Mon espace — HostBuddy", URL: "http://127.0.0.1:4289/app/p/37ce8e1c-81b4-4b89-bdeb-211c65772c44".
+1 AXWebArea Mon espace — HostBuddy, URL: 127.0.0.1:4289/app/p/37ce8e1c-81b4-4b89-bdeb-211c65772c44
+	2 container
+		3 text Conciergerie de Recette TEST
+		4 pop up button (collapsed, settable) Description: Langue, Value: FR, Secondary Actions: Expand
+			5 menu
+				6 (selected) FR
+				7 EN
+				8 ES
+				9 DE
+				10 IT
+				11 PT
+		12 button Se déconnecter
+		13 image NONA
+		14 container Gestionnaire
+			15 link Description: Ajouter un logement, Value: 127.0.0.1:4289/app/new
+			16 text Mes logements
+			17 link Description: Logements, Value: 127.0.0.1:4289/app
+			18 text Au quotidien
+			19 link Description: Messages, Value: 127.0.0.1:4289/app/messages
+			20 link Description: Commandes, Value: 127.0.0.1:4289/app/orders
+			21 link Description: Retours, Value: 127.0.0.1:4289/app/feedback
+			22 text Mon organisation
+			23 link Description: Connexions, Value: 127.0.0.1:4289/app/connections
+			24 link Description: Tableau de bord, Value: 127.0.0.1:4289/app/dashboard
+			25 link Description: Paiements, Value: 127.0.0.1:4289/app/payments
+			26 link Description: Équipe, Value: 127.0.0.1:4289/app/team
+		27 image NONA
+		28 container
+			29 text ✓  Enregistré
+		30 link Description: ← Mes hébergements, Value: 127.0.0.1:4289/app
+		31 heading Nona navigateur TEST 6b4b7cdf, Value: 1
+			32 text Nona navigateur TEST 6b4b7cdf
+		33 text En ligne
+		34 container
+			35 text Nom de l’hébergement
+			36 text field (settable) Description: Nom de l’hébergement, Value: Nona navigateur TEST 6b4b7cdf
+		37 link Description: Voir le guide, Value: 127.0.0.1:4289/l/nona-navigateur-test-6b4b7cdf-8f0714
+		38 button (collapsed) QR code, Secondary Actions: Expand
+		39 checkbox Guide, Value: 0
+		40 checkbox Informations, Value: 0
+		41 checkbox Services, Value: 1
+		42 checkbox Avis, Value: 0
+		43 container
+			44 text Services voyageurs
+			45 heading Vos services, Value: 2
+				46 text Vos services
+			47 text Les voyageurs envoient une demande. Aucun paiement n’est présenté comme effectué.
+			48 button Ajouter un service
+			49 text Enregistré
+			50 container
+				51 text Petit-déjeuner — BROUILLON TEST FICTIF Désactivé
+			52 container
+				53 text 25.00  € · Par personne
+			54 button Modifier
+			55 button Supprimer le service
+
+The focused UI element is 1 AXWebArea Mon espace — HostBuddy, URL: 127.0.0.1:4289/app/p/37ce8e1c-81b4-4b89-bdeb-211c65772c44

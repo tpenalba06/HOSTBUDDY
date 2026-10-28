@@ -23,6 +23,37 @@ const request = (message: string, locale = "fr") =>
   });
 afterEach(() => vi.useRealTimers());
 
+it("does not mistake German entspannen for the French emergency word panne", () => {
+  const message =
+    "Hallo Nona, wir feiern unseren Hochzeitstag und möchten nach der Reise entspannen. Hast du eine schöne Idee?";
+  expect(guidedProposal(request(message, "de"), localGuide()).intent).not.toBe("emergency");
+  for (const realEmergency of ["Il y a une panne électrique", "Plusieurs pannes dans le logement"])
+    expect(guidedProposal(request(realEmergency), localGuide()).intent).toBe("emergency");
+});
+
+it.each([
+  [
+    "fr",
+    "Je change encore de sujet : une idée simple après le massage, sans réserver quoi que ce soit.",
+  ],
+  ["pt", "Quero uma sugestão tranquila para o nosso aniversário, sem reservar nada."],
+])("keeps an explicit %s conversational pause out of a saved booking", async (locale, message) => {
+  const input = request(message, locale);
+  const g = localGuide();
+  const fallback = validateConciergeTurn(input, g, guidedProposal(input, g));
+  expect(fallback.nextStep).toBeNull();
+  expect(fallback.quote).toBeNull();
+  expect(fallback.draft).toMatchObject(ready);
+  const proposed = validateConciergeTurn(input, g, {
+    intent: "services",
+    serviceIds: ["bf"],
+    draft: { serviceId: "bf", quantity: 9 },
+  });
+  expect(proposed.nextStep).toBeNull();
+  expect(proposed.quote).toBeNull();
+  expect(proposed.draft.quantity).toBe(3);
+});
+
 it("redacts translated credentials and contacts when repeated in long conversation context", () => {
   const guide = localGuide();
   guide.sections.push({

@@ -1,0 +1,96 @@
+Browser tab: 8, Title: "NONA — guide TEST cloud", URL: "https://nona-concierge-test-20261020-q07nj3h1p.vercel.app/".
+0 AXWebArea NONA — guide TEST cloud, URL: nona-concierge-test-20261020-q07nj3h1p.vercel.app/
+	1 container root
+		2 text TEST : données fictives · Ollama Cloud Free quand autorisé · aucune commande ni paiement.
+		3 container
+			4 button NONA
+				5 image NONA
+			6 container Villa Mare — démonstration TEST, données fictives
+				7 button Le logement
+				8 button Services
+				9 button À proximité
+			10 button Nous contacter
+		11 container
+			12 heading Villa Mare — démonstration TEST, données fictives, Value: 1
+				13 text Villa Mare — démonstration TEST, données fictives
+			14 text Antibes
+			15 container L’essentiel de votre séjour
+				16 button Mon arrivée
+				17 button Wi-Fi
+				18 button Bonnes adresses
+			19 container
+				20 image Villa Mare — démonstration TEST, données fictives
+				21 button Photo suivante
+					22 text Photos
+					23 text 1
+					24 text /
+					25 text 3
+			26 container Photos
+				27 button Photo précédente
+				28 checkbox Description: Photos 1, Value: 1
+				29 checkbox Description: Photos 2, Value: 0
+				30 checkbox Description: Photos 3, Value: 0
+				31 button Photo suivante
+		32 button Wi-Fi
+		33 button Mon arrivée
+		34 button Bonnes adresses
+		35 button Mon départ
+		36 button Contact
+		37 button Le logement
+		38 button Piscine / Spa
+		39 container Services
+			40 heading Services additionnels, Value: 2
+				41 text Services additionnels
+			42 button Voir tout
+			43 container
+				44 image Petit-déjeuner
+				45 text Petit-déjeuner
+				46 button Découvrir
+				47 image Massage à domicile
+				48 text Massage à domicile
+				49 button Découvrir
+				50 image Transfert
+				51 text Transfert
+				52 button Découvrir
+				53 image Départ tardif
+				54 text Départ tardif
+				55 button Découvrir
+		56 button (collapsed) Médias du logement, Secondary Actions: Expand
+			57 text Médias du logement
+		58 link Description: Appeler, Value: tel:+33612345678
+		59 link Description: WhatsApp, Value: wa.me/33612345678
+		60 link Description: E-mail, Value: mailto:bonjour@conciergerie-azur.fr
+		61 container
+			62 text NONA ·  Sans compte · Sans application
+		63 container
+			64 button (expanded) Description: Discuter avec Nona, Secondary Actions: Collapse
+				65 image Nona
+			66 container Description: Nona, ta concierge, ID: nona-chat-_r_9_
+				67 container
+					68 image Nona
+					69 heading NONA, Value: 2
+						70 image NONA
+					71 text Nona · TEST guidé
+					72 pop up button (collapsed, settable) Description: Langue, Value: FR, Secondary Actions: Expand
+						73 menu
+							74 (selected) FR
+							75 EN
+							76 ES
+							77 DE
+							78 IT
+							79 PT
+					80 button Fermer Nona
+				88 container
+					89 text Villa Mare — démonstration TEST, données fictives Coucou, bienvenue à Villa Mare — démonstration TEST, données fictives ! Un petit-déjeuner ? Un massage pour te détendre ? Une question sur le logement ? Laisse-moi t’aider, mon petit. Je voudrais un massage pour une personne demain. Un peu de douceur, ça ne se refuse pas ! 💆 Je regarde ça avec toi. Tu préfères quelle heure ?
+					90 button (collapsed) Massage à domicile 90,00 € · par unité +, Secondary Actions: Expand
+						91 text Massage à domicile
+						92 text 90,00 €
+						93 text  ·
+						94 text par unité
+						95 text +
+					96 text Je change encore de sujet : une idée simple après le massage, sans réserver quoi que ce soit. Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.
+				85 container
+					86 text entry area (settable) Ta question ou ton envie…
+					87 button (disabled) Envoyer
+
+The focused UI element is 86 text entry area (settable) Ta question ou ton envie…

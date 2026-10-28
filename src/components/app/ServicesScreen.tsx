@@ -455,7 +455,7 @@ export function ServicesScreen({
         {services.map((service) => (
           <article
             key={service.id}
-            className="surface grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4"
+            className="surface grid grid-cols-1 items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"
           >
             <div className="min-w-0">
               <p className="font-bold">

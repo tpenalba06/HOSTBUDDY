@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-28",
+  "aiEnabled": false,
+  "attempts": 83,
+  "observations": 83,
+  "reservedMicros": 1660000,
+  "capMicros": 1660000,
+  "monthlyEnabled": false,
+  "remainingRecipeSessions": 0,
+  "localManagerPorts": "4288 and 4289 connection refused",
+  "betaOpened": false,
+  "externalInvitations": 0,
+  "stripeCalls": 0,
+  "newPayments": 0,
+  "deployment": "dpl_HBrkxmwNsUTKWMxa1h3nfGgoWwiS",
+  "scope": "guide TEST only; manager validated locally against TEST"
+}

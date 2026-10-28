@@ -15,7 +15,15 @@ const fail = (
   error: unknown,
   message = "Cette action n’est pas disponible pour le moment.",
 ): never => {
-  console.error({ event: "operation_unavailable" });
+  const code =
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    /^[A-Z0-9]{5,12}$/.test(error.code)
+      ? error.code
+      : "unavailable";
+  console.error(`NONA_OPERATION_FAILURE ${code}`);
   throw new FriendlyError(message);
 };
 
@@ -131,7 +139,7 @@ export async function saveService(
         .select("property_id,image_paths")
         .eq("organization_id", orgId)
         .eq("id", values.id)
-        .single()
+        .maybeSingle()
     : null;
   if (current?.error) return fail(current.error);
   const propertyIds = [...new Set(values.propertyIds ?? [propertyId])];

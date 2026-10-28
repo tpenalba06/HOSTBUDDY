@@ -131,7 +131,7 @@ export interface ConciergeProvider {
 export const normalize = (value: string) =>
   value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 const emergency =
-  /urgen|panne|fuite|incendie|feu |inond|(?:bloque|enferme|coince).*dehors|impossible de rentrer|plus d.?electricite|plus d.?eau|danger|agress|emergenc|broken|leak|fire|flood|locked out|no power|no water|notfall|kaputt|defekt|feuer|emergenza|guasto|perdita|incendio|averia|fuga|socorro|avaria|vazamento/;
+  /urgen|\bpannes?\b|fuite|incendie|feu |inond|(?:bloque|enferme|coince).*dehors|impossible de rentrer|plus d.?electricite|plus d.?eau|danger|agress|emergenc|broken|leak|fire|flood|locked out|no power|no water|notfall|kaputt|defekt|feuer|emergenza|guasto|perdita|incendio|averia|fuga|socorro|avaria|vazamento/;
 const early =
   /arriv\w*\s+(?:plus tot|en avance|anticip)|early (?:check.?in|arrival)|arrive early|llegada anticipada|llegar (?:antes|temprano)|fruh\w* anreise|fruher anreisen|arrivo anticipato|arrivare prima|chegada antecipada|chegar mais cedo/;
 const italian = /ital|pizz|pasta|trattoria/;
@@ -294,6 +294,10 @@ function inferDraft(
   }
   return next;
 }
+function bookingPaused(message: string) {
+  return /\b(?:sans reserver quoi que ce soit|sem reservar nada)\b/.test(normalize(message));
+}
+
 export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now = new Date()) {
   guide = { ...guide, services: availableServices(guide, now) };
   const text = normalize(input.message);
@@ -329,6 +333,8 @@ export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now 
     )
   )
     return { intent: "tracking", draft, serviceIds: [], factKeys: [] };
+  if (bookingPaused(input.message))
+    return { intent: "unknown", draft: { ...input.draft }, serviceIds: [], factKeys: [] };
   const earlyServices = (guide.services ?? []).filter((s) =>
     early.test(normalize(s.name + " " + s.description)),
   );
@@ -496,7 +502,14 @@ export function validateConciergeTurn(
 ): ConciergeTurn {
   guide = { ...guide, services: availableServices(guide, now) };
   const parsed = conciergeProposalSchema.safeParse(proposal);
-  const p = parsed.success ? parsed.data : conciergeProposalSchema.parse({ intent: "unknown" });
+  const candidate = parsed.success
+    ? parsed.data
+    : conciergeProposalSchema.parse({ intent: "unknown" });
+  // A model proposal cannot turn an explicit conversational pause into a booking.
+  const p =
+    bookingPaused(input.message) && candidate.intent === "services"
+      ? conciergeProposalSchema.parse({ intent: "unknown" })
+      : candidate;
   let services = (guide.services ?? []).filter((s) => p.serviceIds.includes(s.id)).slice(0, 4);
   let draft = { ...input.draft, ...p.draft };
   let chosen = (guide.services ?? []).find((s) => s.id === draft.serviceId);

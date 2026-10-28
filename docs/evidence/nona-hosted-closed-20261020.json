@@ -1,0 +1,10 @@
+{
+  "enabled": false,
+  "expired": true,
+  "monthlyEnabled": false,
+  "reservedMicros": 1260000,
+  "capMicros": 1380000,
+  "cumulativeAttempts": 63,
+  "cumulativeObservations": 63,
+  "reservationAfterClosure": false
+}

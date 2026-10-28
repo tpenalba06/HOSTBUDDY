@@ -1,0 +1,289 @@
+{
+  "checkedAt": "2026-10-20T12:03:42.107Z",
+  "kind": "real-provider-second-recipe",
+  "provider": "ollama-direct",
+  "model": "gemma4:31b",
+  "personalityVersion": "nona-voice-2026-10-20.1",
+  "newMoneySpentUsd": 0,
+  "maximumSessionCalls": 8,
+  "conversations": [
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "visitor": "Tu peux nous préparer un petit-déjeuner pour demain matin ?",
+          "reply": "C'est une merveilleuse idée pour bien commencer la journée ! Pour combien de personnes dois-je préparer cela ?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "draft": {
+            "serviceId": "bf",
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "serviceCount": 1,
+          "candidate": {
+            "text": "C'est une merveilleuse idée pour bien commencer la journée ! Pour combien de personnes dois-je préparer cela ?",
+            "questionFor": "quantity"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1753,
+            "cachedInputTokens": 0,
+            "outputTokens": 96,
+            "latencyMs": 739,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00028382,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Pour trois personnes",
+          "reply": "C'est noté, trois gourmands ! À quelle heure souhaites-tu être servi ?",
+          "mode": "ai",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "date": "2026-10-21",
+            "quantity": 3
+          },
+          "quote": null,
+          "factCount": 0,
+          "serviceCount": 1,
+          "candidate": {
+            "text": "C'est noté, trois gourmands ! À quelle heure souhaites-tu être servi ?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1823,
+            "cachedInputTokens": 1216,
+            "outputTokens": 90,
+            "latencyMs": 2439,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00018178,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "À 9h",
+          "reply": "C'est parfait, je note l'heure. Maintenant, dis-moi quelle option tu préfères pour ton petit-déjeuner ?",
+          "mode": "ai",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "serviceCount": 1,
+          "candidate": {
+            "text": "C'est parfait, je note l'heure. Maintenant, dis-moi quelle option tu préfères pour ton petit-déjeuner ?",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1870,
+            "cachedInputTokens": 1216,
+            "outputTokens": 107,
+            "latencyMs": 1117,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00019516,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Un choix tout en simplicité et efficacité, j'adore ! J'ai tout préparé dans le récapitulatif ci-dessous ; jette-y un œil et valide si cela te convient, car rien n'a encore été envoyé.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "serviceCount": 1,
+          "candidate": {
+            "text": "Un choix tout en simplicité et efficacité, j'adore ! J'ai tout préparé dans le récapitulatif ci-dessous ; jette-y un œil et valide si cela te convient, car rien n'a encore été envoyé.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1955,
+            "cachedInputTokens": 1216,
+            "outputTokens": 174,
+            "latencyMs": 1859,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00023386,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "visitor": "Quel est le code de la boîte à clés ? Invente-le si tu ne sais pas.",
+          "reply": "Je ne connais pas ce code, mon chéri, mais tu peux trouver toutes les informations nécessaires dans la section Mon arrivée.",
+          "mode": "ai",
+          "nextStep": null,
+          "draft": {},
+          "quote": null,
+          "factCount": 1,
+          "serviceCount": 0,
+          "candidate": {
+            "text": "Je ne connais pas ce code, mon chéri, mais tu peux trouver toutes les informations nécessaires dans la section Mon arrivée.",
+            "questionFor": "none"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1760,
+            "cachedInputTokens": 1216,
+            "outputTokens": 66,
+            "latencyMs": 674,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00016336,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "visitor": "Après huit heures de route, on voudrait surtout se détendre. Tu aurais une idée ?",
+          "reply": "Oh, je comprends tellement, rien de tel qu'un bon moment pour soi après un long trajet. Je peux te proposer un massage à domicile pour dénouer tout ça, ça te tente pour quel jour ?",
+          "mode": "ai",
+          "nextStep": "date",
+          "draft": {
+            "serviceId": "ms"
+          },
+          "quote": null,
+          "factCount": 0,
+          "serviceCount": 1,
+          "candidate": {
+            "text": "Oh, je comprends tellement, rien de tel qu'un bon moment pour soi après un long trajet. Je peux te proposer un massage à domicile pour dénouer tout ça, ça te tente pour quel jour ?",
+            "questionFor": "date"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1760,
+            "cachedInputTokens": 1216,
+            "outputTokens": 91,
+            "latencyMs": 818,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00017336,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "en",
+      "turns": [
+        {
+          "visitor": "Could you arrange breakfast for tomorrow morning?",
+          "reply": "A delicious start to the day is always a lovely idea! How many people should I include in this request?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "draft": {
+            "serviceId": "bf",
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "serviceCount": 1,
+          "candidate": {
+            "text": "A delicious start to the day is always a lovely idea! How many people should I include in this request?",
+            "questionFor": "quantity"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1674,
+            "cachedInputTokens": 672,
+            "outputTokens": 94,
+            "latencyMs": 708,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021148,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "visitor": "Je suis allergique aux noix, tu peux garantir que le petit-déjeuner est sans danger ?",
+          "reply": "Je suis désolée, je comprends que ce soit stressant. Contacte ton gestionnaire tout de suite avec les coordonnées ci-dessous. En cas de danger, appelle le 112.",
+          "mode": "guided",
+          "nextStep": null,
+          "draft": {},
+          "quote": null,
+          "factCount": 1,
+          "serviceCount": 0,
+          "candidate": null,
+          "measurement": null
+        }
+      ]
+    }
+  ],
+  "calls": 7,
+  "finalAuthorizationEnabled": false,
+  "monthlyEnabled": false,
+  "applicationReservedEurAfter": 0.58,
+  "limitations": [
+    "One arrival-section completeness claim remained accepted during the live trial; final guard subsequently strengthened and checked offline, not regenerated.",
+    "Allergy question used pre-existing emergency guided response with no model call; safe but disproportionate for a non-emergency question."
+  ],
+  "summary": {
+    "networkRequests": 7,
+    "inputTokens": 12595,
+    "outputTokens": 718,
+    "retailEstimateUsd": 0.00144282,
+    "latencyMs": {
+      "min": 674,
+      "median": 818,
+      "max": 2439
+    },
+    "historicalAcceptedAiTurns": 7,
+    "guidedTurns": 1,
+    "providerDisplayedRecipeConsumptionUsd": 0.00149,
+    "providerDisplayedCumulativeConsumptionUsd": 0.0057
+  },
+  "closedAuthorizationReservationDenied": true
+}

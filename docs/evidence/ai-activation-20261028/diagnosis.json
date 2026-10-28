@@ -1,0 +1,208 @@
+[
+  {
+    "locale": "fr",
+    "diagnostics": [
+      {
+        "stage": "accepted",
+        "reason": "validated"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [],
+      "factKeys": [],
+      "draft": {},
+      "dialogue": {
+        "text": "Joyeux anniversaire ! C'est merveilleux, installe-toi confortablement et raconte-moi tout ce que tu veux.",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "ai",
+      "text": "Joyeux anniversaire ! C'est merveilleux, installe-toi confortablement et raconte-moi tout ce que tu veux.",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 2044,
+          "outputTokens": 60,
+          "costUsd": 0.00031016,
+          "latencyMs": 618
+        }
+      }
+    }
+  },
+  {
+    "locale": "en",
+    "diagnostics": [
+      {
+        "stage": "accepted",
+        "reason": "validated"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [],
+      "factKeys": [],
+      "draft": {},
+      "tonalHint": "arrival",
+      "dialogue": {
+        "text": "Happy anniversary to you both! It sounds like you've had quite a journey, so please just breathe and let the house embrace you.",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "ai",
+      "text": "Happy anniversary to you both! It sounds like you've had quite a journey, so please just breathe and let the house embrace you.",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 1973,
+          "outputTokens": 69,
+          "costUsd": 0.00022894,
+          "latencyMs": 1089
+        }
+      }
+    }
+  },
+  {
+    "locale": "es",
+    "diagnostics": [
+      {
+        "stage": "accepted",
+        "reason": "validated"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [],
+      "factKeys": [],
+      "draft": {},
+      "tonalHint": "arrival",
+      "dialogue": {
+        "text": "¡Qué alegría! Muchas felicidades por vuestro aniversario, es un motivo maravilloso para celebrar.",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "ai",
+      "text": "¡Qué alegría! Muchas felicidades por vuestro aniversario, es un motivo maravilloso para celebrar.",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 2058,
+          "outputTokens": 65,
+          "costUsd": 0.00023924,
+          "latencyMs": 989
+        }
+      }
+    }
+  },
+  {
+    "locale": "it",
+    "diagnostics": [
+      {
+        "stage": "provider",
+        "reason": "provider-rejected"
+      }
+    ],
+    "proposal": null,
+    "turn": {
+      "mode": "guided",
+      "text": "Non trovo questa informazione nella tua guida e preferisco non inventare. Il tuo gestore potrà aiutarti.",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 2064,
+          "outputTokens": 60,
+          "costUsd": 0.00023808,
+          "latencyMs": 692
+        }
+      }
+    }
+  },
+  {
+    "locale": "pt",
+    "diagnostics": [
+      {
+        "stage": "accepted",
+        "reason": "validated"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [],
+      "factKeys": [],
+      "draft": {},
+      "dialogue": {
+        "text": "Parabéns pelo vosso aniversário! Fico muito contente que queiram partilhar esse momento comigo, estou aqui para vos ouvir e conversar sobre tudo o que quiserem.",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "ai",
+      "text": "Parabéns pelo vosso aniversário! Fico muito contente que queiram partilhar esse momento comigo, estou aqui para vos ouvir e conversar sobre tudo o que quiserem.",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 2003,
+          "outputTokens": 70,
+          "costUsd": 0.00023354,
+          "latencyMs": 1035
+        }
+      }
+    }
+  },
+  {
+    "locale": "de",
+    "diagnostics": [
+      {
+        "stage": "dialogue",
+        "reason": "dialogue-rejected"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [
+        "ms"
+      ],
+      "factKeys": [],
+      "draft": {},
+      "tonalHint": "massage",
+      "dialogue": {
+        "text": "Oh, wie wunderbar, alles Liebe zum Hochzeitstag! Für eine richtige Auszeit nach der Reise könnte ich euch eine Massage direkt am Pool organisieren.",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "guided",
+      "text": "Hallo! 👋 Wie kann ich dir helfen?",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 1988,
+          "outputTokens": 79,
+          "costUsd": 0.00023504,
+          "latencyMs": 1224
+        }
+      }
+    }
+  }
+]

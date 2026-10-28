@@ -1,0 +1,29 @@
+{
+  "actualCalls": 20,
+  "accepted": 15,
+  "replaced": 5,
+  "directDiagnosticCalls": 8,
+  "realBrowserCalls": 12,
+  "acceptedLocales": [
+    "fr",
+    "en",
+    "es",
+    "pt",
+    "it",
+    "de"
+  ],
+  "inputTokens": 45883.0,
+  "outputTokens": 1633.0,
+  "estimatedUsd": 0.005178899999999999,
+  "authenticatedIncludedDebitUsd": 0.00528,
+  "newPayments": 0,
+  "aiEnabled": false,
+  "attempts": 103,
+  "observations": 103,
+  "reservedMicros": 2060000,
+  "capMicros": 2060000,
+  "monthlyEnabled": false,
+  "reservationAfterClosure": false,
+  "lovableRuntimeConfigured": false,
+  "betaOpened": false
+}

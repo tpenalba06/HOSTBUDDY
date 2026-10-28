@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-17T16:12:18.477Z",
+  "externalRequests": [],
+  "transactionRequests": [],
+  "simulatedBooking": false,
+  "errors": [],
+  "checks": [
+    {
+      "scenario": "wifi",
+      "message": "Nona, comment je me connecte au Wi-Fi ?",
+      "text": "Regarde les informations Wi-Fi affichées juste ci-dessous pour te connecter !",
+      "nextStep": null,
+      "provider": "ollama-local",
+      "modelCalls": 1
+    }
+  ],
+  "passed": true
+}

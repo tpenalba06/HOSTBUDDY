@@ -37,7 +37,7 @@ export function PropertyEditorScreen({
   ];
 
   return (
-    <div className="py-4 @sm:py-6">
+    <div className="property-editor-screen py-4 @sm:py-6">
       {backAction ?? (
         <Button variant="outline" className="min-h-12 text-primary" onClick={onBack}>
           ← {t("app.myProperties")}
@@ -73,7 +73,7 @@ export function PropertyEditorScreen({
           ))}
       </div>
 
-      <div className="mt-6 grid gap-2 @sm:grid-cols-2 @lg:grid-cols-4">
+      <div className="property-editor-tabs mt-6 grid gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = mode === tab.id;
@@ -109,29 +109,36 @@ function NameEditor({
   initial: string;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState(initial);
-  const t = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(t.current), []);
+  const [error, setError] = useState("");
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
   return (
     <label className="mt-2 block max-w-xl">
-      <span className="sr-only">Nom de l’hébergement</span>
+      <span className="sr-only">{t("manager.propertyName")}</span>
       <input
         className="w-full border-0 bg-transparent p-0 text-sm font-medium text-muted-foreground outline-none transition focus:text-foreground @sm:text-base"
         value={name}
         onChange={(e) => {
           const v = e.target.value;
           setName(v);
-          clearTimeout(t.current);
-          t.current = setTimeout(
+          clearTimeout(timer.current);
+          timer.current = setTimeout(
             () =>
               onRename(v)
                 .then(onSaved)
-                .catch(() => {}),
+                .catch(() => setError(t("manager.propertyNameError"))),
             700,
           );
         }}
-        aria-label="Nom de l’hébergement"
+        aria-label={t("manager.propertyName")}
       />
+      {error && (
+        <span role="alert" className="text-sm text-destructive">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

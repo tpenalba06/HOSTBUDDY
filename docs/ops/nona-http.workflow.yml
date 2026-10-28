@@ -1,0 +1,53 @@
+# PRIVATE NONA-OPS only. Existing published root GET; no app/database mutation.
+# GitHub Actions USD 0 stop-usage budget must remain enabled.
+name: Nona public HTTP availability
+on:
+  schedule:
+    - cron: '19 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: nona-public-http-availability
+  cancel-in-progress: false
+jobs:
+  http:
+    if: github.event.repository.private == true && vars.NONA_ISOLATED_OPS_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || vars.NONA_HTTP_MONITOR_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tpenalba06/HOSTBUDDY
+          ref: fcd4e6be3fff3b2f702486aadb6bf8de48b8b126
+          persist-credentials: false
+      - name: Read-only existing public homepage probe
+        run: |
+          python3 - <<'PYHTTP'
+          import importlib.util, json, os
+          s = importlib.util.spec_from_file_location('nona_http', 'scripts/ops/http-monitor.py')
+          m = importlib.util.module_from_spec(s)
+          s.loader.exec_module(m)
+          class IdentifiedMonitor(m.NoRedirect):
+              def http_request(self, request):
+                  request.add_unredirected_header('User-Agent', 'NonaAvailabilityMonitor/1.0')
+                  return request
+              https_request = http_request
+          m.NoRedirect = IdentifiedMonitor
+          r = m.probe('https://host-buddy-concierge.lovable.app/', 'https://host-buddy-concierge.lovable.app', 'fcd4e6be3fff3b2f702486aadb6bf8de48b8b126')
+          up = r['http'] == 200 and r['state'] in {'READY', 'STALE_BUILD', 'BUILD_UNVERIFIED'}
+          r['availability'] = 'UP' if up else 'NOT_VERIFIED'
+          r['launch_build_verified'] = r['state'] == 'READY'
+          print(json.dumps(r))
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write('## Nona HTTP\n\nAvailability: ' + r['availability'] + '\n\nBuild: ' + r['state'] + '\n\nHTTP: ' + str(r['http']) + '\n\nAn UP result does not grant commercial GO. Private preview access is excluded.\n\nOn failure: inspect status, hosting logs and last approved publication. Do not expose bodies, headers, URLs or secrets.\n')
+          if not up:
+              print('::error title=Nona HTTP monitor::Availability cannot be confirmed. Review sanitized result and hosting logs; this does not by itself prove an application outage.')
+              raise SystemExit(1)
+          if not r['launch_build_verified']:
+              print('::notice title=Nona publication version::HTTP is available but the target launch build is not verified. An older publication must not be reported as an outage.')
+          PYHTTP
+# One bounded GET/cycle, 8-second HTTP timeout; no credentials, Stripe or emails.
+# GitHub failure notifications use the existing owner channel, already received.
+# Schedule gated by NONA_HTTP_MONITOR_ENABLED=true only after an external UP result.
+# No push trigger. Schedules may be late/dropped; independent freshness stays open.

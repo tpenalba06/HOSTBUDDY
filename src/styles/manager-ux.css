@@ -1,0 +1,96 @@
+/* Manager navigation and card hierarchy. Business actions stay in their adapters. */
+.manager-shell .manager-shell-sidebar nav > .manager-nav-group {
+  margin: 18px 12px 5px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.manager-shell .manager-shell-sidebar nav > :is(a, button):not(.manager-nav-add) {
+  margin-top: 0;
+  border: 0;
+  color: var(--foreground);
+  background: transparent;
+}
+.manager-shell .manager-shell-sidebar nav > .manager-nav-add {
+  margin: 0 0 4px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+}
+.manager-shell .manager-shell-sidebar nav > .manager-nav-add svg {
+  color: currentColor;
+}
+.manager-shell
+  .manager-shell-sidebar
+  nav
+  > :is(a, button):not(.manager-nav-add)[aria-current="page"] {
+  background: var(--secondary);
+  color: var(--primary);
+  font-weight: 600;
+}
+.manager-shell
+  .manager-shell-sidebar
+  nav
+  > :is(a, button):not(.manager-nav-add)[aria-current="page"]
+  svg {
+  color: currentColor;
+}
+.manager-shell .manager-shell-mobile [aria-current="page"] {
+  background: var(--secondary);
+  color: var(--primary);
+}
+.manager-shell .manager-property-toolbar {
+  margin-top: 22px;
+}
+.manager-shell .manager-properties-heading {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.manager-shell .manager-property-no-results {
+  grid-column: 1 / -1;
+}
+.manager-shell .manager-property-quick-actions {
+  flex-wrap: wrap;
+}
+.manager-shell .manager-property-quick-actions :is(a, button) {
+  min-height: 44px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+}
+.manager-shell .manager-property-quick-actions .manager-property-edit {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.manager-shell .manager-property-menu summary {
+  width: 44px;
+  height: 44px;
+}
+.manager-shell .manager-property-menu summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.manager-shell .manager-property-search:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .manager-shell .manager-shell-sidebar nav > :is(a, button):not(.manager-nav-add):hover {
+    background: var(--secondary);
+  }
+}
+@container (max-width: 1000px) {
+  .manager-shell .manager-properties-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container (max-width: 450px) {
+  .manager-shell .manager-property-toolbar {
+    gap: 8px;
+  }
+  .manager-shell .manager-property-sort {
+    max-width: 120px;
+  }
+}

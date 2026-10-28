@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-20T13:06:36.580Z",
+  "repository": "tpenalba06/HOSTBUDDY",
+  "branch": "qa/nona-cloud-free-20261020",
+  "runId": 39426948766,
+  "jobId": 118641792576,
+  "remoteCommit": "c268f22bd03003b6e8d8b96aa0a94c2359cec2f3",
+  "conclusion": "success",
+  "artifactId": 12266376798,
+  "artifactSha256": "57fad9a287b5f3f9c09ae022b8eff97af1bde0dfed6174c4a8be94bb9dcf38b1",
+  "vitest": {
+    "passed": 595,
+    "skipped": 2
+  },
+  "node": {
+    "passed": 19,
+    "skipped": 1
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 23
+  },
+  "typecheck": true,
+  "isolatedBuild": true,
+  "playwright": {
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ],
+    "passed": true,
+    "guidedOnly": true,
+    "captures": 16
+  },
+  "productionDeployment": false,
+  "privateCredentialsSentToRunner": false
+}

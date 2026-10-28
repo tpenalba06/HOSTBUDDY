@@ -1,0 +1,101 @@
+Browser tab: 8, Title: "NONA — guide TEST cloud", URL: "https://nona-concierge-test-20261020-q07nj3h1p.vercel.app/".
+0 AXWebArea NONA — guide TEST cloud, URL: nona-concierge-test-20261020-q07nj3h1p.vercel.app/
+	1 container root
+		2 text TEST : données fictives · Ollama Cloud Free quand autorisé · aucune commande ni paiement.
+		3 container
+			4 button NONA
+				5 image NONA
+			6 container Villa Mare — démonstration TEST, données fictives
+				7 button Die Unterkunft
+				8 button Services
+				9 button In der Nähe
+			10 button Kontakt
+		11 container
+			12 heading Villa Mare — démonstration TEST, données fictives, Value: 1
+				13 text Villa Mare — démonstration TEST, données fictives
+			14 text Antibes
+			15 container Das Wichtigste für Ihren Aufenthalt
+				16 button Anreise
+				17 button WLAN
+				18 button Empfehlungen
+			19 container
+				20 image Villa Mare — démonstration TEST, données fictives
+				21 button Nächstes Foto
+					22 text Fotos
+					23 text 1
+					24 text /
+					25 text 3
+			26 container Fotos
+				27 button Vorheriges Foto
+				28 checkbox Description: Fotos 1, Value: 1
+				29 checkbox Description: Fotos 2, Value: 0
+				30 checkbox Description: Fotos 3, Value: 0
+				31 button Nächstes Foto
+		32 button WLAN
+		33 button Anreise
+		34 button Empfehlungen
+		35 button Abreise
+		36 button Kontakt
+		37 button Die Unterkunft
+		38 button Pool / Spa
+		39 container Services
+			40 heading Zusatzleistungen, Value: 2
+				41 text Zusatzleistungen
+			42 button Alle ansehen
+			43 container
+				44 image Frühstück
+				45 text Frühstück
+				46 button Entdecken
+				47 image Massage zu Hause
+				48 text Massage zu Hause
+				49 button Entdecken
+				50 image Transfer
+				51 text Transfer
+				52 button Entdecken
+				53 image Später Check-out
+				54 text Später Check-out
+				55 button Entdecken
+		56 button (collapsed) Medien der Unterkunft, Secondary Actions: Expand
+			57 text Medien der Unterkunft
+		58 link Description: Anrufen, Value: tel:+33612345678
+		59 link Description: WhatsApp, Value: wa.me/33612345678
+		60 link Description: E-Mail, Value: mailto:bonjour@conciergerie-azur.fr
+		61 container
+			62 text NONA ·  Kein Konto · Keine App
+		63 container
+			64 button (expanded) Description: Mit Nona chatten, Secondary Actions: Collapse
+				65 image Nona
+			66 container Description: Nona, Ihr Concierge, ID: nona-chat-_r_9_
+				67 container
+					68 image Nona
+					69 heading NONA, Value: 2
+						70 image NONA
+					71 text Nona · TEST guidé
+					72 pop up button (collapsed, settable) Description: Sprache, Value: DE, Secondary Actions: Expand
+						73 menu
+							74 FR
+							75 EN
+							76 ES
+							77 (selected) DE
+							78 IT
+							79 PT
+					80 button Nona schließen
+				88 container
+					89 text Villa Mare — démonstration TEST, données fictives Willkommen in Villa Mare — démonstration TEST, données fictives. Ich helfe Ihnen gerne, Ihren Aufenthalt zu genießen. Lust auf ein Frühstück? Eine entspannende Massage? Eine Frage zur Unterkunft? Sag mir, was du brauchst, ich bin für dich da.
+					90 container Massage zu Hause
+						91 button (collapsed) Massage zu Hause +, Secondary Actions: Expand
+							92 text Massage zu Hause
+							93 text +
+					94 text Je voudrais un massage pour une personne demain. Un peu de douceur, ça ne se refuse pas ! 💆 Je regarde ça avec toi. Tu préfères quelle heure ?
+					95 button (collapsed) Massage à domicile 90,00 € · pro Einheit +, Secondary Actions: Expand
+						96 text Massage à domicile
+						97 text 90,00 €
+						98 text  ·
+						99 text pro Einheit
+						100 text +
+					101 text Je change encore de sujet : une idée simple après le massage, sans réserver quoi que ce soit. Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider. Hallo Nona, wir feiern unseren Hochzeitstag und möchten nach der Reise entspannen. Hast du eine schöne Idee? Das finde ich nicht in deinem Gästebuch, und ich rate lieber nicht. Dein Verwalter hilft dir gern.
+				85 container
+					86 text entry area (settable) Ihre Frage oder Ihr Wunsch…
+					87 button (disabled) Senden
+
+The focused UI element is 86 text entry area (settable) Ihre Frage oder Ihr Wunsch…

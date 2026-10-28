@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-20T22:14:08.243Z",
+  "runId": 39505905461,
+  "runUrl": "https://github.com/tpenalba06/HOSTBUDDY/actions/runs/39505905461",
+  "commit": "852cefa4af1794ce041d19584eac8e94de954526",
+  "conclusion": "success",
+  "artifactId": 12302404753,
+  "artifactSha256": "61d1cd5b9628cd3f1c0c734687283f8974fd1473a4cefc91cc86eaeef849121a",
+  "vitest": {
+    "passed": 647,
+    "skipped": 2
+  },
+  "node": {
+    "passed": 19,
+    "skipped": 1
+  },
+  "browser": {
+    "turns": 26,
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ],
+    "screenshots": 26,
+    "newModelCalls": 0,
+    "mode": "guided-only",
+    "visibleServerQuoteCents": 7500,
+    "ordersSubmitted": 0,
+    "payments": 0
+  },
+  "typescript": "pass",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 23
+  },
+  "uxTrackedAndUntrackedUnchanged": true
+}

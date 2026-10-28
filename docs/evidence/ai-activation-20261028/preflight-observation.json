@@ -1,0 +1,12 @@
+{
+  "source": "Authenticated Ollama settings page observed in browser before this recipe; structured transcription, not a raw AX export",
+  "checkedAt": "2026-10-28T19:58:24.148Z",
+  "purchasedBalanceUsd": 0,
+  "includedBalanceUsd": 2.48019,
+  "automaticReload": "Off",
+  "freeUsagePercent": 0.8,
+  "eligibleIncludedModel": "gemma4:31b",
+  "gemmaRequests": 82,
+  "billing": "No invoices yet; upgrade subscription offered",
+  "rawAxDiffIncomplete": true
+}

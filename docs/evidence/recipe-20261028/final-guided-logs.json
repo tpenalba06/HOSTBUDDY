@@ -1,0 +1,26 @@
+[
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"eca3032c-de5c-4e25-b566-b64f070c9352\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"time\",\"quote\":null}",
+    "timestamp": "2026-10-28T16:45:23.239Z",
+    "url": "https://nona-concierge-test-20261020-q07nj3h1p.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"b5c0c8b8-81ca-4e3d-8ce4-c98440d43129\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T16:45:28.096Z",
+    "url": "https://nona-concierge-test-20261020-q07nj3h1p.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"298b7ec2-6009-4e5b-a9aa-852ac78c6dce\",\"locale\":\"de\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T16:45:37.419Z",
+    "url": "https://nona-concierge-test-20261020-q07nj3h1p.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"20ecfdb4-7251-4a90-9c15-5f3fe8f09536\",\"locale\":\"de\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T16:45:37.560Z",
+    "url": "https://nona-concierge-test-20261020-q07nj3h1p.vercel.app/assets/index-COtGCJgn.js"
+  }
+]

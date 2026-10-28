@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-20T17:17:01.752Z",
+  "base": "https://nona-concierge-test-20261020-g4a1dn92x.vercel.app",
+  "actualModelCalls": 0,
+  "audit": [
+    {
+      "name": "private-server",
+      "status": 404
+    },
+    {
+      "name": "environment",
+      "status": 404
+    },
+    {
+      "name": "order-disabled",
+      "status": 405
+    },
+    {
+      "name": "foreign-slug",
+      "status": 400
+    },
+    {
+      "name": "cross-site",
+      "status": 403
+    }
+  ]
+}

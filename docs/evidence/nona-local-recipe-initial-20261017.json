@@ -1,0 +1,507 @@
+{
+  "checkedAt": "2026-10-16T23:22:43.297Z",
+  "status": {
+    "backend": "ok",
+    "commit": "036a5ac3bf471ebb1859d4cfa32ef3d6a87dae79",
+    "worktreeDirty": true,
+    "configured": true,
+    "provider": "ollama-local",
+    "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+    "localOnly": true,
+    "paidApisEnabled": false,
+    "costEuros": 0,
+    "guideSource": "Villa Mare — données de démonstration locales ; massage fictif de recette",
+    "ready": true,
+    "issues": []
+  },
+  "paidApiCalls": 0,
+  "checks": [
+    {
+      "scenario": "bonjour",
+      "message": "Coucou Nona, tu vas bien ?",
+      "elapsedMs": 41520,
+      "turn": {
+        "mode": "ai",
+        "text": "Coucou ! Tu as l’air bien, ça me fait plaisir 😊 Tu cherches quoi aujourd’hui ?",
+        "draft": {},
+        "services": [],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "welcome",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2401
+      },
+      "passed": true
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Je voudrais un petit-déjeuner, mon ventre commence à râler",
+      "elapsedMs": 1443,
+      "turn": {
+        "mode": "ai",
+        "text": "Ah, mon petit ventre qui crie ! Tu voudrais un petit-déjeuner, tu veux le faire en version classique ou végétarienne ? 😊",
+        "draft": {
+          "serviceId": "bf"
+        },
+        "services": [
+          {
+            "id": "bf",
+            "name": "Petit-déjeuner",
+            "description": "Livré à la villa, par personne",
+            "price": 25,
+            "pricingType": "per_person",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 10,
+              "requestDate": true,
+              "instructions": "",
+              "cancellation": "Démonstration : demande annulable avant confirmation.",
+              "seller": "Conciergerie Azur",
+              "options": [
+                {
+                  "id": "11111111-1111-4111-8111-111111111111",
+                  "label": "Classique",
+                  "priceCents": 0
+                },
+                {
+                  "id": "22222222-2222-4222-8222-222222222222",
+                  "label": "Végétarien",
+                  "priceCents": 250
+                }
+              ],
+              "slots": [
+                "2026-10-18T06:30:00.000Z",
+                "2026-10-18T07:00:00.000Z"
+              ]
+            },
+            "imagePath": "/demo-guide/breakfast.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "earlyArrival",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2454
+      },
+      "passed": true
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Pour deux personnes",
+      "elapsedMs": 1361,
+      "turn": {
+        "mode": "ai",
+        "text": "Tu veux un petit-déjeuner pour deux, c’est ça ? 😊 Alors, tu préfères le classique ou le végétarien ?",
+        "draft": {
+          "serviceId": "bf"
+        },
+        "services": [
+          {
+            "id": "bf",
+            "name": "Petit-déjeuner",
+            "description": "Livré à la villa, par personne",
+            "price": 25,
+            "pricingType": "per_person",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 10,
+              "requestDate": true,
+              "instructions": "",
+              "cancellation": "Démonstration : demande annulable avant confirmation.",
+              "seller": "Conciergerie Azur",
+              "options": [
+                {
+                  "id": "11111111-1111-4111-8111-111111111111",
+                  "label": "Classique",
+                  "priceCents": 0
+                },
+                {
+                  "id": "22222222-2222-4222-8222-222222222222",
+                  "label": "Végétarien",
+                  "priceCents": 250
+                }
+              ],
+              "slots": [
+                "2026-10-18T06:30:00.000Z",
+                "2026-10-18T07:00:00.000Z"
+              ]
+            },
+            "imagePath": "/demo-guide/breakfast.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "earlyArrival",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2617
+      },
+      "passed": false,
+      "error": "Expected values to be strictly equal:\n\nundefined !== 2\n"
+    },
+    {
+      "scenario": "massage",
+      "message": "Un massage, je suis complètement noué des épaules",
+      "elapsedMs": 1294,
+      "turn": {
+        "mode": "ai",
+        "text": "Tu as l’air tout raide, chérie ! 😊 Pour ton massage, tu voudrais quand, au juste ?",
+        "draft": {
+          "serviceId": "ms"
+        },
+        "services": [
+          {
+            "id": "ms",
+            "name": "Massage à domicile",
+            "description": "1 heure, au bord de la piscine",
+            "price": 90,
+            "pricingType": "fixed",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 20,
+              "requestDate": false,
+              "instructions": "",
+              "cancellation": "",
+              "seller": "",
+              "options": [],
+              "slots": []
+            },
+            "imagePath": "/demo-guide/pool.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "earlyArrival",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2431
+      },
+      "passed": true
+    },
+    {
+      "scenario": "massage",
+      "message": "Pour deux personnes",
+      "elapsedMs": 1284,
+      "turn": {
+        "mode": "ai",
+        "text": "Tu veux que je prépare ton massage pour deux, chérie ? 😊 Quel jour préfères-tu, par exemple ?",
+        "draft": {
+          "serviceId": "ms"
+        },
+        "services": [
+          {
+            "id": "ms",
+            "name": "Massage à domicile",
+            "description": "1 heure, au bord de la piscine",
+            "price": 90,
+            "pricingType": "fixed",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 20,
+              "requestDate": false,
+              "instructions": "",
+              "cancellation": "",
+              "seller": "",
+              "options": [],
+              "slots": []
+            },
+            "imagePath": "/demo-guide/pool.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "earlyArrival",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2563
+      },
+      "passed": false,
+      "error": "Expected values to be strictly equal:\n\nundefined !== 2\n"
+    },
+    {
+      "scenario": "arrivee-anticipee",
+      "message": "Est-ce que je peux arriver plus tôt que prévu ?",
+      "elapsedMs": 668,
+      "turn": {
+        "error": "Le modèle local n’a pas produit de réponse valide. Aucun texte guidé substitué, aucune dépense. Tu peux reformuler ton message."
+      },
+      "passed": false,
+      "error": "{\"error\":\"Le modèle local n’a pas produit de réponse valide. Aucun texte guidé substitué, aucune dépense. Tu peux reformuler ton message.\"}\n\n503 !== 200\n"
+    },
+    {
+      "scenario": "wifi",
+      "message": "Comment je me connecte au Wi-Fi ?",
+      "elapsedMs": 1653,
+      "turn": {
+        "mode": "ai",
+        "text": "Tu as déjà vu le Wi-Fi dans la villa ? C’est souvent à l’entrée, juste à côté de l’entrée principale. Si tu veux, je peux t’expliquer comment le connecter, mais d’abord, tu préfères que je t’aide avec le petit-déjeuner ? 😊",
+        "draft": {
+          "serviceId": "bf"
+        },
+        "services": [
+          {
+            "id": "bf",
+            "name": "Petit-déjeuner",
+            "description": "Livré à la villa, par personne",
+            "price": 25,
+            "pricingType": "per_person",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 10,
+              "requestDate": true,
+              "instructions": "",
+              "cancellation": "Démonstration : demande annulable avant confirmation.",
+              "seller": "Conciergerie Azur",
+              "options": [
+                {
+                  "id": "11111111-1111-4111-8111-111111111111",
+                  "label": "Classique",
+                  "priceCents": 0
+                },
+                {
+                  "id": "22222222-2222-4222-8222-222222222222",
+                  "label": "Végétarien",
+                  "priceCents": 250
+                }
+              ],
+              "slots": [
+                "2026-10-18T06:30:00.000Z",
+                "2026-10-18T07:00:00.000Z"
+              ]
+            },
+            "imagePath": "/demo-guide/breakfast.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "earlyArrival",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2464
+      },
+      "passed": false,
+      "error": "Wi-Fi source absent"
+    },
+    {
+      "scenario": "restaurant-italien",
+      "message": "Tu me conseilles un restaurant italien ?",
+      "elapsedMs": 1038,
+      "turn": {
+        "mode": "ai",
+        "text": "Tu veux un petit-déjeuner italien ? 😊 Et combien de personnes ?",
+        "draft": {
+          "serviceId": "bf"
+        },
+        "services": [
+          {
+            "id": "bf",
+            "name": "Petit-déjeuner",
+            "description": "Livré à la villa, par personne",
+            "price": 25,
+            "pricingType": "per_person",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 10,
+              "requestDate": true,
+              "instructions": "",
+              "cancellation": "Démonstration : demande annulable avant confirmation.",
+              "seller": "Conciergerie Azur",
+              "options": [
+                {
+                  "id": "11111111-1111-4111-8111-111111111111",
+                  "label": "Classique",
+                  "priceCents": 0
+                },
+                {
+                  "id": "22222222-2222-4222-8222-222222222222",
+                  "label": "Végétarien",
+                  "priceCents": 250
+                }
+              ],
+              "slots": [
+                "2026-10-18T06:30:00.000Z",
+                "2026-10-18T07:00:00.000Z"
+              ]
+            },
+            "imagePath": "/demo-guide/breakfast.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 2,
+          "estimatedCostMicros": 0
+        },
+        "persona": "italianNone",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3:4b-instruct-2507-q4_K_M",
+        "localTokens": 2413
+      },
+      "passed": true
+    }
+  ],
+  "passed": false
+}

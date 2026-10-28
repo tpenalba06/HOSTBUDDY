@@ -1,3 +1,5 @@
+import { VillaMarePhone } from "@/components/marketing/VillaMarePhone";
+import { MarketingPhoto } from "@/components/marketing/MarketingPhoto";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -11,17 +13,18 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
-import { PhoneDemo } from "@/components/marketing/PhoneDemo";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 import { SocialProof } from "@/components/marketing/SocialProof";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
+import { uxCopy } from "@/lib/ux-copy";
 import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 import breakfastAsset from "@/assets/hostbuddy-breakfast.jpg.asset.json";
 import spaAsset from "@/assets/hostbuddy-spa.jpg.asset.json";
 
-const TITLE = "HostBuddy — Votre accueil voyageur, prêt en quelques minutes";
+const TITLE = "NONA - Votre accueil voyageur, prêt en quelques minutes";
 const DESC =
-  "Importez vos contenus existants. HostBuddy prépare un guide voyageur élégant, sans application à télécharger.";
+  "Importez vos contenus existants. NONA prépare un guide voyageur élégant, sans application à télécharger.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,15 +43,25 @@ export const Route = createFileRoute("/")({
 const sourceLabels = ["Airbnb", "Booking", "Sunver"];
 
 function Landing() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const ux = uxCopy(locale);
   return (
-    <div className="overflow-hidden">
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-5 sm:px-5">
+    <div className="nona-marketing-page">
+      <a href="#main-content" className="nona-skip-link">
+        {ux.skipContent}
+      </a>
+      <header className="nona-marketing-header mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:px-5">
         <Logo />
         <nav className="flex min-w-0 items-center gap-1 sm:gap-2">
           <Link
+            to="/demo"
+            className="hidden min-h-12 items-center px-3 text-sm font-semibold text-primary sm:inline-flex"
+          >
+            {ux.explore}
+          </Link>
+          <Link
             to="/integrations"
-            className="inline-flex min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:px-2 sm:text-base"
+            className="hidden min-h-12 items-center whitespace-nowrap px-1 text-sm font-semibold text-foreground hover:text-primary sm:inline-flex sm:px-2 sm:text-base"
           >
             {t("marketing.integrations")}
           </Link>
@@ -56,24 +69,26 @@ function Landing() {
           <Link
             to="/auth"
             search={{ mode: "login" }}
-            className="btn btn-secondary hidden md:inline-flex"
+            className="btn btn-secondary min-h-12 px-3 text-sm sm:px-5"
           >
             {t("common.login")}
           </Link>
         </nav>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
-          <img
+          <MarketingPhoto
             src={arrivalAsset.url}
+            fallback="/hostbuddy-media/arrival.webp"
+            fetchPriority="high"
             alt={t("marketing.arrivalAlt")}
             width={1536}
             height={1024}
             className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] w-[calc(100%-1.5rem)] rounded-xl object-cover object-center sm:inset-x-5 sm:w-[calc(100%-2.5rem)] lg:inset-x-8 lg:w-[calc(100%-4rem)]"
           />
           <div className="absolute inset-x-3 top-1 h-[calc(100%-2rem)] rounded-xl bg-gradient-to-r from-ink/95 via-ink/70 to-ink/20 sm:inset-x-5 lg:inset-x-8" />
-          <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-7rem)] max-w-6xl items-center px-4 py-8 sm:px-10 sm:py-14 lg:px-16">
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:px-10 sm:py-14 lg:grid-cols-2 lg:px-12">
             <div className="max-w-2xl text-ink-foreground">
               <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-card/95 px-4 py-2 text-sm font-bold text-foreground shadow-soft">
                 <WandSparkles className="h-4 w-4 text-primary" />
@@ -100,28 +115,31 @@ function Landing() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <strong className="font-display text-4xl font-semibold">
-                  {t("marketing.price")}
-                </strong>
-                <span className="text-ink-foreground/80">{t("marketing.priceNote")}</span>
-              </div>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link to="/auth" search={{ mode: "signup" }} className="btn btn-primary text-lg">
-                  {t("common.try")}
+                <Link to="/demo" className="btn btn-primary text-lg">
+                  {ux.explore}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link
-                  to="/demo"
+                  to="/auth"
+                  search={{ mode: "signup" }}
                   className="btn border-2 border-ink-foreground/60 bg-ink/20 text-ink-foreground backdrop-blur hover:bg-ink/35"
                 >
-                  {t("common.demo")}
+                  {ux.createGuide}
                 </Link>
               </div>
-              <p className="mt-4 text-sm font-semibold text-ink-foreground/80">
+              <p className="mt-3 text-sm text-ink-foreground/90">{ux.demoHint}</p>
+              <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
+                {t("marketing.paidTier")} ·{" "}
+                <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
+                  {t("marketing.price")}
+                </span>
+              </p>
+              <p className="mt-2 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.trial")}
               </p>
             </div>
+            <VillaMarePhone />
           </div>
         </section>
 
@@ -179,7 +197,9 @@ function Landing() {
         <section className="bg-ink py-20 text-ink-foreground">
           <div className="mx-auto max-w-7xl px-3 sm:px-5">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="font-bold text-accent">HostBuddy</p>
+              <div className="inline-flex rounded-xl bg-background px-3 py-2">
+                <NonaWordmark />
+              </div>
               <h2 className="mt-3 text-balance text-4xl font-semibold sm:text-5xl">
                 {t("demo.homePreviewTitle")}
               </h2>
@@ -191,13 +211,25 @@ function Landing() {
                 {t("marketing.qrLine")}
               </div>
             </div>
-            <div id="demo" className="mt-9">
-              <div className="mx-auto w-full max-w-6xl">
-                <PhoneDemo />
+            <div id="demo" className="nona-demo-entry mt-9">
+              <div>
+                <h3 className="text-3xl">{ux.demoPreviewTitle}</h3>
+                <p className="mt-3 text-ink-foreground/80">{ux.demoPreviewBody}</p>
               </div>
-              <Link to="/demo" className="btn btn-primary mx-auto mt-6 flex max-w-xs">
-                {t("marketing.openDemo")}
-              </Link>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Link to="/demo" search={{ mode: "guest" }} className="btn btn-primary">
+                  {ux.demoGuest}
+                  <ArrowRight size={18} />
+                </Link>
+                <Link
+                  to="/demo"
+                  search={{ mode: "manager" }}
+                  className="btn border border-ink-foreground/60 text-ink-foreground hover:bg-ink-foreground/10"
+                >
+                  {ux.demoManager}
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -205,8 +237,9 @@ function Landing() {
         <section className="mx-auto max-w-6xl px-5 py-24">
           <div className="grid gap-12 lg:grid-cols-2">
             <div className="overflow-hidden rounded-2xl">
-              <img
+              <MarketingPhoto
                 src={breakfastAsset.url}
+                fallback="/demo-guide/breakfast.webp"
                 alt={t("marketing.breakfastAlt")}
                 loading="lazy"
                 width={1200}
@@ -215,10 +248,7 @@ function Landing() {
               />
             </div>
             <div className="self-center">
-              <span className="rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-accent-foreground">
-                {t("marketing.upcoming")}
-              </span>
-              <h2 className="mt-5 text-4xl font-semibold">{t("marketing.services")}</h2>
+              <h2 className="text-4xl font-semibold">{t("marketing.services")}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t("marketing.servicesD")}</p>
               <div className="mt-8 grid grid-cols-2 gap-3">
                 {[
@@ -242,8 +272,10 @@ function Landing() {
               </p>
             </div>
             <div className="overflow-hidden rounded-2xl lg:order-4">
-              <img
+              <MarketingPhoto
                 src={spaAsset.url}
+                fallback="/demo-guide/pool.webp"
+                fallbackAlt={ux.poolPhoto}
                 alt={t("marketing.spaAlt")}
                 loading="lazy"
                 width={1200}
@@ -286,6 +318,8 @@ function Landing() {
             </div>
             <div className="surface p-8">
               <h3 className="text-3xl font-semibold">{t("marketing.pricing")}</h3>
+              <p className="mt-4 font-semibold">{t("payments.free")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("payments.freeNote")}</p>
               <p className="mt-6 font-display text-5xl font-semibold">{t("marketing.price")}</p>
               <p className="mt-2 text-muted-foreground">{t("marketing.priceNote")}</p>
               <Link
@@ -309,9 +343,10 @@ function Landing() {
           <Link to="/integrations" className="font-semibold text-primary hover:underline">
             {t("marketing.integrations")}
           </Link>
-          <p className="text-sm text-muted-foreground">
-            © 2026 HostBuddy · {t("marketing.footer")}
-          </p>
+          <a href="/legal" className="min-h-12 py-3 text-primary underline">
+            {t("legal.title")}
+          </a>
+          <p className="text-sm text-muted-foreground">© 2026 NONA · {t("marketing.footer")}</p>
         </div>
       </footer>
     </div>

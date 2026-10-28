@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
+  CreditCard,
   Cable,
   ClipboardList,
   Home,
@@ -11,16 +12,26 @@ import {
   Plus,
   Star,
   Users,
-  X,
   type LucideIcon,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/Logo";
+import { NonaMascot, NonaWordmark } from "@/components/shared/NonaBrand";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
+import { uxCopy } from "@/lib/ux-copy";
 
 export type ManagerArea =
-  "properties" | "messages" | "orders" | "feedback" | "connections" | "dashboard" | "team" | "new";
+  | "properties"
+  | "messages"
+  | "orders"
+  | "feedback"
+  | "connections"
+  | "dashboard"
+  | "team"
+  | "new"
+  | "payments";
 type Role = "owner" | "admin" | "member";
 type ManagerPath =
   | "/app"
@@ -29,6 +40,7 @@ type ManagerPath =
   | "/app/feedback"
   | "/app/connections"
   | "/app/dashboard"
+  | "/app/payments"
   | "/app/team"
   | "/app/new";
 type NavItem = { id: ManagerArea; to: ManagerPath; label: string; icon: LucideIcon };
@@ -42,6 +54,7 @@ export function ManagerShell({
   onSignOut,
   embedded = false,
   viewKey,
+  pendingOrders = 0,
 }: {
   children: ReactNode;
   orgName: string;
@@ -51,14 +64,21 @@ export function ManagerShell({
   onSignOut?: () => void;
   embedded?: boolean;
   viewKey?: string;
+  pendingOrders?: number;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const copy = uxCopy(locale);
   const [more, setMore] = useState(false);
   const contentRef = useRef<HTMLElement>(null);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const operational: NavItem[] = [
     { id: "messages", to: "/app/messages", label: t("nav.messages"), icon: MessageCircle },
-    { id: "orders", to: "/app/orders", label: t("nav.orders"), icon: ClipboardList },
+    {
+      id: "orders",
+      to: "/app/orders",
+      label: `${t("nav.orders")}${pendingOrders ? ` (${pendingOrders})` : ""}`,
+      icon: ClipboardList,
+    },
     { id: "feedback", to: "/app/feedback", label: t("nav.feedback"), icon: Star },
   ];
   const management: NavItem[] = [
@@ -80,6 +100,12 @@ export function ManagerShell({
             label: t("nav.dashboard"),
             icon: BarChart3,
           },
+          {
+            id: "payments" as const,
+            to: "/app/payments" as const,
+            label: t("nav.payments"),
+            icon: CreditCard,
+          },
           { id: "team" as const, to: "/app/team" as const, label: t("nav.team"), icon: Users },
         ]
       : []),
@@ -90,32 +116,57 @@ export function ManagerShell({
     label: t("nav.properties"),
     icon: Home,
   };
-  const routeArea: ManagerArea = pathname.startsWith("/app/messages")
-    ? "messages"
-    : pathname.startsWith("/app/orders")
-      ? "orders"
-      : pathname.startsWith("/app/feedback")
-        ? "feedback"
-        : pathname.startsWith("/app/connections")
-          ? "connections"
-          : pathname.startsWith("/app/dashboard")
-            ? "dashboard"
-            : pathname.startsWith("/app/team")
-              ? "team"
-              : pathname.startsWith("/app/new")
-                ? "new"
-                : "properties";
+  const addProperty: NavItem = {
+    id: "new",
+    to: "/app/new",
+    label: copy.addProperty,
+    icon: Plus,
+  };
+  const mobileItems =
+    role === "member"
+      ? [properties, ...operational]
+      : [properties, addProperty, ...operational.filter((item) => item.id !== "feedback")];
+  const routeArea: ManagerArea = pathname.startsWith("/app/payments")
+    ? "payments"
+    : pathname.startsWith("/app/messages")
+      ? "messages"
+      : pathname.startsWith("/app/orders")
+        ? "orders"
+        : pathname.startsWith("/app/feedback")
+          ? "feedback"
+          : pathname.startsWith("/app/connections")
+            ? "connections"
+            : pathname.startsWith("/app/dashboard")
+              ? "dashboard"
+              : pathname.startsWith("/app/team")
+                ? "team"
+                : pathname.startsWith("/app/new")
+                  ? "new"
+                  : "properties";
   const current = onNavigate ? active : routeArea;
+  const screenKey = `${current}:${viewKey ?? pathname}`;
+  const previousScreen = useRef(screenKey);
   useEffect(() => {
-    if (embedded) contentRef.current?.scrollTo({ top: 0 });
-  }, [current, embedded, viewKey, pathname]);
+    if (screenKey === previousScreen.current) return;
+    previousScreen.current = screenKey;
+    const frame = requestAnimationFrame(() => {
+      if (embedded) contentRef.current?.scrollTo({ top: 0 });
+      else window.scrollTo({ top: 0, behavior: "instant" });
+      const heading = contentRef.current?.querySelector<HTMLElement>("h1");
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [screenKey, embedded]);
   const navigate = (area: ManagerArea) => {
     setMore(false);
     onNavigate?.(area);
   };
   return (
     <div
-      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-hidden" : "min-h-screen"}`}
+      className={`manager-shell relative min-h-0 bg-background text-foreground ${embedded ? "manager-shell-embedded h-full overflow-visible" : "min-h-screen"}`}
     >
       <header
         className={`${embedded ? "absolute" : "sticky"} inset-x-0 top-0 z-30 border-b bg-background/95 backdrop-blur`}
@@ -127,10 +178,7 @@ export function ManagerShell({
               className="h-auto min-w-0 justify-start gap-2 px-1 font-display text-lg font-semibold text-foreground"
               onClick={() => navigate("properties")}
             >
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-                H
-              </span>
-              <span className="truncate">HostBuddy</span>
+              <NonaWordmark />
             </Button>
           ) : (
             <Logo to="/app" />
@@ -153,12 +201,25 @@ export function ManagerShell({
         className={`manager-shell-grid ${embedded ? "h-full pt-[69px]" : "mx-auto w-full max-w-7xl"}`}
       >
         <aside className="manager-shell-sidebar min-h-0 overflow-y-auto border-r bg-card/60 p-4">
+          <div className="manager-sidebar-wordmark">
+            <NonaWordmark />
+          </div>
           <nav className="space-y-1" aria-label={t("demo.manager")}>
+            {role !== "member" && (
+              <ShellItem
+                item={addProperty}
+                active={current === "new"}
+                primary
+                onNavigate={onNavigate ? navigate : undefined}
+              />
+            )}
+            <p className="manager-nav-group">{copy.managerWorkspace}</p>
             <ShellItem
               item={properties}
               active={current === properties.id}
               onNavigate={onNavigate ? navigate : undefined}
             />
+            <p className="manager-nav-group">{copy.managerActivity}</p>
             {operational.map((item) => (
               <ShellItem
                 key={item.id}
@@ -167,6 +228,7 @@ export function ManagerShell({
                 onNavigate={onNavigate ? navigate : undefined}
               />
             ))}
+            {!!management.length && <p className="manager-nav-group">{copy.managerSettings}</p>}
             {management.map((item) => (
               <ShellItem
                 key={item.id}
@@ -175,18 +237,12 @@ export function ManagerShell({
                 onNavigate={onNavigate ? navigate : undefined}
               />
             ))}
-            {role !== "member" && (
-              <ShellItem
-                item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
-                active={current === "new"}
-                primary
-                onNavigate={onNavigate ? navigate : undefined}
-              />
-            )}
           </nav>
+          <NonaMascot className="manager-sidebar-mascot" />
         </aside>
         <main
           ref={contentRef}
+          data-nona-scroll-area={embedded || undefined}
           className={`manager-shell-content min-h-0 min-w-0 overflow-x-hidden px-4 pb-24 pt-5 @sm:px-6 ${embedded ? "overflow-y-auto" : ""}`}
         >
           {children}
@@ -196,12 +252,7 @@ export function ManagerShell({
         className={`manager-shell-mobile ${embedded ? "absolute" : "fixed"} inset-x-0 bottom-0 z-40 grid-cols-5 border-t bg-background/95 px-1 pb-1 shadow-[0_-8px_28px_-18px_rgba(0,0,0,.35)] backdrop-blur`}
         aria-label={t("demo.manager")}
       >
-        <MobileItem
-          item={properties}
-          active={current === "properties"}
-          onNavigate={onNavigate ? navigate : undefined}
-        />
-        {operational.map((item) => (
+        {mobileItems.map((item) => (
           <MobileItem
             key={item.id}
             item={item}
@@ -212,59 +263,52 @@ export function ManagerShell({
         <Button
           variant="ghost"
           onClick={() => setMore(true)}
+          aria-current={!mobileItems.some((item) => item.id === current) ? "page" : undefined}
+          aria-haspopup="dialog"
+          aria-expanded={more}
           className="h-16 min-w-0 flex-col gap-1 rounded-none px-1 text-[11px] font-semibold"
         >
           <Menu className="h-5 w-5" />
-          <span className="truncate">{t("nav.more")}</span>
+          <span className="truncate">{copy.managerMore}</span>
         </Button>
       </nav>
-      {more && (
-        <div
-          className={`${embedded ? "absolute" : "fixed"} inset-0 z-50 flex items-end bg-ink/55`}
-          role="dialog"
-          aria-modal="true"
+      <Dialog open={more} onOpenChange={setMore}>
+        <DialogContent
+          className="top-auto bottom-0 translate-y-0 rounded-t-2xl p-5"
+          aria-describedby={undefined}
         >
-          <div className="w-full rounded-t-2xl bg-background p-5">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center">
-              <h2 className="text-2xl font-semibold">{t("nav.more")}</h2>
+          <DialogTitle className="font-display text-2xl">{copy.managerMore}</DialogTitle>
+          <div className="mt-4 grid gap-2" onClick={() => setMore(false)}>
+            {role !== "member" &&
+              operational
+                .filter((item) => item.id === "feedback")
+                .map((item) => (
+                  <DrawerItem
+                    key={item.id}
+                    item={item}
+                    onNavigate={onNavigate ? navigate : undefined}
+                  />
+                ))}
+            {management.map((item) => (
+              <DrawerItem
+                key={item.id}
+                item={item}
+                onNavigate={onNavigate ? navigate : undefined}
+              />
+            ))}
+            {onSignOut && (
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-12 w-12"
-                onClick={() => setMore(false)}
-                aria-label={t("common.close")}
+                className="min-h-14 justify-start gap-3 px-4"
+                onClick={onSignOut}
               >
-                <X />
+                <LogOut />
+                {t("app.signOut")}
               </Button>
-            </div>
-            <div className="mt-4 grid gap-2">
-              {role !== "member" && (
-                <DrawerItem
-                  item={{ id: "new", to: "/app/new", label: t("app.add"), icon: Plus }}
-                  onNavigate={onNavigate ? navigate : undefined}
-                />
-              )}{" "}
-              {management.map((item) => (
-                <DrawerItem
-                  key={item.id}
-                  item={item}
-                  onNavigate={onNavigate ? navigate : undefined}
-                />
-              ))}
-              {onSignOut && (
-                <Button
-                  variant="ghost"
-                  className="min-h-14 justify-start gap-3 px-4"
-                  onClick={onSignOut}
-                >
-                  <LogOut />
-                  {t("app.signOut")}
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -280,16 +324,26 @@ function ShellItem({
   primary?: boolean;
   onNavigate?: ((area: ManagerArea) => void) | undefined;
 }) {
-  const classes = `flex min-h-12 w-full items-center gap-3 rounded-lg px-3 font-semibold transition ${primary ? "mt-5 bg-primary text-primary-foreground" : active ? "bg-secondary text-primary" : "hover:bg-muted"}`;
+  const classes = `flex min-h-12 w-full items-center gap-3 rounded-lg px-3 font-semibold transition ${primary ? "manager-nav-add bg-primary text-primary-foreground" : active ? "bg-secondary text-primary" : "hover:bg-muted"}`;
   if (onNavigate)
     return (
-      <Button variant="ghost" className={classes} onClick={() => onNavigate(item.id)}>
+      <Button
+        variant="ghost"
+        className={classes}
+        aria-current={active ? "page" : undefined}
+        onClick={() => onNavigate(item.id)}
+      >
         <item.icon className="h-5 w-5" />
         <span className="min-w-0 truncate">{item.label}</span>
       </Button>
     );
   return (
-    <Link to={item.to} preload="intent" className={classes}>
+    <Link
+      to={item.to}
+      preload="intent"
+      className={classes}
+      aria-current={active ? "page" : undefined}
+    >
       <item.icon className="h-5 w-5" />
       <span className="min-w-0 truncate">{item.label}</span>
     </Link>
@@ -307,13 +361,23 @@ function MobileItem({
   const classes = `flex h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-none px-1 text-[11px] font-semibold ${active ? "text-primary" : "text-foreground"}`;
   if (onNavigate)
     return (
-      <Button variant="ghost" className={classes} onClick={() => onNavigate(item.id)}>
+      <Button
+        variant="ghost"
+        className={classes}
+        aria-current={active ? "page" : undefined}
+        onClick={() => onNavigate(item.id)}
+      >
         <item.icon className="h-5 w-5" />
         <span className="max-w-full truncate">{item.label}</span>
       </Button>
     );
   return (
-    <Link to={item.to} preload="intent" className={classes}>
+    <Link
+      to={item.to}
+      preload="intent"
+      className={classes}
+      aria-current={active ? "page" : undefined}
+    >
       <item.icon className="h-5 w-5" />
       <span className="max-w-full truncate">{item.label}</span>
     </Link>

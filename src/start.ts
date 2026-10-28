@@ -2,6 +2,7 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { supabase } from "./integrations/supabase/client";
+import { reportOperationalEvent } from "./lib/operational-events.server";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
@@ -10,7 +11,7 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
-    console.error(error);
+    reportOperationalEvent("server_request_failed");
     return new Response(renderErrorPage(), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },

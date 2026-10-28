@@ -1,3 +1,4 @@
+import { PMS_READINESS, type PmsReadiness } from "./pms-readiness";
 export type IntegrationCategory =
   | "listing_import"
   | "payments"
@@ -37,6 +38,7 @@ export interface IntegrationDefinition {
   countries?: readonly string[];
   marketingVisible: boolean;
   note?: string;
+  readiness?: PmsReadiness;
 }
 
 const integration = <T extends IntegrationDefinition>(definition: T) => definition;
@@ -181,6 +183,9 @@ export const INTEGRATIONS = [
       ["beds24", "Beds24", "api_key"],
       ["superhote", "Superhôte", "api_key"],
       ["lodgify", "Lodgify", "api_key"],
+      ["smoobu", "Smoobu", "api_key"],
+      ["cloudbeds", "Cloudbeds", "api_key"],
+      ["mews", "Mews", "api_key"],
       ["rental-ready", "Rental Ready", "api_key"],
       ["amenitiz", "Amenitiz", "oauth"],
       ["eviivo", "eviivo", "oauth"],
@@ -202,6 +207,9 @@ export const INTEGRATIONS = [
       logoPlaceholder: name.slice(0, 2).toUpperCase(),
       marketingVisible: true,
       note: "Connexion officielle à venir pour l’import en nombre.",
+      ...(PMS_READINESS[id]
+        ? { docsUrl: PMS_READINESS[id].documentation, readiness: PMS_READINESS[id] }
+        : {}),
     }),
   ),
 

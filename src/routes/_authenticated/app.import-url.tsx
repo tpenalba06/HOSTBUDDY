@@ -11,21 +11,15 @@ import {
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
 import { ImportReview } from "@/components/app/ImportReview";
 import { useOrg } from "@/components/app/useOrg";
-import { friendlyMessage } from "@/components/app/Friendly";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/app/import-url")({ component: ImportUrl });
 
-const STAGES = [
-  { id: "read", label: "Lecture du logement" },
-  { id: "name", label: "Recherche du nom" },
-  { id: "description", label: "Recherche de la description" },
-  { id: "equipment", label: "Recherche des équipements" },
-  { id: "organize", label: "Informations organisées" },
-];
+const STAGE_KEYS = ["readUrl", "name", "description", "equipment", "organize"] as const;
 
 function ImportUrl() {
   const { t } = useI18n();
+  const stages = STAGE_KEYS.map((key) => ({ id: key, label: t(`importFlow.${key}`) }));
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -44,19 +38,16 @@ function ImportUrl() {
     const issue = getImportUrlIssue(url);
     if (issue === "airbnb_search_without_single_listing") {
       setFallback(false);
-      return setError(
-        "Ce lien Airbnb correspond à une page de recherche sans logement unique identifiable. Ouvrez le logement voulu puis copiez son lien.",
-      );
+      return setError(t("importFlow.searchLink"));
     }
 
     const clean = normalizeUrl(url);
-    if (!clean)
-      return setError("Ce lien ne semble pas complet. Copiez-le depuis la barre d'adresse.");
+    if (!clean) return setError(t("importFlow.invalidLink"));
 
     setError("");
     setFallback(false);
     setCandidate(null);
-    const stop = tick(setStage, STAGES.length);
+    const stop = tick(setStage, stages.length);
     const adapter = pickAdapter(clean);
     let currentRunId: string | null = null;
 
@@ -86,13 +77,13 @@ function ImportUrl() {
       setSource(adapter.source);
       setCleanUrl(clean);
       setCandidate(outcome.result);
-    } catch (e) {
+    } catch {
       if (currentRunId)
         await finishImportRun(currentRunId, "failed", { error: "client" }).catch(() => {});
       stop();
       setStage(null);
       setRunId(null);
-      setError(friendlyMessage(e));
+      setError(t("errors.body"));
     }
   };
 
@@ -105,10 +96,10 @@ function ImportUrl() {
       if (runId) await finishImportRun(runId, "succeeded", { propertyId: property.id });
       qc.invalidateQueries({ queryKey: ["properties"] });
       nav({ to: "/app/p/$id", params: { id: property.id } });
-    } catch (e) {
+    } catch {
       if (runId)
         await finishImportRun(runId, "failed", { error: "create_property" }).catch(() => {});
-      setError(friendlyMessage(e));
+      setError(t("errors.body"));
       setBusy(false);
     }
   };
@@ -156,7 +147,7 @@ function ImportUrl() {
           className="mt-3 min-h-12 w-full font-medium text-muted-foreground underline"
           onClick={() => setFallback(false)}
         >
-          Essayer un autre lien
+          {t("importFlow.anotherLink")}
         </button>
       </div>
     );
@@ -169,7 +160,7 @@ function ImportUrl() {
       </Link>
       <h1 className="text-3xl font-semibold">{t("import.urlTitle")}</h1>
       {stage !== null ? (
-        <ImportProgress stages={STAGES} current={stage} />
+        <ImportProgress stages={stages} current={stage} />
       ) : (
         <div className="mt-6 space-y-4">
           <input
@@ -177,6 +168,7 @@ function ImportUrl() {
             inputMode="url"
             autoComplete="url"
             placeholder="https://…"
+            aria-label={t("import.urlTitle")}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && go()}

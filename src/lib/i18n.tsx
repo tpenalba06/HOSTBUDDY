@@ -1,3 +1,11 @@
+import { addEditorCopy } from "./editor-copy";
+import { addTeamCopy, addMessageCopy } from "./team-copy";
+import { addQrCopy } from "./qr-copy";
+import { addImportCopy } from "./import-copy";
+import { addProviderCopy } from "./provider-copy";
+import { addPaymentCopy } from "./payment-copy";
+import { addV1Copy } from "./v1-copy";
+import { addVisualPolishCopy } from "./visual-polish-copy";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export const LOCALES = ["fr", "en", "es", "de", "it", "pt"] as const;
@@ -14,6 +22,20 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 type Copy = Record<string, string>;
 export const translations: Record<Locale, Copy> = {
   fr: {
+    "property.delete": "Supprimer définitivement",
+    "property.deleteWarning":
+      "Cette action est irréversible. Le logement, son livret et ses données seront supprimés définitivement.",
+    "property.deleteConfirm": "Saisissez le nom exact du logement pour confirmer.",
+    "property.deleteCleanup":
+      "Le logement est supprimé. Le nettoyage des fichiers reste en attente : réessayez.",
+    "property.deleteBilling":
+      "Le logement est supprimé. Le recalcul de l’abonnement reste en attente.",
+    "property.deleteRetry": "Réessayer le nettoyage",
+    "property.deleteFailed": "La suppression a échoué.",
+    "media.ambience": "Image d’ambiance NONA",
+    "guide.servicesEyebrow": "Pour profiter du séjour",
+    "guide.servicesExplore": "Découvrir les services",
+    "guide.allInfo": "Toutes les infos",
     "common.back": "Retour",
     "common.backSite": "Retour au site",
     "common.home": "Accueil",
@@ -38,22 +60,22 @@ export const translations: Record<Locale, Copy> = {
     "common.optional": "facultatif",
     "marketing.title": "Votre accueil voyageur, prêt en quelques minutes.",
     "marketing.subtitle":
-      "Importez vos contenus existants. HostBuddy les organise en un guide clair, élégant et immédiatement utile.",
-    "marketing.badge": "Collez un lien. HostBuddy prépare le logement.",
+      "Importez vos contenus existants. NONA les organise en un guide clair, élégant et immédiatement utile.",
+    "marketing.badge": "Collez un lien. NONA prépare le logement.",
     "marketing.benefit1": "Import automatique de vos logements",
     "marketing.benefit2": "Moins de questions répétitives",
     "marketing.benefit3": "Plus de services vendus",
     "marketing.benefit4": "Aucune application à télécharger",
     "marketing.price": "9,99 € / mois",
-    "marketing.priceNote": "3 logements inclus · +2,99 € par logement supplémentaire",
-    "marketing.trial": "30 jours gratuits · Aucune carte bancaire · Aucune installation voyageur",
+    "marketing.priceNote": "2 logements inclus · +2,99 € par logement supplémentaire",
+    "marketing.trial": "1 logement gratuit · Sans carte bancaire · Aucune installation voyageur",
     "marketing.for": "Conçu pour",
     "marketing.operators":
       "Conciergeries · Locations saisonnières · Hôtels indépendants · Appart’hôtels · Résidences de tourisme",
     "marketing.importTitle": "Passez de vos contenus existants à un guide prêt à vérifier",
     "marketing.step1": "Collez votre lien",
     "marketing.step1d": "Ou collez vos notes, e-mails et anciens livrets.",
-    "marketing.step2": "HostBuddy récupère et range",
+    "marketing.step2": "NONA récupère et range",
     "marketing.step2d": "Les informations utiles sont classées sans rien inventer.",
     "marketing.step3": "Vérifiez et publiez",
     "marketing.step3d": "Répondez seulement aux questions qui manquent.",
@@ -62,10 +84,10 @@ export const translations: Record<Locale, Copy> = {
     "marketing.arrivalD": "Accès, Wi-Fi et informations essentielles restent simples à trouver.",
     "marketing.creation": "Gagnez du temps dès la création",
     "marketing.creationD":
-      "Importez un lien ou un texte. HostBuddy prépare l’essentiel et montre ce qui manque.",
+      "Importez un lien ou un texte. NONA prépare l’essentiel et montre ce qui manque.",
     "marketing.services": "Vendez vos services simplement",
     "marketing.servicesD":
-      "Petit-déjeuner, massage, transfert ou départ tardif depuis le guide. Paiement intégré bientôt disponible.",
+      "Petit-déjeuner, massage, transfert ou départ tardif depuis le guide. Paiement en ligne lorsque le gestionnaire l’a activé.",
     "marketing.reviews": "Transformez un bon séjour en avis",
     "marketing.reviewsD":
       "Configurez vos destinations d’avis, sans filtrer les voyageurs selon leur retour.",
@@ -77,7 +99,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Passez du mode voyageur au mode gestionnaire et modifiez le Wi-Fi. Aucun faux chiffre, aucun faux témoignage.",
     "marketing.pricing": "Un prix simple pour démarrer",
-    "marketing.upcoming": "Bientôt",
     "marketing.footer": "L’accueil voyageur, simplement bien organisé.",
     "marketing.qrLine": "QR ou lien · sans compte · sans installation",
     "marketing.openDemo": "Ouvrir la démo complète",
@@ -89,7 +110,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massage au bord d’une piscine",
     "auth.signupTitle": "Commençons",
     "auth.loginTitle": "Bon retour",
-    "auth.subtitle": "30 jours gratuits. Sans carte bancaire.",
+    "auth.subtitle": "1 logement gratuit. Sans carte bancaire.",
     "auth.google": "Continuer avec Google",
     "auth.or": "ou",
     "auth.firstName": "Votre prénom",
@@ -100,7 +121,7 @@ export const translations: Record<Locale, Copy> = {
     "auth.checkBody": "Nous avons envoyé un lien. Cliquez dessus pour activer votre compte.",
     "auth.existing": "Déjà un compte ?",
     "auth.new": "Pas encore de compte ?",
-    "nav.properties": "Hébergements",
+    "nav.properties": "Logements",
     "nav.messages": "Messages",
     "nav.orders": "Commandes",
     "nav.feedback": "Retours",
@@ -131,7 +152,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.unavailable": "Ce guide n’est pas encore disponible",
     "guest.unavailableD":
       "Il est peut-être en cours de préparation. Contactez votre hôte ou réessayez plus tard.",
-    "guest.discover": "Découvrir HostBuddy",
+    "guest.discover": "Découvrir NONA",
     "guest.review": "Partager mon avis",
     "guest.stay": "Tout pour profiter de votre séjour",
     "guest.noInstall": "Sans compte · Sans application",
@@ -141,7 +162,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copier",
     "guest.copied": "Copié",
     "guest.contact": "Contact",
-    "guest.privateFeedback": "Envoyer un retour privé",
+    "guest.privateFeedback": "Évaluez votre expérience",
     "guest.sendMessage": "Envoyer un message",
     "guest.noServices": "Aucun service disponible pour le moment.",
     "guest.request": "Demander",
@@ -180,10 +201,12 @@ export const translations: Record<Locale, Copy> = {
     "demo.serviceHint": "Ajoutez un service simple visible dans le guide.",
     "demo.addBasket": "Ajouter « Panier de bienvenue »",
     "demo.saved": "Enregistré",
-    "demo.pageTitle": "Essayez HostBuddy, des deux côtés.",
+    "demo.pageTitle": "Essayez NONA, des deux côtés.",
     "demo.pageDesc":
       "Modifiez l’arrivée, le Wi-Fi, une photo ou un service, puis regardez le résultat côté voyageur.",
     "manager.guide": "Guide voyageur",
+    "manager.editContent": "Modifier le contenu",
+    "manager.general": "Général",
     "manager.editEverything": "Tout se modifie ici",
     "manager.editHint": "Titre, texte, icône, ordre, visibilité, photos et vidéos.",
     "manager.preview": "Voir côté voyageur",
@@ -266,6 +289,18 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Seules les informations confirmées seront visibles par vos voyageurs.",
   },
   en: {
+    "property.delete": "Delete permanently",
+    "property.deleteWarning":
+      "This is irreversible. The property, its guide and its data will be permanently deleted.",
+    "property.deleteConfirm": "Enter the exact property name to confirm.",
+    "property.deleteCleanup": "The property is deleted. File cleanup is pending: retry.",
+    "property.deleteBilling": "The property is deleted. Subscription recalculation is pending.",
+    "property.deleteRetry": "Retry cleanup",
+    "property.deleteFailed": "Deletion failed.",
+    "media.ambience": "NONA ambience image",
+    "guide.servicesEyebrow": "Make the most of your stay",
+    "guide.servicesExplore": "Explore services",
+    "guide.allInfo": "All information",
     "common.back": "Back",
     "common.backSite": "Back to site",
     "common.home": "Home",
@@ -290,22 +325,22 @@ export const translations: Record<Locale, Copy> = {
     "common.optional": "optional",
     "marketing.title": "Your guest welcome, ready in minutes.",
     "marketing.subtitle":
-      "Import your existing content. HostBuddy turns it into a clear, elegant guide guests can use right away.",
-    "marketing.badge": "Paste a link. HostBuddy prepares the property.",
+      "Import your existing content. NONA turns it into a clear, elegant guide guests can use right away.",
+    "marketing.badge": "Paste a link. NONA prepares the property.",
     "marketing.benefit1": "Automatic property import",
     "marketing.benefit2": "Fewer repetitive questions",
     "marketing.benefit3": "More services sold",
     "marketing.benefit4": "No app to download",
     "marketing.price": "€9.99 / month",
-    "marketing.priceNote": "3 properties included · €2.99 per additional property",
-    "marketing.trial": "30 days free · No card · No guest installation",
+    "marketing.priceNote": "2 properties included · €2.99 per additional property",
+    "marketing.trial": "1 property free · No card · No guest installation",
     "marketing.for": "Designed for",
     "marketing.operators":
       "Concierges · Vacation rentals · Independent hotels · Aparthotels · Serviced residences",
     "marketing.importTitle": "Turn existing content into a guide ready to review",
     "marketing.step1": "Paste your link",
     "marketing.step1d": "Or paste notes, emails and old guides.",
-    "marketing.step2": "HostBuddy retrieves and sorts",
+    "marketing.step2": "NONA retrieves and sorts",
     "marketing.step2d": "Useful information is organized without inventing anything.",
     "marketing.step3": "Review and publish",
     "marketing.step3d": "Answer only what is still missing.",
@@ -314,10 +349,10 @@ export const translations: Record<Locale, Copy> = {
     "marketing.arrivalD": "Access, Wi-Fi and essentials stay easy to find.",
     "marketing.creation": "Save time from the start",
     "marketing.creationD":
-      "Import a link or text. HostBuddy prepares the essentials and shows what is missing.",
+      "Import a link or text. NONA prepares the essentials and shows what is missing.",
     "marketing.services": "Sell services simply",
     "marketing.servicesD":
-      "Breakfast, massage, transfer or late checkout from the guide. Integrated payment coming soon.",
+      "Breakfast, massage, transfer or late checkout from the guide. Online payment when enabled by the manager.",
     "marketing.reviews": "Turn a great stay into a review",
     "marketing.reviewsD":
       "Configure review destinations without filtering guests by their feedback.",
@@ -329,7 +364,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Switch between guest and manager views and edit Wi-Fi. No fake numbers or testimonials.",
     "marketing.pricing": "Simple pricing to get started",
-    "marketing.upcoming": "Coming soon",
     "marketing.footer": "Guest hospitality, beautifully organized.",
     "marketing.qrLine": "QR or link · no account · no installation",
     "marketing.openDemo": "Open full demo",
@@ -341,7 +375,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Poolside massage",
     "auth.signupTitle": "Let’s get started",
     "auth.loginTitle": "Welcome back",
-    "auth.subtitle": "30 days free. No card required.",
+    "auth.subtitle": "1 property free. No card required.",
     "auth.google": "Continue with Google",
     "auth.or": "or",
     "auth.firstName": "First name",
@@ -351,7 +385,7 @@ export const translations: Record<Locale, Copy> = {
     "auth.checkTitle": "Check your inbox",
     "auth.checkBody": "We sent a link. Open it to activate your account.",
     "auth.existing": "Already have an account?",
-    "auth.new": "New to HostBuddy?",
+    "auth.new": "New to NONA?",
     "nav.properties": "Properties",
     "nav.messages": "Messages",
     "nav.orders": "Orders",
@@ -381,7 +415,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.email": "Email",
     "guest.unavailable": "This guide is not available yet",
     "guest.unavailableD": "It may still be in preparation. Contact your host or try again later.",
-    "guest.discover": "Discover HostBuddy",
+    "guest.discover": "Discover NONA",
     "guest.review": "Leave a review",
     "guest.stay": "Everything for a great stay",
     "guest.noInstall": "No account · No app",
@@ -391,7 +425,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copy",
     "guest.copied": "Copied",
     "guest.contact": "Contact",
-    "guest.privateFeedback": "Send private feedback",
+    "guest.privateFeedback": "Rate your experience",
     "guest.sendMessage": "Send a message",
     "guest.noServices": "No services are available right now.",
     "guest.request": "Request",
@@ -430,9 +464,11 @@ export const translations: Record<Locale, Copy> = {
     "demo.serviceHint": "Add a simple service visible in the guide.",
     "demo.addBasket": "Add “Welcome basket”",
     "demo.saved": "Saved",
-    "demo.pageTitle": "Try HostBuddy from both sides.",
+    "demo.pageTitle": "Try NONA from both sides.",
     "demo.pageDesc": "Edit arrival, Wi-Fi, a photo or service, then see the guest result.",
     "manager.guide": "Guest guide",
+    "manager.editContent": "Edit content",
+    "manager.general": "General",
     "manager.editEverything": "Edit everything here",
     "manager.editHint": "Title, text, icon, order, visibility, photos and videos.",
     "manager.preview": "View as guest",
@@ -513,6 +549,20 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Only confirmed information is visible to guests.",
   },
   es: {
+    "property.delete": "Eliminar definitivamente",
+    "property.deleteWarning":
+      "Esta acción es irreversible. Se eliminarán el alojamiento, su guía y sus datos.",
+    "property.deleteConfirm": "Escriba el nombre exacto del alojamiento para confirmar.",
+    "property.deleteCleanup":
+      "Alojamiento eliminado. La limpieza de archivos está pendiente: reinténtelo.",
+    "property.deleteBilling":
+      "Alojamiento eliminado. El recálculo de la suscripción está pendiente.",
+    "property.deleteRetry": "Reintentar limpieza",
+    "property.deleteFailed": "No se pudo eliminar.",
+    "media.ambience": "Imagen de ambiente NONA",
+    "guide.servicesEyebrow": "Disfruta de tu estancia",
+    "guide.servicesExplore": "Descubrir servicios",
+    "guide.allInfo": "Toda la información",
     "common.back": "Volver",
     "common.backSite": "Volver al sitio",
     "common.home": "Inicio",
@@ -537,22 +587,22 @@ export const translations: Record<Locale, Copy> = {
     "common.optional": "opcional",
     "marketing.title": "La bienvenida de sus huéspedes, lista en minutos.",
     "marketing.subtitle":
-      "Importe su contenido actual. HostBuddy lo convierte en una guía clara y elegante.",
-    "marketing.badge": "Pegue un enlace. HostBuddy prepara el alojamiento.",
+      "Importe su contenido actual. NONA lo convierte en una guía clara y elegante.",
+    "marketing.badge": "Pegue un enlace. NONA prepara el alojamiento.",
     "marketing.benefit1": "Importación automática de alojamientos",
     "marketing.benefit2": "Menos preguntas repetitivas",
     "marketing.benefit3": "Más servicios vendidos",
     "marketing.benefit4": "Sin aplicación que descargar",
     "marketing.price": "9,99 € / mes",
-    "marketing.priceNote": "3 alojamientos incluidos · 2,99 € por alojamiento adicional",
-    "marketing.trial": "30 días gratis · Sin tarjeta · Sin instalación",
+    "marketing.priceNote": "2 alojamientos incluidos · 2,99 € por alojamiento adicional",
+    "marketing.trial": "1 alojamiento gratis · Sin tarjeta · Sin instalación",
     "marketing.for": "Diseñado para",
     "marketing.operators":
       "Conserjerías · Alquileres vacacionales · Hoteles independientes · Apartahoteles",
     "marketing.importTitle": "Convierta su contenido en una guía lista para revisar",
     "marketing.step1": "Pegue su enlace",
     "marketing.step1d": "O pegue notas, correos y guías antiguas.",
-    "marketing.step2": "HostBuddy recupera y ordena",
+    "marketing.step2": "NONA recupera y ordena",
     "marketing.step2d": "La información se organiza sin inventar nada.",
     "marketing.step3": "Revise y publique",
     "marketing.step3d": "Responda solo a lo que falta.",
@@ -561,10 +611,10 @@ export const translations: Record<Locale, Copy> = {
     "marketing.arrivalD": "Acceso, Wi-Fi e información esencial siempre a mano.",
     "marketing.creation": "Ahorre tiempo desde el principio",
     "marketing.creationD":
-      "Importe un enlace o texto. HostBuddy prepara lo esencial y muestra lo que falta.",
+      "Importe un enlace o texto. NONA prepara lo esencial y muestra lo que falta.",
     "marketing.services": "Venda sus servicios fácilmente",
     "marketing.servicesD":
-      "Desayuno, masaje, traslado o salida tardía desde la guía. Pago integrado próximamente.",
+      "Desayuno, masaje, traslado o salida tardía desde la guía. Pago en línea cuando lo activa el gestor.",
     "marketing.reviews": "Convierta una gran estancia en reseña",
     "marketing.reviewsD": "Configure destinos de reseñas sin filtrar huéspedes por opinión.",
     "marketing.noGating": "Sin filtros según una opinión positiva o negativa.",
@@ -575,7 +625,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Cambie entre huésped y gestor y edite el Wi-Fi. Sin cifras ni testimonios falsos.",
     "marketing.pricing": "Un precio simple para empezar",
-    "marketing.upcoming": "Próximamente",
     "marketing.footer": "La bienvenida al huésped, bien organizada.",
     "marketing.qrLine": "QR o enlace · sin cuenta · sin instalación",
     "marketing.openDemo": "Abrir demo completa",
@@ -587,7 +636,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Masaje junto a la piscina",
     "auth.signupTitle": "Empecemos",
     "auth.loginTitle": "Bienvenido de nuevo",
-    "auth.subtitle": "30 días gratis. Sin tarjeta.",
+    "auth.subtitle": "1 alojamiento gratis. Sin tarjeta.",
     "auth.google": "Continuar con Google",
     "auth.or": "o",
     "auth.firstName": "Nombre",
@@ -628,7 +677,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.unavailable": "Esta guía aún no está disponible",
     "guest.unavailableD":
       "Puede estar en preparación. Contacte a su anfitrión o inténtelo más tarde.",
-    "guest.discover": "Descubrir HostBuddy",
+    "guest.discover": "Descubrir NONA",
     "guest.review": "Dejar una reseña",
     "guest.stay": "Todo para disfrutar de su estancia",
     "guest.noInstall": "Sin cuenta · Sin aplicación",
@@ -638,7 +687,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copiar",
     "guest.copied": "Copiado",
     "guest.contact": "Contacto",
-    "guest.privateFeedback": "Enviar comentario privado",
+    "guest.privateFeedback": "Valora tu experiencia",
     "guest.sendMessage": "Enviar un mensaje",
     "guest.noServices": "No hay servicios disponibles por ahora.",
     "guest.request": "Solicitar",
@@ -677,9 +726,11 @@ export const translations: Record<Locale, Copy> = {
     "demo.serviceHint": "Añada un servicio visible en la guía.",
     "demo.addBasket": "Añadir «Cesta de bienvenida»",
     "demo.saved": "Guardado",
-    "demo.pageTitle": "Pruebe HostBuddy desde ambos lados.",
+    "demo.pageTitle": "Pruebe NONA desde ambos lados.",
     "demo.pageDesc": "Edite llegada, Wi-Fi, foto o servicio y vea el resultado como huésped.",
     "manager.guide": "Guía del huésped",
+    "manager.editContent": "Editar contenido",
+    "manager.general": "General",
     "manager.editEverything": "Edítelo todo aquí",
     "manager.editHint": "Título, texto, icono, orden, visibilidad, fotos y vídeos.",
     "manager.preview": "Ver como huésped",
@@ -760,6 +811,19 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo la información confirmada será visible.",
   },
   de: {
+    "property.delete": "Endgültig löschen",
+    "property.deleteWarning":
+      "Dies ist unwiderruflich. Unterkunft, Reiseführer und Daten werden endgültig gelöscht.",
+    "property.deleteConfirm": "Geben Sie zur Bestätigung den genauen Namen der Unterkunft ein.",
+    "property.deleteCleanup":
+      "Unterkunft gelöscht. Die Dateibereinigung steht aus: erneut versuchen.",
+    "property.deleteBilling": "Unterkunft gelöscht. Die Neuberechnung des Abonnements steht aus.",
+    "property.deleteRetry": "Bereinigung erneut versuchen",
+    "property.deleteFailed": "Löschen fehlgeschlagen.",
+    "media.ambience": "NONA Stimmungsbild",
+    "guide.servicesEyebrow": "Den Aufenthalt genießen",
+    "guide.servicesExplore": "Services entdecken",
+    "guide.allInfo": "Alle Informationen",
     "common.back": "Zurück",
     "common.backSite": "Zurück zur Website",
     "common.home": "Startseite",
@@ -784,21 +848,21 @@ export const translations: Record<Locale, Copy> = {
     "common.optional": "optional",
     "marketing.title": "Ihr Gästeempfang, in wenigen Minuten bereit.",
     "marketing.subtitle":
-      "Importieren Sie vorhandene Inhalte. HostBuddy macht daraus einen klaren, eleganten Gästeguide.",
-    "marketing.badge": "Link einfügen. HostBuddy bereitet die Unterkunft vor.",
+      "Importieren Sie vorhandene Inhalte. NONA macht daraus einen klaren, eleganten Gästeguide.",
+    "marketing.badge": "Link einfügen. NONA bereitet die Unterkunft vor.",
     "marketing.benefit1": "Automatischer Unterkunftsimport",
     "marketing.benefit2": "Weniger wiederkehrende Fragen",
     "marketing.benefit3": "Mehr verkaufte Services",
     "marketing.benefit4": "Keine App nötig",
     "marketing.price": "9,99 € / Monat",
-    "marketing.priceNote": "3 Unterkünfte inklusive · 2,99 € je weitere Unterkunft",
-    "marketing.trial": "30 Tage kostenlos · Keine Karte · Keine Installation",
+    "marketing.priceNote": "2 Unterkünfte inklusive · 2,99 € je weitere Unterkunft",
+    "marketing.trial": "1 Unterkunft kostenlos · Keine Karte · Keine Installation",
     "marketing.for": "Entwickelt für",
     "marketing.operators": "Concierges · Ferienwohnungen · Unabhängige Hotels · Aparthotels",
     "marketing.importTitle": "Machen Sie aus Inhalten einen prüfbereiten Guide",
     "marketing.step1": "Link einfügen",
     "marketing.step1d": "Oder Notizen, E-Mails und alte Guides einfügen.",
-    "marketing.step2": "HostBuddy sammelt und sortiert",
+    "marketing.step2": "NONA sammelt und sortiert",
     "marketing.step2d": "Informationen werden geordnet, ohne etwas zu erfinden.",
     "marketing.step3": "Prüfen und veröffentlichen",
     "marketing.step3d": "Beantworten Sie nur fehlende Fragen.",
@@ -806,11 +870,10 @@ export const translations: Record<Locale, Copy> = {
     "marketing.arrival": "Machen Sie die Anreise mühelos",
     "marketing.arrivalD": "Zugang, WLAN und Wichtiges bleiben leicht auffindbar.",
     "marketing.creation": "Sparen Sie von Anfang an Zeit",
-    "marketing.creationD":
-      "Importieren Sie Link oder Text. HostBuddy bereitet das Wesentliche vor.",
+    "marketing.creationD": "Importieren Sie Link oder Text. NONA bereitet das Wesentliche vor.",
     "marketing.services": "Services einfach verkaufen",
     "marketing.servicesD":
-      "Frühstück, Massage, Transfer oder später Check-out im Guide. Zahlung folgt bald.",
+      "Frühstück, Massage, Transfer oder später Check-out im Guide. Online-Zahlung, wenn vom Gastgeber aktiviert.",
     "marketing.reviews": "Machen Sie aus einem tollen Aufenthalt eine Bewertung",
     "marketing.reviewsD": "Bewertungsziele ohne Filterung nach Feedback konfigurieren.",
     "marketing.noGating": "Keine Filterung nach positivem oder negativem Feedback.",
@@ -821,7 +884,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proofD":
       "Zwischen Gast und Verwaltung wechseln und WLAN bearbeiten. Keine erfundenen Angaben.",
     "marketing.pricing": "Ein einfacher Preis zum Start",
-    "marketing.upcoming": "Demnächst",
     "marketing.footer": "Gästeempfang, einfach gut organisiert.",
     "marketing.qrLine": "QR oder Link · kein Konto · keine Installation",
     "marketing.openDemo": "Vollständige Demo öffnen",
@@ -833,7 +895,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massage am Pool",
     "auth.signupTitle": "Los geht’s",
     "auth.loginTitle": "Willkommen zurück",
-    "auth.subtitle": "30 Tage kostenlos. Keine Karte.",
+    "auth.subtitle": "1 Unterkunft kostenlos. Keine Karte.",
     "auth.google": "Mit Google fortfahren",
     "auth.or": "oder",
     "auth.firstName": "Vorname",
@@ -843,7 +905,7 @@ export const translations: Record<Locale, Copy> = {
     "auth.checkTitle": "Posteingang prüfen",
     "auth.checkBody": "Wir haben einen Link gesendet. Öffnen Sie ihn zur Aktivierung.",
     "auth.existing": "Schon ein Konto?",
-    "auth.new": "Neu bei HostBuddy?",
+    "auth.new": "Neu bei NONA?",
     "nav.properties": "Unterkünfte",
     "nav.messages": "Nachrichten",
     "nav.orders": "Bestellungen",
@@ -874,7 +936,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.email": "E-Mail",
     "guest.unavailable": "Dieser Guide ist noch nicht verfügbar",
     "guest.unavailableD": "Er wird vielleicht noch vorbereitet. Kontaktieren Sie Ihren Gastgeber.",
-    "guest.discover": "HostBuddy entdecken",
+    "guest.discover": "NONA entdecken",
     "guest.review": "Bewertung abgeben",
     "guest.stay": "Alles für einen schönen Aufenthalt",
     "guest.noInstall": "Kein Konto · Keine App",
@@ -884,7 +946,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Kopieren",
     "guest.copied": "Kopiert",
     "guest.contact": "Kontakt",
-    "guest.privateFeedback": "Privates Feedback senden",
+    "guest.privateFeedback": "Bewerten Sie Ihren Aufenthalt",
     "guest.sendMessage": "Nachricht senden",
     "guest.noServices": "Derzeit sind keine Services verfügbar.",
     "guest.request": "Anfragen",
@@ -923,10 +985,12 @@ export const translations: Record<Locale, Copy> = {
     "demo.serviceHint": "Fügen Sie einen sichtbaren Service hinzu.",
     "demo.addBasket": "„Willkommenskorb“ hinzufügen",
     "demo.saved": "Gespeichert",
-    "demo.pageTitle": "Testen Sie HostBuddy von beiden Seiten.",
+    "demo.pageTitle": "Testen Sie NONA von beiden Seiten.",
     "demo.pageDesc":
       "Bearbeiten Sie Anreise, WLAN, Foto oder Service und sehen Sie das Ergebnis als Gast.",
     "manager.guide": "Gästeguide",
+    "manager.editContent": "Inhalte bearbeiten",
+    "manager.general": "Allgemein",
     "manager.editEverything": "Hier alles bearbeiten",
     "manager.editHint": "Titel, Text, Symbol, Reihenfolge, Sichtbarkeit, Fotos und Videos.",
     "manager.preview": "Als Gast ansehen",
@@ -1008,6 +1072,18 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Nur bestätigte Informationen sind sichtbar.",
   },
   it: {
+    "property.delete": "Elimina definitivamente",
+    "property.deleteWarning":
+      "Azione irreversibile. Alloggio, guida e dati saranno eliminati definitivamente.",
+    "property.deleteConfirm": "Inserisci il nome esatto dell’alloggio per confermare.",
+    "property.deleteCleanup": "Alloggio eliminato. Pulizia dei file in attesa: riprova.",
+    "property.deleteBilling": "Alloggio eliminato. Ricalcolo dell’abbonamento in attesa.",
+    "property.deleteRetry": "Riprova pulizia",
+    "property.deleteFailed": "Eliminazione non riuscita.",
+    "media.ambience": "Immagine d’atmosfera NONA",
+    "guide.servicesEyebrow": "Vivi il tuo soggiorno",
+    "guide.servicesExplore": "Scopri i servizi",
+    "guide.allInfo": "Tutte le informazioni",
     "common.back": "Indietro",
     "common.backSite": "Torna al sito",
     "common.home": "Home",
@@ -1032,21 +1108,21 @@ export const translations: Record<Locale, Copy> = {
     "common.optional": "facoltativo",
     "marketing.title": "L’accoglienza degli ospiti, pronta in pochi minuti.",
     "marketing.subtitle":
-      "Importa i contenuti esistenti. HostBuddy li trasforma in una guida chiara ed elegante.",
-    "marketing.badge": "Incolla un link. HostBuddy prepara l’alloggio.",
+      "Importa i contenuti esistenti. NONA li trasforma in una guida chiara ed elegante.",
+    "marketing.badge": "Incolla un link. NONA prepara l’alloggio.",
     "marketing.benefit1": "Importazione automatica degli alloggi",
     "marketing.benefit2": "Meno domande ripetitive",
     "marketing.benefit3": "Più servizi venduti",
     "marketing.benefit4": "Nessuna app da scaricare",
     "marketing.price": "9,99 € / mese",
-    "marketing.priceNote": "3 alloggi inclusi · 2,99 € per ogni alloggio aggiuntivo",
-    "marketing.trial": "30 giorni gratis · Nessuna carta · Nessuna installazione",
+    "marketing.priceNote": "2 alloggi inclusi · 2,99 € per ogni alloggio aggiuntivo",
+    "marketing.trial": "1 alloggio gratis · Nessuna carta · Nessuna installazione",
     "marketing.for": "Pensato per",
     "marketing.operators": "Concierge · Case vacanza · Hotel indipendenti · Aparthotel",
     "marketing.importTitle": "Trasforma i contenuti in una guida pronta da verificare",
     "marketing.step1": "Incolla il link",
     "marketing.step1d": "Oppure incolla note, e-mail e vecchie guide.",
-    "marketing.step2": "HostBuddy recupera e organizza",
+    "marketing.step2": "NONA recupera e organizza",
     "marketing.step2d": "Le informazioni vengono organizzate senza inventare nulla.",
     "marketing.step3": "Verifica e pubblica",
     "marketing.step3d": "Rispondi solo alle domande mancanti.",
@@ -1054,10 +1130,10 @@ export const translations: Record<Locale, Copy> = {
     "marketing.arrival": "Rendi l’arrivo senza intoppi",
     "marketing.arrivalD": "Accesso, Wi-Fi e informazioni essenziali sempre a portata di mano.",
     "marketing.creation": "Risparmia tempo fin dall’inizio",
-    "marketing.creationD": "Importa un link o testo. HostBuddy prepara l’essenziale.",
+    "marketing.creationD": "Importa un link o testo. NONA prepara l’essenziale.",
     "marketing.services": "Vendi i servizi con semplicità",
     "marketing.servicesD":
-      "Colazione, massaggio, transfer o check-out posticipato dalla guida. Pagamenti in arrivo.",
+      "Colazione, massaggio, transfer o check-out posticipato dalla guida. Pagamento online quando attivato dal gestore.",
     "marketing.reviews": "Trasforma un bel soggiorno in una recensione",
     "marketing.reviewsD":
       "Configura le destinazioni senza filtrare gli ospiti in base al feedback.",
@@ -1068,7 +1144,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proof": "Un’esperienza che puoi davvero provare",
     "marketing.proofD": "Passa da ospite a gestore e modifica il Wi-Fi. Nessun dato inventato.",
     "marketing.pricing": "Un prezzo semplice per iniziare",
-    "marketing.upcoming": "Prossimamente",
     "marketing.footer": "L’accoglienza degli ospiti, ben organizzata.",
     "marketing.qrLine": "QR o link · senza account · senza installazione",
     "marketing.openDemo": "Apri la demo completa",
@@ -1080,7 +1155,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massaggio a bordo piscina",
     "auth.signupTitle": "Iniziamo",
     "auth.loginTitle": "Bentornato",
-    "auth.subtitle": "30 giorni gratis. Senza carta.",
+    "auth.subtitle": "1 alloggio gratis. Senza carta.",
     "auth.google": "Continua con Google",
     "auth.or": "oppure",
     "auth.firstName": "Nome",
@@ -1090,7 +1165,7 @@ export const translations: Record<Locale, Copy> = {
     "auth.checkTitle": "Controlla la posta",
     "auth.checkBody": "Abbiamo inviato un link. Aprilo per attivare l’account.",
     "auth.existing": "Hai già un account?",
-    "auth.new": "Nuovo su HostBuddy?",
+    "auth.new": "Nuovo su NONA?",
     "nav.properties": "Alloggi",
     "nav.messages": "Messaggi",
     "nav.orders": "Ordini",
@@ -1120,7 +1195,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.email": "E-mail",
     "guest.unavailable": "Questa guida non è ancora disponibile",
     "guest.unavailableD": "Potrebbe essere in preparazione. Contatta l’host o riprova più tardi.",
-    "guest.discover": "Scopri HostBuddy",
+    "guest.discover": "Scopri NONA",
     "guest.review": "Lascia una recensione",
     "guest.stay": "Tutto per un ottimo soggiorno",
     "guest.noInstall": "Senza account · Senza app",
@@ -1130,7 +1205,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copia",
     "guest.copied": "Copiato",
     "guest.contact": "Contatto",
-    "guest.privateFeedback": "Invia feedback privato",
+    "guest.privateFeedback": "Valuta la tua esperienza",
     "guest.sendMessage": "Invia un messaggio",
     "guest.noServices": "Nessun servizio disponibile al momento.",
     "guest.request": "Richiedi",
@@ -1169,9 +1244,11 @@ export const translations: Record<Locale, Copy> = {
     "demo.serviceHint": "Aggiungi un servizio visibile nella guida.",
     "demo.addBasket": "Aggiungi “Cesto di benvenuto”",
     "demo.saved": "Salvato",
-    "demo.pageTitle": "Prova HostBuddy da entrambi i lati.",
+    "demo.pageTitle": "Prova NONA da entrambi i lati.",
     "demo.pageDesc": "Modifica arrivo, Wi-Fi, foto o servizio e guarda il risultato come ospite.",
     "manager.guide": "Guida ospite",
+    "manager.editContent": "Modifica contenuto",
+    "manager.general": "Generale",
     "manager.editEverything": "Modifica tutto qui",
     "manager.editHint": "Titolo, testo, icona, ordine, visibilità, foto e video.",
     "manager.preview": "Vedi come ospite",
@@ -1252,6 +1329,19 @@ export const translations: Record<Locale, Copy> = {
     "property.confirmed": "Solo le informazioni confermate saranno visibili.",
   },
   pt: {
+    "property.delete": "Eliminar definitivamente",
+    "property.deleteWarning":
+      "Esta ação é irreversível. O alojamento, o guia e os dados serão eliminados.",
+    "property.deleteConfirm": "Introduza o nome exato do alojamento para confirmar.",
+    "property.deleteCleanup":
+      "Alojamento eliminado. Limpeza dos ficheiros pendente: tente novamente.",
+    "property.deleteBilling": "Alojamento eliminado. Recálculo da subscrição pendente.",
+    "property.deleteRetry": "Repetir limpeza",
+    "property.deleteFailed": "Falha ao eliminar.",
+    "media.ambience": "Imagem de ambiente NONA",
+    "guide.servicesEyebrow": "Aproveite a estadia",
+    "guide.servicesExplore": "Descobrir serviços",
+    "guide.allInfo": "Todas as informações",
     "common.back": "Voltar",
     "common.backSite": "Voltar ao site",
     "common.home": "Início",
@@ -1276,21 +1366,21 @@ export const translations: Record<Locale, Copy> = {
     "common.optional": "opcional",
     "marketing.title": "A receção dos seus hóspedes, pronta em minutos.",
     "marketing.subtitle":
-      "Importe o conteúdo existente. A HostBuddy transforma-o num guia claro e elegante.",
-    "marketing.badge": "Cole um link. A HostBuddy prepara o alojamento.",
+      "Importe o conteúdo existente. A NONA transforma-o num guia claro e elegante.",
+    "marketing.badge": "Cole um link. A NONA prepara o alojamento.",
     "marketing.benefit1": "Importação automática de alojamentos",
     "marketing.benefit2": "Menos perguntas repetitivas",
     "marketing.benefit3": "Mais serviços vendidos",
     "marketing.benefit4": "Sem aplicação para descarregar",
     "marketing.price": "9,99 € / mês",
-    "marketing.priceNote": "3 alojamentos incluídos · 2,99 € por alojamento adicional",
-    "marketing.trial": "30 dias grátis · Sem cartão · Sem instalação",
+    "marketing.priceNote": "2 alojamentos incluídos · 2,99 € por alojamento adicional",
+    "marketing.trial": "1 alojamento grátis · Sem cartão · Sem instalação",
     "marketing.for": "Criado para",
     "marketing.operators": "Concierges · Alojamentos locais · Hotéis independentes · Aparthotéis",
     "marketing.importTitle": "Transforme o conteúdo num guia pronto a verificar",
     "marketing.step1": "Cole o link",
     "marketing.step1d": "Ou cole notas, e-mails e guias antigos.",
-    "marketing.step2": "A HostBuddy recolhe e organiza",
+    "marketing.step2": "A NONA recolhe e organiza",
     "marketing.step2d": "A informação é organizada sem inventar nada.",
     "marketing.step3": "Verifique e publique",
     "marketing.step3d": "Responda apenas ao que falta.",
@@ -1298,10 +1388,10 @@ export const translations: Record<Locale, Copy> = {
     "marketing.arrival": "Torne a chegada simples",
     "marketing.arrivalD": "Acesso, Wi-Fi e informações essenciais sempre fáceis de encontrar.",
     "marketing.creation": "Poupe tempo desde o início",
-    "marketing.creationD": "Importe um link ou texto. A HostBuddy prepara o essencial.",
+    "marketing.creationD": "Importe um link ou texto. A NONA prepara o essencial.",
     "marketing.services": "Venda serviços facilmente",
     "marketing.servicesD":
-      "Pequeno-almoço, massagem, transfer ou saída tardia no guia. Pagamento em breve.",
+      "Pequeno-almoço, massagem, transfer ou saída tardia no guia. Pagamento online quando ativado pelo gestor.",
     "marketing.reviews": "Transforme uma ótima estadia numa avaliação",
     "marketing.reviewsD": "Configure destinos sem filtrar hóspedes pelo feedback.",
     "marketing.noGating": "Sem filtragem por feedback positivo ou negativo.",
@@ -1310,7 +1400,6 @@ export const translations: Record<Locale, Copy> = {
     "marketing.proof": "Uma experiência que pode realmente testar",
     "marketing.proofD": "Alterne entre hóspede e gestor e edite o Wi-Fi. Sem dados inventados.",
     "marketing.pricing": "Um preço simples para começar",
-    "marketing.upcoming": "Em breve",
     "marketing.footer": "A receção dos hóspedes, bem organizada.",
     "marketing.qrLine": "QR ou link · sem conta · sem instalação",
     "marketing.openDemo": "Abrir demonstração completa",
@@ -1322,7 +1411,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.spaAlt": "Massagem junto à piscina",
     "auth.signupTitle": "Vamos começar",
     "auth.loginTitle": "Bem-vindo de volta",
-    "auth.subtitle": "30 dias grátis. Sem cartão.",
+    "auth.subtitle": "1 alojamento grátis. Sem cartão.",
     "auth.google": "Continuar com Google",
     "auth.or": "ou",
     "auth.firstName": "Nome",
@@ -1362,7 +1451,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.email": "E-mail",
     "guest.unavailable": "Este guia ainda não está disponível",
     "guest.unavailableD": "Pode estar em preparação. Contacte o anfitrião ou tente mais tarde.",
-    "guest.discover": "Descobrir HostBuddy",
+    "guest.discover": "Descobrir NONA",
     "guest.review": "Deixar avaliação",
     "guest.stay": "Tudo para aproveitar a estadia",
     "guest.noInstall": "Sem conta · Sem aplicação",
@@ -1372,7 +1461,7 @@ export const translations: Record<Locale, Copy> = {
     "guest.copy": "Copiar",
     "guest.copied": "Copiado",
     "guest.contact": "Contacto",
-    "guest.privateFeedback": "Enviar comentário privado",
+    "guest.privateFeedback": "Avalie a sua experiência",
     "guest.sendMessage": "Enviar mensagem",
     "guest.noServices": "Nenhum serviço disponível de momento.",
     "guest.request": "Pedir",
@@ -1411,9 +1500,11 @@ export const translations: Record<Locale, Copy> = {
     "demo.serviceHint": "Adicione um serviço visível no guia.",
     "demo.addBasket": "Adicionar “Cabaz de boas-vindas”",
     "demo.saved": "Guardado",
-    "demo.pageTitle": "Experimente HostBuddy dos dois lados.",
+    "demo.pageTitle": "Experimente NONA dos dois lados.",
     "demo.pageDesc": "Edite chegada, Wi-Fi, foto ou serviço e veja o resultado como hóspede.",
     "manager.guide": "Guia do hóspede",
+    "manager.editContent": "Editar conteúdo",
+    "manager.general": "Geral",
     "manager.editEverything": "Edite tudo aqui",
     "manager.editHint": "Título, texto, ícone, ordem, visibilidade, fotos e vídeos.",
     "manager.preview": "Ver como hóspede",
@@ -1510,11 +1601,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
     "app.operator": "Votre activité",
     "app.operatorHint": "Facultatif · vous pourrez changer ce choix à tout moment.",
     "import.textTitle": "Collez tout ce que vous avez. Même si c’est mal rangé.",
-    "import.textHelp": "HostBuddy s’occupe du reste.",
+    "import.textHelp": "NONA s’occupe du reste.",
     "import.textAction": "Ranger mes informations",
     "import.manualTitle": "Comment s’appelle votre hébergement ?",
     "import.fallbackTitle": "Nous n’avons pas pu récupérer assez d’informations.",
-    "import.fallbackText": "Collez le texte de l’annonce et HostBuddy l’organisera.",
+    "import.fallbackText": "Collez le texte de l’annonce et NONA l’organisera.",
     "import.fallbackPrimary": "Coller le texte de l’annonce",
     "import.fallbackSecondary": "Ajouter les informations moi-même",
   },
@@ -1532,11 +1623,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
     "app.operator": "Your business",
     "app.operatorHint": "Optional · change this at any time.",
     "import.textTitle": "Paste everything you have, even if it is messy.",
-    "import.textHelp": "HostBuddy takes care of the rest.",
+    "import.textHelp": "NONA takes care of the rest.",
     "import.textAction": "Organize my information",
     "import.manualTitle": "What is your property called?",
     "import.fallbackTitle": "We could not retrieve enough information.",
-    "import.fallbackText": "Paste the listing text and HostBuddy will organize it.",
+    "import.fallbackText": "Paste the listing text and NONA will organize it.",
     "import.fallbackPrimary": "Paste listing text",
     "import.fallbackSecondary": "Add information myself",
   },
@@ -1554,11 +1645,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
     "app.operator": "Su actividad",
     "app.operatorHint": "Opcional · puede cambiarlo en cualquier momento.",
     "import.textTitle": "Pegue todo lo que tenga, aunque esté desordenado.",
-    "import.textHelp": "HostBuddy se ocupa del resto.",
+    "import.textHelp": "NONA se ocupa del resto.",
     "import.textAction": "Organizar mi información",
     "import.manualTitle": "¿Cómo se llama su alojamiento?",
     "import.fallbackTitle": "No pudimos recuperar suficiente información.",
-    "import.fallbackText": "Pegue el texto del anuncio y HostBuddy lo organizará.",
+    "import.fallbackText": "Pegue el texto del anuncio y NONA lo organizará.",
     "import.fallbackPrimary": "Pegar texto del anuncio",
     "import.fallbackSecondary": "Añadir información manualmente",
   },
@@ -1576,11 +1667,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
     "app.operator": "Ihr Betrieb",
     "app.operatorHint": "Optional · jederzeit änderbar.",
     "import.textTitle": "Fügen Sie alles ein, auch wenn es unsortiert ist.",
-    "import.textHelp": "HostBuddy kümmert sich um den Rest.",
+    "import.textHelp": "NONA kümmert sich um den Rest.",
     "import.textAction": "Informationen ordnen",
     "import.manualTitle": "Wie heißt Ihre Unterkunft?",
     "import.fallbackTitle": "Wir konnten nicht genug Informationen abrufen.",
-    "import.fallbackText": "Fügen Sie den Anzeigentext ein und HostBuddy ordnet ihn.",
+    "import.fallbackText": "Fügen Sie den Anzeigentext ein und NONA ordnet ihn.",
     "import.fallbackPrimary": "Anzeigentext einfügen",
     "import.fallbackSecondary": "Informationen selbst hinzufügen",
   },
@@ -1598,11 +1689,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
     "app.operator": "La tua attività",
     "app.operatorHint": "Facoltativo · modificabile in qualsiasi momento.",
     "import.textTitle": "Incolla tutto, anche se è disordinato.",
-    "import.textHelp": "HostBuddy si occupa del resto.",
+    "import.textHelp": "NONA si occupa del resto.",
     "import.textAction": "Organizza le informazioni",
     "import.manualTitle": "Come si chiama il tuo alloggio?",
     "import.fallbackTitle": "Non abbiamo recuperato abbastanza informazioni.",
-    "import.fallbackText": "Incolla il testo dell’annuncio e HostBuddy lo organizzerà.",
+    "import.fallbackText": "Incolla il testo dell’annuncio e NONA lo organizzerà.",
     "import.fallbackPrimary": "Incolla testo annuncio",
     "import.fallbackSecondary": "Aggiungi informazioni manualmente",
   },
@@ -1620,11 +1711,11 @@ const legacyScreenCopy: Record<Locale, Copy> = {
     "app.operator": "A sua atividade",
     "app.operatorHint": "Opcional · altere a qualquer momento.",
     "import.textTitle": "Cole tudo, mesmo desorganizado.",
-    "import.textHelp": "A HostBuddy trata do resto.",
+    "import.textHelp": "A NONA trata do resto.",
     "import.textAction": "Organizar informações",
     "import.manualTitle": "Como se chama o alojamento?",
     "import.fallbackTitle": "Não foi possível obter informação suficiente.",
-    "import.fallbackText": "Cole o texto do anúncio e a HostBuddy organiza-o.",
+    "import.fallbackText": "Cole o texto do anúncio e a NONA organiza-o.",
     "import.fallbackPrimary": "Colar texto do anúncio",
     "import.fallbackSecondary": "Adicionar informação manualmente",
   },
@@ -1806,7 +1897,7 @@ const operationsCopy: Record<Locale, Copy> = {
     "messages.placeholder": "Écrivez votre réponse…",
     "connections.title": "Connexions",
     "connections.desc":
-      "Retrouvez ici les outils reliés à HostBuddy. Rien à configurer avant d’en avoir besoin.",
+      "Retrouvez ici les outils reliés à NONA. Rien à configurer avant d’en avoir besoin.",
     "connections.connected": "Outils connectés",
     "connections.none": "Aucun outil connecté",
     "connections.upcoming": "Connexions à venir",
@@ -1848,8 +1939,7 @@ const operationsCopy: Record<Locale, Copy> = {
     "messages.reply": "Your reply",
     "messages.placeholder": "Write your reply…",
     "connections.title": "Connections",
-    "connections.desc":
-      "Find tools connected to HostBuddy here. Nothing to configure until needed.",
+    "connections.desc": "Find tools connected to NONA here. Nothing to configure until needed.",
     "connections.connected": "Connected tools",
     "connections.none": "No connected tools",
     "connections.upcoming": "Upcoming connections",
@@ -2035,7 +2125,7 @@ for (const locale of LOCALES) Object.assign(translations[locale], operationsCopy
 const finishingCopy: Record<Locale, Copy> = {
   fr: {
     "integrations.login": "Se connecter",
-    "integrations.eyebrow": "Connexions HostBuddy",
+    "integrations.eyebrow": "Connexions NONA",
     "integrations.hero": "Vos outils alimentent le même accueil voyageur.",
     "integrations.heroD":
       "Commencez par un lien ou un texte. Les futures connexions suivront le même parcours simple : importer, vérifier, publier.",
@@ -2049,7 +2139,7 @@ const finishingCopy: Record<Locale, Copy> = {
     "integrations.beta": "Bêta",
     "integrations.planned": "Prévu",
     "integrations.fallbackPlanned": "Connexion préparée, non disponible aujourd’hui.",
-    "integrations.fallbackLive": "Fonction prise en charge par HostBuddy.",
+    "integrations.fallbackLive": "Fonction prise en charge par NONA.",
     "integrations.simpleTitle": "Connecter un PMS, sans complexité",
     "integrations.simpleD":
       "Connecter mon outil → choisir les logements → créer les guides → vérifier les informations manquantes.",
@@ -2079,7 +2169,7 @@ const finishingCopy: Record<Locale, Copy> = {
   },
   en: {
     "integrations.login": "Sign in",
-    "integrations.eyebrow": "HostBuddy connections",
+    "integrations.eyebrow": "NONA connections",
     "integrations.hero": "Your tools power one guest welcome.",
     "integrations.heroD":
       "Start with a link or text. Future connections follow the same simple path: import, review, publish.",
@@ -2093,7 +2183,7 @@ const finishingCopy: Record<Locale, Copy> = {
     "integrations.beta": "Beta",
     "integrations.planned": "Planned",
     "integrations.fallbackPlanned": "Connection prepared, not available today.",
-    "integrations.fallbackLive": "Feature supported by HostBuddy.",
+    "integrations.fallbackLive": "Feature supported by NONA.",
     "integrations.simpleTitle": "Connect a PMS, without complexity",
     "integrations.simpleD":
       "Connect my tool → choose properties → create guides → review missing information.",
@@ -2121,7 +2211,7 @@ const finishingCopy: Record<Locale, Copy> = {
   },
   es: {
     "integrations.login": "Iniciar sesión",
-    "integrations.eyebrow": "Conexiones HostBuddy",
+    "integrations.eyebrow": "Conexiones NONA",
     "integrations.hero": "Sus herramientas alimentan una misma bienvenida.",
     "integrations.heroD":
       "Empiece con un enlace o texto. Las futuras conexiones seguirán el mismo camino: importar, revisar y publicar.",
@@ -2135,7 +2225,7 @@ const finishingCopy: Record<Locale, Copy> = {
     "integrations.beta": "Beta",
     "integrations.planned": "Previsto",
     "integrations.fallbackPlanned": "Conexión preparada, no disponible hoy.",
-    "integrations.fallbackLive": "Función compatible con HostBuddy.",
+    "integrations.fallbackLive": "Función compatible con NONA.",
     "integrations.simpleTitle": "Conecte un PMS sin complejidad",
     "integrations.simpleD":
       "Conectar mi herramienta → elegir alojamientos → crear guías → revisar lo que falta.",
@@ -2163,7 +2253,7 @@ const finishingCopy: Record<Locale, Copy> = {
   },
   de: {
     "integrations.login": "Anmelden",
-    "integrations.eyebrow": "HostBuddy-Verbindungen",
+    "integrations.eyebrow": "NONA-Verbindungen",
     "integrations.hero": "Ihre Tools speisen einen Gästeempfang.",
     "integrations.heroD":
       "Starten Sie mit Link oder Text. Künftige Verbindungen folgen demselben Weg: importieren, prüfen, veröffentlichen.",
@@ -2177,7 +2267,7 @@ const finishingCopy: Record<Locale, Copy> = {
     "integrations.beta": "Beta",
     "integrations.planned": "Geplant",
     "integrations.fallbackPlanned": "Verbindung vorbereitet, heute nicht verfügbar.",
-    "integrations.fallbackLive": "Von HostBuddy unterstützte Funktion.",
+    "integrations.fallbackLive": "Von NONA unterstützte Funktion.",
     "integrations.simpleTitle": "PMS verbinden, ohne Komplexität",
     "integrations.simpleD":
       "Tool verbinden → Unterkünfte wählen → Guides erstellen → Fehlendes prüfen.",
@@ -2206,7 +2296,7 @@ const finishingCopy: Record<Locale, Copy> = {
   },
   it: {
     "integrations.login": "Accedi",
-    "integrations.eyebrow": "Connessioni HostBuddy",
+    "integrations.eyebrow": "Connessioni NONA",
     "integrations.hero": "I tuoi strumenti alimentano un’unica accoglienza.",
     "integrations.heroD":
       "Inizia con un link o testo. Le connessioni future seguiranno lo stesso percorso: importa, verifica, pubblica.",
@@ -2220,7 +2310,7 @@ const finishingCopy: Record<Locale, Copy> = {
     "integrations.beta": "Beta",
     "integrations.planned": "Previsto",
     "integrations.fallbackPlanned": "Connessione preparata, non disponibile oggi.",
-    "integrations.fallbackLive": "Funzione supportata da HostBuddy.",
+    "integrations.fallbackLive": "Funzione supportata da NONA.",
     "integrations.simpleTitle": "Collega un PMS senza complessità",
     "integrations.simpleD":
       "Collega lo strumento → scegli gli alloggi → crea le guide → verifica ciò che manca.",
@@ -2248,7 +2338,7 @@ const finishingCopy: Record<Locale, Copy> = {
   },
   pt: {
     "integrations.login": "Entrar",
-    "integrations.eyebrow": "Ligações HostBuddy",
+    "integrations.eyebrow": "Ligações NONA",
     "integrations.hero": "As suas ferramentas alimentam o mesmo acolhimento.",
     "integrations.heroD":
       "Comece com um link ou texto. As futuras ligações seguirão o mesmo caminho: importar, verificar, publicar.",
@@ -2262,7 +2352,7 @@ const finishingCopy: Record<Locale, Copy> = {
     "integrations.beta": "Beta",
     "integrations.planned": "Planeado",
     "integrations.fallbackPlanned": "Ligação preparada, indisponível hoje.",
-    "integrations.fallbackLive": "Funcionalidade suportada pelo HostBuddy.",
+    "integrations.fallbackLive": "Funcionalidade suportada pelo NONA.",
     "integrations.simpleTitle": "Ligue um PMS sem complexidade",
     "integrations.simpleD":
       "Ligar a ferramenta → escolher alojamentos → criar guias → verificar o que falta.",
@@ -2495,6 +2585,345 @@ const managerDemoCopy: Record<Locale, Copy> = {
   },
 };
 for (const locale of LOCALES) Object.assign(translations[locale], managerDemoCopy[locale]);
+const guideCopy: Record<Locale, string[]> = {
+  fr: [
+    "Explorer le guide",
+    "Rechercher dans le guide",
+    "Votre guide de séjour",
+    "L’essentiel",
+    "Tous",
+    "Garder cette adresse",
+    "Démo : demande enregistrée localement",
+    "Impossible de copier. Sélectionnez le texte ci-dessus.",
+  ],
+  en: [
+    "Explore the guide",
+    "Search the guide",
+    "Your stay guide",
+    "Essentials",
+    "All",
+    "Save this place",
+    "Demo: request saved locally",
+    "Unable to copy. Select the text above.",
+  ],
+  es: [
+    "Explorar la guía",
+    "Buscar en la guía",
+    "Tu guía de estancia",
+    "Lo esencial",
+    "Todos",
+    "Guardar este lugar",
+    "Demo: solicitud guardada localmente",
+    "No se pudo copiar. Seleccione el texto de arriba.",
+  ],
+  de: [
+    "Guide entdecken",
+    "Im Guide suchen",
+    "Ihr Aufenthaltsguide",
+    "Das Wichtigste",
+    "Alle",
+    "Diesen Ort merken",
+    "Demo: Anfrage lokal gespeichert",
+    "Kopieren nicht möglich. Wählen Sie den Text oben aus.",
+  ],
+  it: [
+    "Esplora la guida",
+    "Cerca nella guida",
+    "La guida del soggiorno",
+    "L’essenziale",
+    "Tutti",
+    "Salva questo luogo",
+    "Demo: richiesta salvata localmente",
+    "Impossibile copiare. Seleziona il testo sopra.",
+  ],
+  pt: [
+    "Explorar o guia",
+    "Pesquisar no guia",
+    "O seu guia de estadia",
+    "O essencial",
+    "Todos",
+    "Guardar este local",
+    "Demo: pedido guardado localmente",
+    "Não foi possível copiar. Selecione o texto acima.",
+  ],
+};
+const guidePreviewCopy: Record<Locale, string> = {
+  fr: "Aperçu visuel · Logement de démonstration",
+  en: "Visual preview · Demonstration property",
+  es: "Vista previa · Alojamiento de demostración",
+  de: "Vorschau · Demo-Unterkunft",
+  it: "Anteprima · Alloggio dimostrativo",
+  pt: "Pré-visualização · Alojamento de demonstração",
+};
+for (const locale of LOCALES)
+  translations[locale]["guide.previewNotice"] = guidePreviewCopy[locale];
+const mediaCopy: Record<Locale, string[]> = {
+  fr: [
+    "Médias du logement",
+    "Photos du logement",
+    "Voir la photo",
+    "Présentation du logement",
+    "Découvrez le logement en vidéo",
+    "Photo du logement",
+  ],
+  en: [
+    "Property media",
+    "Property photos",
+    "View photo",
+    "Property introduction",
+    "Discover the property on video",
+    "Property photo",
+  ],
+  es: [
+    "Medios del alojamiento",
+    "Fotos del alojamiento",
+    "Ver foto",
+    "Presentación del alojamiento",
+    "Descubre el alojamiento en vídeo",
+    "Foto del alojamiento",
+  ],
+  de: [
+    "Medien der Unterkunft",
+    "Fotos der Unterkunft",
+    "Foto ansehen",
+    "Vorstellung der Unterkunft",
+    "Entdecken Sie die Unterkunft im Video",
+    "Foto der Unterkunft",
+  ],
+  it: [
+    "Media dell’alloggio",
+    "Foto dell’alloggio",
+    "Vedi foto",
+    "Presentazione dell’alloggio",
+    "Scopri l’alloggio in video",
+    "Foto dell’alloggio",
+  ],
+  pt: [
+    "Média do alojamento",
+    "Fotos do alojamento",
+    "Ver foto",
+    "Apresentação do alojamento",
+    "Descubra o alojamento em vídeo",
+    "Foto do alojamento",
+  ],
+};
+const mediaKeys = [
+  "media.heading",
+  "media.photos",
+  "media.viewPhoto",
+  "media.presentation",
+  "media.discover",
+  "media.photo",
+];
+for (const locale of LOCALES)
+  mediaKeys.forEach((key, index) => {
+    translations[locale][key] = mediaCopy[locale][index]!;
+  });
+const guideKeys = [
+  "guide.menu",
+  "guide.search",
+  "guide.discover",
+  "guide.essentials",
+  "guide.all",
+  "guide.save",
+  "guide.demoRequest",
+  "guide.copyFailed",
+];
+for (const locale of LOCALES)
+  guideKeys.forEach((key, index) => {
+    translations[locale][key] = guideCopy[locale][index] ?? "";
+  });
+const consolidationCopy = {
+  fr: ["Brouillons", "Publiés", "À partir de", "Paiements", "Publier les modifications"],
+  en: ["Drafts", "Published", "From", "Payments", "Publish changes"],
+  es: ["Borradores", "Publicados", "Desde", "Pagos", "Publicar cambios"],
+  de: ["Entwürfe", "Veröffentlicht", "Ab", "Zahlungen", "Änderungen veröffentlichen"],
+  it: ["Bozze", "Pubblicati", "A partire da", "Pagamenti", "Pubblica modifiche"],
+  pt: ["Rascunhos", "Publicados", "A partir de", "Pagamentos", "Publicar alterações"],
+};
+for (const locale of LOCALES) {
+  [
+    "manager.drafts",
+    "manager.published",
+    "marketing.startingPrice",
+    "nav.payments",
+    "manager.publishChanges",
+  ].forEach((key, index) => {
+    translations[locale][key] = consolidationCopy[locale][index]!;
+  });
+}
+Object.assign(translations.fr, {
+  "payments.businessCountry": "Pays de votre entreprise",
+  "payments.countryHint":
+    "Code pays à deux lettres, par exemple FR. Choisissez le pays légal de votre entreprise.",
+});
+Object.assign(translations.en, {
+  "payments.businessCountry": "Business country",
+  "payments.countryHint":
+    "Two-letter country code, for example FR. Choose your business’s legal country.",
+});
+Object.assign(translations.es, {
+  "payments.businessCountry": "País de tu empresa",
+  "payments.countryHint":
+    "Código de país de dos letras, por ejemplo FR. Elige el país legal de tu empresa.",
+});
+Object.assign(translations.de, {
+  "payments.businessCountry": "Land Ihres Unternehmens",
+  "payments.countryHint":
+    "Ländercode mit zwei Buchstaben, zum Beispiel FR. Wählen Sie den rechtlichen Sitz Ihres Unternehmens.",
+});
+Object.assign(translations.it, {
+  "payments.businessCountry": "Paese della tua attività",
+  "payments.countryHint":
+    "Codice paese di due lettere, ad esempio FR. Scegli il paese legale della tua attività.",
+});
+Object.assign(translations.pt, {
+  "payments.businessCountry": "País da sua empresa",
+  "payments.countryHint":
+    "Código de país de duas letras, por exemplo FR. Escolha o país legal da sua empresa.",
+});
+addQrCopy(translations);
+addImportCopy(translations);
+addProviderCopy(translations);
+addPaymentCopy(translations);
+addV1Copy(translations);
+addEditorCopy(translations);
+addVisualPolishCopy(translations);
+addTeamCopy(translations);
+addMessageCopy(translations);
+
+Object.assign(translations.fr, {
+  "marketing.paidTier": "2 logements",
+  "payments.subscriptionRequired":
+    "Un abonnement actif est requis à partir de 2 logements non archivés. Ouvrez Paiements pour vous abonner. Vos données sont conservées.",
+  "payments.syncRequired":
+    "La facturation doit être synchronisée avant publication. Ouvrez Paiements puis réessayez.",
+});
+Object.assign(translations.en, {
+  "marketing.paidTier": "2 properties",
+  "payments.subscriptionRequired":
+    "An active subscription is required for 2 or more non-archived properties. Open Payments to subscribe. Your data is retained.",
+  "payments.syncRequired": "Billing must sync before publishing. Open Payments, then try again.",
+});
+Object.assign(translations.es, {
+  "marketing.paidTier": "2 alojamientos",
+  "payments.subscriptionRequired":
+    "Se requiere una suscripción activa desde 2 alojamientos no archivados. Abre Pagos para suscribirte. Tus datos se conservan.",
+  "payments.syncRequired":
+    "La facturación debe sincronizarse antes de publicar. Abre Pagos y vuelve a intentarlo.",
+});
+Object.assign(translations.de, {
+  "marketing.paidTier": "2 Unterkünfte",
+  "payments.subscriptionRequired":
+    "Ab 2 nicht archivierten Unterkünften ist ein aktives Abo erforderlich. Öffne Zahlungen. Deine Daten bleiben erhalten.",
+  "payments.syncRequired":
+    "Die Abrechnung muss vor der Veröffentlichung synchronisiert werden. Öffne Zahlungen und versuche es erneut.",
+});
+Object.assign(translations.it, {
+  "marketing.paidTier": "2 alloggi",
+  "payments.subscriptionRequired":
+    "Da 2 alloggi non archiviati è richiesto un abbonamento attivo. Apri Pagamenti. I dati sono conservati.",
+  "payments.syncRequired":
+    "La fatturazione deve sincronizzarsi prima della pubblicazione. Apri Pagamenti e riprova.",
+});
+Object.assign(translations.pt, {
+  "marketing.paidTier": "2 alojamentos",
+  "payments.subscriptionRequired":
+    "É necessária uma assinatura ativa a partir de 2 alojamentos não arquivados. Abra Pagamentos. Os dados são preservados.",
+  "payments.syncRequired":
+    "A faturação deve sincronizar antes de publicar. Abra Pagamentos e tente novamente.",
+});
+
+Object.assign(translations.fr, {
+  "legal.title": "Documents légaux",
+  "legal.draft":
+    "Documents en préparation : informations de l’éditeur et conditions à compléter et valider avant commercialisation.",
+  "legal.publisher": "Éditeur et contact",
+  "legal.publisherMissing":
+    "À compléter : nom légal, statut, identifiant entreprise, adresse, contact et hébergeur.",
+  "legal.privacy": "Confidentialité",
+  "legal.privacyMissing":
+    "À compléter : responsable et contact, données et finalités, durées de conservation, prestataires et modalités d’exercice des droits.",
+  "legal.terms": "Conditions d’utilisation et d’abonnement",
+  "legal.fees": "Commission NONA : 2 % sur les services payés, distincte des frais Stripe.",
+  "legal.termsMissing":
+    "À compléter : renouvellement, annulation, traitement des impayés, conditions des services et politique de remboursement.",
+});
+Object.assign(translations.en, {
+  "legal.title": "Legal documents",
+  "legal.draft":
+    "Draft documents: publisher details and terms must be completed and approved before commercial launch.",
+  "legal.publisher": "Publisher and contact",
+  "legal.publisherMissing":
+    "To complete: legal name, status, company identifier, address, contact and hosting provider.",
+  "legal.privacy": "Privacy",
+  "legal.privacyMissing":
+    "To complete: controller and contact, data and purposes, retention periods, providers and rights request process.",
+  "legal.terms": "Usage and subscription terms",
+  "legal.fees": "NONA commission: 2% on paid services, separate from Stripe fees.",
+  "legal.termsMissing":
+    "To complete: renewal, cancellation, unpaid invoices, service terms and refund policy.",
+});
+Object.assign(translations.es, {
+  "legal.title": "Documentos legales",
+  "legal.draft":
+    "Documentos en preparación: completar y validar los datos del editor y las condiciones antes del lanzamiento comercial.",
+  "legal.publisher": "Editor y contacto",
+  "legal.publisherMissing":
+    "Por completar: nombre legal, forma jurídica, identificador, dirección, contacto y alojamiento web.",
+  "legal.privacy": "Privacidad",
+  "legal.privacyMissing":
+    "Por completar: responsable, contacto, datos, finalidades, conservación, proveedores y ejercicio de derechos.",
+  "legal.terms": "Condiciones de uso y suscripción",
+  "legal.fees": "Comisión NONA: 2 % sobre servicios pagados, aparte de las tarifas Stripe.",
+  "legal.termsMissing":
+    "Por completar: renovación, cancelación, impagos, condiciones de servicios y reembolsos.",
+});
+Object.assign(translations.de, {
+  "legal.title": "Rechtliche Dokumente",
+  "legal.draft":
+    "Entwürfe: Anbieterangaben und Bedingungen müssen vor dem kommerziellen Start ergänzt und freigegeben werden.",
+  "legal.publisher": "Anbieter und Kontakt",
+  "legal.publisherMissing":
+    "Ergänzen: Firmenname, Rechtsform, Kennnummer, Adresse, Kontakt und Hostinganbieter.",
+  "legal.privacy": "Datenschutz",
+  "legal.privacyMissing":
+    "Ergänzen: Verantwortlicher, Kontakt, Daten, Zwecke, Speicherfristen, Anbieter und Rechteanfragen.",
+  "legal.terms": "Nutzungs- und Abobedingungen",
+  "legal.fees": "NONA-Provision: 2 % auf bezahlte Services, getrennt von Stripe-Gebühren.",
+  "legal.termsMissing":
+    "Ergänzen: Verlängerung, Kündigung, Zahlungsausfälle, Servicebedingungen und Erstattungen.",
+});
+Object.assign(translations.it, {
+  "legal.title": "Documenti legali",
+  "legal.draft":
+    "Bozze: completare e approvare i dati dell’editore e le condizioni prima del lancio commerciale.",
+  "legal.publisher": "Editore e contatto",
+  "legal.publisherMissing":
+    "Da completare: ragione sociale, forma giuridica, identificativo, indirizzo, contatto e hosting.",
+  "legal.privacy": "Privacy",
+  "legal.privacyMissing":
+    "Da completare: titolare, contatto, dati, finalità, conservazione, fornitori e richieste sui diritti.",
+  "legal.terms": "Condizioni d’uso e abbonamento",
+  "legal.fees": "Commissione NONA: 2 % sui servizi pagati, separata dalle tariffe Stripe.",
+  "legal.termsMissing":
+    "Da completare: rinnovo, cancellazione, mancati pagamenti, condizioni dei servizi e rimborsi.",
+});
+Object.assign(translations.pt, {
+  "legal.title": "Documentos legais",
+  "legal.draft":
+    "Documentos em preparação: completar e validar dados do editor e condições antes do lançamento comercial.",
+  "legal.publisher": "Editor e contacto",
+  "legal.publisherMissing":
+    "A completar: nome legal, forma jurídica, identificador, endereço, contacto e alojamento web.",
+  "legal.privacy": "Privacidade",
+  "legal.privacyMissing":
+    "A completar: responsável, contacto, dados, finalidades, conservação, fornecedores e exercício de direitos.",
+  "legal.terms": "Condições de uso e assinatura",
+  "legal.fees": "Comissão NONA: 2 % sobre serviços pagos, separada das taxas Stripe.",
+  "legal.termsMissing":
+    "A completar: renovação, cancelamento, incumprimento, condições dos serviços e reembolsos.",
+});
 export const I18N_KEYS = Object.keys(translations.fr);
 export function missingTranslationKeys(locale: Locale) {
   return I18N_KEYS.filter((key) => !translations[locale][key]);
@@ -2547,3 +2976,33 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 export const useI18n = () => useContext(LocaleContext);
 export const translateStatic = (locale: Locale, key: string) =>
   translations[locale][key] ?? translations.fr[key] ?? "";
+
+const demoMessageSaved: Record<Locale, string> = {
+  fr: "Message simulé : aucun message n’a été envoyé.",
+  en: "Message simulated: no message was sent.",
+  es: "Mensaje simulado: no se ha enviado ningún mensaje.",
+  de: "Nachricht simuliert: Es wurde keine Nachricht gesendet.",
+  it: "Messaggio simulato: nessun messaggio è stato inviato.",
+  pt: "Mensagem simulada: nenhuma mensagem foi enviada.",
+};
+for (const locale of LOCALES) translations[locale]["demo.messageSaved"] = demoMessageSaved[locale];
+
+const demoMessageHint: Record<Locale, string> = {
+  fr: "Démo : essayez le formulaire, sans envoyer de message réel.",
+  en: "Demo: try the form without sending a real message.",
+  es: "Demo: pruebe el formulario sin enviar un mensaje real.",
+  de: "Demo: Testen Sie das Formular, ohne eine echte Nachricht zu senden.",
+  it: "Demo: prova il modulo senza inviare un messaggio reale.",
+  pt: "Demo: experimente o formulário sem enviar uma mensagem real.",
+};
+for (const locale of LOCALES) translations[locale]["demo.messageHint"] = demoMessageHint[locale];
+
+const findPlaceCopy: Record<Locale, string> = {
+  fr: "Rechercher cette adresse",
+  en: "Find this place",
+  es: "Buscar este lugar",
+  de: "Diesen Ort suchen",
+  it: "Cerca questo luogo",
+  pt: "Encontrar este lugar",
+};
+for (const locale of LOCALES) translations[locale]["guest.findPlace"] = findPlaceCopy[locale];

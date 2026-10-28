@@ -2,12 +2,24 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { reportOperationalEvent } from "./lib/operational-events.server";
+import {
+  deliverServerFailureAlert,
+  serverAlertConfiguration,
+} from "./lib/operational-alert.server";
+import { secureResponse } from "./lib/security-headers";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
+
+async function alertServerFailure(env: unknown, request: Request) {
+  const delivery = await deliverServerFailureAlert(serverAlertConfiguration(env, request));
+  if (delivery === "FAILED" || delivery === "INVALID_CONFIGURATION")
+    reportOperationalEvent("operational_alert_failed");
+}
 
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
@@ -28,7 +40,8 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const body = await response.clone().text();
   if (!isH3SwallowedErrorBody(body)) return response;
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  consumeLastCapturedError();
+  reportOperationalEvent("server_request_failed");
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -49,13 +62,23 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
-    } catch (error) {
-      console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      // Handled SSR 5xx responses also need an operational signal. The h3
+      // normalization above already reported its replaced response.
+      if (normalized === response && response.status >= 500)
+        reportOperationalEvent("server_request_failed");
+      if (normalized.status >= 500) await alertServerFailure(env, request);
+      return secureResponse(request, normalized);
+    } catch {
+      reportOperationalEvent("server_request_failed");
+      await alertServerFailure(env, request);
+      return secureResponse(
+        request,
+        new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+      );
     }
   },
 };

@@ -1,0 +1,96 @@
+# PRIVATE NONA-OPS only. No schedule here: inbox read shares existing health job.
+name: Nona isolated TEST operational alerts
+on:
+  workflow_dispatch:
+    inputs:
+      check_notification_channel:
+        type: boolean
+        default: false
+        description: One expected failure to verify owner email channel; no backend calls
+      setup_receiver:
+        type: boolean
+        default: false
+        description: Install service-only receiver on isolated TEST, never source
+      prove_delivery:
+        type: boolean
+        default: false
+        description: Send one fixed TEST event; received event intentionally alerts owner
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: nona-isolated-test-operational-alerts
+  cancel-in-progress: false
+jobs:
+  alerts:
+    if: github.event.repository.private == true && vars.NONA_ISOLATED_OPS_ENABLED == 'true' && inputs.check_notification_channel != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: tpenalba06/HOSTBUDDY
+          ref: 40f47a74e9057e35aca1a378e77edfdec22cd8c8
+          persist-credentials: false
+      - name: Install setup dependency before secrets
+        if: inputs.setup_receiver == true
+        run: python3 -m pip install -r scripts/ops/requirements.txt
+      - name: Private TEST inputs
+        env:
+          NONA_TEST_API_KEY: ${{ secrets.NONA_TEST_API_KEY }}
+          NONA_TEST_DATABASE_JSON: ${{ inputs.setup_receiver && secrets.NONA_TEST_DATABASE_JSON || '' }}
+          NONA_TEST_DATABASE_CA_PEM: ${{ inputs.setup_receiver && vars.NONA_TEST_DATABASE_CA_PEM || '' }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nona-alert-inputs'
+          root.mkdir(mode=0o700)
+          for name, variable in [('api.key','NONA_TEST_API_KEY'), ('database.json','NONA_TEST_DATABASE_JSON'), ('ca.crt','NONA_TEST_DATABASE_CA_PEM')]:
+              value = os.environ.get(variable, '')
+              if not value:
+                  if name == 'api.key': raise SystemExit('Missing approved TEST input')
+                  continue
+              fd = os.open(root / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+              with os.fdopen(fd, 'w') as f: f.write(value)
+          PY
+      - name: Explicit isolated TEST receiver setup
+        if: inputs.setup_receiver == true
+        run: python3 scripts/ops/install-test-alert-receiver.py --connection-file "$RUNNER_TEMP/nona-alert-inputs/database.json" --ca-file "$RUNNER_TEMP/nona-alert-inputs/ca.crt"
+      - name: Send one fixed event through the actual server transport
+        if: inputs.prove_delivery == true
+        run: |
+          node --experimental-strip-types --input-type=module <<'JS'
+          import { readFileSync } from 'node:fs';
+          import { createServerFailureAlert } from './src/lib/operational-alert.server.ts';
+          const status = await createServerFailureAlert()({
+            NONA_OPS_ALERT_TRANSPORT: 'supabase-test-rpc',
+            NONA_OPS_ALERT_URL: 'https://mhhtnqfdkyudwyqlmnce.supabase.co/rest/v1/rpc/nona_report_operational_alert',
+            NONA_OPS_ALERT_TOKEN: readFileSync(process.env.RUNNER_TEMP + '/nona-alert-inputs/api.key', 'utf8').trim(),
+          });
+          console.log(JSON.stringify({schema:'nona.alert-delivery.v1',environment:'isolated-test',status}));
+          if (status !== 'ACKNOWLEDGED') process.exitCode = 1;
+          JS
+      - name: Read actual receiver and notify existing owner channel on alert
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/ops/test-alert-inbox.py --api-key-file "$RUNNER_TEMP/nona-alert-inputs/api.key"
+      - name: Remove only this job temporary credentials
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nona-alert-inputs'
+          for name in ['api.key','database.json','ca.crt']:
+              (root / name).unlink(missing_ok=True)
+          PY
+# One event proof, no public debug endpoint, guest data, Stripe, restore or app deployment.
+  notification_channel:
+    if: github.event.repository.private == true && inputs.check_notification_channel == true
+    permissions: {}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Expected owner notification proof; no backend or financial calls
+        run: |
+          echo '::error title=Nona notification channel proof::Expected notification check only. No application, DB, Auth, Storage or Stripe call. No incident.'
+          exit 1

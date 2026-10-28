@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-20T22:00:19.298Z",
+  "deployment": "dpl_Cuup4oPnhVsG1dHhznNmDq2hi5nx",
+  "target": "staging",
+  "results": [
+    {
+      "path": "/api/test?kind=guide",
+      "status": 200,
+      "synthetic": true
+    },
+    {
+      "path": "/server/nona-hosted-test-entry.js",
+      "status": 404
+    },
+    {
+      "path": "/.env",
+      "status": 404
+    },
+    {
+      "path": "/api/test?kind=order",
+      "status": 405
+    },
+    {
+      "path": "/chat",
+      "status": 200,
+      "mode": "guided",
+      "modelCalls": 0,
+      "text": "Coucou ! 👋 Comment je peux t’aider ?"
+    },
+    {
+      "path": "/chat",
+      "status": 403
+    }
+  ]
+}

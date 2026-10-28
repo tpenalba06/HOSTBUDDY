@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import { LocalConciergeTransport } from "@/lib/concierge-transport";
+import { isNonaPrivatePreviewHost } from "@/lib/concierge-preview";
 import { MessageCircle, Send, X, Wifi, KeyRound, MapPin, Coffee, LoaderCircle } from "lucide-react";
 import type { PublicGuide } from "@/lib/data/public-guide.functions";
 import { useI18n } from "@/lib/i18n";
@@ -204,7 +205,23 @@ export function NonaConcierge({
         website: "",
       });
       if (localTransport) return localTransport(body);
-      if (demo) return validateConciergeTurn(body, guide, guidedProposal(body, guide));
+      if (demo) {
+        if (isNonaPrivatePreviewHost(window.location.hostname)) {
+          try {
+            const response = await fetch("/api/public/concierge-preview", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(body),
+              cache: "no-store",
+              signal: AbortSignal.timeout(16000),
+            });
+            if (response.ok) return (await response.json()) as ConciergeTurn;
+          } catch {
+            // No retry: a timed-out generation may already have been reserved.
+          }
+        }
+        return validateConciergeTurn(body, guide, guidedProposal(body, guide));
+      }
       const result = await fetch("/api/public/concierge", {
         method: "POST",
         headers: { "content-type": "application/json" },

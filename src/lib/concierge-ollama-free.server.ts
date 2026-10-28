@@ -279,7 +279,24 @@ export function createReviewedOllamaTransport(
           funding: config.funding,
           state: "estimated",
         };
-        const proposal = responseSchema.parse(raw);
+        const checkedProposal = responseSchema.safeParse(raw);
+        if (!checkedProposal.success) {
+          // Report structural categories only, never generated prose, values,
+          // provider errors, headers or prompts. This does not relax acceptance.
+          const toolArguments = checkedProposal.error.issues.some((issue) =>
+            issue.path.includes("arguments"),
+          );
+          try {
+            config.onDiagnostic?.({
+              stage: "provider",
+              reason: toolArguments ? "invalid-tool-arguments" : "invalid-tool-envelope",
+            });
+          } catch {
+            /* Diagnostics cannot change admission, metering or fallback. */
+          }
+          throw new Error("ollama-invalid-proposal");
+        }
+        const proposal = checkedProposal.data;
         if (proposal.done_reason === "length") throw new Error("ollama-truncated");
         return proposal.message.tool_calls[0]!.function.arguments;
       } catch {

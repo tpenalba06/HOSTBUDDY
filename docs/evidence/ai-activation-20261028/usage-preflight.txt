@@ -1,0 +1,3 @@
+Browser tab: 13, Title: "Usage · Settings", URL: "https://ollama.com/settings".
+There has been no change in the accessibility tree.
+The focused UI element is 0 AXWebArea Usage · Settings, URL: ollama.com/settings

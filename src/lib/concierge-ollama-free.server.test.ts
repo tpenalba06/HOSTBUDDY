@@ -181,6 +181,23 @@ it.each([
   expect(s.fetcher.mock.calls.filter((c) => String(c[0]).endsWith("/chat"))).toHaveLength(1);
 });
 
+it("reports only structural rejection categories without leaking provider prose or changing metering", async () => {
+  const s = setup();
+  const onDiagnostic = vi.fn();
+  const d = createOllamaFreeDependencies({ ...s.config, onDiagnostic }, s.fetcher)!;
+  await d.reserve(s.input, localGuide(), "a".repeat(64));
+  const raw = structuredClone(s.response);
+  raw.message.tool_calls[0]!.function.arguments.dialogue.questionFor = "private-invalid-value";
+  s.fetcher.mockResolvedValueOnce(Response.json(raw));
+  await expect(d.propose("synthetic", "fr")).rejects.toThrow("ollama-model-unavailable");
+  expect(onDiagnostic).toHaveBeenCalledWith({
+    stage: "provider",
+    reason: "invalid-tool-arguments",
+  });
+  expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain("private-invalid-value");
+  expect(await d.record!()).toMatchObject({ state: "estimated", inputTokens: 2000 });
+});
+
 it("falls back through the acquired engine on quota exhaustion, timeout or oversized responses", async () => {
   for (const failure of ["quota", "timeout", "large"]) {
     const s = setup();

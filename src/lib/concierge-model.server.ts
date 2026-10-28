@@ -190,6 +190,7 @@ export async function runConciergeModel(
       "dialogue-submission-boundary-missing",
       "dialogue-external-action-claim",
       "dialogue-unverified-source-content",
+      "dialogue-unverified-service-location",
       "untrusted-dialogue",
       "unknown-source",
     ]);

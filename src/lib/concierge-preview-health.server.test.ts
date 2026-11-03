@@ -32,8 +32,8 @@ it("only reads the public catalogue and never leaks provider error content or se
     catalogue: { status: 403, compatible: false, reason: "catalogue-http-rejected" },
   });
   expect(fetcher).toHaveBeenCalledTimes(1);
-  expect(fetcher.mock.calls[0][0]).toBe("https://ollama.com/api/tags");
-  expect(fetcher.mock.calls[0][1]).not.toHaveProperty("headers");
+  expect(fetcher.mock.calls[0]![0]).toBe("https://ollama.com/api/tags");
+  expect(fetcher.mock.calls[0]![1]).not.toHaveProperty("headers");
 });
 it("recognizes the required tools without returning raw catalogue data", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(

@@ -68,11 +68,18 @@ export async function conciergePreviewHealth(request: Request) {
     }
   } catch (error) {
     const name = error instanceof Error ? error.name : "unknown";
+    const message = error instanceof Error ? error.message : "";
     reason = ["TypeError", "ReferenceError", "SyntaxError", "TimeoutError", "AbortError"].includes(
       name,
     )
       ? `catalogue-${name}`
       : "catalogue-unavailable";
+    // Static categories only: never return upstream error text or destinations.
+    if (/redirect/i.test(message)) reason = "catalogue-redirect-option-rejected";
+    else if (/cache/i.test(message)) reason = "catalogue-cache-option-rejected";
+    else if (/AbortSignal|timeout.*function/i.test(message))
+      reason = "catalogue-timeout-api-unavailable";
+    else if (/fetch failed|network|connection/i.test(message)) reason = "catalogue-network-failed";
   }
   return Response.json(
     { modelCalls: 0, ledgerMutations: 0, catalogue: { status, compatible, reason } },

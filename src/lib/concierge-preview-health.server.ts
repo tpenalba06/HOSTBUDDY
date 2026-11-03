@@ -16,12 +16,14 @@ export async function conciergePreviewHealth(request: Request) {
   let status: number | null = null;
   let reason = "unavailable";
   let compatible = false;
+  let stage = "fetch";
   try {
     const response = await fetch("https://ollama.com/api/tags", {
       redirect: "error",
       signal: AbortSignal.timeout(4000),
     });
     status = response.status;
+    stage = "body";
     if (response.ok && response.body) {
       const reader = response.body.getReader();
       const chunks: Uint8Array[] = [];
@@ -80,9 +82,18 @@ export async function conciergePreviewHealth(request: Request) {
     else if (/AbortSignal|timeout.*function/i.test(message))
       reason = "catalogue-timeout-api-unavailable";
     else if (/fetch failed|network|connection/i.test(message)) reason = "catalogue-network-failed";
+    else if (/illegal invocation|invalid.*receiver|incompatible.*receiver/i.test(message))
+      reason = "catalogue-fetch-binding-rejected";
+    else if (/invalid.*url|url.*invalid/i.test(message)) reason = "catalogue-url-rejected";
+    else if (/construct|constructor/i.test(message)) reason = "catalogue-constructor-rejected";
   }
   return Response.json(
-    { modelCalls: 0, ledgerMutations: 0, catalogue: { status, compatible, reason } },
+    {
+      modelCalls: 0,
+      ledgerMutations: 0,
+      catalogue: { status, compatible, reason, stage },
+      revision: "health-v3",
+    },
     { headers },
   );
 }

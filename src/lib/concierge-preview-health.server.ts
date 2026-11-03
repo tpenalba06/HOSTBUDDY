@@ -19,7 +19,8 @@ export async function conciergePreviewHealth(request: Request) {
   let stage = "fetch";
   try {
     const response = await fetch("https://ollama.com/api/tags", {
-      redirect: "error",
+      redirect: "manual",
+      headers: { "cache-control": "no-store" },
       signal: AbortSignal.timeout(4000),
     });
     status = response.status;

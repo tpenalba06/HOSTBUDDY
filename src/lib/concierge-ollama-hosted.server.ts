@@ -58,7 +58,8 @@ export function createHostedOllamaTestDependencies(
         fetch: (destination, init) =>
           fetch(destination, {
             ...init,
-            redirect: "error",
+            // Do not follow redirects or forward the private TEST key.
+            redirect: "manual",
             signal: AbortSignal.timeout(5000),
           }),
       },

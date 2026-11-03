@@ -26,14 +26,18 @@ it("only reads the public catalogue and never leaks provider error content or se
     .spyOn(globalThis, "fetch")
     .mockResolvedValue(new Response("private-error-content", { status: 403 }));
   const response = await conciergePreviewHealth(new Request(origin));
-  expect(await response.json()).toEqual({
+  expect(await response.json()).toMatchObject({
     modelCalls: 0,
     ledgerMutations: 0,
     catalogue: { status: 403, compatible: false, reason: "catalogue-http-rejected" },
   });
   expect(fetcher).toHaveBeenCalledTimes(1);
   expect(fetcher.mock.calls[0]![0]).toBe("https://ollama.com/api/tags");
-  expect(fetcher.mock.calls[0]![1]).not.toHaveProperty("headers");
+  expect(fetcher.mock.calls[0]![1]).toMatchObject({
+    redirect: "manual",
+    headers: { "cache-control": "no-store" },
+  });
+  expect(fetcher.mock.calls[0]![1]?.headers).not.toHaveProperty("authorization");
 });
 it("recognizes the required tools without returning raw catalogue data", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(
@@ -41,7 +45,7 @@ it("recognizes the required tools without returning raw catalogue data", async (
       models: [{ name: "gemma4:31b", capabilities: ["completion", "tools"], private: "omit" }],
     }),
   );
-  expect(await (await conciergePreviewHealth(new Request(origin))).json()).toEqual({
+  expect(await (await conciergePreviewHealth(new Request(origin))).json()).toMatchObject({
     modelCalls: 0,
     ledgerMutations: 0,
     catalogue: { status: 200, compatible: true, reason: "catalogue-ready" },

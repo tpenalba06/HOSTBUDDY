@@ -9,6 +9,18 @@ import { runConciergeModel, modelContext } from "./concierge-model.server";
 import { localGuide } from "../../scripts/validation/nona-local-fixture";
 
 const key = "SYNTHETIC-NOT-A-REAL-OLLAMA-KEY";
+it("rejects catalogue redirects before reservation, never following or forwarding a key", async () => {
+  const s = setup();
+  s.fetcher.mockResolvedValueOnce(
+    new Response(null, { status: 302, headers: { location: "https://foreign.invalid" } }),
+  );
+  const d = createOllamaFreeDependencies(s.config, s.fetcher)!;
+  await expect(d.reserve(s.input, localGuide(), "a".repeat(64))).rejects.toThrow(
+    "ollama-unavailable",
+  );
+  expect(s.ledger.reserve).not.toHaveBeenCalled();
+  expect(s.fetcher).toHaveBeenCalledTimes(1);
+});
 const proposal = {
   intent: "greeting",
   dialogue: { text: "Coucou ! Qu'est-ce qui te ferait plaisir ?", questionFor: "none" },
@@ -138,7 +150,7 @@ it("makes one native tool proposal and measures tokens without claiming a measur
   expect(body).not.toHaveProperty("format");
   expect(body.tools).toHaveLength(1);
   expect(body.tools[0].function.name).toBe("submit_nona_proposal");
-  expect(init.redirect).toBe("error");
+  expect(init.redirect).toBe("manual");
   expect(await d.record!()).toMatchObject({
     state: "estimated",
     inputTokens: 2000,

@@ -166,9 +166,11 @@ export function createReviewedOllamaTransport(
       // Read-only public metadata, never a generation or a charge.
       const catalogue = await boundedJson(
         await fetcher("https://ollama.com/api/tags", {
-          redirect: "error",
+          // Workers reject the "error" redirect mode. Manual never forwards
+          // credentials; boundedJson rejects every 3xx before reading content.
+          redirect: "manual",
           signal: AbortSignal.timeout(4000),
-          cache: "no-store",
+          headers: { "cache-control": "no-store" },
         }),
         262144,
       );
@@ -237,7 +239,7 @@ export function createReviewedOllamaTransport(
             method: "POST",
             headers,
             body: wire,
-            redirect: "error",
+            redirect: "manual",
             signal: AbortSignal.timeout(12000),
           }),
         );

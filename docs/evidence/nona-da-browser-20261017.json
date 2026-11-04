@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-17T16:26:36.578Z",
+  "scope": "Local shared UI; demo data and simulated actions",
+  "externalRequestsBlocked": [],
+  "pageErrors": [],
+  "viewports": [
+    {
+      "width": 360,
+      "documentWidth": 360,
+      "gridColumns": 2,
+      "primarySections": 4,
+      "touchHeights": [
+        102,
+        102,
+        102,
+        102
+      ],
+      "servicesBelowSections": true,
+      "serviceCards": 4
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "gridColumns": 2,
+      "primarySections": 4,
+      "touchHeights": [
+        102,
+        102,
+        102,
+        102
+      ],
+      "servicesBelowSections": true,
+      "serviceCards": 4
+    },
+    {
+      "width": 430,
+      "documentWidth": 430,
+      "gridColumns": 2,
+      "primarySections": 4,
+      "touchHeights": [
+        102,
+        102,
+        102,
+        102
+      ],
+      "servicesBelowSections": true,
+      "serviceCards": 4
+    },
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "gridColumns": 2,
+      "primarySections": 4,
+      "touchHeights": [
+        64,
+        64,
+        64,
+        64
+      ],
+      "servicesBelowSections": true,
+      "serviceCards": 4
+    }
+  ],
+  "manager": {
+    "columns": 3,
+    "documentWidth": 1440,
+    "initialCards": 3
+  },
+  "simulatedReservationSubmitted": true,
+  "passed": true
+}

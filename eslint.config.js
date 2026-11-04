@@ -37,4 +37,10 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // Supabase regenerates this file using its own formatting. Keep semantic lint
+    // and TypeScript checks, without requiring manual edits to generated output.
+    files: ["src/integrations/supabase/types.ts"],
+    rules: { "prettier/prettier": "off" },
+  },
 );

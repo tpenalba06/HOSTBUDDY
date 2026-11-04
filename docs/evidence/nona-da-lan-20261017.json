@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-17T16:28:00.641Z",
+  "scope": "PC-to-own-LAN endpoint; physical phone not available to agent",
+  "authenticatedLanPreview": true,
+  "expiresAt": "2026-10-17T20:19:43.710Z",
+  "unauthenticatedAccessRejected": true,
+  "cloudModeRejectedBeforeProxy": true,
+  "crossOriginPostRejected": true,
+  "externalBrowserConnectionsBlockedByCsp": true,
+  "accountPaymentAndConfigurationRoutesAbsent": true,
+  "inferenceCallsDuringSecurityCheck": 0,
+  "passed": true
+}

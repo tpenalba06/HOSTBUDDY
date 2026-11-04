@@ -1,0 +1,20 @@
+{
+  "attempts": 10,
+  "accepted": 4,
+  "replaced": 6,
+  "locales": [
+    "fr",
+    "en",
+    "es",
+    "it",
+    "pt",
+    "de"
+  ],
+  "inputTokens": 22504,
+  "outputTokens": 864,
+  "estimatedUsd": 0.00275312,
+  "minProviderMs": 698,
+  "maxProviderMs": 1796,
+  "authenticatedIncludedDebitUsd": 0.0028,
+  "newPayments": 0
+}

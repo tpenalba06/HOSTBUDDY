@@ -1,6 +1,7 @@
 import { FIELD_DEFS } from "@/lib/import-engine/fields";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import { useI18n } from "@/lib/i18n";
+import { NonaWordmark } from "@/components/shared/NonaBrand";
 
 const BADGE_CLASS = {
   found: "bg-success-soft text-success",
@@ -58,11 +59,9 @@ export function ImportReview({
       </button>
 
       <div className="mt-2">
-        <p className="font-bold text-primary">HostBuddy</p>
-        <h1 className="mt-1 text-3xl font-semibold">Voici ce que nous avons préparé</h1>
-        <p className="mt-2 text-muted-foreground">
-          Vérifiez avant de créer le logement. Rien de manquant n’est inventé.
-        </p>
+        <NonaWordmark />
+        <h1 className="mt-1 text-3xl font-semibold">{t("importFlow.reviewTitle")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("importFlow.reviewHelp")}</p>
       </div>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-3">
@@ -79,24 +78,55 @@ export function ImportReview({
           <p className="text-2xl font-semibold">{missing}</p>
         </div>
       </div>
+      {!!value.analysis?.warnings.length && (
+        <p role="status" className="mt-4 rounded-xl bg-warning-soft p-3">
+          L’analyse assistée n’a pas pu être terminée. Le contenu détecté reste disponible
+          ci-dessous : vérifiez les informations avant de créer votre brouillon.
+        </p>
+      )}
 
       {essentialMissing > 0 && (
         <p className="mt-4 rounded-xl bg-warning-soft p-3 font-medium">
-          Il reste {essentialMissing} information{essentialMissing > 1 ? "s" : ""} importante
-          {essentialMissing > 1 ? "s" : ""} à compléter. Vous pourrez le faire juste après.
+          {t("importFlow.importantMissing").replace("{count}", String(essentialMissing))}
         </p>
       )}
 
       <label className="mt-6 block">
-        <span className="mb-1 block font-semibold">Nom du logement</span>
+        <span className="mb-1 block font-semibold">{t("importFlow.propertyName")}</span>
         <input
           className="field text-lg"
           value={value.propertyName ?? ""}
-          placeholder="Mon logement"
+          placeholder={t("importFlow.propertyPlaceholder")}
           onChange={(event) => updateName(event.target.value)}
         />
       </label>
 
+      {!!value.photos?.length && (
+        <section className="surface mt-6 p-4">
+          <h2 className="text-xl">{t("importFlow.photos")}</h2>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {value.photos.map((url) => (
+              <img
+                key={url}
+                src={url}
+                alt={t("importFlow.photoAlt")}
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                className="aspect-square w-full rounded-xl object-cover"
+              />
+            ))}
+          </div>
+          <label className="mt-4 flex items-center gap-3">
+            <input
+              type="checkbox"
+              className="h-6 w-6"
+              checked={value.photoRightsConfirmed ?? false}
+              onChange={(e) => onChange({ ...value, photoRightsConfirmed: e.target.checked })}
+            />
+            <span>{t("importFlow.photoRights")}</span>
+          </label>
+        </section>
+      )}
       <div className="mt-6 space-y-3">
         {FIELD_DEFS.map((def) => {
           const field = value.fields.find((item) => item.key === def.key);
@@ -106,7 +136,7 @@ export function ImportReview({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-semibold">
-                    {def.label}
+                    {t(`field.${def.key}`)}
                     {def.essential && (
                       <span className="text-sm text-muted-foreground">
                         {" "}
@@ -115,7 +145,9 @@ export function ImportReview({
                     )}
                   </p>
                   {field.rawValue && field.rawValue !== field.value && (
-                    <p className="mt-1 text-xs text-muted-foreground">Source conservée</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t("importFlow.sourceSaved")}
+                    </p>
                   )}
                 </div>
                 <span
@@ -127,17 +159,54 @@ export function ImportReview({
 
               <textarea
                 className="field mt-3 min-h-24"
+                disabled={busy}
                 value={field.value ?? ""}
-                placeholder={def.question}
+                placeholder={t("importFlow.fieldPrompt").replace("{label}", t(`field.${def.key}`))}
+                aria-label={t(`field.${def.key}`)}
                 onChange={(event) => updateField(def.key, event.target.value)}
               />
+              {field.status === "to_verify" &&
+                field.value?.trim() &&
+                !field.issues?.includes("conflicting_sources") && (
+                  <button
+                    type="button"
+                    className="mt-2 min-h-12 font-semibold text-primary underline"
+                    disabled={busy}
+                    onClick={() =>
+                      onChange({
+                        ...value,
+                        fields: value.fields.map((item) =>
+                          item.key === field.key
+                            ? { ...item, status: "found", confidence: 1, manuallyVerified: true }
+                            : item,
+                        ),
+                      })
+                    }
+                  >
+                    {t("importFlow.confirmField")}
+                  </button>
+                )}
+              {field.issues?.includes("conflicting_sources") && (
+                <p className="mt-2 text-sm text-warning">
+                  Plusieurs informations diffèrent dans la source. Choisissez la bonne valeur.
+                </p>
+              )}
 
               {field.rawValue && (
                 <details className="mt-2 text-sm text-muted-foreground">
                   <summary className="cursor-pointer py-2 font-medium">
-                    Voir le texte source
+                    {t("importFlow.sourceText")}
                   </summary>
                   <p className="whitespace-pre-line rounded-lg bg-muted p-3">{field.rawValue}</p>
+                  <p className="mt-2">
+                    Confiance indicative : {Math.round(field.confidence * 100)} % ·{" "}
+                    {field.evidence?.some((item) => item.method === "local-ai")
+                      ? "Classement assisté par l'IA locale"
+                      : "Extraction du document"}
+                  </p>
+                  {value.analysis?.sourceUrl && (
+                    <p className="mt-1 break-all">Source : {value.analysis.sourceUrl}</p>
+                  )}
                 </details>
               )}
             </article>
@@ -150,10 +219,10 @@ export function ImportReview({
         onClick={onConfirm}
         disabled={busy || !value.propertyName?.trim()}
       >
-        {busy ? "Création…" : "Créer ce logement"}
+        {busy ? t("importFlow.creating") : t("importFlow.create")}
       </button>
       <p className="mt-3 text-center text-sm text-muted-foreground">
-        Les champs corrigés ici sont considérés comme validés manuellement.
+        {t("importFlow.manualReview")}
       </p>
     </div>
   );

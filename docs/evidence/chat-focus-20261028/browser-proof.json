@@ -1,0 +1,22 @@
+{
+  "scope": "Real shared NonaConcierge component, local synthetic demo; no provider calls",
+  "before": {
+    "desktopTextareaWidth": 492,
+    "footerWidth": 492,
+    "centerHit": "DIV input-group-addon",
+    "focusAfterClick": "BODY"
+  },
+  "after": {
+    "desktopTextareaWidth": 492,
+    "footerWidth": 44,
+    "centerHit": "TEXTAREA",
+    "refocusAndAppend": true,
+    "mobileViewport": 390,
+    "mobileTextareaWidth": 362,
+    "mobileFooterWidth": 44,
+    "mobileRefocusAndAppend": true,
+    "horizontalOverflow": false,
+    "sendButtonGuidedDemoPassed": true
+  },
+  "lovablePreview": "Login required; not bypassed"
+}

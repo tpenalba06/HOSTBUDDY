@@ -1,0 +1,428 @@
+{
+  "executedAt": "2026-10-18T12:23:04.507Z",
+  "scope": "Real public network extraction only; no editor, database insertion or publishing tested.",
+  "results": [
+    {
+      "source": "sunver",
+      "url": "https://app.sunver.app/fr/guest/villa-dolce-vecchia",
+      "elapsedMs": 680,
+      "ok": true,
+      "name": "Villa Dolce Vecchia",
+      "fields": [
+        {
+          "key": "description",
+          "status": "to_verify",
+          "characters": 215
+        },
+        {
+          "key": "address",
+          "status": "to_verify",
+          "characters": 421
+        },
+        {
+          "key": "arrival",
+          "status": "to_verify",
+          "characters": 223
+        },
+        {
+          "key": "parking",
+          "status": "to_verify",
+          "characters": 25
+        },
+        {
+          "key": "rules",
+          "status": "to_verify",
+          "characters": 150
+        },
+        {
+          "key": "trash",
+          "status": "to_verify",
+          "characters": 87
+        },
+        {
+          "key": "recommendations",
+          "status": "to_verify",
+          "characters": 3451
+        },
+        {
+          "key": "departure",
+          "status": "to_verify",
+          "characters": 259
+        },
+        {
+          "key": "contact",
+          "status": "to_verify",
+          "characters": 20
+        },
+        {
+          "key": "emergency",
+          "status": "to_verify",
+          "characters": 185
+        }
+      ],
+      "photos": 1
+    },
+    {
+      "source": "sunver",
+      "url": "https://app.sunver.app/fr/guest/villa-oliviera-ajaccio",
+      "elapsedMs": 434,
+      "ok": true,
+      "name": "Casa Oliviera - Ajaccio",
+      "fields": [
+        {
+          "key": "description",
+          "status": "to_verify",
+          "characters": 214
+        },
+        {
+          "key": "address",
+          "status": "to_verify",
+          "characters": 560
+        },
+        {
+          "key": "arrival",
+          "status": "to_verify",
+          "characters": 223
+        },
+        {
+          "key": "parking",
+          "status": "to_verify",
+          "characters": 25
+        },
+        {
+          "key": "wifi",
+          "status": "to_verify",
+          "characters": 85
+        },
+        {
+          "key": "equipment",
+          "status": "to_verify",
+          "characters": 68
+        },
+        {
+          "key": "rules",
+          "status": "to_verify",
+          "characters": 150
+        },
+        {
+          "key": "trash",
+          "status": "to_verify",
+          "characters": 87
+        },
+        {
+          "key": "recommendations",
+          "status": "to_verify",
+          "characters": 168
+        },
+        {
+          "key": "departure",
+          "status": "to_verify",
+          "characters": 259
+        },
+        {
+          "key": "contact",
+          "status": "to_verify",
+          "characters": 275
+        },
+        {
+          "key": "emergency",
+          "status": "to_verify",
+          "characters": 211
+        }
+      ],
+      "photos": 1
+    },
+    {
+      "source": "airbnb",
+      "url": "https://www.airbnb.fr/rooms/1766783017368548898",
+      "elapsedMs": 1105,
+      "ok": true,
+      "name": "Votre petit cocon charentais",
+      "fields": [
+        {
+          "key": "description",
+          "status": "to_verify",
+          "characters": 808
+        },
+        {
+          "key": "address",
+          "status": "to_verify",
+          "characters": 9
+        },
+        {
+          "key": "arrival",
+          "status": "to_verify",
+          "characters": 183
+        },
+        {
+          "key": "access",
+          "status": "to_verify",
+          "characters": 65
+        },
+        {
+          "key": "parking",
+          "status": "to_verify",
+          "characters": 182
+        },
+        {
+          "key": "wifi",
+          "status": "to_verify",
+          "characters": 329
+        },
+        {
+          "key": "capacity",
+          "status": "to_verify",
+          "characters": 40
+        },
+        {
+          "key": "equipment",
+          "status": "to_verify",
+          "characters": 88
+        },
+        {
+          "key": "kitchen",
+          "status": "to_verify",
+          "characters": 158
+        },
+        {
+          "key": "rules",
+          "status": "to_verify",
+          "characters": 143
+        },
+        {
+          "key": "recommendations",
+          "status": "to_verify",
+          "characters": 185
+        },
+        {
+          "key": "departure",
+          "status": "to_verify",
+          "characters": 371
+        },
+        {
+          "key": "emergency",
+          "status": "to_verify",
+          "characters": 28
+        }
+      ],
+      "photos": 9
+    },
+    {
+      "source": "booking",
+      "url": "https://www.booking.com/hotel/fr/best-western-champlain-france-angleterre.fr.html",
+      "elapsedMs": 197,
+      "ok": false,
+      "reason": "blocked"
+    },
+    {
+      "source": "website",
+      "url": "https://www.hotelchamplain.com/fr/",
+      "elapsedMs": 365,
+      "ok": true,
+      "name": "Hôtel Champlain 4* · La Rochelle Centre Ville",
+      "fields": [
+        {
+          "key": "description",
+          "status": "to_verify",
+          "characters": 385
+        },
+        {
+          "key": "address",
+          "status": "to_verify",
+          "characters": 269
+        },
+        {
+          "key": "arrival",
+          "status": "to_verify",
+          "characters": 671
+        },
+        {
+          "key": "parking",
+          "status": "to_verify",
+          "characters": 357
+        },
+        {
+          "key": "capacity",
+          "status": "to_verify",
+          "characters": 11
+        },
+        {
+          "key": "equipment",
+          "status": "to_verify",
+          "characters": 444
+        },
+        {
+          "key": "rules",
+          "status": "to_verify",
+          "characters": 235
+        },
+        {
+          "key": "pool",
+          "status": "to_verify",
+          "characters": 102
+        },
+        {
+          "key": "recommendations",
+          "status": "to_verify",
+          "characters": 206
+        },
+        {
+          "key": "services",
+          "status": "to_verify",
+          "characters": 33
+        },
+        {
+          "key": "departure",
+          "status": "to_verify",
+          "characters": 387
+        },
+        {
+          "key": "contact",
+          "status": "to_verify",
+          "characters": 52
+        }
+      ],
+      "photos": 6
+    },
+    {
+      "source": "website",
+      "url": "https://www.hotelchamplain.com/en/services-hotel-la-rochelle/useful-information/",
+      "elapsedMs": 190,
+      "ok": true,
+      "name": "Hôtel Champlain 4★ · La Rochelle City Centre",
+      "fields": [
+        {
+          "key": "description",
+          "status": "to_verify",
+          "characters": 506
+        },
+        {
+          "key": "address",
+          "status": "to_verify",
+          "characters": 79
+        },
+        {
+          "key": "arrival",
+          "status": "to_verify",
+          "characters": 742
+        },
+        {
+          "key": "wifi",
+          "status": "to_verify",
+          "characters": 158
+        },
+        {
+          "key": "capacity",
+          "status": "to_verify",
+          "characters": 136
+        },
+        {
+          "key": "equipment",
+          "status": "to_verify",
+          "characters": 218
+        },
+        {
+          "key": "rules",
+          "status": "to_verify",
+          "characters": 200
+        },
+        {
+          "key": "recommendations",
+          "status": "to_verify",
+          "characters": 536
+        },
+        {
+          "key": "departure",
+          "status": "to_verify",
+          "characters": 5
+        },
+        {
+          "key": "contact",
+          "status": "to_verify",
+          "characters": 204
+        }
+      ],
+      "photos": 6
+    },
+    {
+      "source": "website",
+      "url": "https://www.le-manoir-la-rochelle.fr/chambres-hotel-la-rochelle/",
+      "elapsedMs": 2042,
+      "ok": true,
+      "name": "Nos chambres et suites familiales à La Rochelle - Le Manoir Hôtel",
+      "fields": [
+        {
+          "key": "description",
+          "status": "to_verify",
+          "characters": 140
+        },
+        {
+          "key": "address",
+          "status": "to_verify",
+          "characters": 24
+        },
+        {
+          "key": "arrival",
+          "status": "to_verify",
+          "characters": 103
+        },
+        {
+          "key": "parking",
+          "status": "to_verify",
+          "characters": 63
+        },
+        {
+          "key": "wifi",
+          "status": "to_verify",
+          "characters": 1743
+        },
+        {
+          "key": "capacity",
+          "status": "to_verify",
+          "characters": 754
+        },
+        {
+          "key": "equipment",
+          "status": "to_verify",
+          "characters": 1315
+        },
+        {
+          "key": "kitchen",
+          "status": "to_verify",
+          "characters": 562
+        },
+        {
+          "key": "rules",
+          "status": "to_verify",
+          "characters": 1135
+        },
+        {
+          "key": "pool",
+          "status": "to_verify",
+          "characters": 213
+        },
+        {
+          "key": "recommendations",
+          "status": "to_verify",
+          "characters": 402
+        },
+        {
+          "key": "services",
+          "status": "to_verify",
+          "characters": 288
+        },
+        {
+          "key": "departure",
+          "status": "to_verify",
+          "characters": 52
+        },
+        {
+          "key": "contact",
+          "status": "to_verify",
+          "characters": 14
+        }
+      ],
+      "photos": 1
+    }
+  ]
+}

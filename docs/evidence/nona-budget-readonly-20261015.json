@@ -1,0 +1,11 @@
+{
+  "runId": 38673009523,
+  "workflowConclusion": "success",
+  "project_ref": "mhhtnqfdkyudwyqlmnce",
+  "read_only": true,
+  "objects": {
+    "authorization": false,
+    "usage": false,
+    "reservation_rpc": false
+  }
+}

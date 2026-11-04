@@ -1,0 +1,8 @@
+{
+  "schema": "nona.commercial-backup-approval.v1",
+  "authorized": false,
+  "project_ref": "jzbjpaucgckggumhowns",
+  "origin": "https://host-buddy-concierge.lovable.app",
+  "destination_repository": "tpenalba06/NONA-OPS",
+  "scope": "read-only-database-auth-and-guide-media-export"
+}

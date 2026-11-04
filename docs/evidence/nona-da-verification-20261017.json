@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-10-17T16:26:52.679Z",
+  "reference": "CHARTE-NONA.md, reference A, received 2026-10-17; B explicitly excluded",
+  "branch": "design/nona-da-20261017",
+  "preservedCheckpointCommit": "95d75d2",
+  "officialAssetsByteIdentical": {
+    "logo": true,
+    "mascot": true,
+    "compositeA": true
+  },
+  "palette": {
+    "cream": "#FCF9F2",
+    "burgundy": "#780E2F",
+    "cocoa": "#210804",
+    "peach": "#F8E3D4",
+    "guideBorder": "rgba(33,8,4,0.8)"
+  },
+  "fonts": {
+    "heading": "Lora",
+    "ui": "Nunito Sans",
+    "localWoff2Faces": 10,
+    "licenses": "SIL OFL from official google/fonts repository",
+    "runtimeExternalFontRequests": 0
+  },
+  "checks": {
+    "vitestPassed": 461,
+    "nodePassed": 19,
+    "skipped": 3,
+    "failed": 0,
+    "additionalChatTestsPassed": 20,
+    "typecheck": true,
+    "lintErrors": 0,
+    "preExistingWarnings": 23,
+    "fullBuild": true,
+    "localBuild": true,
+    "ssrSmoke": true,
+    "migrations": 26
+  },
+  "scope": {
+    "authenticatedRealTenantMutations": false,
+    "remotePermissionsChanged": false,
+    "stripeChanged": false,
+    "importEngineChanged": false,
+    "aiEngineChanged": false,
+    "aiPresentationChanged": true,
+    "livePayments": 0,
+    "paidInferenceCalls": 0,
+    "lovableServiceCalls": 0,
+    "productionDeployment": false
+  },
+  "browserEvidence": "nona-da-browser-20261017.json",
+  "lanEvidence": "nona-da-lan-20261017.json",
+  "realInferenceEvidence": "nona-da-phone-browser-20261017.json",
+  "importEvidence": "nona-compiled-import-20261017.json",
+  "remaining": [
+    "Official waving animation and vector/transparent masters not supplied",
+    "Actual demo names/photos/statuses differ from illustration",
+    "30-day restorable trash unavailable: tab disabled",
+    "Physical phone not directly available for testing; LAN mobile Chrome tested"
+  ],
+  "comparison": "Same-viewport before/after screenshots; qualitative layout and typography comparison, no invented pixel score"
+}

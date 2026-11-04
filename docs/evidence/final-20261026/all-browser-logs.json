@@ -1,0 +1,182 @@
+[
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"d43c2483-20ef-4094-9234-7f6879dae305\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:54:42.241Z",
+    "url": "https://nona-concierge-test-20261020-lsz2i7ggk.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"88534950-f477-4b93-ac1b-c3857c4e64ae\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2055,\"outputTokens\":84,\"costUsd\":0.0003213,\"latencyMs\":676}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:56:06.776Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"e872fe72-9285-4bf0-8a4a-8de91635f056\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2170,\"outputTokens\":98,\"costUsd\":0.00021916,\"latencyMs\":683}},\"nextStep\":\"time\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:56:45.786Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"7d66c6eb-b7ae-4362-bf2a-b391234577cf\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2231,\"outputTokens\":82,\"costUsd\":0.0002213,\"latencyMs\":695}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:56:54.017Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"8087212f-c0c9-4aef-b166-e5372852bcc9\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:56:54.292Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"35e1de5a-41b8-4cb6-b354-6f1eee1437f7\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:56:54.612Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"a8336c1d-3a38-418a-ac05-e2a900aac85a\",\"locale\":\"en\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2354,\"outputTokens\":61,\"costUsd\":0.00027908,\"latencyMs\":585}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:07.059Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f9b7554d-b44a-4c7f-820b-a5fc9322468a\",\"locale\":\"en\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:07.204Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"399e8bed-4271-4da4-b2d9-5aaedbe3b0ee\",\"locale\":\"es\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:27.687Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f784b976-b864-4a46-b98a-229aa2ee60e8\",\"locale\":\"es\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2422,\"outputTokens\":73,\"costUsd\":0.0002934,\"latencyMs\":741}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:29.627Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"a468d53c-c9e7-40ff-a2f1-94c62281b19a\",\"locale\":\"es\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:29.850Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"01b5cec9-f928-451b-874e-dd723fc95319\",\"locale\":\"es\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:29.992Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"71b05f93-aefb-4862-baf0-da6e02a83d7f\",\"locale\":\"de\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:30.127Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"4c8507c1-d7fc-4b64-943f-35d9feb25d9e\",\"locale\":\"de\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:30.342Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"9c9ff592-4955-4545-910c-7c2f1b6df5d7\",\"locale\":\"de\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2373,\"outputTokens\":86,\"costUsd\":0.00029174,\"latencyMs\":682}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:40.571Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"0115400b-68ea-45d2-bcee-68eaa71da7ab\",\"locale\":\"it\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:40.994Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"1cbbb596-65e6-45ca-9a85-2bf69c56b6f6\",\"locale\":\"it\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2453,\"outputTokens\":88,\"costUsd\":0.00030374,\"latencyMs\":809}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:42.976Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"b4ee8777-76e2-4cca-a052-737dd7177375\",\"locale\":\"it\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:43.253Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"cb7890e3-2a67-42c0-a68a-a720bc74e00b\",\"locale\":\"pt\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:43.479Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"86140317-4a27-4f73-843c-8f9baa60468e\",\"locale\":\"pt\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2452,\"outputTokens\":82,\"costUsd\":0.0003012,\"latencyMs\":712}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:45.165Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f35e744c-0cdc-4eb3-8b64-4639160a3041\",\"locale\":\"pt\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:45.538Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"639379f9-b57a-41d0-b474-88ebd43e4018\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:45.745Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"2d4c2ec9-c638-4fbb-b296-8e9aecf6802f\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2480,\"outputTokens\":90,\"costUsd\":0.00025936,\"latencyMs\":686}},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:47.435Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"a237a1f6-8416-42de-8340-ad05a6f0de23\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:47.563Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"1bea0e22-8594-4a75-80ba-69f982d7763f\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2484,\"outputTokens\":94,\"costUsd\":0.00026152,\"latencyMs\":796}},\"nextStep\":\"time\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:57:59.905Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"682ba0e6-4d01-4ca4-9ab4-9b6e573b4991\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"option\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:58:06.116Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"988ea888-dc21-4cad-870b-ba4f67d25c91\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":{\"totalCents\":7500,\"revision\":\"2026-10-01T00:00:00.000Z\"}}",
+    "timestamp": "2026-10-25T17:58:12.167Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"a2fb1f25-dfbb-41a2-be85-aa256e8e4a2d\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-25T17:58:12.445Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"0f728749-c076-4a14-b615-254459897e6d\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":{\"totalCents\":7500,\"revision\":\"2026-10-01T00:00:00.000Z\"}}",
+    "timestamp": "2026-10-25T17:58:12.682Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"61450f61-edfb-4b60-a7a3-944db38dd666\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-25T17:59:25.191Z",
+    "url": "https://nona-concierge-test-20261020-9k085ofis.vercel.app/assets/index-COtGCJgn.js"
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-09",
+  "base_head": "64b703c5b5e53ad1b772141c69f2c7ceef44ab2b",
+  "scope": "isolated TEST media/config backup and local alert transport, not recurring service or human receipt",
+  "backup": {
+    "status": "PASS",
+    "objects": 12,
+    "bytes": 4352466,
+    "authenticated_encryption": true,
+    "scope": "Storage bytes/buckets, public Auth settings, observed configuration; not a DB/Auth credentials dump",
+    "duration_seconds": 339.62,
+    "encrypted_sha256": "8af4335c2693fd035a520e2bd50402f9199699a98b38cbe4257abd79f61e76c6"
+  },
+  "written_bundle_verification": {
+    "objects": 12,
+    "bytes": 4352466,
+    "authenticated_encryption": true,
+    "scope": "Storage bytes/buckets, public Auth settings, observed configuration; not a DB/Auth credentials dump",
+    "atomic_private_write_verified": true,
+    "status": "PASS"
+  },
+  "alert": {
+    "status": "PASS",
+    "source": "actual application operational emitter, synthetic server_unhandled_error event",
+    "receiver": "isolated local HTTP TEST, authenticated bearer, actual 204 acknowledgment",
+    "safe_payload": {
+      "schema": "hostbuddy.operations.v1",
+      "event": "server_unhandled_error",
+      "level": "error",
+      "at": "2026-10-09T18:59:01.563Z"
+    },
+    "payload_minimization": true,
+    "wrong_token_refused": true,
+    "email_sent": false,
+    "human_or_hosted_alert_receipt_validated": false,
+    "limitation": "No external recipient configured; this is transport validation, not a real human notification"
+  },
+  "unit_tests": {
+    "passed": 5,
+    "total": 5
+  },
+  "daily_schedule_enabled": false,
+  "human_notification_receipt_validated": false,
+  "source_modified": false,
+  "production_modified": false,
+  "lovable_prompts": 0
+}

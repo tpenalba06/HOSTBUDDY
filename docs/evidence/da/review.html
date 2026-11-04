@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="fr">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  /><title>NONA — Intégration de la charte</title>
+  <style>
+    @font-face {
+      font-family: Nunito;
+      src: url("/nona/fonts/nunito-sans-400-latin.woff2");
+    }
+    @font-face {
+      font-family: Lora;
+      src: url("/nona/fonts/lora-500-latin.woff2");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #fcf9f2;
+      color: #210804;
+      font:
+        16px/1.6 Nunito,
+        system-ui;
+    }
+    main {
+      max-width: 1320px;
+      margin: auto;
+      padding: 32px 24px 80px;
+    }
+    h1,
+    h2 {
+      font-family: Lora, Georgia, serif;
+      font-weight: 500;
+      color: #780e2f;
+    }
+    h1 {
+      font-size: 40px;
+      margin: 0 0 12px;
+    }
+    h2 {
+      font-size: 27px;
+    }
+    a {
+      color: #780e2f;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 24px 0;
+    }
+    nav a,
+    button {
+      min-height: 44px;
+      padding: 12px 18px;
+      border: 1px solid #780e2f;
+      border-radius: 12px;
+      text-decoration: none;
+      background: transparent;
+      color: #780e2f;
+      font: inherit;
+      cursor: pointer;
+    }
+    nav a:first-child {
+      background: #780e2f;
+      color: #fcf9f2;
+    }
+    button[aria-pressed="true"] {
+      background: #780e2f;
+      color: #fcf9f2;
+    }
+    .note {
+      max-width: 850px;
+      color: #68534b;
+    }
+    .phone {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      border: 1px solid #e5d9cf;
+      padding: 16px;
+      border-radius: 16px;
+    }
+    .phone img {
+      width: 180px;
+      height: 180px;
+    }
+    fieldset {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border: 0;
+      padding: 0;
+      margin: 24px 0;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    figure {
+      margin: 0;
+      min-width: 0;
+    }
+    figcaption {
+      padding: 12px 0;
+      font-weight: 600;
+      color: #780e2f;
+    }
+    .frame {
+      max-height: 760px;
+      overflow: auto;
+      border: 1px solid #d4c8bf;
+      border-radius: 16px;
+      background: #fff;
+    }
+    .frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .reference {
+      width: 100%;
+      border-radius: 16px;
+    }
+    li {
+      margin: 8px 0;
+    }
+    :focus-visible {
+      outline: 3px solid #780e2f;
+      outline-offset: 4px;
+    }
+    @media (max-width: 650px) {
+      main {
+        padding: 24px 16px;
+      }
+      .comparison {
+        gap: 10px;
+      }
+      h1 {
+        font-size: 30px;
+      }
+      .phone {
+        flex-wrap: wrap;
+      }
+      .phone img {
+        width: 150px;
+        height: 150px;
+      }
+    }
+  </style>
+  <main>
+    <h1>NONA, ta nouvelle interface</h1>
+    <p>
+      La charte du 17 octobre et sa référence A sont appliquées aux composants existants. Les
+      données et actions de cette prévisualisation restent celles de la recette locale.
+    </p>
+    <nav>
+      <a href="http://127.0.0.1:4182/nona">Guide avec la vraie IA locale</a
+      ><a href="/demo?preview=manager">Gestionnaire</a
+      ><a href="/demo?preview=guide">Guide de démonstration</a>
+    </nav>
+    <section class="phone">
+      <img
+        src="/design-phone-qr.svg"
+        alt="Code à scanner pour ouvrir la recette sur ton téléphone"
+      />
+      <div>
+        <h2>Sur ton téléphone</h2>
+        <p>Connecte-le au même Wi-Fi que ce PC et scanne le code.</p>
+        <p class="note">
+          Accès privé temporaire de quatre heures. Données fictives, IA sur ce PC, réservations
+          simulées. Le téléphone physique n’a pas été testé par l’agent.
+        </p>
+      </div>
+    </section>
+    <h2>Avant / après, dans le navigateur</h2>
+    <p class="note">
+      Captures réelles aux mêmes tailles de fenêtre. Compare la structure, les couleurs, la
+      typographie, les marges et les proportions. Aucun score pixel à pixel : la référence illustrée
+      et les données Villa Mare ont des contenus différents. Le gestionnaire avant était présenté
+      dans la démo encadrée ; la version après utilise le même composant en plein écran.
+    </p>
+    <fieldset aria-label="Écran comparé">
+      <button data-screen="guide-390" aria-pressed="true">Guide 390 px</button
+      ><button data-screen="guide-360">360 px</button><button data-screen="guide-430">430 px</button
+      ><button data-screen="guide-1440">Guide desktop</button
+      ><button data-screen="manager-1440">Gestionnaire</button
+      ><button data-screen="chat-390">Chat mobile</button>
+    </fieldset>
+    <div class="comparison">
+      <figure>
+        <figcaption>Avant</figcaption>
+        <div class="frame">
+          <img
+            id="before"
+            src="/design-evidence/before/guide-390.png"
+            alt="NONA avant l’intégration"
+          />
+        </div>
+      </figure>
+      <figure>
+        <figcaption>Après</figcaption>
+        <div class="frame">
+          <img
+            id="after"
+            src="/design-evidence/after/guide-390.png"
+            alt="NONA après l’intégration"
+          />
+        </div>
+      </figure>
+    </div>
+    <h2>La référence officielle A</h2>
+    <img
+      class="reference"
+      src="/nona/official-da.png"
+      alt="Planche officielle NONA : gestionnaire, guide desktop et guide mobile"
+    />
+    <h2>Écarts encore explicites</h2>
+    <ul>
+      <li>
+        Les photos, noms, services, prix et statuts restent les vraies données de démonstration
+        existantes. Les logements de la planche n’ont pas été inventés dans le catalogue.
+      </li>
+      <li>
+        La charte A conserve les cartes « Découvrir ». Le catalogue complet et le formulaire
+        conservent les montants et les réservations existantes.
+      </li>
+      <li>
+        Logo et personnage raster officiels intégrés. Les fichiers vectoriels et l’animation de
+        coucou finale ne sont pas fournis ; aucune animation de remplacement n’est générée.
+      </li>
+      <li>
+        La corbeille restaurable sur 30 jours n’existe pas dans le backend actuel : son onglet reste
+        désactivé, sans promesse de restauration.
+      </li>
+    </ul>
+    <p class="note">
+      Aucun déploiement, paiement réel, appel IA facturable ou utilisation de Lovable. Le modèle
+      local reste une recette, distincte de la validation de Haiku en production.
+    </p>
+  </main>
+  <script>
+    document.querySelectorAll("[data-screen]").forEach((button) =>
+      button.addEventListener("click", () => {
+        document
+          .querySelectorAll("[data-screen]")
+          .forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        for (const phase of ["before", "after"])
+          document.getElementById(phase).src =
+            "/design-evidence/" + phase + "/" + button.dataset.screen + ".png";
+      }),
+    );
+  </script>
+</html>

@@ -1,0 +1,54 @@
+# INERT TEMPLATE. Not installed in .github/workflows of the public app repository.
+# Intended for an approved, PRIVATE operations repository, default branch ops.
+# Before enabling: verify free allowance and a hard $0 Actions spending budget.
+name: Nona isolated TEST media backup
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: isolated-test-media-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    if: github.event.repository.private == true && vars.NONA_ISOLATED_OPS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: nona-isolated-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r scripts/ops/requirements.txt
+      - name: Prepare private TEST inputs
+        env:
+          NONA_TEST_API_KEY: ${{ secrets.NONA_TEST_API_KEY }}
+          NONA_TEST_BACKUP_KEY_HEX: ${{ secrets.NONA_TEST_BACKUP_KEY_HEX }}
+          NONA_TEST_CONFIGURATION_JSON: ${{ vars.NONA_TEST_CONFIGURATION_JSON }}
+        run: |
+          python - <<'PY'
+          import os, pathlib
+          private = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nona-test-private'
+          private.mkdir(mode=0o700)
+          for name, variable in [('api.key','NONA_TEST_API_KEY'),('backup.key','NONA_TEST_BACKUP_KEY_HEX'),('configuration.json','NONA_TEST_CONFIGURATION_JSON')]:
+              value = os.environ[variable]
+              if not value: raise SystemExit('Missing approved TEST input')
+              path = private / name
+              path.write_text(value)
+              path.chmod(0o600)
+          PY
+      - name: Read-only encrypted backup and verification
+        run: |
+          python scripts/ops/storage-backup.py backup --expected-ref mhhtnqfdkyudwyqlmnce --api-key-file "$RUNNER_TEMP/nona-test-private/api.key" --key-file "$RUNNER_TEMP/nona-test-private/backup.key" --configuration "$RUNNER_TEMP/nona-test-private/configuration.json" --output "$RUNNER_TEMP/nona-test-private/storage-config.nonaenc" --max-bytes 67108864
+          python scripts/ops/storage-backup.py verify --expected-ref mhhtnqfdkyudwyqlmnce --key-file "$RUNNER_TEMP/nona-test-private/backup.key" --output "$RUNNER_TEMP/nona-test-private/storage-config.nonaenc"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isolated-test-storage-config-${{ github.run_id }}
+          path: ${{ runner.temp }}/nona-test-private/storage-config.nonaenc
+          retention-days: 7
+          if-no-files-found: error
+# Only the encrypted bundle is archived. No API/encryption key/config plaintext.
+# No pull_request / push execution and no production, DB or financial endpoint.

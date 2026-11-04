@@ -1,0 +1,14 @@
+{
+  "guide": 200,
+  "chat": 200,
+  "mode": "guided",
+  "modelCalls": 0,
+  "foreignOrigin": 403,
+  "order": 405,
+  "production": 403,
+  "outboundAttempts": 0,
+  "passed": true,
+  "packageFiles": 58,
+  "privateKeyPatternHits": [],
+  "clientServerCredentialNames": []
+}

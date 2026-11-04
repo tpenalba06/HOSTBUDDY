@@ -1,0 +1,52 @@
+{
+  "schema": "nona.services-interruption-recovery.v1",
+  "date": "2026-10-14",
+  "branch": "feat/guest-guide-v2-lot1",
+  "recovered_source_sha": "b8ac0af65318d7bae39a6e5246a051b6da9b0a0b",
+  "ops_sha": "0a47f6be2832ea4104dc71b2a61cebe8223137b7",
+  "isolated_test": {
+    "run_id": 38495717023,
+    "job_id": 115630901251,
+    "url": "https://github.com/tpenalba06/NONA-OPS/actions/runs/38495717023",
+    "started_at": "2026-10-14T01:26:18Z",
+    "completed_at": "2026-10-14T01:26:55Z",
+    "conclusion": "success",
+    "source_sha_verified_in_job_log": true,
+    "schema": "nona.service-catalog-test.v1",
+    "project_ref": "mhhtnqfdkyudwyqlmnce",
+    "status": "PASS",
+    "migration_applied": true,
+    "fixtures_rolled_back": true,
+    "quote_dedup_receipt_tenant_checks": true,
+    "stripe_payment_executed": false
+  },
+  "local_validation": {
+    "source_files_equal_to_git_blobs": 507,
+    "targeted_vitest_files": [
+      "src/lib/service-booking.test.ts",
+      "src/components/guest/service-booking-flow.test.tsx",
+      "src/lib/integrations/service-receipt-checkout.server.test.ts"
+    ],
+    "tests_passed": 6,
+    "tests_total": 6,
+    "lint_errors": 0,
+    "lint_existing_warnings": 16,
+    "typecheck_exit_code": 0,
+    "build_exit_code": 0,
+    "migration_inventory_verified": 24
+  },
+  "recovery_actions": {
+    "test_migration_reapplied": false,
+    "remote_database_mutated": false,
+    "financial_rls_offline_mobile_suites_rerun": false,
+    "application_files_changed": false,
+    "lovable_generation_used": false,
+    "production_deployed": false,
+    "stripe_live_used": false
+  },
+  "limitations": [
+    "Original remote Work checkout/process state is not available on this local executor; unpublished remote files cannot be asserted absent.",
+    "The new booking-receipt Checkout entry is verified with a Stripe stub, not a newly executed Stripe TEST payment.",
+    "Commercial migration remains unapplied by this recovery and requires explicit authorization."
+  ]
+}

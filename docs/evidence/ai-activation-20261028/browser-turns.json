@@ -1,0 +1,164 @@
+[
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"b47182d8-5658-4725-8861-b537256376fb\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2144,\"outputTokens\":68,\"costUsd\":0.00024384,\"latencyMs\":1527}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:06:12.280Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"be66c994-7a20-4457-81be-84eba94f7dd2\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2214,\"outputTokens\":88,\"costUsd\":0.00021268,\"latencyMs\":1225}},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:06:32.958Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"99be5db1-3dde-4588-a01e-0704f45fad5f\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2312,\"outputTokens\":84,\"costUsd\":0.0002248,\"latencyMs\":1186}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:06:52.141Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"7c8651eb-5eff-40ca-841f-e46e22c8dc06\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:07:13.280Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"bd49fe2a-e36b-4078-b13a-bccf75d185ed\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:07:21.099Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f4ea3bb3-0d2c-446a-a861-fdb8757d7fcf\",\"locale\":\"en\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:07:27.606Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"d67d4629-317f-4bfa-9d2a-8ce3c3287a43\",\"locale\":\"en\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2447,\"outputTokens\":63,\"costUsd\":0.00028426,\"latencyMs\":948}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:07:36.316Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"978d4db0-3dd8-4d6d-9f6b-9943d0ad78da\",\"locale\":\"es\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:07:56.808Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"b14b4210-e9fe-4d19-b980-4e728197bb4f\",\"locale\":\"es\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:07:56.821Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"421b7232-6aaf-426e-ad71-349407250ad2\",\"locale\":\"es\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2526,\"outputTokens\":65,\"costUsd\":0.00029612,\"latencyMs\":1311}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:05.771Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"61ae67d2-e4b3-4e11-a6cb-6bb22720eac3\",\"locale\":\"it\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:25.847Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"0dc759ad-4254-44fe-81ea-17e2cbad4673\",\"locale\":\"it\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:25.876Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f98ab5c0-9185-401d-a764-f65c7bd071a8\",\"locale\":\"it\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2521,\"outputTokens\":87,\"costUsd\":0.00030422,\"latencyMs\":1286}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:35.508Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"a048a1d5-35b7-43e0-95a1-1c238ab8e8eb\",\"locale\":\"pt\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:45.490Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"0823c244-2b1c-4281-b039-a85f506891cf\",\"locale\":\"pt\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:45.507Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"5b1a64d9-84cd-4db3-a090-c89cd29b0958\",\"locale\":\"pt\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2474,\"outputTokens\":69,\"costUsd\":0.00029044,\"latencyMs\":1106}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:08:57.181Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"6279bd14-cbb7-4198-aa48-2b0f152144c1\",\"locale\":\"de\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:09:04.689Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f442f5e5-2440-4699-bf36-034c147e0e6c\",\"locale\":\"de\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:09:04.710Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"062ef6d1-eea2-4bee-b158-7b63635a7d1a\",\"locale\":\"de\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2464,\"outputTokens\":68,\"costUsd\":0.00028864,\"latencyMs\":1134}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:09:43.680Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"84603560-feee-45a3-9d70-0ab358c6262a\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:09:58.917Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"c128176b-ba7b-4eb1-bd92-c26df9448358\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:09:58.983Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"f9b7d69e-3fca-4343-8adb-72e959d8db09\",\"locale\":\"fr\",\"mode\":\"ai\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2566,\"outputTokens\":97,\"costUsd\":0.00026556,\"latencyMs\":1537}},\"nextStep\":\"time\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:10:05.945Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"5ab08f5c-f3ea-4b6d-9680-d4b402f3e087\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2615,\"outputTokens\":122,\"costUsd\":0.00028242,\"latencyMs\":1520}},\"nextStep\":\"option\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:10:37.590Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"911eff2f-3122-46d8-b637-8e571b60d6cc\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2677,\"outputTokens\":185,\"costUsd\":0.0003163,\"latencyMs\":1841}},\"nextStep\":\"ready\",\"quote\":{\"totalCents\":7500,\"revision\":\"2026-10-01T00:00:00.000Z\"}}",
+    "timestamp": "2026-10-28T20:11:15.542Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"4cc44f3b-771e-4b7e-91c3-ea49d14fe168\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"date\",\"quote\":null}",
+    "timestamp": "2026-10-28T20:11:15.566Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"11cc0be1-9547-4c43-8571-b629f9f2c3b1\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":0,\"estimatedCostMicros\":0},\"nextStep\":\"ready\",\"quote\":{\"totalCents\":7500,\"revision\":\"2026-10-01T00:00:00.000Z\"}}",
+    "timestamp": "2026-10-28T20:11:15.572Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  },
+  {
+    "level": "info",
+    "message": "NONA_TEST_TURN {\"requestId\":\"1950e3ab-dc62-43bf-8e56-58b2148441eb\",\"locale\":\"fr\",\"mode\":\"guided\",\"usage\":{\"modelCalls\":1,\"estimatedCostMicros\":20000,\"metering\":{\"state\":\"estimated\",\"inputTokens\":2646,\"outputTokens\":84,\"costUsd\":0.00027156,\"latencyMs\":5251}},\"nextStep\":null,\"quote\":null}",
+    "timestamp": "2026-10-28T20:11:52.510Z",
+    "url": "http://127.0.0.1:4295/assets/index-BdYvbXMI.js"
+  }
+]

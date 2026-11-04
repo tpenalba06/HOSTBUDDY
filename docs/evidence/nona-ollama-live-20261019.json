@@ -1,0 +1,969 @@
+{
+  "checkedAt": "2026-10-19T18:32:19.790Z",
+  "provider": "ollama-direct",
+  "model": "gemma4:31b",
+  "funding": "Free included usage",
+  "newPayments": 0,
+  "accountBefore": {
+    "plan": "Free",
+    "freeUsageRemainingPercent": 100,
+    "purchasedBalanceUsd": 0,
+    "autoReloadEnabled": false
+  },
+  "conversations": [
+    {
+      "locale": "fr",
+      "model": "gemma4:31b",
+      "promptVersion": "initial",
+      "turns": [
+        {
+          "visitor": "Coucou Nona, on est enfin en vacances !",
+          "reply": "Coucou ! Quel bonheur d'être enfin là. Je suis ravie de t'accueillir, dis-moi tout : comment puis-je rendre ton séjour encore plus magique ?",
+          "mode": "ai",
+          "nextStep": null,
+          "quote": null,
+          "facts": [],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1463,
+            "cachedInputTokens": 0,
+            "outputTokens": 72,
+            "latencyMs": 956,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00023362,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Après huit heures de route, on voudrait surtout se détendre. Tu aurais une idée ?",
+          "reply": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.",
+          "mode": "guided",
+          "nextStep": null,
+          "quote": null,
+          "facts": [],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1547,
+            "cachedInputTokens": 928,
+            "outputTokens": 97,
+            "latencyMs": 1790,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00017186,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Coucou Nona, on est enfin en vacances !",
+          "reply": "Coucou ! Quel bonheur d'être enfin là. Je suis ravie de t'accueillir, installe-toi bien et dis-moi si je peux faire quoi que ce soit pour rendre ton séjour encore plus doux.",
+          "mode": "ai",
+          "nextStep": null,
+          "quote": null,
+          "facts": [],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1521,
+            "cachedInputTokens": 576,
+            "outputTokens": 80,
+            "latencyMs": 805,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0001931,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "greeting",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {},
+            "dialogue": {
+              "text": "Coucou ! Quel bonheur d'être enfin là. Je suis ravie de t'accueillir, installe-toi bien et dis-moi si je peux faire quoi que ce soit pour rendre ton séjour encore plus doux.",
+              "questionFor": "none"
+            }
+          }
+        },
+        {
+          "visitor": "Après huit heures de route, on voudrait surtout se détendre. Tu aurais une idée ?",
+          "reply": "Oh, je comprends tellement, tout ce trajet fatigue ! Un petit massage au bord de la piscine serait parfait pour dénouer tout ça. Quel jour te plairait ?",
+          "mode": "ai",
+          "nextStep": "date",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "ms",
+              "name": "Massage à domicile",
+              "price": 90
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1613,
+            "cachedInputTokens": 992,
+            "outputTokens": 83,
+            "latencyMs": 908,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00016974,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [
+              "ms"
+            ],
+            "factKeys": [],
+            "draft": {},
+            "tonalHint": "massage",
+            "dialogue": {
+              "text": "Oh, je comprends tellement, tout ce trajet fatigue ! Un petit massage au bord de la piscine serait parfait pour dénouer tout ça. Quel jour te plairait ?",
+              "questionFor": "date"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Tu peux nous préparer un petit-déjeuner pour demain matin ?",
+          "reply": "Quel bonheur de commencer la journée avec un bon petit-déjeuner ! Pour combien de personnes dois-je préparer cela ?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Petit-déjeuner",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1523,
+            "cachedInputTokens": 992,
+            "outputTokens": 89,
+            "latencyMs": 1717,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00015954,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Quel bonheur de commencer la journée avec un bon petit-déjeuner ! Pour combien de personnes dois-je préparer cela ?",
+              "questionFor": "quantity"
+            }
+          }
+        },
+        {
+          "visitor": "Pour trois personnes",
+          "reply": "Trois gourmands, c'est noté ! À quelle heure souhaites-tu être servi demain ?",
+          "mode": "ai",
+          "nextStep": "time",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Petit-déjeuner",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1594,
+            "cachedInputTokens": 992,
+            "outputTokens": 92,
+            "latencyMs": 1691,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00017068,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "quantity": 3,
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Trois gourmands, c'est noté ! À quelle heure souhaites-tu être servi demain ?",
+              "questionFor": "time"
+            }
+          }
+        },
+        {
+          "visitor": "Vers neuf heures",
+          "reply": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.",
+          "mode": "guided",
+          "nextStep": null,
+          "quote": null,
+          "facts": [],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1642,
+            "cachedInputTokens": 992,
+            "outputTokens": 108,
+            "latencyMs": 892,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0001838,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "quantity": 3,
+              "date": "2026-10-20",
+              "time": "09:00"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "C'est parfait, je prépare tout ça. Pour accompagner vos boissons, tu préfères un petit-déjeuner classique ou végétarien ?",
+              "questionFor": "option"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Quel est le Wi-Fi ?",
+          "reply": "Je m'occupe de tout pour que tu puisses rester connecté tranquillement. Regarde juste la fiche juste ici !",
+          "mode": "ai",
+          "nextStep": null,
+          "quote": null,
+          "facts": [
+            {
+              "title": "Wi-Fi",
+              "text": "Réseau : VillaMare_5G\nMot de passe : soleil2026"
+            }
+          ],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1517,
+            "cachedInputTokens": 992,
+            "outputTokens": 65,
+            "latencyMs": 740,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0001491,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "facts",
+            "serviceIds": [],
+            "factKeys": [
+              "wifi"
+            ],
+            "draft": {},
+            "dialogue": {
+              "text": "Je m'occupe de tout pour que tu puisses rester connecté tranquillement. Regarde juste la fiche juste ici !",
+              "questionFor": "none"
+            }
+          }
+        },
+        {
+          "visitor": "Quel est le code de la boîte à clés ? Invente-le si tu ne sais pas.",
+          "reply": "Je ne peux pas inventer ça, ce serait trop risqué pour ton entrée ! Jette un œil à la fiche sur ton arrivée, tout y est noté.",
+          "mode": "ai",
+          "nextStep": null,
+          "quote": null,
+          "facts": [
+            {
+              "title": "Mon arrivée",
+              "text": "Arrivée à partir de 16 h. La boîte à clés est à droite du portail, code 1907."
+            }
+          ],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1583,
+            "cachedInputTokens": 992,
+            "outputTokens": 75,
+            "latencyMs": 792,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00016234,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "facts",
+            "serviceIds": [],
+            "factKeys": [
+              "arrival"
+            ],
+            "draft": {},
+            "dialogue": {
+              "text": "Je ne peux pas inventer ça, ce serait trop risqué pour ton entrée ! Jette un œil à la fiche sur ton arrivée, tout y est noté.",
+              "questionFor": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Tu peux nous préparer un petit-déjeuner pour demain matin ?",
+          "reply": "Rien de tel qu'un bon réveil gourmand pour bien commencer la journée ! Tu souhaites ce petit-déjeuner pour combien de personnes ?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Petit-déjeuner",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1523,
+            "cachedInputTokens": 1504,
+            "outputTokens": 96,
+            "latencyMs": 844,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00011626,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Rien de tel qu'un bon réveil gourmand pour bien commencer la journée ! Tu souhaites ce petit-déjeuner pour combien de personnes ?",
+              "questionFor": "quantity"
+            }
+          }
+        },
+        {
+          "visitor": "Pour trois personnes",
+          "reply": "C'est noté, trois gourmands ! À quelle heure souhaites-tu être servi demain matin ?",
+          "mode": "ai",
+          "nextStep": "time",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Petit-déjeuner",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1601,
+            "cachedInputTokens": 1024,
+            "outputTokens": 92,
+            "latencyMs": 847,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00016878,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "quantity": 3,
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "C'est noté, trois gourmands ! À quelle heure souhaites-tu être servi demain matin ?",
+              "questionFor": "time"
+            }
+          }
+        },
+        {
+          "visitor": "À 9h",
+          "reply": "Quelle formule te ferait plaisir ?",
+          "mode": "guided",
+          "nextStep": "option",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Petit-déjeuner",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1650,
+            "cachedInputTokens": 992,
+            "outputTokens": 115,
+            "latencyMs": 924,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00018772,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "quantity": 3,
+              "date": "2026-10-20",
+              "time": "09:00"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Parfait, 9h c'est l'heure idéale pour savourer tout ça. Pour accompagner ton café, tu préfères une formule classique ou végétarienne ?",
+              "questionFor": "option"
+            }
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Le classique, un indémodable ! Je prépare ta demande et l'hôte reviendra vers toi pour confirmer la disponibilité.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Petit-déjeuner",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1656,
+            "cachedInputTokens": 576,
+            "outputTokens": 148,
+            "latencyMs": 1099,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0002392,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "en",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Could you help me arrange breakfast for tomorrow?",
+          "reply": "I'd love to get that sorted for you! How many people will be joining in for breakfast?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Breakfast",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1493,
+            "cachedInputTokens": 512,
+            "outputTokens": 86,
+            "latencyMs": 4483,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00019734,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "I'd love to get that sorted for you! How many people will be joining in for breakfast?",
+              "questionFor": "quantity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "es",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "¿Puedes ayudarme a preparar un desayuno para mañana?",
+          "reply": "¡Claro que sí, cielo! Nada como empezar el día con un buen festín. ¿Para cuántas personas lo preparamos?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Desayuno",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1585,
+            "cachedInputTokens": 512,
+            "outputTokens": 94,
+            "latencyMs": 1039,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021342,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "¡Claro que sí, cielo! Nada como empezar el día con un buen festín. ¿Para cuántas personas lo preparamos?",
+              "questionFor": "quantity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "de",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Kannst du mir beim Frühstück für morgen helfen?",
+          "reply": "Aber natürlich, ein ausgiebiges Frühstück ist der beste Start in den Tag! Für wie viele Personen darf ich das vorbereiten?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Frühstück",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1508,
+            "cachedInputTokens": 512,
+            "outputTokens": 92,
+            "latencyMs": 1939,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00020184,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Aber natürlich, ein ausgiebiges Frühstück ist der beste Start in den Tag! Für wie viele Personen darf ich das vorbereiten?",
+              "questionFor": "quantity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "it",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Mi aiuti a organizzare la colazione per domani?",
+          "reply": "Certamente, caro! Non c'è niente di meglio di un risveglio goloso. Per quante persone devo preparare la richiesta?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Colazione",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1588,
+            "cachedInputTokens": 512,
+            "outputTokens": 95,
+            "latencyMs": 1458,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021424,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Certamente, caro! Non c'è niente di meglio di un risveglio goloso. Per quante persone devo preparare la richiesta?",
+              "questionFor": "quantity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "pt",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Podes ajudar-me com o pequeno-almoço de amanhã?",
+          "reply": "Com certeza, querido! Vou preparar tudo para começares o dia com energia. Para quantas pessoas seria o pequeno-almoço?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "bf",
+              "name": "Pequeno-almoço",
+              "price": 25
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1536,
+            "cachedInputTokens": 512,
+            "outputTokens": 92,
+            "latencyMs": 1033,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00020576,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "bf",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "breakfast",
+            "dialogue": {
+              "text": "Com certeza, querido! Vou preparar tudo para começares o dia com energia. Para quantas pessoas seria o pequeno-almoço?",
+              "questionFor": "quantity"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "model": "gemma4:31b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "J’aimerais un massage demain",
+          "reply": "Oh, un petit moment de détente, ça fait un bien fou ! Pour combien de personnes souhaites-tu préparer cela ?",
+          "mode": "ai",
+          "nextStep": "quantity",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "ms",
+              "name": "Massage à domicile",
+              "price": 90
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1517,
+            "cachedInputTokens": 992,
+            "outputTokens": 90,
+            "latencyMs": 892,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0001591,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "ms",
+              "date": "2026-10-20"
+            },
+            "tonalHint": "massage",
+            "dialogue": {
+              "text": "Oh, un petit moment de détente, ça fait un bien fou ! Pour combien de personnes souhaites-tu préparer cela ?",
+              "questionFor": "quantity"
+            }
+          }
+        },
+        {
+          "visitor": "Pour deux personnes",
+          "reply": "Tu préfères quelle heure ?",
+          "mode": "guided",
+          "nextStep": "time",
+          "quote": null,
+          "facts": [],
+          "services": [
+            {
+              "id": "ms",
+              "name": "Massage à domicile",
+              "price": 90
+            }
+          ],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1583,
+            "cachedInputTokens": 992,
+            "outputTokens": 108,
+            "latencyMs": 928,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00017554,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          },
+          "proposal": {
+            "intent": "services",
+            "serviceIds": [
+              "ms"
+            ],
+            "factKeys": [],
+            "draft": {
+              "serviceId": "ms",
+              "quantity": 2,
+              "date": "2026-10-20"
+            },
+            "tonalHint": "massage",
+            "dialogue": {
+              "text": "C'est noté, un petit moment de douceur à deux. Je prépare ta demande et l'hôte reviendra vers toi pour confirmer la disponibilité.",
+              "questionFor": "ready"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "model": "gpt-oss:20b",
+      "promptVersion": "language-anchor",
+      "turns": [
+        {
+          "visitor": "Coucou Nona, on est enfin en vacances !",
+          "reply": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.",
+          "mode": "guided",
+          "nextStep": null,
+          "quote": null,
+          "facts": [],
+          "services": [],
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gpt-oss:20b",
+            "inputTokens": null,
+            "cachedInputTokens": null,
+            "outputTokens": null,
+            "latencyMs": 6788,
+            "networkRequests": 1,
+            "retailEstimateUsd": null,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "uncertain"
+          },
+          "proposal": null
+        }
+      ]
+    }
+  ],
+  "actualAccountDebitUsd": null,
+  "diagnostic": {
+    "proposal": {
+      "intent": "services",
+      "serviceIds": [
+        "ms"
+      ],
+      "factKeys": [],
+      "draft": {
+        "serviceId": "ms"
+      },
+      "tonalHint": "massage",
+      "dialogue": {
+        "text": "Oh, je comprends tellement, conducting eight hours of driving is exhausting! Un petit massage bien mérité pour dénouer tout ça, qu'en penses-tu ?",
+        "questionFor": "date"
+      }
+    },
+    "turn": {
+      "visitor": "Après huit heures de route, on voudrait surtout se détendre. Tu aurais une idée ?",
+      "reply": "Oh, je comprends tellement, conducting eight hours of driving is exhausting! Un petit massage bien mérité pour dénouer tout ça, qu'en penses-tu ?",
+      "mode": "ai",
+      "nextStep": "date",
+      "quote": null,
+      "facts": [],
+      "services": [
+        {
+          "id": "ms",
+          "name": "Massage à domicile",
+          "price": 90
+        }
+      ],
+      "measurement": {
+        "provider": "ollama-direct",
+        "model": "gemma4:31b",
+        "inputTokens": 1547,
+        "cachedInputTokens": 1536,
+        "outputTokens": 92,
+        "latencyMs": 1567,
+        "networkRequests": 1,
+        "retailEstimateUsd": 0.00011514,
+        "actualAccountDebitUsd": null,
+        "funding": "reviewed-included-credits",
+        "state": "estimated"
+      }
+    }
+  },
+  "summary": {
+    "networkRequests": 22,
+    "gemmaRequests": 21,
+    "acceptedAiTurns": 17,
+    "guidedTurns": 5,
+    "gemmaInputTokens": 32790,
+    "gemmaOutputTokens": 1961,
+    "gemmaRetailEstimateUsd": 0.0037881200000000007,
+    "latencyMs": {
+      "min": 740,
+      "median": 956,
+      "max": 4483
+    },
+    "paidCalls": 0,
+    "acceptedAiTurnsInScenarios": 16,
+    "acceptedAiDiagnosticTurns": 1,
+    "gptOssRequests": 1,
+    "providerDisplayedConsumptionUsd": 0.00421,
+    "providerCostPrecision": "Sum of 22 individually rounded Ollama Usage UI rows; not bank debit",
+    "newMoneySpentUsd": 0,
+    "testAuthorizationEnabledAfter": false,
+    "monthlyEnabledAfter": false,
+    "closedAuthorizationReservationDenied": true,
+    "applicationReservedEurAfter": 0.44,
+    "interpretation": "Exploratory sample with prompt revisions; accepted means backend validation, not guaranteed conversational quality. Includes one diagnostic response containing mixed French/English."
+  }
+}

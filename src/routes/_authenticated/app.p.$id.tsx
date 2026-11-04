@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { QrCode } from "lucide-react";
 import {
   getProperty,
   publishProperty,
@@ -14,7 +15,9 @@ import {
 import { FriendlyError, Loading, friendlyMessage } from "@/components/app/Friendly";
 import { QrCard } from "@/components/app/QrCard";
 import { useI18n } from "@/lib/i18n";
-import { GuideEditor } from "@/components/app/GuideEditor";
+import { ManagerGuidePreview } from "@/components/app/ManagerGuidePreview";
+import { listServices } from "@/lib/data/operations";
+import { GuideEditor, realGuideEditorActions } from "@/components/app/GuideEditor";
 import { useOrg } from "@/components/app/useOrg";
 import { MessagingEditor, ReviewEditor } from "@/components/app/PropertySettingsEditors";
 import { QuestionScreen } from "@/components/app/PropertyQuestionScreen";
@@ -84,11 +87,37 @@ function PropertyPage() {
   const { data } = useSuspenseQuery(propertyQuery(id));
   const org = useOrg();
   const { property, fields, review, destinations, sections, media, messagingEnabled } = data!;
-  const step: Step = search.step ?? (property.status === "published" ? "ready" : "review");
+  const step: Step = search.step ?? "review";
   const setStep = (s: Step) => nav({ search: { step: s } });
   const [saved, flashSaved] = useSaved();
   const [editing, setEditing] = useState<PropertyField | null>(null);
   const [mode, setMode] = useState<"guide" | "details" | "services" | "reviews">("guide");
+
+  const [preview, setPreview] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [previewServices, setPreviewServices] = useState<
+    NonNullable<import("@/components/guest/guide-model").GuideViewData["services"]>
+  >([]);
+  const openPreview = async () => {
+    await qc.invalidateQueries({ queryKey: ["property", id] });
+    const services = await listServices(property.organization_id, id);
+    const photos = await import("@/lib/data/operations").then((m) =>
+      m.listServicePhotos(property.organization_id, id),
+    );
+    setPreviewServices(
+      services
+        .filter((service) => service.is_active)
+        .map((service) => ({
+          id: service.id,
+          name: service.name,
+          description: service.description,
+          price: Number(service.price),
+          imagePath: photos.find((photo) => photo.path === service.image_path)?.url ?? null,
+          pricingType: service.pricing_type as "fixed" | "per_person",
+        })),
+    );
+    setPreview(true);
+  };
 
   const refresh = (f: PropertyField) => {
     qc.setQueryData(
@@ -121,6 +150,16 @@ function PropertyPage() {
           </a>
         )}
       </div>
+    );
+
+  if (preview)
+    return (
+      <ManagerGuidePreview
+        data={{ property, fields, sections, media }}
+        resolveMediaUrl={realGuideEditorActions.resolveMediaUrl}
+        extras={{ services: previewServices }}
+        onBack={() => setPreview(false)}
+      />
     );
 
   const SavedBadge = (
@@ -183,7 +222,7 @@ function PropertyPage() {
         mode={mode}
         onModeChange={setMode}
         onBack={() => nav({ to: "/app" })}
-        onPreview={() => window.open(`/l/${property.slug}`, "_blank", "noopener,noreferrer")}
+        onPreview={openPreview}
         onRename={(name) => renameProperty(id, name)}
         onSaved={() => {
           flashSaved();
@@ -199,26 +238,43 @@ function PropertyPage() {
           </Link>
         }
         previewAction={
-          <a
-            href={`/l/${property.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-secondary min-h-12 w-full @sm:w-auto"
-          >
-            {t("app.viewGuide")}
-          </a>
+          <div className="grid w-full grid-cols-2 gap-2 @sm:w-auto">
+            <a
+              href={`/l/${property.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary min-h-12"
+            >
+              {t("app.viewGuide")}
+            </a>
+            <button
+              type="button"
+              className="btn btn-secondary min-h-12"
+              aria-expanded={showQr}
+              onClick={() => setShowQr((current) => !current)}
+            >
+              <QrCode className="h-5 w-5" />
+              {t("qr.title")}
+            </button>
+          </div>
         }
       >
+        {showQr && property.status === "published" && (
+          <section className="surface mx-auto mt-6 max-w-md p-5">
+            <QrCard slug={property.slug} name={property.name} />
+          </section>
+        )}
         {mode === "guide" && (
           <div className="mt-7">
             <GuideEditor
               data={{ property, fields, sections, media }}
               onChanged={() => qc.invalidateQueries({ queryKey: ["property", id] })}
-              onPreview={() =>
-                property.status === "published"
-                  ? window.open(`/l/${property.slug}`, "_blank")
-                  : setStep("ready")
-              }
+              onPreview={openPreview}
+              onPublish={async () => {
+                await publishProperty(property, fields);
+                await qc.invalidateQueries({ queryKey: ["property", id] });
+                await qc.invalidateQueries({ queryKey: ["properties"] });
+              }}
             />
           </div>
         )}
@@ -308,6 +364,7 @@ function ReadyScreen({
   const published = property.status === "published";
   const pending = fields.filter((f) => f.status !== "found").length;
   const publish = async () => {
+    if (busy) return;
     setBusy(true);
     setError("");
     try {

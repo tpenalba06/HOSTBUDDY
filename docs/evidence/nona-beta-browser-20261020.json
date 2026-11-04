@@ -1,0 +1,252 @@
+{
+  "kind": "shared UI and compiled API, synthetic data, guided fallback only; not a live AI test",
+  "actualModelCalls": 0,
+  "results": [
+    {
+      "name": "desktop",
+      "label": "breakfast-start",
+      "message": "Petit-déjeuner pour le 2026-10-21",
+      "mode": "guided",
+      "nextStep": "quantity",
+      "quote": null,
+      "text": "Rien de tel pour bien commencer la journée ! 🥐 Je prépare ta demande. Et tu prévois combien de personnes ?"
+    },
+    {
+      "name": "desktop",
+      "label": "breakfast-quantity",
+      "message": "Pour trois personnes",
+      "mode": "guided",
+      "nextStep": "time",
+      "quote": null,
+      "text": "Tu préfères quelle heure ?"
+    },
+    {
+      "name": "desktop",
+      "label": "breakfast-time",
+      "message": "10:30",
+      "mode": "guided",
+      "nextStep": "option",
+      "quote": null,
+      "text": "Tu choisis quelle formule ?"
+    },
+    {
+      "name": "desktop",
+      "label": "breakfast-ready",
+      "message": "Classique",
+      "mode": "guided",
+      "nextStep": "ready",
+      "quote": {
+        "totalCents": 7500,
+        "revision": "2026-10-01T00:00:00.000Z"
+      },
+      "text": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités."
+    },
+    {
+      "name": "desktop",
+      "label": "topic-change",
+      "message": "Merci. On fête notre anniversaire ici, qu’est-ce qu’on pourrait faire pour se détendre après le trajet ?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider."
+    },
+    {
+      "name": "desktop",
+      "label": "massage",
+      "message": "Je change de sujet : je voudrais un massage pour le 2026-10-21, pour une personne.",
+      "mode": "guided",
+      "nextStep": "time",
+      "quote": null,
+      "text": "Ohh, un petit moment de détente ! 💆 Tu as bien raison. Et à quelle heure ça te ferait plaisir ?"
+    },
+    {
+      "name": "desktop",
+      "label": "breakfast-resumed",
+      "message": "Revenons au petit-déjeuner",
+      "mode": "guided",
+      "nextStep": "ready",
+      "quote": {
+        "totalCents": 7500,
+        "revision": "2026-10-01T00:00:00.000Z"
+      },
+      "text": "Hmmm, miam ! 🥐 Ça donne faim ! Je te prépare ça. Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités."
+    },
+    {
+      "name": "desktop",
+      "label": "language-fr",
+      "message": "Quel est le code de la boîte à clés ?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider."
+    },
+    {
+      "name": "desktop",
+      "label": "language-en",
+      "message": "What is the key box code?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "I can’t find that in your guide and I’d rather not guess. Your manager can help."
+    },
+    {
+      "name": "desktop",
+      "label": "language-es",
+      "message": "¿Cuál es el código de la caja de llaves?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "No encuentro esa información en tu guía y prefiero no inventar. Tu gestor podrá ayudarte."
+    },
+    {
+      "name": "desktop",
+      "label": "language-de",
+      "message": "Hallo Nona, wir feiern unseren Hochzeitstag. Hast du einen lieben Rat?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Das finde ich nicht in deinem Gästebuch, und ich rate lieber nicht. Dein Verwalter hilft dir gern."
+    },
+    {
+      "name": "desktop",
+      "label": "language-it",
+      "message": "Qual è il codice della cassetta delle chiavi?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Non trovo questa informazione nella tua guida e preferisco non inventare. Il tuo gestore potrà aiutarti."
+    },
+    {
+      "name": "desktop",
+      "label": "language-pt",
+      "message": "Qual é o código da caixa de chaves?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Não encontro essa informação no teu guia e prefiro não inventar. O teu gestor pode ajudar."
+    },
+    {
+      "name": "mobile",
+      "label": "breakfast-start",
+      "message": "Petit-déjeuner pour le 2026-10-21",
+      "mode": "guided",
+      "nextStep": "quantity",
+      "quote": null,
+      "text": "Rien de tel pour bien commencer la journée ! 🥐 Je prépare ta demande. Et tu prévois combien de personnes ?"
+    },
+    {
+      "name": "mobile",
+      "label": "breakfast-quantity",
+      "message": "Pour trois personnes",
+      "mode": "guided",
+      "nextStep": "time",
+      "quote": null,
+      "text": "Tu préfères quelle heure ?"
+    },
+    {
+      "name": "mobile",
+      "label": "breakfast-time",
+      "message": "10:30",
+      "mode": "guided",
+      "nextStep": "option",
+      "quote": null,
+      "text": "Tu choisis quelle formule ?"
+    },
+    {
+      "name": "mobile",
+      "label": "breakfast-ready",
+      "message": "Classique",
+      "mode": "guided",
+      "nextStep": "ready",
+      "quote": {
+        "totalCents": 7500,
+        "revision": "2026-10-01T00:00:00.000Z"
+      },
+      "text": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités."
+    },
+    {
+      "name": "mobile",
+      "label": "topic-change",
+      "message": "Merci. On fête notre anniversaire ici, qu’est-ce qu’on pourrait faire pour se détendre après le trajet ?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider."
+    },
+    {
+      "name": "mobile",
+      "label": "massage",
+      "message": "Je change de sujet : je voudrais un massage pour le 2026-10-21, pour une personne.",
+      "mode": "guided",
+      "nextStep": "time",
+      "quote": null,
+      "text": "Ohh, un petit moment de détente ! 💆 Tu as bien raison. Et à quelle heure ça te ferait plaisir ?"
+    },
+    {
+      "name": "mobile",
+      "label": "breakfast-resumed",
+      "message": "Revenons au petit-déjeuner",
+      "mode": "guided",
+      "nextStep": "ready",
+      "quote": {
+        "totalCents": 7500,
+        "revision": "2026-10-01T00:00:00.000Z"
+      },
+      "text": "Hmmm, miam ! 🥐 Ça donne faim ! Je te prépare ça. Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités."
+    },
+    {
+      "name": "mobile",
+      "label": "language-fr",
+      "message": "Quel est le code de la boîte à clés ?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider."
+    },
+    {
+      "name": "mobile",
+      "label": "language-en",
+      "message": "What is the key box code?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "I can’t find that in your guide and I’d rather not guess. Your manager can help."
+    },
+    {
+      "name": "mobile",
+      "label": "language-es",
+      "message": "¿Cuál es el código de la caja de llaves?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "No encuentro esa información en tu guía y prefiero no inventar. Tu gestor podrá ayudarte."
+    },
+    {
+      "name": "mobile",
+      "label": "language-de",
+      "message": "Hallo Nona, wir feiern unseren Hochzeitstag. Hast du einen lieben Rat?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Das finde ich nicht in deinem Gästebuch, und ich rate lieber nicht. Dein Verwalter hilft dir gern."
+    },
+    {
+      "name": "mobile",
+      "label": "language-it",
+      "message": "Qual è il codice della cassetta delle chiavi?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Non trovo questa informazione nella tua guida e preferisco non inventare. Il tuo gestore potrà aiutarti."
+    },
+    {
+      "name": "mobile",
+      "label": "language-pt",
+      "message": "Qual é o código da caixa de chaves?",
+      "mode": "guided",
+      "nextStep": null,
+      "quote": null,
+      "text": "Não encontro essa informação no teu guia e prefiro não inventar. O teu gestor pode ajudar."
+    }
+  ]
+}

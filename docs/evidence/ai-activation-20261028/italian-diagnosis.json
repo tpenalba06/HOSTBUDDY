@@ -1,0 +1,69 @@
+[
+  {
+    "locale": "it",
+    "diagnostics": [
+      {
+        "stage": "accepted",
+        "reason": "validated"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [],
+      "factKeys": [],
+      "draft": {},
+      "tonalHint": "italian",
+      "dialogue": {
+        "text": "Ma che splendida notizia, tanti auguri di cuore per il vostro anniversario! Siete nel posto giusto per rilassarvi e godervi ogni momento insieme.",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "ai",
+      "text": "Ma che splendida notizia, tanti auguri di cuore per il vostro anniversario! Siete nel posto giusto per rilassarvi e godervi ogni momento insieme.",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 2064,
+          "outputTokens": 73,
+          "costUsd": 0.00013384,
+          "latencyMs": 803
+        }
+      }
+    },
+    "providerRaw": {
+      "model": "gemma4:31b",
+      "created_at": "2026-10-28T20:02:56.988788662Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_d1hnu7wd",
+            "function": {
+              "index": 0,
+              "name": "submit_nona_proposal",
+              "arguments": {
+                "dialogue": {
+                  "questionFor": "none",
+                  "text": "Ma che splendida notizia, tanti auguri di cuore per il vostro anniversario! Siete nel posto giusto per rilassarvi e godervi ogni momento insieme."
+                },
+                "intent": "greeting",
+                "tonalHint": "italian"
+              }
+            }
+          }
+        ]
+      },
+      "done": true,
+      "done_reason": "stop",
+      "total_duration": 606083621,
+      "prompt_eval_count": 2064,
+      "prompt_eval_cached_count": 2048,
+      "eval_count": 73
+    }
+  }
+]

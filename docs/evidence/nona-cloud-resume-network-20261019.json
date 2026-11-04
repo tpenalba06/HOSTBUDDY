@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-10-19T17:56:49.158Z",
+  "scope": "isolated-test-read-only",
+  "vaultState": "ready",
+  "model": "anthropic/claude-haiku-5.5",
+  "inferenceCalls": 0,
+  "newPayments": 0,
+  "writesToRemoteDatabase": 0,
+  "gateway": null,
+  "ledger": {
+    "ok": false,
+    "reason": "unavailable",
+    "code": "unknown",
+    "httpStatus": 0,
+    "keyKind": "server-secret"
+  },
+  "observationSchemaAvailable": false,
+  "publishedGuide": false,
+  "billingControlsVerified": false,
+  "ready": false,
+  "blockedReasons": [
+    "Gateway read-only preflight unavailable.",
+    "Existing TEST authorization is disabled, expired or unreadable; not renewed.",
+    "TEST schema or guide read unavailable.",
+    "Auto top-up, BYOK, chargeable extras, FX/tax envelope and privacy agreement have not been verified for this account."
+  ],
+  "checkoutRevision": "59f84c4c40574ffacfd29815d02d5000954df476",
+  "checkoutDirty": false
+}

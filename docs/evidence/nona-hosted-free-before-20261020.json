@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-20T17:06:38.307Z",
+  "plan": "Free",
+  "purchasedBalanceUsd": 0,
+  "automaticBillingEnabled": false,
+  "usedPercent": 0.4,
+  "gemmaRequests": 48,
+  "gptRequests": 1,
+  "eligibleModel": "gemma4:31b",
+  "source": "authenticated Ollama settings UI"
+}

@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-20T12:54:18.092Z",
+  "source": "Authenticated Ollama Usage UI",
+  "plan": "Free",
+  "purchasedBalanceUsd": 0,
+  "autoReloadEnabled": false,
+  "freeUsageUsedPercent": 0.2,
+  "existingGemmaRequests": 28,
+  "existingGptRequests": 1
+}

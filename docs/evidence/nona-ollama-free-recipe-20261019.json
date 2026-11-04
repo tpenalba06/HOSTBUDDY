@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-19T18:35:11.456Z",
+  "provider": "ollama-direct",
+  "mode": "prepare-only",
+  "model": "gemma4:31b",
+  "compiled": true,
+  "keyAvailable": true,
+  "accountReviewAvailable": false,
+  "actualModelCalls": 0,
+  "reservedAttempts": 0,
+  "newPayments": 0,
+  "productionChanges": 0,
+  "realConversationDemonstrated": false,
+  "actualAccountDebitUsd": null,
+  "comparisonToHaiku": "No real Haiku sample available; no model quality ranking established.",
+  "conversations": [],
+  "blockedReasons": [
+    "No verified Free-credit, eligible-model and zero-new-spend account review.",
+    "Prepare-only: no inference or remote database calls."
+  ]
+}

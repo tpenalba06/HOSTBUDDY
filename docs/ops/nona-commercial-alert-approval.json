@@ -1,0 +1,7 @@
+{
+  "schema": "nona.commercial-alert-approval.v1",
+  "authorized": false,
+  "project_ref": "jzbjpaucgckggumhowns",
+  "destination_repository": "tpenalba06/NONA-OPS",
+  "scope": "private-service-role-only-alert-receiver-and-notification"
+}

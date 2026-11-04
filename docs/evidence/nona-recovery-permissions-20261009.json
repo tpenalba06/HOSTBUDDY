@@ -1,0 +1,1028 @@
+{
+  "date": "2026-10-09",
+  "scope": "isolated TEST DB/Auth/Storage and real user sessions, not production",
+  "code_head": "126f863a778ab98d02e52ec2fe2f0c6c400419c5",
+  "source_fingerprint": "3267de3fed9336eee86ff6d832c0d4dc6927eb09065361b29085627b2dda55cc",
+  "verdict": "PASS",
+  "active_checks": 147,
+  "permission_checks": [
+    {
+      "test": "baseline restored memberships",
+      "pass": true,
+      "http": 200,
+      "evidence": {
+        "memberships": 9
+      }
+    },
+    {
+      "test": "create synthetic owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "real Auth session owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "Auth validates user owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "ensure organization owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "create synthetic owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "real Auth session owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "Auth validates user owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "ensure organization owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "separate A and B",
+      "pass": true,
+      "http": null
+    },
+    {
+      "test": "separate A and B",
+      "pass": true,
+      "http": null
+    },
+    {
+      "test": "invitation before identity admin",
+      "pass": true,
+      "http": 204
+    },
+    {
+      "test": "invitation is pending admin",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "create synthetic admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "real Auth session admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "Auth validates user admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "accept pending invitation admin",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "accepted timestamp admin",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "correct single membership admin",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "first-load idempotence admin",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "invitation before identity member",
+      "pass": true,
+      "http": 204
+    },
+    {
+      "test": "invitation is pending member",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "create synthetic member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "real Auth session member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "Auth validates user member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "accept pending invitation member",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "accepted timestamp member",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "correct single membership member",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "first-load idempotence member",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "create synthetic existing_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "real Auth session existing_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "Auth validates user existing_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "existing user immediate admission",
+      "pass": true,
+      "http": 204
+    },
+    {
+      "test": "existing identity membership",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "cannot move B owner into A",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "owner protection invite_organization_member",
+      "pass": true,
+      "http": 400,
+      "evidence": {
+        "owner_unchanged": true
+      }
+    },
+    {
+      "test": "owner protection change_organization_member_role",
+      "pass": true,
+      "http": 204,
+      "evidence": {
+        "owner_unchanged": true
+      }
+    },
+    {
+      "test": "owner protection remove_organization_member",
+      "pass": true,
+      "http": 204,
+      "evidence": {
+        "owner_unchanged": true
+      }
+    },
+    {
+      "test": "real Auth refresh",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "JWT issuer is isolated target",
+      "pass": true,
+      "http": null
+    },
+    {
+      "test": "external email blocked by target hook",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "tenant-visible organizations owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_member owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_admin owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_owner owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign memberships denied owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "team read owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign team denied owner_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "tenant-visible organizations owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_member owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_admin owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_owner owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign memberships denied owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "team read owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign team denied owner_b",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "tenant-visible organizations admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_member admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_admin admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_owner admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign memberships denied admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "team read admin_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "foreign team denied admin_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "tenant-visible organizations member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_member member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_admin member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "role helper is_org_owner member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign memberships denied member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "team read member_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "foreign team denied member_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "team mutation denied admin_a invite_organization_member",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "team mutation denied admin_a change_organization_member_role",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "team mutation denied admin_a remove_organization_member",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "team mutation denied member_a invite_organization_member",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "team mutation denied member_a change_organization_member_role",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "team mutation denied member_a remove_organization_member",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "owner creates own property owner_a",
+      "pass": true,
+      "http": 201
+    },
+    {
+      "test": "owner creates own property owner_b",
+      "pass": true,
+      "http": 201
+    },
+    {
+      "test": "own property readable owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property read denied owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property write denied owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "own property readable owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property read denied owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property write denied owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "own property readable admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property read denied admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property write denied admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "own property readable member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property read denied member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign property write denied member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "admin edits A content",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "member cannot edit content",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "member cannot create property",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "member cannot self-promote",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "admin creates section A",
+      "pass": true,
+      "http": 201
+    },
+    {
+      "test": "member cannot create section",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "admin cannot create B section",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "member can read A sections",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "member operational conversation",
+      "pass": true,
+      "http": 201
+    },
+    {
+      "test": "member operational reply",
+      "pass": true,
+      "http": 201
+    },
+    {
+      "test": "operation rejects foreign property reference",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "cannot impersonate manager sender",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "B cannot read A conversation",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied organizations",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied organization_members",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied properties",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied guide_sections",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied conversations",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied messages",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "anonymous private table denied section_media",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "owner changes member role",
+      "pass": true,
+      "http": 204
+    },
+    {
+      "test": "same session reflects promoted role",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "owner restores TEST member role",
+      "pass": true,
+      "http": 204
+    },
+    {
+      "test": "same session reflects demoted role",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "owner revokes TEST member",
+      "pass": true,
+      "http": 204
+    },
+    {
+      "test": "existing session loses access after removal",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "restored source owners all unchanged",
+      "pass": true,
+      "http": 200,
+      "evidence": {
+        "preserved_memberships": 9
+      }
+    },
+    {
+      "test": "restored guide-media stays private",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "owner uploads private TEST media owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "owner uploads private TEST media owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "admin uploads A media",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "member cannot upload media",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "admin cannot upload B media",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "authorized short-lived signed URL",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "signed URL works before expiry",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "own private media readable owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign media download denied owner_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "foreign media signature denied owner_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "own private media readable owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign media download denied owner_b",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "foreign media signature denied owner_b",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "own private media readable admin_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign media download denied admin_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "foreign media signature denied admin_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "own private media readable member_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "foreign media download denied member_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "foreign media signature denied member_a",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "anonymous direct media denied authenticated",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "anonymous direct media denied public",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "anonymous media signature denied",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "new TEST owner cannot read restored customer media",
+      "pass": true,
+      "http": 400
+    },
+    {
+      "test": "signed URL rejected after expiry",
+      "pass": true,
+      "http": 400,
+      "evidence": {
+        "elapsed_seconds": 209,
+        "error": "InvalidJWT",
+        "message": "\"exp\" claim timestamp check failed"
+      }
+    }
+  ],
+  "app_helper_checks": [
+    {
+      "test": "HEAD team-access owner_a -> owner_a",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "HEAD team-access owner_b -> owner_b",
+      "pass": true,
+      "http": 200
+    },
+    {
+      "test": "HEAD team-access admin_a -> owner_a",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "HEAD team-access member_a -> owner_a",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "HEAD team-access owner_a -> owner_b",
+      "pass": true,
+      "http": 403
+    },
+    {
+      "test": "HEAD team-access owner_b -> owner_a",
+      "pass": true,
+      "http": 403
+    }
+  ],
+  "storage_restore": [
+    {
+      "index": 0,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 1602,
+      "sha256_equal": true
+    },
+    {
+      "index": 1,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 510403,
+      "sha256_equal": true
+    },
+    {
+      "index": 2,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 123147,
+      "sha256_equal": true
+    },
+    {
+      "index": 3,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 35588,
+      "sha256_equal": true
+    },
+    {
+      "index": 4,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 8090,
+      "sha256_equal": true
+    },
+    {
+      "index": 5,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 102562,
+      "sha256_equal": true
+    },
+    {
+      "index": 6,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 417953,
+      "sha256_equal": true
+    },
+    {
+      "index": 7,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 660420,
+      "sha256_equal": true
+    },
+    {
+      "index": 8,
+      "upload_http": 200,
+      "download_http": 200,
+      "size": 2487895,
+      "sha256_equal": true
+    }
+  ],
+  "integrity": {
+    "tables": [
+      {
+        "table": "drizzle.__drizzle_migrations",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.conversations",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.guest_conversation_sessions",
+        "countEqual": true,
+        "fingerprintEqual": false,
+        "sanitized": true
+      },
+      {
+        "table": "public.guest_feedback",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.guest_message_rate_limits",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.guide_section_translations",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.guide_sections",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.import_runs",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.messages",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.order_payments",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.orders",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.organization_billing_capacity",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.organization_billing_sync",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.organization_invitations",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.organization_members",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.organization_payment_accounts",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.organizations",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.pms_connections",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.properties",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.property_deletion_cleanup",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.property_fields",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.property_messaging_settings",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.property_publications",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.property_review_destinations",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.property_review_settings",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.provider_import_links",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.public_submission_rate_limits",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.section_media",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.services",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      },
+      {
+        "table": "public.stripe_processed_events",
+        "countEqual": true,
+        "fingerprintEqual": true,
+        "sanitized": false
+      }
+    ],
+    "policiesEqual": true,
+    "publicRlsOff": 0,
+    "sourcePasswordsPresent": 0,
+    "policyCount": 46,
+    "policyComparison": "Object keys sorted and SQL whitespace normalized only"
+  },
+  "limitations": [
+    "Original credentials and sessions sanitized; managed service migration histories retained on target",
+    "External emissions blocked; no automatic invitation email",
+    "No authenticated preview UI recipe against isolated target",
+    "No financial tests or production actions"
+  ],
+  "superseded_harness_assertions": 1
+}

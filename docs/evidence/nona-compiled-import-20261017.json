@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-17T16:17:20.301Z",
+  "scope": "compiled local demo; simulated persistence, no remote publication",
+  "paidApiCalls": 0,
+  "lateContradictionReviewed": true,
+  "lateWifiCredentialsRetained": true,
+  "originalEvidenceRetained": true,
+  "humanCorrection": true,
+  "createdAsDraft": true,
+  "provenanceAndManualFlags": true,
+  "uncertainPoolExcludedFromGuide": true,
+  "simulatedPublication": true,
+  "travelerWifiVisible": true,
+  "blockedOrigins": [],
+  "pageErrors": []
+}

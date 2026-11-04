@@ -1,0 +1,171 @@
+# INERT PREPARATION. PRIVATE NONA-OPS/commercial.yml only after explicit approval.
+# Keep Actions USD 0 / Stop usage Yes. No push trigger, no Live activation here.
+name: Nona approved commercial operations
+on:
+  workflow_dispatch:
+    inputs:
+      capture_backup:
+        type: boolean
+        default: false
+        description: Capture approved commercial DB/Auth and guide-media
+      setup_alerts:
+        type: boolean
+        default: false
+        description: Install approved service-only alert receiver
+  # Enable after approvals, quota check and first commercial capture:
+  # schedule:
+  #   - cron: '17 * * * *'
+  #   - cron: '37 4 * * *'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: nona-approved-commercial-operations
+  cancel-in-progress: false
+jobs:
+  runtime:
+    if: github.event.repository.private == true && vars.NONA_COMMERCIAL_OPS_APPROVED == 'true' && github.event.schedule != '37 4 * * *'
+    environment: nona-commercial
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Validate immutable approved target before secrets
+        env:
+          RELEASE_REF: ${{ vars.NONA_RELEASE_REF }}
+          PROJECT_REF: ${{ vars.NONA_COMMERCIAL_PROJECT_REF }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          if not re.fullmatch('[0-9a-f]{40}', os.environ.get('RELEASE_REF','')) or os.environ.get('PROJECT_REF') != 'jzbjpaucgckggumhowns':
+              raise SystemExit('Approved immutable release and commercial target required')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: tpenalba06/HOSTBUDDY
+          ref: ${{ vars.NONA_RELEASE_REF }}
+          persist-credentials: false
+      - run: python3 -m pip install -r scripts/ops/requirements.txt
+      - name: Prepare commercial private inputs
+        env:
+          API_KEY: ${{ secrets.NONA_COMMERCIAL_API_KEY }}
+          ALERT_APPROVAL: ${{ secrets.NONA_COMMERCIAL_ALERT_APPROVAL_JSON }}
+          DATABASE: ${{ inputs.setup_alerts && secrets.NONA_COMMERCIAL_DATABASE_JSON || '' }}
+          CA: ${{ inputs.setup_alerts && vars.NONA_COMMERCIAL_DATABASE_CA_PEM || '' }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'nona-commercial-runtime'
+          root.mkdir(mode=0o700)
+          for name,key in [('api.key','API_KEY'),('approval.json','ALERT_APPROVAL'),('database.json','DATABASE'),('ca.crt','CA')]:
+              value=os.environ.get(key,'')
+              if not value:
+                  if key in ['API_KEY','ALERT_APPROVAL']: raise SystemExit('Missing authorized commercial input')
+                  continue
+              fd=os.open(root/name,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+              with os.fdopen(fd,'w') as f:f.write(value)
+          PY
+      - name: Set up commercial receiver only when individually approved
+        if: inputs.setup_alerts == true
+        run: python3 scripts/ops/commercial-alerts.py setup --approval-file "$RUNNER_TEMP/nona-commercial-runtime/approval.json" --connection-file "$RUNNER_TEMP/nona-commercial-runtime/database.json" --ca-file "$RUNNER_TEMP/nona-commercial-runtime/ca.crt"
+      - name: Read commercial alerts; GitHub failure notifies existing owner
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/ops/commercial-alerts.py read --approval-file "$RUNNER_TEMP/nona-commercial-runtime/approval.json" --api-key-file "$RUNNER_TEMP/nona-commercial-runtime/api.key"
+      - name: Commercial Billing retry queue fallback after separate Live approval
+        if: vars.NONA_STRIPE_LIVE_APPROVED == 'true'
+        env:
+          NONA_COMMERCIAL_OPS_APPROVED: ${{ vars.NONA_COMMERCIAL_OPS_APPROVED }}
+          STRIPE_LIVE_VERIFIED: ${{ vars.NONA_STRIPE_LIVE_APPROVED }}
+          HOSTBUDDY_APP_URL: https://host-buddy-concierge.lovable.app
+          BILLING_SYNC_SECRET: ${{ secrets.NONA_COMMERCIAL_BILLING_SYNC_SECRET }}
+        run: node scripts/run-commercial-billing-sync.mjs
+      - name: Remove only temporary job credentials
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'nona-commercial-runtime'
+          for name in ['api.key','approval.json','database.json','ca.crt']:(root/name).unlink(missing_ok=True)
+          PY
+  backup:
+    if: github.event.repository.private == true && vars.NONA_COMMERCIAL_OPS_APPROVED == 'true' && (inputs.capture_backup == true || github.event.schedule == '37 4 * * *')
+    environment: nona-commercial
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Validate immutable approved target before secrets
+        env:
+          RELEASE_REF: ${{ vars.NONA_RELEASE_REF }}
+          PROJECT_REF: ${{ vars.NONA_COMMERCIAL_PROJECT_REF }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          if not re.fullmatch('[0-9a-f]{40}', os.environ.get('RELEASE_REF','')) or os.environ.get('PROJECT_REF') != 'jzbjpaucgckggumhowns':
+              raise SystemExit('Approved immutable release and commercial target required')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: tpenalba06/HOSTBUDDY
+          ref: ${{ vars.NONA_RELEASE_REF }}
+          persist-credentials: false
+      - name: Install official PostgreSQL 17 client before secrets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main\n' | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client-17
+          python3 -m pip install -r scripts/ops/requirements.txt
+      - name: Prepare approved commercial backup inputs
+        env:
+          DATABASE: ${{ secrets.NONA_COMMERCIAL_DATABASE_JSON }}
+          CA: ${{ vars.NONA_COMMERCIAL_DATABASE_CA_PEM }}
+          KEY: ${{ secrets.NONA_COMMERCIAL_BACKUP_KEY_HEX }}
+          APPROVAL: ${{ secrets.NONA_COMMERCIAL_BACKUP_APPROVAL_JSON }}
+          API_KEY: ${{ secrets.NONA_COMMERCIAL_API_KEY }}
+          CONFIGURATION: ${{ vars.NONA_COMMERCIAL_OBSERVED_CONFIGURATION_JSON }}
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'nona-commercial-backup'
+          root.mkdir(mode=0o700)
+          for name,key in [('database.json','DATABASE'),('ca.crt','CA'),('backup.key','KEY'),('approval.json','APPROVAL'),('api.key','API_KEY'),('configuration.json','CONFIGURATION')]:
+              value=os.environ.get(key,'')
+              if not value:raise SystemExit('Missing individually approved commercial backup input')
+              fd=os.open(root/name,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+              with os.fdopen(fd,'w') as f:f.write(value)
+          PY
+      - name: Read-only DB/Auth and guide-media capture; authenticated verification
+        run: |
+          P="$RUNNER_TEMP/nona-commercial-backup"
+          python3 scripts/ops/commercial-database-backup.py backup --approval-file "$P/approval.json" --connection-file "$P/database.json" --ca-file "$P/ca.crt" --key-file "$P/backup.key" --output "$P/database.nonaenc"
+          python3 scripts/ops/commercial-media-backup.py backup --approval-file "$P/approval.json" --api-key-file "$P/api.key" --configuration "$P/configuration.json" --key-file "$P/backup.key" --output "$P/media.nonaenc"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: commercial-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/nona-commercial-backup/*.nonaenc
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/download-artifact@v4
+        with:
+          name: commercial-encrypted-${{ github.run_id }}
+          path: ${{ runner.temp }}/nona-commercial-retrieved
+      - name: Verify the retrieved ciphertext, without new DB or media read
+        run: |
+          chmod 700 "$RUNNER_TEMP/nona-commercial-retrieved"
+          chmod 600 "$RUNNER_TEMP/nona-commercial-retrieved/"*.nonaenc
+          P="$RUNNER_TEMP/nona-commercial-backup"
+          python3 scripts/ops/commercial-database-backup.py verify --approval-file "$P/approval.json" --key-file "$P/backup.key" --output "$RUNNER_TEMP/nona-commercial-retrieved/database.nonaenc"
+          python3 scripts/ops/commercial-media-backup.py verify --approval-file "$P/approval.json" --key-file "$P/backup.key" --output "$RUNNER_TEMP/nona-commercial-retrieved/media.nonaenc"
+      - name: Remove only temporary job credentials
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'nona-commercial-backup'
+          for name in ['database.json','ca.crt','backup.key','approval.json','api.key','configuration.json']:(root/name).unlink(missing_ok=True)
+          PY
+# Agent installs/applies only after concrete approvals; never in public .github.

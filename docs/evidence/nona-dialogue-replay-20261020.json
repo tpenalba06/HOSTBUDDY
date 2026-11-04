@@ -1,0 +1,202 @@
+{
+  "checkedAt": "2026-10-20T12:09:20.733Z",
+  "kind": "offline-recorded-prose-replay",
+  "actualModelCalls": 0,
+  "databaseCalls": 0,
+  "newMoneySpentUsd": 0,
+  "limitation": "Lexical guard evaluation only; does not prove semantic accuracy or new model quality.",
+  "results": [
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Coucou ! Quel bonheur d'être enfin là. Je suis ravie de t'accueillir, dis-moi tout : comment puis-je rendre ton séjour encore plus magique ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Coucou ! Quel bonheur d'être enfin là. Je suis ravie de t'accueillir, installe-toi bien et dis-moi si je peux faire quoi que ce soit pour rendre ton séjour encore plus doux.",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 1,
+      "text": "Oh, je comprends tellement, tout ce trajet fatigue ! Un petit massage au bord de la piscine serait parfait pour dénouer tout ça. Quel jour te plairait ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Quel bonheur de commencer la journée avec un bon petit-déjeuner ! Pour combien de personnes dois-je préparer cela ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 1,
+      "text": "Trois gourmands, c'est noté ! À quelle heure souhaites-tu être servi demain ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Je m'occupe de tout pour que tu puisses rester connecté tranquillement. Regarde juste la fiche juste ici !",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 1,
+      "text": "Je ne peux pas inventer ça, ce serait trop risqué pour ton entrée ! Jette un œil à la fiche sur ton arrivée, tout y est noté.",
+      "acceptedByCurrentVoiceGuard": false,
+      "refusal": "dialogue-unverified-source-content"
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Rien de tel qu'un bon réveil gourmand pour bien commencer la journée ! Tu souhaites ce petit-déjeuner pour combien de personnes ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 1,
+      "text": "C'est noté, trois gourmands ! À quelle heure souhaites-tu être servi demain matin ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 3,
+      "text": "Le classique, un indémodable ! Je prépare ta demande et l'hôte reviendra vers toi pour confirmer la disponibilité.",
+      "acceptedByCurrentVoiceGuard": false,
+      "refusal": "dialogue-submission-boundary-missing"
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "en",
+      "turnIndex": 0,
+      "text": "I'd love to get that sorted for you! How many people will be joining in for breakfast?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "es",
+      "turnIndex": 0,
+      "text": "¡Claro que sí, cielo! Nada como empezar el día con un buen festín. ¿Para cuántas personas lo preparamos?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "de",
+      "turnIndex": 0,
+      "text": "Aber natürlich, ein ausgiebiges Frühstück ist der beste Start in den Tag! Für wie viele Personen darf ich das vorbereiten?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "it",
+      "turnIndex": 0,
+      "text": "Certamente, caro! Non c'è niente di meglio di un risveglio goloso. Per quante persone devo preparare la richiesta?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "pt",
+      "turnIndex": 0,
+      "text": "Com certeza, querido! Vou preparar tudo para começares o dia com energia. Para quantas pessoas seria o pequeno-almoço?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Oh, un petit moment de détente, ça fait un bien fou ! Pour combien de personnes souhaites-tu préparer cela ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261019.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Oh, je comprends tellement, conducting eight hours of driving is exhausting! Un petit massage bien mérité pour dénouer tout ça, qu'en penses-tu ?",
+      "acceptedByCurrentVoiceGuard": false,
+      "refusal": "dialogue-language-mismatch"
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "C'est une merveilleuse idée pour bien commencer la journée ! Pour combien de personnes dois-je préparer cela ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "fr",
+      "turnIndex": 1,
+      "text": "C'est noté, trois gourmands ! À quelle heure souhaites-tu être servi ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "fr",
+      "turnIndex": 2,
+      "text": "C'est parfait, je note l'heure. Maintenant, dis-moi quelle option tu préfères pour ton petit-déjeuner ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "fr",
+      "turnIndex": 3,
+      "text": "Un choix tout en simplicité et efficacité, j'adore ! J'ai tout préparé dans le récapitulatif ci-dessous ; jette-y un œil et valide si cela te convient, car rien n'a encore été envoyé.",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Je ne connais pas ce code, mon chéri, mais tu peux trouver toutes les informations nécessaires dans la section Mon arrivée.",
+      "acceptedByCurrentVoiceGuard": false,
+      "refusal": "dialogue-unverified-source-content"
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "fr",
+      "turnIndex": 0,
+      "text": "Oh, je comprends tellement, rien de tel qu'un bon moment pour soi après un long trajet. Je peux te proposer un massage à domicile pour dénouer tout ça, ça te tente pour quel jour ?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    },
+    {
+      "source": "nona-ollama-live-20261020.json",
+      "locale": "en",
+      "turnIndex": 0,
+      "text": "A delicious start to the day is always a lovely idea! How many people should I include in this request?",
+      "acceptedByCurrentVoiceGuard": true,
+      "refusal": null
+    }
+  ]
+}

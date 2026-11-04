@@ -1,0 +1,25 @@
+name: Billing sync (preview only)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+permissions:
+  contents: read
+concurrency:
+  group: billing-sync-preview
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: vars.HOSTBUDDY_BILLING_SYNC_TEST_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reconcile pending preview billing jobs
+        env:
+          HOSTBUDDY_BILLING_SYNC_URL: ${{ vars.HOSTBUDDY_BILLING_SYNC_URL }}
+          BILLING_SYNC_SECRET: ${{ secrets.BILLING_SYNC_SECRET }}
+        run: node scripts/run-billing-sync.mjs

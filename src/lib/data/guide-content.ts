@@ -39,6 +39,7 @@ export function readGuideContent(value: unknown): GuideContent {
 }
 
 function inferredFieldKey(sectionKey: string, item: GuideContentItem) {
+  sectionKey = sectionKey.split("-")[0] ?? sectionKey;
   if (item.fieldKey && FIELD_BY_KEY[item.fieldKey]?.section.key === sectionKey)
     return item.fieldKey;
   const normalized = item.label.trim().toLocaleLowerCase("fr");
@@ -111,6 +112,16 @@ export function mergeFieldIntoGuideContent(
   previous: unknown,
   field: { key: string; label: string; value: string | null },
 ): GuideContent {
+  if (sectionKey.split("-")[0] === "wifi" && field.key === "wifi") {
+    // Information holds the complete Wi-Fi value, including network/password rows.
+    return buildGuideContent(
+      sectionKey,
+      previous,
+      field.value?.trim()
+        ? [{ fieldKey: field.key, label: field.label, text: field.value.trim() }]
+        : [],
+    );
+  }
   const items = getGuideItems(sectionKey, previous);
   const index = items.findIndex((item) => item.fieldKey === field.key);
   const nextItem: GuideContentItem = {
@@ -135,11 +146,26 @@ export function fieldUpdatesForGuideSection(
 ) {
   const before = getGuideItems(sectionKey, previous);
   const after = sanitizeGuideItems(sectionKey, items);
+  const canonicalKey = sectionKey.split("-")[0];
+  if (canonicalKey === "wifi" && (before.length || after.length)) {
+    const rows = after.filter((item) => item.text);
+    return [
+      {
+        key: "wifi",
+        value:
+          rows.length > 1
+            ? rows
+                .map((item) => (item.label ? `${item.label} : ${item.text}` : item.text))
+                .join("\n")
+            : rows[0]?.text || null,
+      },
+    ];
+  }
   const keys = new Set<string>();
   before.forEach((item) => item.fieldKey && keys.add(item.fieldKey));
   after.forEach((item) => item.fieldKey && keys.add(item.fieldKey));
   return [...keys]
-    .filter((key) => FIELD_BY_KEY[key]?.section.key === sectionKey)
+    .filter((key) => FIELD_BY_KEY[key]?.section.key === canonicalKey)
     .map((key) => ({
       key,
       value: after.find((item) => item.fieldKey === key)?.text.trim() || null,

@@ -3,14 +3,14 @@ name: Validate
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, feat/guest-guide-v2-lot1]
 
 permissions:
   contents: read
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -25,3 +25,67 @@ jobs:
       - run: npm run test
       - run: npm run typecheck
       - run: npm run build
+      - run: node scripts/validation/build-smoke.mjs
+      - name: Restore an isolated synthetic PostgreSQL backup
+        env:
+          HOSTBUDDY_PGLITE_MODULE: ${{ runner.temp }}/hostbuddy-recovery/node_modules/@electric-sql/pglite/dist/index.js
+          HOSTBUDDY_PGDUMP_MODULE: ${{ runner.temp }}/hostbuddy-recovery/node_modules/@electric-sql/pglite-tools/dist/pg_dump.js
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hostbuddy-recovery" --no-audit --no-fund @electric-sql/pglite@0.5.8 @electric-sql/pglite-tools@0.4.8
+          node scripts/validation/local-recovery.mjs
+  lighthouse:
+    name: Hosted public Lighthouse (slow network)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/guest-guide-v2-lot1'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Audit current hosted homepage and public TEST guide
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lighthouse-tools" --no-audit --no-fund lighthouse@13.5.0
+          mkdir -p audit-results
+          node scripts/validation/hosted-network.mjs audit-results/hosted-network.json
+          node -e 'fetch("https://host-buddy-concierge.lovable.app/l/audit-hostbuddy-04-10-2026-7ad333").then(async r=>{if(!r.ok||!(await r.text()).includes("AUDIT HostBuddy 04-10-2026"))throw Error("Published TEST guide unavailable")})'
+          for page in home guide; do
+            url='https://host-buddy-concierge.lovable.app/'
+            if [ "$page" = guide ]; then url='https://host-buddy-concierge.lovable.app/l/audit-hostbuddy-04-10-2026-7ad333'; fi
+            node "$RUNNER_TEMP/lighthouse-tools/node_modules/lighthouse/cli/index.js" "$url" --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --only-categories=performance,accessibility,best-practices --throttling-method=devtools --output=json --output-path="$RUNNER_TEMP/lighthouse-$page.json" --max-wait-for-load=45000 --quiet
+            node scripts/lighthouse-summary.mjs "$RUNNER_TEMP/lighthouse-$page.json" "audit-results/$page.json" "$page"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hosted-lighthouse-metrics
+          path: audit-results/*.json
+          if-no-files-found: ignore
+
+  network-import:
+    name: Public network extraction (no hosted mutations)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/guest-guide-v2-lot1'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - name: Robots, fictitious public JSON-LD and photo bytes
+        env:
+          HOSTBUDDY_NETWORK_IMPORTS: "1"
+          HOSTBUDDY_NETWORK_EVIDENCE: network-import-evidence.json
+        run: npx vitest run scripts/validation/network-import.test.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-network-import-evidence
+          path: network-import-evidence.json
+          if-no-files-found: ignore

@@ -1,0 +1,40 @@
+{
+  "source_url": "https://recherche-entreprises.api.gouv.fr/search?q=992856641",
+  "consulted_at_utc": "2026-10-09T13:27:21.819310+00:00",
+  "http_status": 200,
+  "matching_results": 1,
+  "entreprise": {
+    "siren": "992856641",
+    "nature_juridique": "1000",
+    "etat_administratif": "A",
+    "date_creation": "2025-10-17",
+    "date_fermeture": null,
+    "statut_diffusion": "P",
+    "activite_principale": "59.12Z",
+    "date_mise_a_jour": "2026-10-08T10:20:17",
+    "date_mise_a_jour_insee": "2025-10-20T09:40:56",
+    "date_mise_a_jour_rne": "2026-09-02T14:59:31",
+    "nombre_etablissements": 1,
+    "nombre_etablissements_ouverts": 1,
+    "tva": null
+  },
+  "est_entrepreneur_individuel": true,
+  "siege": {
+    "siret": "99285664100012",
+    "etat_administratif": "A",
+    "date_creation": "2025-10-17",
+    "date_debut_activite": "2025-10-17",
+    "date_fermeture": null,
+    "commune": "06088",
+    "libelle_commune": "NICE",
+    "departement": "06",
+    "activite_principale": "59.12Z",
+    "statut_diffusion_etablissement": "P"
+  },
+  "limits": [
+    "Le nom et l’adresse détaillée sont non diffusibles dans la réponse publique.",
+    "L’identité de l’éditeur Nona est attribuée par le titulaire et ses documents, pas déduite d’un homonyme.",
+    "Le champ tva non renseigné ne démontre ni franchise en base ni assujettissement.",
+    "Le code APE a une valeur statistique ; il ne décrit pas à lui seul toutes les activités déclarées."
+  ]
+}

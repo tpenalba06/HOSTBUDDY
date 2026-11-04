@@ -36,22 +36,25 @@ test("removes model, implicit OIDC and payment credentials; preserves isolated d
   assert.equal(env.VERCEL_OIDC_TOKEN, undefined);
   assert.equal(env.NONA_OLLAMA_TEST_ENABLE, "closed-manager-validation");
 });
-test("blocks order, billing and webhook requests while keeping authenticated manager routes available", () => {
+test("blocks order, billing and webhook requests while keeping authenticated manager routes available", async () => {
   let calls = 0;
-  const handler = managerTestBoundary(() => calls++, true);
-  const response = () => ({ setHeader() {}, end() {}, statusCode: 200 });
+  const handler = managerTestBoundary(() => {
+    calls++;
+    return new Response("TEST");
+  }, true);
   for (const [method, url] of [
     ["POST", "/api/public/guest-order"],
     ["POST", "/api/billing"],
     ["GET", "/api/stripe/status"],
     ["POST", "/api/webhooks/stripe"],
   ]) {
-    const res = response();
-    handler({ method, url }, res);
-    assert.equal(res.statusCode, 405);
+    const res = await handler.fetch(new Request("https://test.invalid" + url, { method }));
+    assert.equal(res.status, 405);
   }
   assert.equal(calls, 0);
-  handler({ method: "GET", url: "/app" }, response());
-  handler({ method: "POST", url: "/_serverFn/authenticated-manager" }, response());
+  await handler.fetch(new Request("https://test.invalid/app"));
+  await handler.fetch(
+    new Request("https://test.invalid/_serverFn/authenticated-manager", { method: "POST" }),
+  );
   assert.equal(calls, 2);
 });

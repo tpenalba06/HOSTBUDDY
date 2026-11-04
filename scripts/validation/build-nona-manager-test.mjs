@@ -38,9 +38,9 @@ await writeFile(
     'import { prepareManagerTestEnvironment, managerTestBoundary } from "./test-boundary.mjs";',
     `const ready = prepareManagerTestEnvironment(process.env, ${JSON.stringify(process.env.VITE_SUPABASE_PUBLISHABLE_KEY)});`,
     "let handler;",
-    "export default managerTestBoundary(async (req, res) => {",
+    "export default managerTestBoundary(async (req, context) => {",
     '  handler ??= (await import("./index.mjs")).default;',
-    "  return handler(req, res);",
+    "  return handler.fetch(req, context);",
     "}, ready);",
   ].join("\n"),
 );

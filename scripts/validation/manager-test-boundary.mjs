@@ -22,21 +22,27 @@ export function prepareManagerTestEnvironment(env, publishableKey) {
 }
 
 export function managerTestBoundary(handler, ready) {
-  return (req, res) => {
-    res.setHeader("x-robots-tag", "noindex, nofollow");
-    res.setHeader("referrer-policy", "no-referrer");
-    if (!ready) {
-      res.statusCode = 503;
-      return res.end("TEST unavailable");
-    }
-    const path = new URL(req.url, "https://test.invalid").pathname;
-    if (
-      /^\/api\/(?:stripe|billing|webhooks)(?:\/|$)/i.test(path) ||
-      (/^\/api\/public(?:\/|$)/i.test(path) && !["GET", "HEAD"].includes(req.method))
-    ) {
-      res.statusCode = 405;
-      return res.end("Unavailable in manager TEST validation");
-    }
-    return handler(req, res);
+  return {
+    async fetch(req, context) {
+      const headers = { "x-robots-tag": "noindex, nofollow", "referrer-policy": "no-referrer" };
+      if (!ready) {
+        return new Response("TEST unavailable", { status: 503, headers });
+      }
+      const path = new URL(req.url, "https://test.invalid").pathname;
+      if (
+        /^\/api\/(?:stripe|billing|webhooks)(?:\/|$)/i.test(path) ||
+        (/^\/api\/public(?:\/|$)/i.test(path) && !["GET", "HEAD"].includes(req.method))
+      ) {
+        return new Response("Unavailable in manager TEST validation", { status: 405, headers });
+      }
+      const response = await handler(req, context);
+      const outputHeaders = new Headers(response.headers);
+      for (const [key, value] of Object.entries(headers)) outputHeaders.set(key, value);
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: outputHeaders,
+      });
+    },
   };
 }

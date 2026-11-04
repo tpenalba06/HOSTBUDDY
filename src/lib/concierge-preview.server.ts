@@ -50,6 +50,8 @@ export async function conciergePreviewResponse(request: Request) {
       property: Boolean(env["NONA_OLLAMA_TEST_PROPERTY_ID"]),
       review: Boolean(env["NONA_OLLAMA_FREE_REVIEW"]),
       enabled: env["NONA_OLLAMA_TEST_ENABLE"] === "hosted-free-test-v1",
+      testArmed: process.env["NONA_OLLAMA_TEST_ENABLE"] === "hosted-free-test-v1",
+      previewArmed: process.env["NONA_OLLAMA_PREVIEW_ENABLE"] === "private-free-test-v1",
       session: Boolean(process.env["NONA_TEST_CONCIERGE_SESSION_SECRET"]),
     }),
   );

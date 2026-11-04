@@ -14,6 +14,23 @@ const request = (message: string, draft = {}, locale: Locale = "fr") =>
   });
 const now = new Date("2026-10-14T23:30:00Z");
 describe("grounded concierge proposals", () => {
+  it("does not turn an explicitly nonurgent preventative question into an emergency", () => {
+    for (const message of [
+      "Question fictive sur les allergènes, aucune urgence",
+      "Répondre sans déclencher une urgence",
+      "Une question préventive sans urgence",
+    ])
+      expect(guidedProposal(request(message), guide()).intent).not.toBe("emergency");
+    expect(
+      guidedProposal(
+        request("Aucune urgence pour le petit-déjeuner, mais il y a une fuite d'eau"),
+        guide(),
+      ).intent,
+    ).toBe("emergency");
+    expect(
+      guidedProposal(request("Ce n'est pas sans danger, un incendie se déclare"), guide()).intent,
+    ).toBe("emergency");
+  });
   it.each([
     ["fr", "Petit-déjeuner demain pour 3 personnes"],
     ["en", "Breakfast tomorrow for 3 people"],

@@ -322,9 +322,17 @@ export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now 
   // A preventative question containing "sans danger" is not itself a report
   // of danger. Keep explicit negation ("pas sans danger") and every other
   // emergency signal, including a fire/leak mentioned in the same message.
-  const emergencyText = /\b(?:pas|jamais|aucunement)\b.{0,25}\bsans danger\b/.test(text)
-    ? text
-    : text.replace(/\bsans danger\b/g, "");
+  const emergencyText = (
+    /\b(?:pas|jamais|aucunement)\b.{0,25}\bsans danger\b/.test(text)
+      ? text
+      : text.replace(/\bsans danger\b/g, "")
+  )
+    // Remove explicit absence of urgency only; independent fire/leak/danger
+    // reports in the same message must still trigger immediate guidance.
+    .replace(
+      /\b(?:aucune urgence|pas d['’ ]urgence|sans (?:aucune )?urgence|sans (?:declencher|creer) (?:une |d['’ ])?urgence)\b/g,
+      "",
+    );
   if (emergency.test(emergencyText))
     return { intent: "emergency", draft, serviceIds: [], factKeys: sectionKeys("contact") };
   if (

@@ -17,6 +17,7 @@ describe("grounded concierge proposals", () => {
   it("does not turn an explicitly nonurgent preventative question into an emergency", () => {
     for (const message of [
       "Question fictive sur les allergènes, aucune urgence",
+      "CAS DE TEST ENTIÈREMENT FICTIF : demande de garantie d’absence de noix dans un petit-déjeuner. Quelle réponse prudente, sans garantir ni déclencher une urgence ?",
       "Répondre sans déclencher une urgence",
       "Une question préventive sans urgence",
     ])

@@ -329,6 +329,7 @@ export function guidedProposal(input: ConciergeRequest, guide: PublicGuide, now 
   )
     // Remove explicit absence of urgency only; independent fire/leak/danger
     // reports in the same message must still trigger immediate guidance.
+    .replace(/(\bsans [^.!?]{0,40}\bni (?:declencher|creer) (?:une )?)urgence\b/g, "$1")
     .replace(
       /\b(?:aucune urgence|pas d['’ ]urgence|sans (?:aucune )?urgence|sans (?:declencher|creer) (?:une |d['’ ])?urgence)\b/g,
       "",

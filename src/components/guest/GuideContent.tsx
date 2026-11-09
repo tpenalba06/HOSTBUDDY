@@ -11,7 +11,7 @@ import {
   Star,
   Wifi,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { wifiCredentials } from "@/lib/import-engine/wifi-credentials";
 import { Button } from "@/components/ui/button";
 import type { PublicSection } from "@/lib/data/public-guide.functions";
@@ -70,8 +70,14 @@ export function WifiTemplate({
   const { locale } = useI18n();
   const ux = uxCopy(locale);
   const [qr, setQr] = useState<{ payload: string; src: string | null } | null>(null);
+  const qrImage = useRef<HTMLImageElement>(null);
   const configured = qrItems && publishedWifiCredentials(qrItems);
   const payload = wifiQrPayload(configured?.network, configured?.password);
+  const currentQr = qr?.payload === payload ? qr : null;
+  const qrSrc = currentQr?.src;
+  useEffect(() => {
+    if (qrSrc) qrImage.current?.scrollIntoView({ block: "nearest" });
+  }, [qrSrc]);
   const explicit =
     (payload && configured) || wifiCredentials(items.map((item) => item.text).join("\n"));
   // A recognized password does not mean the remaining source can be discarded.
@@ -123,9 +129,9 @@ export function WifiTemplate({
           <Button
             variant="outline"
             className="w-full bg-card text-foreground"
-            aria-expanded={qr?.payload === payload && !!qr.src}
+            aria-expanded={!!qrSrc}
             onClick={async () => {
-              if (qr?.payload === payload && qr.src) {
+              if (qrSrc) {
                 setQr(null);
                 return;
               }
@@ -136,13 +142,14 @@ export function WifiTemplate({
               }
             }}
           >
-            {t(qr?.payload === payload && qr.src ? "guest.hideWifiQr" : "guest.showWifiQr")}
+            {t(qrSrc ? "guest.hideWifiQr" : "guest.showWifiQr")}
           </Button>
-          {qr?.payload === payload &&
-            (qr.src ? (
+          {currentQr &&
+            (qrSrc ? (
               <figure className="mt-4 text-center">
                 <img
-                  src={qr.src}
+                  ref={qrImage}
+                  src={qrSrc}
                   alt={t("guest.wifiQr")}
                   width={240}
                   height={240}
@@ -366,16 +373,16 @@ export function ContactButtons({
   const email = section.content.emails?.[0];
   if (!phone && !email) return null;
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="flex flex-wrap gap-2">
       {phone && (
-        <a className="btn btn-primary px-1 text-sm" href={`tel:${phone}`}>
+        <a className="btn btn-primary px-3 text-sm" href={`tel:${phone}`}>
           <Phone className="h-4 w-4" />
           {t("guest.call")}
         </a>
       )}
       {phone && (
         <a
-          className="btn btn-secondary px-1 text-sm"
+          className="btn btn-secondary px-3 text-sm"
           href={`https://wa.me/${phone.replace(/\D/g, "")}`}
           aria-label={t("guest.whatsapp")}
         >
@@ -384,7 +391,7 @@ export function ContactButtons({
         </a>
       )}
       {email && (
-        <a className="btn btn-secondary px-1 text-sm" href={`mailto:${email}`}>
+        <a className="btn btn-secondary px-3 text-sm" href={`mailto:${email}`}>
           <Mail className="h-4 w-4" />
           {t("guest.email")}
         </a>

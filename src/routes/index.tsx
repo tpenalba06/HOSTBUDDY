@@ -18,7 +18,6 @@ import { SocialProof } from "@/components/marketing/SocialProof";
 import { LanguageSelect } from "@/components/i18n/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 import { uxCopy } from "@/lib/ux-copy";
-import arrivalAsset from "@/assets/hostbuddy-arrival.jpg.asset.json";
 import breakfastAsset from "@/assets/hostbuddy-breakfast.jpg.asset.json";
 import spaAsset from "@/assets/hostbuddy-spa.jpg.asset.json";
 
@@ -78,9 +77,8 @@ function Landing() {
 
       <main id="main-content" tabIndex={-1}>
         <section className="relative mx-auto min-h-[calc(100dvh-5rem)] max-w-[1600px] px-3 pb-8 pt-1 sm:px-5 lg:px-8">
-          <MarketingPhoto
-            src={arrivalAsset.url}
-            fallback="/hostbuddy-media/arrival.webp"
+          <img
+            src="/hostbuddy-media/arrival.webp"
             fetchPriority="high"
             alt={t("marketing.arrivalAlt")}
             width={1536}
@@ -94,27 +92,12 @@ function Landing() {
                 <WandSparkles className="h-4 w-4 text-primary" />
                 {t("marketing.badge")}
               </p>
-              <h1 className="text-balance text-5xl font-semibold leading-[1.05] sm:text-7xl">
+              <h1 className="text-balance text-4xl font-semibold leading-[1.05] sm:text-7xl">
                 {t("marketing.title")}
               </h1>
               <p className="mt-6 max-w-xl text-lg font-medium leading-relaxed text-ink-foreground/90 sm:text-xl">
                 {t("marketing.subtitle")}
               </p>
-              <ul className="mt-6 grid gap-2 text-base font-semibold sm:grid-cols-2">
-                {[
-                  "marketing.benefit1",
-                  "marketing.benefit2",
-                  "marketing.benefit3",
-                  "marketing.benefit4",
-                ].map((k) => (
-                  <li key={k} className="flex items-center gap-2">
-                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
-                      <Check className="h-4 w-4" />
-                    </span>
-                    {t(k)}
-                  </li>
-                ))}
-              </ul>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link to="/demo" search={{ mode: "guest" }} className="btn btn-primary">
                   {t("marketing.demoGuestAction")}
@@ -136,6 +119,21 @@ function Landing() {
               >
                 {ux.createGuide}
               </Link>
+              <ul className="mt-4 grid gap-2 text-base font-semibold sm:grid-cols-2">
+                {[
+                  "marketing.benefit1",
+                  "marketing.benefit2",
+                  "marketing.benefit3",
+                  "marketing.benefit4",
+                ].map((k) => (
+                  <li key={k} className="flex items-center gap-2">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
+                      <Check className="h-4 w-4" />
+                    </span>
+                    {t(k)}
+                  </li>
+                ))}
+              </ul>
               <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.paidTier")} ·{" "}
                 <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">

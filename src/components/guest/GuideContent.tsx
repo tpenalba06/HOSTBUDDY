@@ -76,7 +76,7 @@ export function WifiTemplate({
   const currentQr = qr?.payload === payload ? qr : null;
   const qrSrc = currentQr?.src;
   useEffect(() => {
-    if (qrSrc) qrImage.current?.scrollIntoView({ block: "nearest" });
+    if (qrSrc) qrImage.current?.scrollIntoView({ block: "center" });
   }, [qrSrc]);
   const explicit =
     (payload && configured) || wifiCredentials(items.map((item) => item.text).join("\n"));

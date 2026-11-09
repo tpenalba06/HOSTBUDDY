@@ -570,6 +570,12 @@ function SectionRow({
   }, []);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const kind = sectionKind(section);
+  const addItem = (label = "") =>
+    setItems((current) => [
+      ...current.filter((item) => item.label.trim() || item.text.trim()),
+      { ...blankItem(), label },
+    ]);
   const visibleTitle =
     SYSTEM_SECTION_KEYS.has(sectionKind(section)) && !titleEdited ? displayTitle : title;
   return (
@@ -614,7 +620,10 @@ function SectionRow({
               }}
             />
           </label>
-          {section.section_key.split("-")[0] !== "welcome" && (
+          {(kind === "arrival" || kind === "wifi") && (
+            <p className="rounded-lg bg-muted p-3 text-sm">{t("manager.publicSecrets")}</p>
+          )}
+          {kind !== "welcome" && (
             <>
               <div>
                 <p className="font-semibold">{t("manager.media")}</p>
@@ -671,6 +680,28 @@ function SectionRow({
           )}
           <div>
             <p className="mb-2 font-semibold">{t("manager.sectionContent")}</p>
+            {kind === "arrival" && (
+              <>
+                <p className="mb-3 text-sm text-muted-foreground">
+                  {t("manager.arrivalStepsHelp")}
+                </p>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {(
+                    ["guest.findEntrance", "guest.collectKeys", "guest.enterProperty"] as const
+                  ).map((key) => (
+                    <Button
+                      key={key}
+                      type="button"
+                      variant="outline"
+                      onClick={() => addItem(t(key))}
+                    >
+                      <Plus />
+                      {t(key)}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="space-y-3">
               {items.map((item, index) => (
                 <div
@@ -708,10 +739,12 @@ function SectionRow({
             <Button
               variant="outline"
               className="mt-3 w-full"
-              onClick={() => setItems((current) => [...current, blankItem()])}
+              onClick={() =>
+                kind === "arrival" ? addItem() : setItems((current) => [...current, blankItem()])
+              }
             >
               <Plus />
-              {t("manager.addInformation")}
+              {t(kind === "arrival" ? "manager.addArrivalStep" : "manager.addInformation")}
             </Button>
           </div>
           <label className="flex min-h-14 items-center justify-between gap-3 rounded-lg bg-muted px-4">

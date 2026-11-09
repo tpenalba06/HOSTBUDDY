@@ -116,19 +116,26 @@ function Landing() {
                 ))}
               </ul>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link to="/demo" className="btn btn-primary text-lg">
-                  {ux.explore}
+                <Link to="/demo" search={{ mode: "guest" }} className="btn btn-primary">
+                  {t("marketing.demoGuestAction")}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link
-                  to="/auth"
-                  search={{ mode: "signup" }}
+                  to="/demo"
+                  search={{ mode: "manager" }}
                   className="btn border-2 border-ink-foreground/60 bg-ink/20 text-ink-foreground backdrop-blur hover:bg-ink/35"
                 >
-                  {ux.createGuide}
+                  {t("marketing.demoManagerAction")}
                 </Link>
               </div>
               <p className="mt-3 text-sm text-ink-foreground/90">{ux.demoHint}</p>
+              <Link
+                to="/auth"
+                search={{ mode: "signup" }}
+                className="mt-1 inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
+              >
+                {ux.createGuide}
+              </Link>
               <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
                 {t("marketing.paidTier")} ·{" "}
                 <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">

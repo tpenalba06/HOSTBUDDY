@@ -67,6 +67,7 @@ export function ManagerGuidePreview({
       {guide && (
         <GuideView
           guide={guide}
+          showWifiQr
           onRequest={() =>
             setNotice(
               "En aperçu, aucune demande n’est envoyée. Ce bouton fonctionnera dans le guide publié.",

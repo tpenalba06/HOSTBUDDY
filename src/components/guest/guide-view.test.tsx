@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { PublicGuide, PublicSection } from "@/lib/data/public-guide.functions";
-vi.mock("@/lib/i18n", () => ({ useI18n: () => ({ locale: "fr", t: (key: string) => key }) }));
+vi.mock("@/lib/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/i18n")>()),
+  useI18n: () => ({ locale: "fr", t: (key: string) => key }),
+}));
 vi.mock("@/components/i18n/LanguageSelect", () => ({ LanguageSelect: () => null }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: new Proxy(
@@ -45,6 +48,47 @@ describe("shared guest guide compatibility", () => {
     expect(html).toContain("Réseau Maison / mot de passe secret");
     expect(html).not.toContain("guest.wifiPassword");
     expect(html).toContain("guest.copy");
+  });
+  it("offers a QR only on the opted-in surface and does not pre-render the QR image", () => {
+    const wifi = {
+      ...guide,
+      sections: [
+        {
+          ...section,
+          content: { items: [{ label: "Wi-Fi", text: "SSID: Maison\nMot de passe: synthetic" }] },
+        },
+      ],
+    };
+    const publicView = renderToStaticMarkup(<GuideView guide={wifi} sectionKey="wifi" />);
+    const preview = renderToStaticMarkup(<GuideView guide={wifi} sectionKey="wifi" showWifiQr />);
+    expect(publicView).not.toContain("guest.showWifiQr");
+    expect(preview).toContain("guest.showWifiQr");
+    expect(preview).not.toContain("data:image/png");
+  });
+  it("numbers only configured arrival steps and keeps help ahead of their content", () => {
+    const arrival = {
+      ...guide,
+      sections: [
+        {
+          ...section,
+          key: "arrival",
+          content: {
+            items: [
+              { label: "Empty preset", text: " " },
+              { label: "Entrance", text: "Blue door" },
+              { label: "Keys", text: "Ask the host" },
+            ],
+          },
+        },
+      ],
+    };
+    const html = renderToStaticMarkup(
+      <GuideView guide={arrival} sectionKey="arrival" onAskArrival={() => {}} />,
+    );
+    expect(html).not.toContain("Empty preset");
+    expect(html).toMatch(/1\. .*Entrance/);
+    expect(html).toMatch(/2\. .*Keys/);
+    expect(html.indexOf("guest.askArrival")).toBeLessThan(html.indexOf("Blue door"));
   });
   it("preserves the original Wi-Fi information when only the password can be normalized", () => {
     const text = "Wi-Fi : RECETTE_FINAL ; mot de passe SYNTHETIQUE_2026.";

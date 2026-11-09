@@ -49,11 +49,13 @@ export function NonaConcierge({
   slug,
   demo: demoProp = false,
   onContact,
+  arrivalRequest = 0,
 }: {
   guide: PublicGuide;
   slug?: string;
   demo?: boolean;
   onContact?: () => void;
+  arrivalRequest?: number;
 }) {
   const localTransport = useContext(LocalConciergeTransport);
   const demo = demoProp || Boolean(localTransport);
@@ -169,6 +171,16 @@ export function NonaConcierge({
   const sending = useRef(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
+  const handledArrival = useRef(0);
+  useEffect(() => {
+    if (arrivalRequest <= handledArrival.current) return;
+    handledArrival.current = arrivalRequest;
+    setInvited(false);
+    setWaving(false);
+    setOpen(true);
+    setMessage((current) => current || c.arrival);
+    input.current?.focus();
+  }, [arrivalRequest, c.arrival]);
   const messageId = useRef(0);
   const latestMessageId = messages.at(-1)?.id;
   useEffect(() => {

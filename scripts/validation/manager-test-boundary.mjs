@@ -29,9 +29,12 @@ export function managerTestBoundary(handler, ready) {
         return new Response("TEST unavailable", { status: 503, headers });
       }
       const path = new URL(req.url, "https://test.invalid").pathname;
+      const guidedChat = req.method === "POST" && path === "/api/public/concierge";
       if (
         /^\/api\/(?:stripe|billing|webhooks)(?:\/|$)/i.test(path) ||
-        (/^\/api\/public(?:\/|$)/i.test(path) && !["GET", "HEAD"].includes(req.method))
+        (/^\/api\/public(?:\/|$)/i.test(path) &&
+          !["GET", "HEAD"].includes(req.method) &&
+          !guidedChat)
       ) {
         return new Response("Unavailable in manager TEST validation", { status: 405, headers });
       }

@@ -44,6 +44,8 @@ test("blocks order, billing and webhook requests while keeping authenticated man
   }, true);
   for (const [method, url] of [
     ["POST", "/api/public/guest-order"],
+    ["POST", "/api/public/concierge-preview"],
+    ["PUT", "/api/public/concierge"],
     ["POST", "/api/billing"],
     ["GET", "/api/stripe/status"],
     ["POST", "/api/webhooks/stripe"],
@@ -56,5 +58,9 @@ test("blocks order, billing and webhook requests while keeping authenticated man
   await handler.fetch(
     new Request("https://test.invalid/_serverFn/authenticated-manager", { method: "POST" }),
   );
-  assert.equal(calls, 2);
+  const chat = await handler.fetch(
+    new Request("https://test.invalid/api/public/concierge", { method: "POST" }),
+  );
+  assert.equal(chat.status, 200);
+  assert.equal(calls, 3);
 });

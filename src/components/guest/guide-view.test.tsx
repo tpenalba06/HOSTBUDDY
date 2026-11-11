@@ -38,7 +38,7 @@ describe("shared guest guide compatibility", () => {
     const html = renderToStaticMarkup(<GuideView guide={guide} />);
     expect(html).toContain("Maison réelle");
     expect(html).toContain("media.ambience");
-    expect(html).toContain("nona-section-icon");
+    expect(html).toContain('data-guide-target="shortcut:wifi"');
     expect(html).not.toContain("/hostbuddy-media/wifi.webp");
     expect(html).not.toMatch(/Villa Mare|soleil2026|breakfast|arrival.jpg|spa.jpg/);
     expect(guideCover(guide)).toBe("/hostbuddy-media/apartment.webp");

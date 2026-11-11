@@ -18,7 +18,7 @@ export const Route = createFileRoute("/phone-preview")({
 
 function PhonePreview() {
   const { lang } = Route.useSearch();
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
   const initialized = useRef<Locale | null>(null);
   useEffect(() => {
     if (initialized.current !== lang) {
@@ -49,51 +49,65 @@ function PhonePreview() {
         id: "import-preview",
         name: fr ? "Votre logement" : "Your property",
         originalLocale: locale,
-        coverUrl: "/hostbuddy-media/apartment.webp",
+        coverUrl:
+          preview.illustration === "villa-sea"
+            ? "/demo-guide/coast.webp"
+            : `/hostbuddy-media/${preview.illustration ?? "apartment"}.webp`,
         subtitle: fr
           ? "Image d’illustration · Informations à vérifier"
           : "Illustration · Details to review",
         sections: [
-          ...(preview.arrival
-            ? [
-                {
-                  id: "arrival",
-                  key: "arrival",
-                  title: fr ? "Arrivée" : "Arrival",
-                  content: { items: [{ label: "", text: preview.arrival }] },
-                },
-              ]
-            : []),
-          ...(preview.departure
-            ? [
-                {
-                  id: "departure",
-                  key: "departure",
-                  title: fr ? "Départ" : "Departure",
-                  content: { items: [{ label: "", text: preview.departure }] },
-                },
-              ]
-            : []),
-          ...(preview.capacity
-            ? [
-                {
-                  id: "house",
-                  key: "house",
-                  title: fr ? "Le logement" : "The property",
-                  content: {
-                    items: [
-                      { label: fr ? "Capacité" : "Capacity", text: String(preview.capacity) },
-                    ],
-                  },
-                },
-              ]
-            : []),
+          {
+            id: "arrival",
+            key: "arrival",
+            title: t("section.arrival"),
+            content: { items: preview.arrival ? [{ label: "", text: preview.arrival }] : [] },
+          },
+          { id: "wifi", key: "wifi", title: t("section.wifi"), content: { items: [] } },
+          {
+            id: "departure",
+            key: "departure",
+            title: t("section.departure"),
+            content: { items: preview.departure ? [{ label: "", text: preview.departure }] : [] },
+          },
+          {
+            id: "address",
+            key: "address",
+            title: fr ? "Adresse" : "Address",
+            content: { items: [] },
+          },
+          {
+            id: "access",
+            key: "access",
+            title: fr ? "Accès et clés" : "Access and keys",
+            content: { items: [] },
+          },
+          {
+            id: "house",
+            key: "house",
+            title: t("section.house"),
+            content: {
+              items: preview.capacity
+                ? [
+                    {
+                      label: fr ? "Capacité" : "Capacity",
+                      text: fr ? `${preview.capacity} voyageur(s)` : `${preview.capacity} guest(s)`,
+                    },
+                  ]
+                : [],
+            },
+          },
+          { id: "services", key: "services", title: t("section.services"), content: { items: [] } },
         ],
       }
     : demoGuide(createVillaMare(locale));
   return (
     <div className="nona-phone-document">
-      <GuideView key={preview ? JSON.stringify(preview) : "villa"} guide={guide} />
+      <GuideView
+        key={preview ? JSON.stringify(preview) : "villa"}
+        guide={guide}
+        importPreview={!!preview}
+      />
       {!preview && <NonaConcierge guide={guide} demo />}
     </div>
   );

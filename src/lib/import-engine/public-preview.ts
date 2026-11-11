@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ExtractionResult } from "./types";
+import { detectAccommodationMood } from "@/components/guest/property-media";
 
 // Only bounded, typed facts cross into the marketing preview. Source titles,
 // free text, evidence, URLs, images and credentials never enter the phone.
@@ -13,6 +14,9 @@ export const publicPreviewSchema = z.object({
     .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
     .optional(),
   capacity: z.number().int().min(1).max(99).optional(),
+  illustration: z
+    .enum(["villa-sea", "urban-hotel", "chalet", "glamping", "apartment", "countryside"])
+    .optional(),
 });
 
 export type PublicImportPreview = z.infer<typeof publicPreviewSchema>;
@@ -46,5 +50,6 @@ export function publicImportPreview(result: ExtractionResult): PublicImportPrevi
     arrival: time("arrival", arrival),
     departure: time("departure", departure),
     capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,
+    illustration: detectAccommodationMood(result.propertyName ?? ""),
   };
 }

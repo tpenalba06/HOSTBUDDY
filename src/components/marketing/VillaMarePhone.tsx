@@ -73,14 +73,6 @@ export function VillaMarePhone() {
         result = response.preview;
       }
       const count = [result.arrival, result.departure, result.capacity].filter(Boolean).length;
-      if (!count) {
-        setMessage(
-          fr
-            ? "Aucune information exploitable pour le téléphone. Colle un extrait de l’annonce avec la capacité ou les horaires."
-            : "No usable details for the phone preview. Paste listing text with capacity or check-in and check-out times.",
-        );
-        return;
-      }
       setPreview(result);
       setMessage(
         fr

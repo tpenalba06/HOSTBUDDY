@@ -138,6 +138,7 @@ export function GuideView({
   conciergeSlug,
   displayName,
   showWifiQr = false,
+  importPreview = false,
   onAskArrival,
 }: {
   guide: GuideViewData;
@@ -150,6 +151,7 @@ export function GuideView({
   conciergeSlug?: string;
   displayName?: string;
   showWifiQr?: boolean;
+  importPreview?: boolean;
   onAskArrival?: () => void;
 }) {
   const { locale, t } = useI18n();
@@ -160,7 +162,7 @@ export function GuideView({
   const [entryId, setEntryId] = useState<string | null>(null);
   const [entryCategory, setEntryCategory] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(importPreview);
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState(false);
   const [arrivalRequest, setArrivalRequest] = useState(0);
@@ -364,7 +366,13 @@ export function GuideView({
                       }
                     />
                     <div className="hb-section-information">
-                      {sectionKind(open.key) === "wifi" ? (
+                      {importPreview && !open.content.items?.length ? (
+                        <p className="rounded-xl bg-muted p-4">
+                          {locale === "fr"
+                            ? "À compléter dans ton livret après l’import."
+                            : "Add this to your guide after importing."}
+                        </p>
+                      ) : sectionKind(open.key) === "wifi" ? (
                         <WifiTemplate
                           items={open.content.items ?? []}
                           t={t}

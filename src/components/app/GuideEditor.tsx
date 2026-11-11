@@ -2,7 +2,7 @@ import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Eye, Home, ImagePlus, Plus, Trash2, Video } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, ImagePlus, Plus, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -244,20 +244,21 @@ export function GuideEditor({
   return (
     <div className={`guide-editor-workspace ${compact ? "guide-editor-compact" : ""}`}>
       <nav className="guide-editor-rail" aria-label={t("manager.editContent")}>
-        <button type="button" aria-pressed={!open} onClick={() => setOpen(null)}>
-          <Home size={17} />
-          {t("manager.general")}
-        </button>
-        {sorted.map((section) => (
-          <button
-            key={section.id}
-            type="button"
-            aria-pressed={open === section.id}
-            onClick={() => setOpen(section.id)}
+        <label className="block text-sm font-semibold">
+          {locale === "fr" ? "Rubrique à modifier" : "Section to edit"}
+          <select
+            className="field mt-1 min-h-11"
+            value={open ?? ""}
+            onChange={(event) => setOpen(event.target.value || null)}
           >
-            {sectionLabel(section, t)}
-          </button>
-        ))}
+            <option value="">{t("manager.general")}</option>
+            {sorted.map((section) => (
+              <option key={section.id} value={section.id}>
+                {sectionLabel(section, t)}
+              </option>
+            ))}
+          </select>
+        </label>
         <details>
           <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold">
             {t("editor.sectionsOrder")}

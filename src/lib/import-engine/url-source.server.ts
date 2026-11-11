@@ -209,6 +209,7 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
 export async function runUrlImport(data: {
   url: string;
   source: ImportSource;
+  localAi?: boolean;
 }): Promise<UrlImportOutcome> {
   const source = data.source as ImportSource;
   let url: URL;
@@ -264,7 +265,7 @@ export async function runUrlImport(data: {
     result = await extractAccessibleHtml(
       html,
       resolvedUrl,
-      typeof process !== "undefined" && process.env["NONA_IMPORT_LOCAL_AI"] === "true",
+      data.localAi ?? process.env["NONA_IMPORT_LOCAL_AI"] === "true",
     );
   } catch {
     return { ok: false, source, reason: "insufficient" };

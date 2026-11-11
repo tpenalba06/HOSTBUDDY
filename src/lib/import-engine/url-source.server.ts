@@ -150,8 +150,7 @@ export function webTextForRules(text: string) {
 export async function extractAccessibleHtml(html: string, resolvedUrl: string, localAi = false) {
   const structured = extractStructuredFields(html, resolvedUrl);
   const sunver = sunverGuestDocument(html, resolvedUrl);
-  const visible = htmlDocumentText(html);
-  const textual = await analyzeImportDocument([sunver?.text, visible].filter(Boolean).join("\n"), {
+  const textual = await analyzeImportDocument(sunver?.text ?? htmlDocumentText(html), {
     sourceUrl: resolvedUrl,
     localAi,
   });
@@ -167,7 +166,7 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
           { quote: sunver.recommendations, sourceUrl: resolvedUrl, method: "structured" as const },
         ],
       };
-    const metadata = structured.fields[field.key];
+    const metadata = sunver ? undefined : structured.fields[field.key];
     if (!metadata) return field;
     return {
       ...metadata,

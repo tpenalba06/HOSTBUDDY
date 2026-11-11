@@ -89,11 +89,13 @@ export function sunverGuestDocument(
   const lines = [
     `Nom du logement : ${string("name")}`,
     string("info_text") ? `# Description\n${htmlDocumentText(string("info_text"))}` : "",
+    "# Coordonnées du logement",
     string("address")
       ? `Adresse : ${[string("address"), string("zipcode"), string("city"), string("country")].filter(Boolean).join(", ")}`
       : "",
     string("phone_number") ? `Téléphone : ${string("phone_number")}` : "",
     string("mail") ? `E-mail : ${string("mail")}` : "",
+    "# Wi-Fi",
     string("wifi_ssid") ? `Réseau Wi-Fi : ${string("wifi_ssid")}` : "",
     string("wifi_password") ? `Mot de passe Wi-Fi : ${string("wifi_password")}` : "",
   ].filter(Boolean);
@@ -109,7 +111,7 @@ export function sunverGuestDocument(
     for (const faq of entries(content["faqQuestions"])) {
       if (faq["establishment_id"] !== e["id"]) continue;
       lines.push(
-        `${localizedText(faq["question"])}\n${htmlDocumentText(localizedText(faq["answer"]))}`,
+        `# ${localizedText(faq["question"]).replace(/\s+/g, " ").trim()}\n${htmlDocumentText(localizedText(faq["answer"]))}`,
       );
     }
     const moduleIds = new Set<string>();
@@ -127,7 +129,10 @@ export function sunverGuestDocument(
     }
     for (const description of entries(content["optionalModuleDescriptions"])) {
       if (typeof description["id"] === "string" && moduleIds.has(description["id"]))
-        lines.push(htmlDocumentText(localizedText(description["description"])));
+        lines.push(
+          "# Informations du logement",
+          htmlDocumentText(localizedText(description["description"])),
+        );
     }
     for (const category of entries(content["alentours"])) {
       if (category["establishment_id"] !== e["id"]) continue;

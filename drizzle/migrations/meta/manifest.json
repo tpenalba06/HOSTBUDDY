@@ -108,6 +108,10 @@
     {
       "tag": "0026_concierge_metered_cloud",
       "sha256": "44dd37083f4c6817e2f2b0a9e64a8eebd90d6c80ee0141de31c21f90064a03dd"
+    },
+    {
+      "tag": "0027_guest_stay_access",
+      "sha256": "777446f5412eb8504abb447043d133a7ed393eed8b5f4c300815cc8b5706fb2b"
     }
   ]
 }

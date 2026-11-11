@@ -1349,6 +1349,7 @@ export type Database = {
         }[]
       }
       get_public_guide: { Args: { _slug: string }; Returns: Json }
+      read_guest_stay_access: { Args: { _slug: string; _token: string }; Returns: Json }
       has_paid_publication_access: { Args: { _org: string }; Returns: boolean }
       invite_organization_member: {
         Args: {

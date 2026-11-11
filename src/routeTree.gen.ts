@@ -46,6 +46,7 @@ import { Route as ApiPublicMessagesRouteImport } from './routes/api/public/messa
 import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
 import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
 import { Route as ApiPublicPaymentInfoRouteImport } from './routes/api/public/payment-info'
+import { Route as ApiPublicStayAccessRouteImport } from './routes/api/public/stay-access'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthenticatedAppMessagesIdRouteImport } from './routes/_authenticated/app.messages_.$id'
 import { Route as AuthenticatedAppPIdRouteImport } from './routes/_authenticated/app.p.$id'
@@ -244,6 +245,11 @@ const ApiPublicPaymentInfoRoute = ApiPublicPaymentInfoRouteImport.update({
   path: '/api/public/payment-info',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStayAccessRoute = ApiPublicStayAccessRouteImport.update({
+  id: '/api/public/stay-access',
+  path: '/api/public/stay-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe-webhook',
   path: '/api/public/stripe-webhook',
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stay-access': typeof ApiPublicStayAccessRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stay-access': typeof ApiPublicStayAccessRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/messages/$id': typeof AuthenticatedAppMessagesIdRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/orders': typeof ApiPublicOrdersRoute
   '/api/public/payment-info': typeof ApiPublicPaymentInfoRoute
+  '/api/public/stay-access': typeof ApiPublicStayAccessRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/messages_/$id': typeof AuthenticatedAppMessagesIdRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/api/public/order-status'
     | '/api/public/orders'
     | '/api/public/payment-info'
+    | '/api/public/stay-access'
     | '/api/public/stripe-webhook'
     | '/app/'
     | '/app/messages/$id'
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/api/public/order-status'
     | '/api/public/orders'
     | '/api/public/payment-info'
+    | '/api/public/stay-access'
     | '/api/public/stripe-webhook'
     | '/app'
     | '/app/messages/$id'
@@ -505,6 +516,7 @@ export interface FileRouteTypes {
     | '/api/public/order-status'
     | '/api/public/orders'
     | '/api/public/payment-info'
+    | '/api/public/stay-access'
     | '/api/public/stripe-webhook'
     | '/_authenticated/app/'
     | '/_authenticated/app/messages_/$id'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
   ApiPublicOrdersRoute: typeof ApiPublicOrdersRoute
   ApiPublicPaymentInfoRoute: typeof ApiPublicPaymentInfoRoute
+  ApiPublicStayAccessRoute: typeof ApiPublicStayAccessRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -798,6 +811,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentInfoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stay-access': {
+      id: '/api/public/stay-access'
+      path: '/api/public/stay-access'
+      fullPath: '/api/public/stay-access'
+      preLoaderRoute: typeof ApiPublicStayAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stripe-webhook': {
       id: '/api/public/stripe-webhook'
       path: '/api/public/stripe-webhook'
@@ -897,6 +917,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,
   ApiPublicOrdersRoute: ApiPublicOrdersRoute,
   ApiPublicPaymentInfoRoute: ApiPublicPaymentInfoRoute,
+  ApiPublicStayAccessRoute: ApiPublicStayAccessRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport

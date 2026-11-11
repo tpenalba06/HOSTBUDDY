@@ -30,3 +30,11 @@ Ces observations proviennent du code, des captures historiques et d’une recett
 - Vitest : 686 réussis et 2 ignorés. Tests Node : 22 réussis et 1 ignoré. Le test de boucle locale a réussi avec l’accès réseau local autorisé après un premier refus de connexion dans l’environnement restreint.
 - Playwright avec données fictives sur 360 × 800, 390 × 844 et 1440 × 900 : affichage initial de Villa Mare, import texte, ouverture de l’arrivée à 16 h, omission du code fictif, retour à Villa Mare, rejet d’un hôte local et absence de débordement horizontal. Captures dans le dossier de preuves de la reprise.
 - Autorisation de séjour, assainissement des données historiques, import URL réussi depuis les plateformes et recette distante de l’ensemble restent à valider. La Preview hébergée ne contient pas cette branche.
+
+## Suite · Autorisation de séjour
+
+La migration 0027 introduit des consignes privées par autorisation et par logement. L’émetteur doit être gestionnaire de l’organisation. Le jeton aléatoire est renvoyé une seule fois et seul son empreinte est conservée. La lecture est réservée au serveur et contrôlée à chaque requête selon le logement, les dates et la révocation. L’API dédiée reçoit le jeton dans le corps d’une requête POST et envoie une réponse privée non mise en cache.
+
+Tests locaux réussis pour un autre logement, l’accès anonyme, la fenêtre future et expirée, la révocation, les droits directs, l’origine étrangère, le corps invalide et l’en-tête de cache. Le test de non-régression du catalogue de services et l’inventaire des migrations passent également. Build, TypeScript et lint des fichiers concernés réussis.
+
+Cette étape ne bascule aucune donnée de la Preview. Il reste à brancher l’édition et la distribution des accès, afficher les consignes privées dans le parcours voyageur, assainir les instantanés historiques et traiter les copies hors ligne antérieures. Les informations déjà publiées demandent une revue avant bascule et, pour les véritables codes exposés, une rotation par le gestionnaire. Le QR de séjour doit être recetté après cette bascule. L’audit UX complet reste après la stabilisation fonctionnelle.

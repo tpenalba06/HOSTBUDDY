@@ -37,7 +37,7 @@ function airbnbPinnedListingIds(url: URL) {
   return [...new Set(values.filter((value) => /^\d{5,30}$/.test(value)))];
 }
 
-export type ImportUrlIssue = "airbnb_search_without_single_listing";
+export type ImportUrlIssue = "airbnb_search_without_single_listing" | "sunver_staff_link";
 
 export function getImportUrlIssue(input: string): ImportUrlIssue | null {
   const value = cleanInput(input);
@@ -45,6 +45,8 @@ export function getImportUrlIssue(input: string): ImportUrlIssue | null {
 
   try {
     const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    if (url.hostname === "app.sunver.app" && /^\/[a-z]{2}\/staff(?:\/|$)/i.test(url.pathname))
+      return "sunver_staff_link";
     if (!isAirbnbHost(url.hostname) || !AIRBNB_SEARCH_PATH.test(url.pathname)) return null;
     return airbnbPinnedListingIds(url).length === 1 ? null : "airbnb_search_without_single_listing";
   } catch {
@@ -86,6 +88,16 @@ export function normalizeUrl(input: string): string | null {
           return new URL(`/rooms/${pinned[0]}`, url.origin).toString();
         }
       }
+    }
+
+    if (
+      ((host === "booking.com" || host.endsWith(".booking.com")) &&
+        /^\/hotel\/[a-z]{2}\/[^/]+\.html$/i.test(url.pathname)) ||
+      (host === "app.sunver.app" && /^\/[a-z]{2}\/guest\/[^/]+\/?$/i.test(url.pathname))
+    ) {
+      url.search = "";
+      url.hash = "";
+      url.pathname = url.pathname.replace(/\/$/, "");
     }
 
     return url.toString();

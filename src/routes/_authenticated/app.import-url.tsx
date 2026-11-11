@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/app/import-url")({ compone
 const STAGE_KEYS = ["readUrl", "name", "description", "equipment", "organize"] as const;
 
 function ImportUrl() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const stages = STAGE_KEYS.map((key) => ({ id: key, label: t(`importFlow.${key}`) }));
   const org = useOrg();
   const nav = useNavigate();
@@ -41,6 +41,14 @@ function ImportUrl() {
       return setError(t("importFlow.searchLink"));
     }
 
+    if (issue === "sunver_staff_link") {
+      setFallback(false);
+      return setError(
+        locale === "fr"
+          ? "Ce lien Sunver est réservé au personnel. Copie le lien de partage du livret voyageur."
+          : "This Sunver link is for staff. Copy the guest guide’s share link.",
+      );
+    }
     const clean = normalizeUrl(url);
     if (!clean) return setError(t("importFlow.invalidLink"));
 

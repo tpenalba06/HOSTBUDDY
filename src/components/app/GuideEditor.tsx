@@ -129,7 +129,7 @@ export function GuideEditor({
   actions?: GuideEditorActions;
   compact?: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const flushers = useRef(new Map<string, () => Promise<void>>());
   const actionLock = useRef(false);
   const [sections, setSections] = useState(data.sections);
@@ -248,27 +248,29 @@ export function GuideEditor({
           <Home size={17} />
           {t("manager.general")}
         </button>
-        {sorted
-          .filter((section) => ["welcome", "services"].includes(section.section_key.split("-")[0]!))
-          .map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              aria-pressed={open === section.id}
-              onClick={() => setOpen(section.id)}
-            >
-              {sectionLabel(section, t)}
-            </button>
-          ))}
-        <p className="text-xs text-muted-foreground">{t("editor.sectionsOrder")}</p>
-        <SectionOrganizer
-          sections={sorted}
-          selected={open}
-          disabled={saving || mediaBusy || transfers > 0}
-          label={(section) => sectionLabel(section, t)}
-          onSelect={setOpen}
-          onReorder={(next) => void reorder(next)}
-        />
+        {sorted.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            aria-pressed={open === section.id}
+            onClick={() => setOpen(section.id)}
+          >
+            {sectionLabel(section, t)}
+          </button>
+        ))}
+        <details>
+          <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold">
+            {t("editor.sectionsOrder")}
+          </summary>
+          <SectionOrganizer
+            sections={sorted}
+            selected={open}
+            disabled={saving || mediaBusy || transfers > 0}
+            label={(section) => sectionLabel(section, t)}
+            onSelect={setOpen}
+            onReorder={(next) => void reorder(next)}
+          />
+        </details>
       </nav>
       <div className="guide-editor-form space-y-4">
         <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
@@ -296,7 +298,10 @@ export function GuideEditor({
                 : t("property.publish")}
           </Button>
         )}
-        <div hidden={open !== null}>
+        <details hidden={open !== null} className="surface p-4">
+          <summary className="min-h-11 cursor-pointer py-3 font-semibold">
+            {locale === "fr" ? "Photos et vidéo" : "Photos and video"}
+          </summary>
           <PropertyMediaEditor
             property={data.property}
             section={sections.find((section) => section.section_key.split("-")[0] === "welcome")}
@@ -317,7 +322,7 @@ export function GuideEditor({
             onPreview={() => void proceed()}
             onBusyChange={setMediaBusy}
           />
-        </div>
+        </details>
         <Button
           onClick={() => setTemplates(!templates)}
           className="min-h-14 w-full rounded-full text-base"

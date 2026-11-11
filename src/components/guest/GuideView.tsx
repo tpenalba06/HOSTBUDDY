@@ -366,7 +366,9 @@ export function GuideView({
                       }
                     />
                     <div className="hb-section-information">
-                      {importPreview && !open.content.items?.length ? (
+                      {importPreview &&
+                      sectionKind(open.key) !== "services" &&
+                      !open.content.items?.length ? (
                         <p className="rounded-xl bg-muted p-4">
                           {locale === "fr"
                             ? "À compléter dans ton livret après l’import."

@@ -1,7 +1,8 @@
+import { DemoServiceBooking } from "@/components/demo/DemoServiceBooking";
+import { readBookingConfig } from "@/lib/service-booking";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { GuideView } from "@/components/guest/GuideView";
-import { NonaConcierge } from "@/components/guest/NonaConcierge";
 import { createVillaMare, demoGuide } from "@/components/demo/villa-mare-fixture";
 import { LOCALES, useI18n, type Locale } from "@/lib/i18n";
 
@@ -45,7 +46,16 @@ function PhonePreview() {
       window.parent.postMessage("nona-phone-ready", window.location.origin);
     return () => window.removeEventListener("message", receive);
   }, []);
+  return <PhoneGuide key={JSON.stringify(preview)} preview={preview} />;
+}
+
+function PhoneGuide({ preview }: { preview: PublicImportPreview | null }) {
+  const { locale, t } = useI18n();
+  const [serviceId, setServiceId] = useState<string | null>(null);
   const fr = locale === "fr";
+  const text = preview?.text;
+  const items = (...values: (string | undefined)[]) =>
+    values.filter((value): value is string => !!value).map((value) => ({ label: "", text: value }));
   const amenityLabels = fr
     ? {
         kitchen: "Cuisine",
@@ -98,12 +108,22 @@ function PhonePreview() {
           ? "Image d’illustration · Informations à vérifier"
           : "Illustration · Details to review",
         sections: [
+          ...(text?.description
+            ? [
+                {
+                  id: "welcome",
+                  key: "welcome",
+                  title: t("section.welcome"),
+                  content: { items: items(text.description) },
+                },
+              ]
+            : []),
           {
             id: "arrival",
             key: "arrival",
             title: t("section.arrival"),
             media: illustration("arrival"),
-            content: { items: preview.arrival ? [{ label: "", text: preview.arrival }] : [] },
+            content: { items: items(text?.arrival ?? preview.arrival) },
           },
           {
             id: "wifi",
@@ -116,13 +136,13 @@ function PhonePreview() {
             id: "departure",
             key: "departure",
             title: t("section.departure"),
-            content: { items: preview.departure ? [{ label: "", text: preview.departure }] : [] },
+            content: { items: items(text?.departure ?? preview.departure, text?.trash) },
           },
           {
             id: "address",
             key: "address",
             title: fr ? "Adresse" : "Address",
-            content: { items: [] },
+            content: { items: items(text?.address) },
           },
           {
             id: "access",
@@ -145,30 +165,36 @@ function PhonePreview() {
                 : [],
             },
           },
-          ...(preview.amenities?.length
+          ...(preview.amenities?.length || text?.equipment || text?.kitchen || text?.parking
             ? [
                 {
                   id: "amenities",
                   key: "amenities",
                   title: t("section.amenities"),
                   content: {
-                    items: preview.amenities.map((key) => ({
-                      label: "",
-                      text: amenityLabels[key],
-                    })),
+                    items: [
+                      ...items(text?.equipment, text?.kitchen, text?.parking),
+                      ...(preview.amenities ?? []).map((key) => ({
+                        label: "",
+                        text: amenityLabels[key],
+                      })),
+                    ],
                   },
                   media: illustration("house"),
                 },
               ]
             : []),
-          ...(preview.rules?.length
+          ...(preview.rules?.length || text?.rules
             ? [
                 {
                   id: "rules",
                   key: "rules",
                   title: t("section.rules"),
                   content: {
-                    items: preview.rules.map((key) => ({ label: "", text: ruleLabels[key] })),
+                    items: [
+                      ...items(text?.rules),
+                      ...(preview.rules ?? []).map((key) => ({ label: "", text: ruleLabels[key] })),
+                    ],
                   },
                 },
               ]
@@ -177,14 +203,71 @@ function PhonePreview() {
         ],
       }
     : demoGuide(createVillaMare(locale));
+  guide.services = [
+    [
+      "Petit-déjeuner",
+      "Breakfast",
+      "Viennoiseries, jus et boisson chaude · 15 € par personne",
+      15,
+      "per_person",
+      "/demo-guide/breakfast.webp",
+      ["Classique", "Végétarien"],
+    ],
+    [
+      "Transfert",
+      "Transfer",
+      "Trajet fictif · 35 € par trajet",
+      35,
+      "fixed",
+      "/hostbuddy-media/arrival.webp",
+      ["Gare → logement", "Logement → gare"],
+    ],
+    [
+      "Départ tardif",
+      "Late checkout",
+      "Prolonge le séjour fictif · 25 € par réservation",
+      25,
+      "fixed",
+      "/hostbuddy-media/departure.webp",
+      ["Jusqu’à midi", "Jusqu’à 13 h"],
+    ],
+  ].map(([frName, enName, description, price, pricingType, imagePath, options], i) => ({
+    id: `demo-service-${i}`,
+    name: `${fr ? frName : enName} · Démo`,
+    description: String(description),
+    price: Number(price),
+    pricingType: pricingType as "fixed" | "per_person",
+    imagePath: String(imagePath),
+    bookingConfig: readBookingConfig({
+      maxQuantity: i === 0 ? 10 : 1,
+      requestDate: true,
+      seller: "NONA · Démonstration",
+      options: (options as string[]).map((label, j) => ({
+        id: `11111111-1111-4111-8111-11111111111${j}`,
+        label,
+        priceCents: 0,
+      })),
+    }),
+  }));
   return (
     <div className="nona-phone-document">
-      <GuideView
-        key={preview ? JSON.stringify(preview) : "villa"}
+      <div hidden={!!serviceId}>
+        <GuideView
+          key={preview ? JSON.stringify(preview) : "villa"}
+          guide={guide}
+          importPreview={!!preview}
+          onRequest={(id) => {
+            setServiceId(id);
+            window.scrollTo(0, 0);
+          }}
+        />
+      </div>
+      <DemoServiceBooking
         guide={guide}
-        importPreview={!!preview}
+        serviceId={serviceId}
+        onClose={() => setServiceId(null)}
+        immediate
       />
-      {!preview && <NonaConcierge guide={guide} demo />}
     </div>
   );
 }

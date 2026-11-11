@@ -34,20 +34,24 @@ function receipt(row: ManagerOrder): BookingReceipt {
     paymentStatus: row.order_payments?.[0]?.status,
   };
 }
-export function demoBookingTransport(guide: PublicGuide): BookingTransport {
+export function demoBookingTransport(guide: PublicGuide, immediate = false): BookingTransport {
+  const bookings = immediate
+    ? new Map<string, typeof rows extends Map<string, infer Row> ? Row : never>()
+    : rows;
   return {
     mode: "demo",
+    ephemeral: immediate,
     async submit(payload) {
       const token = String(payload["receiptToken"]),
         request = String(payload["requestId"]);
       const signature = JSON.stringify(payload);
-      const old = [...rows.values()].find((value) => value.request === request);
+      const old = [...bookings.values()].find((value) => value.request === request);
       if (old) {
         if (old.token !== token || old.signature !== signature) throw new Error("demo_conflict");
         return receipt(old.row);
       }
       const service = guide.services?.find((s) => s.id === payload["serviceId"]);
-      if (rows.size >= 30) throw new Error("demo_limit");
+      if (bookings.size >= 30) throw new Error("demo_limit");
       if (!service || payload["termsAccepted"] !== true) throw new Error("demo_unavailable");
       const config = readBookingConfig(service.bookingConfig);
       const total = serviceTotalCents(
@@ -66,7 +70,8 @@ export function demoBookingTransport(guide: PublicGuide): BookingTransport {
       const id = crypto.randomUUID();
       const row: ManagerOrder = {
         id,
-        status: "pending",
+        status: immediate ? "confirmed" : "pending",
+        ...(immediate ? { order_payments: [{ status: "pending" }] } : {}),
         created_at: new Date().toISOString(),
         requested_for: requested,
         total_amount: total / 100,
@@ -83,12 +88,12 @@ export function demoBookingTransport(guide: PublicGuide): BookingTransport {
           cancellation: config.cancellation,
         },
       };
-      rows.set(id, { row, token, request, signature });
-      changed();
+      bookings.set(id, { row, token, request, signature });
+      if (!immediate) changed();
       return receipt(row);
     },
     async read(identity) {
-      const record = [...rows.values()].find(
+      const record = [...bookings.values()].find(
         (item) =>
           (identity.orderId
             ? item.row.id === identity.orderId
@@ -97,7 +102,7 @@ export function demoBookingTransport(guide: PublicGuide): BookingTransport {
       return record ? receipt(record.row) : null;
     },
     async simulatePayment(id) {
-      const record = rows.get(id);
+      const record = bookings.get(id);
       if (
         !record ||
         record.row.status !== "confirmed" ||
@@ -105,7 +110,7 @@ export function demoBookingTransport(guide: PublicGuide): BookingTransport {
       )
         throw new Error("demo_not_payable");
       record.row = { ...record.row, order_payments: [{ status: "paid" }] };
-      changed();
+      if (!immediate) changed();
       return receipt(record.row);
     },
   };

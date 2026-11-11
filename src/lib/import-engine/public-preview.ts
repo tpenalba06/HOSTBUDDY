@@ -24,7 +24,20 @@ function matchingKeys<K extends string>(patterns: Record<K, RegExp>, snippets: s
   );
 }
 
+const textKeys = [
+  "description",
+  "address",
+  "arrival",
+  "departure",
+  "equipment",
+  "kitchen",
+  "rules",
+  "parking",
+  "trash",
+] as const;
+
 export const publicPreviewSchema = z.object({
+  text: z.record(z.enum(textKeys), z.string().max(2400)).optional(),
   name: z.string().max(100).optional(),
   amenities: z
     .array(z.enum(["kitchen", "laundry", "parking", "climate", "heating", "television", "pool"]))
@@ -96,7 +109,20 @@ export function publicImportPreview(
     snippets(["equipment", "kitchen", "parking", "climate", "pool"]),
   );
   const confirmedRules = matchingKeys(rules, snippets(["rules"]));
+  // Only carry over whole, non-sensitive lines. Drop any field whose source
+  // evidence mentions credentials, including possible continuation lines.
+  const sensitive =
+    /code|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|password|mot de passe|passwort|senha|contrase[ñn]a|token|secret|identifiant|ssid|wi[ -]?fi|\d{4,}|@/iu;
+  const text = fromPublicUrl
+    ? {}
+    : Object.fromEntries(
+        textKeys.flatMap((key) => {
+          const content = value(key);
+          return content && !sensitive.test(content) ? [[key, content.slice(0, 2400)]] : [];
+        }),
+      );
   return {
+    ...(Object.keys(text).length ? { text } : {}),
     ...(name ? { name } : {}),
     ...(confirmedAmenities.length ? { amenities: confirmedAmenities } : {}),
     ...(confirmedRules.length ? { rules: confirmedRules } : {}),

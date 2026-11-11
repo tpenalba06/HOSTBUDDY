@@ -16,6 +16,7 @@ describe("public import preview", () => {
       arrival: "16:00",
       departure: "10:00",
       capacity: 3,
+      text: { arrival: "Arrivée : 16h", departure: "Départ : avant 10h" },
     });
   });
 

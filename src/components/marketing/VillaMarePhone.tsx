@@ -59,6 +59,7 @@ export function VillaMarePhone() {
       } else {
         const response = await importPublicPreview({ data: { url: value } });
         if (response.status !== "ok") {
+          if (response.status !== "limited") setMode("text");
           setMessage(
             response.status === "limited"
               ? fr
@@ -75,7 +76,8 @@ export function VillaMarePhone() {
       const count =
         [result.name, result.arrival, result.departure, result.capacity].filter(Boolean).length +
         (result.amenities?.length ?? 0) +
-        (result.rules?.length ?? 0);
+        (result.rules?.length ?? 0) +
+        Object.keys(result.text ?? {}).length;
       setPreview(result);
       setMessage(
         fr

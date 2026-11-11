@@ -141,7 +141,13 @@ export function publicImportPreview(
     arrival: time("arrival", arrival),
     departure: time("departure", departure),
     capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,
-    illustration: detectAccommodationMood(title),
+    illustration:
+      detectAccommodationMood(title) ??
+      (/\b(?:villa|maison|house)\b/i.test(title)
+        ? "countryside"
+        : /\b(?:hôtel|hotel)\b/i.test(title)
+          ? "urban-hotel"
+          : undefined),
   };
 }
 

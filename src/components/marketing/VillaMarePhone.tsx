@@ -177,7 +177,10 @@ export function VillaMarePhone() {
           </p>
         )}
         {preview && (
-          <div className="space-y-2">
+          <details className="space-y-2">
+            <summary className="cursor-pointer text-sm">
+              {fr ? "Personnaliser les photos" : "Customize photos"}
+            </summary>
             <label className="block text-sm font-semibold">
               {fr ? "Ajouter mes photos" : "Add my photos"}
               <input
@@ -221,7 +224,7 @@ export function VillaMarePhone() {
               </button>
             )}
             {photoError && <p role="alert">{photoError}</p>}
-          </div>
+          </details>
         )}
         {preview && (
           <button

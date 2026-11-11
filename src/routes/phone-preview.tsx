@@ -7,7 +7,7 @@ import { createVillaMare, demoGuide } from "@/components/demo/villa-mare-fixture
 import { LOCALES, useI18n, type Locale } from "@/lib/i18n";
 
 import { publicPreviewSchema, type PublicImportPreview } from "@/lib/import-engine/public-preview";
-import { SECTION_VISUALS } from "@/components/guest/visual-library";
+import { smartFillCover, smartFillSections } from "@/components/guest/smart-fill";
 import type { PublicSection } from "@/lib/data/public-guide.functions";
 import type { GuideViewData } from "@/components/guest/guide-model";
 
@@ -97,7 +97,7 @@ function PhoneGuide({
     ? { noSmoking: "Logement non-fumeur", noParties: "Fêtes interdites" }
     : { noSmoking: "No smoking", noParties: "No parties" };
   const illustration = (key: string): NonNullable<PublicSection["media"]> => {
-    const url = SECTION_VISUALS[key];
+    const url = smartFillSections[key];
     return url
       ? [
           {
@@ -118,10 +118,7 @@ function PhoneGuide({
         id: "import-preview",
         name: preview.name ?? (fr ? "Votre logement" : "Your property"),
         originalLocale: locale,
-        coverUrl:
-          preview.illustration === "villa-sea"
-            ? "/demo-guide/coast.webp"
-            : `/hostbuddy-media/${preview.illustration ?? "apartment"}.webp`,
+        coverUrl: smartFillCover(preview.illustration),
         subtitle: fr
           ? "Image d’illustration · Informations à vérifier"
           : "Illustration · Details to review",
@@ -154,6 +151,7 @@ function PhoneGuide({
             id: "departure",
             key: "departure",
             title: t("section.departure"),
+            media: illustration("departure"),
             content: { items: items(text?.departure ?? preview.departure, text?.trash) },
           },
           {
@@ -301,7 +299,7 @@ function PhoneGuide({
   ].map(([frName, enName, description, price, pricingType, imagePath, options], i) => ({
     id: `demo-service-${i}`,
     name: `${fr ? frName : enName} · Démo`,
-    description: String(description),
+    description: `${String(description)} · ${fr ? "Image illustrative" : "Illustrative image"}`,
     price: Number(price),
     pricingType: pricingType as "fixed" | "per_person",
     imagePath: String(imagePath),

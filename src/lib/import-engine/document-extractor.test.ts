@@ -141,6 +141,7 @@ describe("document import with verifiable evidence", () => {
   });
   it("reads only the matching public Sunver establishment, never interface translations or tokens", () => {
     const e = {
+      id: "fixture",
       slug: "synthetic",
       name: { fr: "Villa synthétique" },
       info_text: { fr: "Bienvenue" },
@@ -154,12 +155,30 @@ describe("document import with verifiable evidence", () => {
         "$",
         "Component",
         null,
-        { messages: { wifi: "NEVER_IMPORT_TRANSLATION" }, establishment: e },
+        {
+          messages: { wifi: "NEVER_IMPORT_TRANSLATION" },
+          establishment: e,
+          faqQuestions: [
+            {
+              establishment_id: "fixture",
+              question: "Où peut-on se garer ?",
+              answer: "À gauche du portail.",
+            },
+            {
+              establishment_id: "foreign",
+              question: "Où se garer ?",
+              answer: "NEVER_IMPORT_FOREIGN",
+            },
+          ],
+        },
       ]) +
       "\n";
     const html = `<script>self.__next_f.push(${JSON.stringify([1, payload])})</script>`;
     const result = sunverGuestDocument(html, "https://app.sunver.app/fr/guest/synthetic")!;
     expect(result.text).toContain("Villa synthétique");
+    expect(
+      extractDocument(result.text).fields.find((field) => field.key === "parking")?.value,
+    ).toContain("À gauche du portail.");
     expect(result.text).not.toMatch(/NEVER_IMPORT/);
     expect(sunverGuestDocument(html, "https://app.sunver.app/fr/staff/synthetic")).toBeNull();
   });

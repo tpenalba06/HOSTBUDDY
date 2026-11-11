@@ -110,9 +110,17 @@ export function sunverGuestDocument(
         : [];
     for (const faq of entries(content["faqQuestions"])) {
       if (faq["establishment_id"] !== e["id"]) continue;
-      lines.push(
-        `# ${localizedText(faq["question"]).replace(/\s+/g, " ").trim()}\n${htmlDocumentText(localizedText(faq["answer"]))}`,
-      );
+      const question = localizedText(faq["question"]).replace(/\s+/g, " ").trim();
+      const answer = htmlDocumentText(localizedText(faq["answer"])).trim();
+      if (!question || !answer) continue;
+      const topics = [
+        [/\b(?:wi[ -]?fi|internet)\b/i, "Wi-Fi"],
+        [/\b(?:parking|stationnement|se garer)\b/i, "Parking"],
+        [/\b(?:check[ -]?in|arriv[ée]e?|arriver)\b/i, "Arrivée"],
+        [/\b(?:check[ -]?out|d[ée]part|partir)\b/i, "Départ"],
+      ] as const;
+      const matches = topics.filter(([pattern]) => pattern.test(question));
+      lines.push(`# ${matches.length === 1 ? matches[0]![1] : question}\n${answer}`);
     }
     const moduleIds = new Set<string>();
     for (const category of entries(content["moduleCategories"])) {

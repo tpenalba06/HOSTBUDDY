@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/app/import-url")({ compone
 const STAGE_KEYS = ["readUrl", "name", "description", "equipment", "organize"] as const;
 
 function ImportUrl() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const stages = STAGE_KEYS.map((key) => ({ id: key, label: t(`importFlow.${key}`) }));
   const org = useOrg();
   const nav = useNavigate();
@@ -41,6 +41,14 @@ function ImportUrl() {
       return setError(t("importFlow.searchLink"));
     }
 
+    if (issue === "sunver_staff_link") {
+      setFallback(false);
+      return setError(
+        locale === "fr"
+          ? "Ce lien Sunver est réservé au personnel. Copie le lien de partage du livret voyageur."
+          : "This Sunver link is for staff. Copy the guest guide’s share link.",
+      );
+    }
     const clean = normalizeUrl(url);
     if (!clean) return setError(t("importFlow.invalidLink"));
 
@@ -52,7 +60,7 @@ function ImportUrl() {
     let currentRunId: string | null = null;
 
     try {
-      currentRunId = await startImportRun(org.id, adapter.source, { url: clean });
+      currentRunId = await startImportRun(org.id, adapter.source, { url: clean }).catch(() => null);
       setRunId(currentRunId);
       const outcome = await adapter.run(clean).catch(() => ({
         ok: false as const,
@@ -64,11 +72,12 @@ function ImportUrl() {
       setStage(null);
 
       if (!outcome.ok) {
-        await finishImportRun(
-          currentRunId,
-          outcome.reason === "insufficient" ? "insufficient" : "failed",
-          { error: outcome.reason },
-        );
+        if (currentRunId)
+          await finishImportRun(
+            currentRunId,
+            outcome.reason === "insufficient" ? "insufficient" : "failed",
+            { error: outcome.reason },
+          ).catch(() => {});
         setRunId(null);
         setFallback(true);
         return;
@@ -93,7 +102,8 @@ function ImportUrl() {
     setError("");
     try {
       const property = await createPropertyFromExtraction(org.id, source, candidate, cleanUrl);
-      if (runId) await finishImportRun(runId, "succeeded", { propertyId: property.id });
+      if (runId)
+        void finishImportRun(runId, "succeeded", { propertyId: property.id }).catch(() => {});
       qc.invalidateQueries({ queryKey: ["properties"] });
       nav({ to: "/app/p/$id", params: { id: property.id } });
     } catch {

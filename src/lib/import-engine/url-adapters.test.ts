@@ -37,3 +37,22 @@ describe("Airbnb URL normalization", () => {
     expect(getImportUrlIssue(input)).toBe("airbnb_search_without_single_listing");
   });
 });
+
+describe("Booking and Sunver listing links", () => {
+  it("strips Booking session, attribution and search parameters", () => {
+    expect(
+      normalizeUrl(
+        "https://www.booking.com/hotel/gr/vallais-villa.fr.html?aid=1&sid=fixture#rooms",
+      ),
+    ).toBe("https://www.booking.com/hotel/gr/vallais-villa.fr.html");
+  });
+
+  it("canonicalizes the Sunver guest link and rejects the staff route", () => {
+    expect(normalizeUrl("https://app.sunver.app/fr/guest/villa-dolce-vecchia/?ref=fixture")).toBe(
+      "https://app.sunver.app/fr/guest/villa-dolce-vecchia",
+    );
+    expect(
+      getImportUrlIssue("https://app.sunver.app/fr/staff/villa-ottavia-pianottoli-caldarello"),
+    ).toBe("sunver_staff_link");
+  });
+});

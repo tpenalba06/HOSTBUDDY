@@ -150,8 +150,7 @@ export function webTextForRules(text: string) {
 export async function extractAccessibleHtml(html: string, resolvedUrl: string, localAi = false) {
   const structured = extractStructuredFields(html, resolvedUrl);
   const sunver = sunverGuestDocument(html, resolvedUrl);
-  const visible = htmlDocumentText(html);
-  const textual = await analyzeImportDocument([sunver?.text, visible].filter(Boolean).join("\n"), {
+  const textual = await analyzeImportDocument(sunver?.text ?? htmlDocumentText(html), {
     sourceUrl: resolvedUrl,
     localAi,
   });
@@ -167,7 +166,7 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
           { quote: sunver.recommendations, sourceUrl: resolvedUrl, method: "structured" as const },
         ],
       };
-    const metadata = structured.fields[field.key];
+    const metadata = sunver ? undefined : structured.fields[field.key];
     if (!metadata) return field;
     return {
       ...metadata,
@@ -274,7 +273,11 @@ export async function runUrlImport(data: {
   const useful = result.fields.filter(
     (f) => f.status !== "missing" && !(f.key === "description" && !structured.lodging),
   ).length;
-  if (useful < 2) return { ok: false, source, reason: "insufficient" };
+  // A recognized listing with a title is enough to prepare a partial draft.
+  // Never lower the threshold for a generic page with only site metadata.
+  const identifiedListing = structured.lodging || !!sunverGuestDocument(html, resolvedUrl);
+  if (useful < 2 && !(identifiedListing && result.propertyName?.trim()))
+    return { ok: false, source, reason: "insufficient" };
   return {
     ok: true,
     source,

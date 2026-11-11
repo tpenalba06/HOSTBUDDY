@@ -22,7 +22,7 @@ export function ImportReview({
   onBack: () => void;
   busy?: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   const found = value.fields.filter((field) => field.status === "found").length;
   const verify = value.fields.filter((field) => field.status === "to_verify").length;
@@ -103,7 +103,14 @@ export function ImportReview({
 
       {!!value.photos?.length && (
         <section className="surface mt-6 p-4">
-          <h2 className="text-xl">{t("importFlow.photos")}</h2>
+          <h2 className="text-xl">
+            {t("importFlow.photos")} ({value.photos.length})
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {locale === "fr"
+              ? "Les photos sont copiées à la création du brouillon si tu confirmes les droits. Si le site bloque une image, ajoute le fichier depuis la galerie du logement."
+              : "Photos are copied when the draft is created if you confirm the rights. If the source blocks an image, upload the file from the property gallery."}
+          </p>
           <div className="mt-3 grid grid-cols-3 gap-2">
             {value.photos.map((url) => (
               <img

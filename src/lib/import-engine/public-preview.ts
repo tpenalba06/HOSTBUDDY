@@ -34,10 +34,17 @@ export function publicImportPreview(result: ExtractionResult): PublicImportPrevi
     const match = value(key).match(pattern);
     return match ? `${match[1]!.padStart(2, "0")}:${match[2] ?? "00"}` : undefined;
   };
-  const guests = value("capacity").match(capacity);
+  // The source can group occupancy with bedrooms and beds on the same line.
+  // Keep only explicit guest counts and withhold contradictory counts.
+  const guestCounts = new Set(
+    (field("capacity")?.value ?? "").split(/[\n·•]/).flatMap((part) => {
+      const match = part.trim().match(capacity);
+      return match ? [Number(match[1])] : [];
+    }),
+  );
   return {
     arrival: time("arrival", arrival),
     departure: time("departure", departure),
-    capacity: guests ? Number(guests[1]) : undefined,
+    capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,
   };
 }

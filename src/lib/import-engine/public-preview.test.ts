@@ -26,4 +26,16 @@ describe("public import preview", () => {
       arrival: "16:00",
     });
   });
+  it("reads explicit guest counts in grouped listing details and rejects disagreement", () => {
+    const result = (value: string) => ({
+      propertyName: null,
+      fields: [
+        { key: "capacity", status: "to_verify" as const, value, rawValue: value, confidence: 0.8 },
+      ],
+    });
+    expect(publicImportPreview(result("2 voyageurs · 1 chambre · 1 lit")).capacity).toBe(2);
+    expect(
+      publicImportPreview(result("2 voyageurs · 1 chambre\n4 voyageurs")).capacity,
+    ).toBeUndefined();
+  });
 });

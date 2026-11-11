@@ -1,3 +1,4 @@
+import { GuestStayEditor } from "@/components/app/GuestStayEditor";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -277,6 +278,9 @@ function PropertyPage() {
               }}
             />
           </div>
+        )}
+        {mode === "guide" && property.status === "published" && (
+          <GuestStayEditor key={property.id} id={property.id} slug={property.slug} />
         )}
         {mode === "details" && (
           <>

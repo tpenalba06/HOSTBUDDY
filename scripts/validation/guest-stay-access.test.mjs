@@ -26,6 +26,14 @@ test("stay grants require a manager, are property-bound, and expire or revoke", 
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync(
+      new URL("../../drizzle/migrations/0028_list_guest_stay_access.sql", import.meta.url),
+      "utf8",
+    ),
+  );
+  const list = async (id) =>
+    (await db.query("SELECT * FROM public.list_guest_stay_access($1)", [id])).rows;
   const issue = (id, opens = "-1 hour", expires = "1 hour") =>
     db.query(
       "SELECT * FROM public.issue_guest_stay_access($1, now() + $2::interval, now() + $3::interval, 'TEST door', 'TEST-NET', 'TEST-only')",
@@ -43,6 +51,10 @@ test("stay grants require a manager, are property-bound, and expire or revoke", 
   await assert.rejects(() => db.query("SELECT * FROM public.guest_stay_access"), { code: "42501" });
   const { id, token } = (await issue(property)).rows[0];
   const future = (await issue(property, "1 hour", "2 hours")).rows[0];
+  assert.deepEqual(await list(foreign), []);
+  const grants = await list(property);
+  assert.equal(grants.length, 2);
+  assert.deepEqual(Object.keys(grants[0]).sort(), ["expires_at", "id", "opens_at", "revoked_at"]);
   assert.match(token, /^[0-9a-f]{64}$/);
   await assert.rejects(() => read("stay-a", token), { code: "42501" });
 
@@ -67,6 +79,7 @@ test("stay grants require a manager, are property-bound, and expire or revoke", 
       .rows[0].revoked;
   assert.equal(await revoke(foreign), false);
   assert.equal(await revoke(property), true);
+  assert.equal((await list(property)).length, 0);
   assert.equal(await revoke(property), false);
   await db.exec("SET ROLE service_role");
   assert.equal(await read("stay-a", token), null);

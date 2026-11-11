@@ -1,3 +1,4 @@
+import { GuestStayPanel } from "@/components/guest/GuestStayPanel";
 import { OfflineSaveButton } from "@/components/guest/OfflineSaveButton";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -51,6 +52,7 @@ function GuestPage() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   return (
     <div className="hb-guide">
+      <GuestStayPanel key={slug} slug={slug} />
       <GuideView
         guide={guide}
         conciergeSlug={slug}

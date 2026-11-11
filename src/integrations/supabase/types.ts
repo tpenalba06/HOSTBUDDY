@@ -1349,6 +1349,22 @@ export type Database = {
         }[]
       }
       get_public_guide: { Args: { _slug: string }; Returns: Json }
+      issue_guest_stay_access: {
+        Args: {
+          _property: string
+          _opens_at: string
+          _expires_at: string
+          _entry_instructions: string | null
+          _wifi_ssid: string | null
+          _wifi_password: string | null
+        }
+        Returns: { id: string; token: string }[]
+      }
+      list_guest_stay_access: {
+        Args: { _property: string }
+        Returns: { id: string; opens_at: string; expires_at: string; revoked_at: string | null }[]
+      }
+      revoke_guest_stay_access: { Args: { _property: string; _id: string }; Returns: boolean }
       read_guest_stay_access: { Args: { _slug: string; _token: string }; Returns: Json }
       has_paid_publication_access: { Args: { _org: string }; Returns: boolean }
       invite_organization_member: {

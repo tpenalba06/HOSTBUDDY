@@ -112,6 +112,10 @@
     {
       "tag": "0027_guest_stay_access",
       "sha256": "777446f5412eb8504abb447043d133a7ed393eed8b5f4c300815cc8b5706fb2b"
+    },
+    {
+      "tag": "0028_list_guest_stay_access",
+      "sha256": "2cdf970a4df20231e6078bc0cd1572c4db0cdd163861141db9daa0e9842202f8"
     }
   ]
 }

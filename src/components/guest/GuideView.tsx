@@ -176,7 +176,8 @@ export function GuideView({
       (section) =>
         sectionKind(section.key) === "welcome" &&
         section.media?.some((item) => item.type === "image" && item.url),
-    ) || !!guide.coverUrl;
+    ) ||
+    (!importPreview && !!guide.coverUrl);
   const hasPropertyGallery = sections.some(
     (section) =>
       sectionKind(section.key) === "welcome" &&

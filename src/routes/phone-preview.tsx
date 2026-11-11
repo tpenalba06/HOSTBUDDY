@@ -30,6 +30,7 @@ function PhonePreview() {
     }
   }, [lang, setLocale]);
   const [preview, setPreview] = useState<PublicImportPreview | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -39,17 +40,34 @@ function PhonePreview() {
       )
         return;
       const result = publicPreviewSchema.nullable().safeParse(event.data.preview);
-      if (result.success) setPreview(result.data);
+      if (result.success) {
+        setPreview(result.data);
+        const prefix = `blob:${window.location.origin}/`;
+        const urls: unknown = event.data.photos;
+        setPhotos(
+          result.data && Array.isArray(urls)
+            ? urls
+                .filter((url): url is string => typeof url === "string" && url.startsWith(prefix))
+                .slice(0, 6)
+            : [],
+        );
+      }
     };
     window.addEventListener("message", receive);
     if (window.parent !== window)
       window.parent.postMessage("nona-phone-ready", window.location.origin);
     return () => window.removeEventListener("message", receive);
   }, []);
-  return <PhoneGuide key={JSON.stringify(preview)} preview={preview} />;
+  return <PhoneGuide key={JSON.stringify(preview)} preview={preview} photos={photos} />;
 }
 
-function PhoneGuide({ preview }: { preview: PublicImportPreview | null }) {
+function PhoneGuide({
+  preview,
+  photos,
+}: {
+  preview: PublicImportPreview | null;
+  photos: string[];
+}) {
   const { locale, t } = useI18n();
   const [serviceId, setServiceId] = useState<string | null>(null);
   const fr = locale === "fr";
@@ -228,6 +246,30 @@ function PhoneGuide({ preview }: { preview: PublicImportPreview | null }) {
         ],
       }
     : demoGuide(createVillaMare(locale));
+  if (preview && photos.length) {
+    const welcome = guide.sections.find((section) => section.key === "welcome") ?? {
+      id: "welcome",
+      key: "welcome",
+      title: t("section.welcome"),
+      content: {},
+    };
+    const media = photos.map((url, index) => ({
+      id: `owner-photo-${index}`,
+      type: "image" as const,
+      path: url,
+      url,
+      mimeType: "image/*",
+      sortOrder: index,
+      caption: fr ? "Photo fournie par le propriétaire" : "Owner-provided photo",
+    }));
+    guide.sections = [
+      { ...welcome, media },
+      ...guide.sections.filter((section) => section.key !== "welcome"),
+    ];
+    guide.coverUrl = photos[0]!;
+    if (preview.locality) guide.subtitle = preview.locality;
+    else delete guide.subtitle;
+  }
   guide.services = [
     [
       "Petit-déjeuner",

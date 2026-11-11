@@ -15,6 +15,9 @@ export function VillaMarePhone() {
   const [scale, setScale] = useState(0);
   const [mode, setMode] = useState<"url" | "text">("url");
   const [preview, setPreview] = useState<PublicImportPreview | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [photoError, setPhotoError] = useState("");
+  useEffect(() => () => photos.forEach((url) => URL.revokeObjectURL(url)), [photos]);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -31,7 +34,7 @@ export function VillaMarePhone() {
   useEffect(() => {
     const send = () =>
       frame.current?.contentWindow?.postMessage(
-        { type: "nona-import-preview", preview },
+        { type: "nona-import-preview", preview, photos },
         window.location.origin,
       );
     const ready = (event: MessageEvent) => {
@@ -45,7 +48,7 @@ export function VillaMarePhone() {
     window.addEventListener("message", ready);
     send();
     return () => window.removeEventListener("message", ready);
-  }, [preview]);
+  }, [preview, photos]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,6 +83,8 @@ export function VillaMarePhone() {
         (result.amenities?.length ?? 0) +
         (result.rules?.length ?? 0) +
         Object.keys(result.text ?? {}).length;
+      setPhotos([]);
+      setPhotoError("");
       setPreview(result);
       setMessage(
         fr
@@ -172,11 +177,60 @@ export function VillaMarePhone() {
           </p>
         )}
         {preview && (
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold">
+              {fr ? "Ajouter mes photos" : "Add my photos"}
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                className="field mt-1 w-full"
+                onChange={(event) => {
+                  const files = Array.from(event.currentTarget.files ?? []);
+                  event.currentTarget.value = "";
+                  if (!files.length) return;
+                  if (
+                    files.length > 6 ||
+                    files.some(
+                      (file) =>
+                        !/^(image\/(jpeg|png|webp))$/.test(file.type) ||
+                        !file.size ||
+                        file.size > 5_000_000,
+                    )
+                  ) {
+                    setPhotoError(
+                      fr
+                        ? "Choisis jusqu’à 6 photos JPEG, PNG ou WebP de 5 Mo chacune."
+                        : "Choose up to 6 JPEG, PNG or WebP photos, each under 5 MB.",
+                    );
+                    return;
+                  }
+                  setPhotoError("");
+                  setPhotos(files.map((file) => URL.createObjectURL(file)));
+                }}
+              />
+            </label>
+            <p className="text-xs">
+              {fr
+                ? "Utilise des photos que tu as le droit de montrer. Elles restent dans ce navigateur."
+                : "Use photos you have permission to show. They stay in this browser."}
+            </p>
+            {photos.length > 0 && (
+              <button type="button" className="min-h-11 underline" onClick={() => setPhotos([])}>
+                {fr ? "Retirer mes photos" : "Remove my photos"}
+              </button>
+            )}
+            {photoError && <p role="alert">{photoError}</p>}
+          </div>
+        )}
+        {preview && (
           <button
             type="button"
             className="min-h-11 underline"
             onClick={() => {
               setPreview(null);
+              setPhotos([]);
+              setPhotoError("");
               setMessage("");
             }}
           >

@@ -46,7 +46,13 @@ export function htmlDocumentText(html: string): string {
 export function sunverGuestDocument(
   html: string,
   source: string,
-): { text: string; photos: string[]; recommendations: string } | null {
+): {
+  text: string;
+  photos: string[];
+  recommendations: string;
+  locality: string;
+  placeNames: string[];
+} | null {
   const url = new URL(source);
   if (url.hostname !== "app.sunver.app" || !/^\/[a-z]{2}\/guest\/[^/]+\/?$/.test(url.pathname))
     return null;
@@ -103,6 +109,7 @@ export function sunverGuestDocument(
   if (picture && typeof picture === "object") picture = (picture as Record<string, unknown>)["url"];
   const photos = typeof picture === "string" && /^https:\/\//.test(picture) ? [picture] : [];
   const recommendations: string[] = [];
+  const placeNames: string[] = [];
   for (const content of publicContent) {
     const entries = (v: unknown) =>
       Array.isArray(v)
@@ -146,6 +153,8 @@ export function sunverGuestDocument(
       if (category["establishment_id"] !== e["id"]) continue;
       for (const place of entries(category["alentours"])) {
         if (place["establishment_id"] !== e["id"]) continue;
+        const name = localizedText(place["name"]);
+        if (name) placeNames.push(name);
         recommendations.push(
           [
             localizedText(place["name"]),
@@ -161,6 +170,8 @@ export function sunverGuestDocument(
   return {
     text: lines.join("\n"),
     photos: [...new Set(photos)].slice(0, 30),
+    locality: string("city"),
+    placeNames: [...new Set(placeNames)].slice(0, 12),
     recommendations: [...new Set(recommendations)].join("\n"),
   };
 }

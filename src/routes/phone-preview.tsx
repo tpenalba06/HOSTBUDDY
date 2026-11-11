@@ -142,7 +142,14 @@ function PhoneGuide({ preview }: { preview: PublicImportPreview | null }) {
             id: "address",
             key: "address",
             title: fr ? "Adresse" : "Address",
-            content: { items: items(text?.address) },
+            content: {
+              items: items(
+                text?.address ??
+                  (preview.locality
+                    ? `${fr ? "Localité indiquée par la source" : "Locality from source"} · ${preview.locality}`
+                    : undefined),
+              ),
+            },
           },
           {
             id: "access",
@@ -195,6 +202,24 @@ function PhoneGuide({ preview }: { preview: PublicImportPreview | null }) {
                       ...items(text?.rules),
                       ...(preview.rules ?? []).map((key) => ({ label: "", text: ruleLabels[key] })),
                     ],
+                  },
+                },
+              ]
+            : []),
+          ...(preview.places?.length
+            ? [
+                {
+                  id: "places",
+                  key: "places",
+                  title: t("section.places"),
+                  content: {
+                    entries: preview.places.map((title, i) => ({
+                      id: String(i),
+                      title,
+                      text: fr
+                        ? "Recommandation issue du livret source"
+                        : "Recommendation from the source guide",
+                    })),
                   },
                 },
               ]

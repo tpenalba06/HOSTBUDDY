@@ -40,6 +40,8 @@ const textKeys = [
 export const publicPreviewSchema = z.object({
   text: z.record(z.enum(textKeys), z.string().max(2400)).optional(),
   name: z.string().max(100).optional(),
+  locality: z.string().max(80).optional(),
+  places: z.array(z.string().max(80)).max(12).optional(),
   amenities: z
     .array(z.enum(["kitchen", "laundry", "parking", "climate", "heating", "television", "pool"]))
     .max(7)
@@ -125,7 +127,13 @@ export function publicImportPreview(
           return content && !sensitive.test(content) ? [[key, content.slice(0, 2400)]] : [];
         }),
       );
+  const safeLabel = (label: string) =>
+    /^[\p{L}][\p{L}\p{M} .’'&()-]{1,79}$/u.test(label) && !sensitive.test(label);
+  const locality = result.publicLocality?.trim();
+  const places = result.publicPlaceNames?.map((label) => label.trim()).filter(safeLabel);
   return {
+    ...(fromPublicUrl && locality && safeLabel(locality) ? { locality } : {}),
+    ...(fromPublicUrl && places?.length ? { places: places.slice(0, 12) } : {}),
     ...(Object.keys(text).length ? { text } : {}),
     ...(name ? { name } : {}),
     ...(confirmedAmenities.length ? { amenities: confirmedAmenities } : {}),

@@ -95,12 +95,14 @@ export function extractStructuredFields(html: string, url: string) {
   };
   let name: string | null = null;
   let lodging = false;
+  let locality: string | null = null;
   for (const n of jsonLdNodes(html)) {
     if (!LODGING.test(String(n["@type"] ?? ""))) continue;
     lodging = true;
     name ??= str(n.name);
     put("description", str(n.description), `JSON-LD description (${url})`, 0.85);
     const a = n.address;
+    locality ??= str(a?.addressLocality);
     const addr =
       typeof a === "string"
         ? a
@@ -136,7 +138,7 @@ export function extractStructuredFields(html: string, url: string) {
   // Without a lodging JSON-LD node the meta description stays "to verify".
   if (desc)
     put("description", decode(desc), `meta description: ${decode(desc)}`, lodging ? 0.75 : 0.5);
-  return { name, fields, lodging };
+  return { name, fields, lodging, locality };
 }
 
 /** Rules only run on sentence-sized web snippets; keyword hits inside long link lists or menus are noise. */
@@ -194,6 +196,10 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
   });
   return {
     ...textual,
+    ...(sunver?.locality || structured.locality
+      ? { publicLocality: (sunver?.locality || structured.locality)! }
+      : {}),
+    ...(sunver?.placeNames.length ? { publicPlaceNames: sunver.placeNames } : {}),
     propertyName: sunver
       ? textual.propertyName
       : (structured.name?.slice(0, 120) ?? textual.propertyName),

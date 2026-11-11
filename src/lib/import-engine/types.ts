@@ -25,6 +25,8 @@ export interface ExtractionResult {
   propertyName: string | null;
   fields: ExtractedField[];
   photos?: string[];
+  publicLocality?: string;
+  publicPlaceNames?: string[];
   photoRightsConfirmed?: boolean;
   analysis?: {
     engine: "document" | "document+local-ai";

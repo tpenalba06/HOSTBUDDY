@@ -72,12 +72,15 @@ export function VillaMarePhone() {
         }
         result = response.preview;
       }
-      const count = [result.arrival, result.departure, result.capacity].filter(Boolean).length;
+      const count =
+        [result.name, result.arrival, result.departure, result.capacity].filter(Boolean).length +
+        (result.amenities?.length ?? 0) +
+        (result.rules?.length ?? 0);
       setPreview(result);
       setMessage(
         fr
-          ? `${count} information(s) extraite(s), ${3 - count} à compléter. À vérifier avant publication.`
-          : `${count} detail(s) extracted, ${3 - count} missing. Review before publishing.`,
+          ? `${count} information(s) extraite(s). À vérifier avant publication.`
+          : `${count} detail(s) extracted. Review before publishing.`,
       );
     } catch {
       setMessage(

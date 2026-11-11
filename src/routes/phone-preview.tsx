@@ -6,6 +6,8 @@ import { createVillaMare, demoGuide } from "@/components/demo/villa-mare-fixture
 import { LOCALES, useI18n, type Locale } from "@/lib/i18n";
 
 import { publicPreviewSchema, type PublicImportPreview } from "@/lib/import-engine/public-preview";
+import { SECTION_VISUALS } from "@/components/guest/visual-library";
+import type { PublicSection } from "@/lib/data/public-guide.functions";
 import type { GuideViewData } from "@/components/guest/guide-model";
 
 export const Route = createFileRoute("/phone-preview")({
@@ -44,10 +46,49 @@ function PhonePreview() {
     return () => window.removeEventListener("message", receive);
   }, []);
   const fr = locale === "fr";
+  const amenityLabels = fr
+    ? {
+        kitchen: "Cuisine",
+        laundry: "Lave-linge",
+        parking: "Parking",
+        climate: "Climatisation",
+        heating: "Chauffage",
+        television: "Télévision",
+        pool: "Piscine",
+      }
+    : {
+        kitchen: "Kitchen",
+        laundry: "Washing machine",
+        parking: "Parking",
+        climate: "Air conditioning",
+        heating: "Heating",
+        television: "Television",
+        pool: "Pool",
+      };
+  const ruleLabels = fr
+    ? { noSmoking: "Logement non-fumeur", noParties: "Fêtes interdites" }
+    : { noSmoking: "No smoking", noParties: "No parties" };
+  const illustration = (key: string): NonNullable<PublicSection["media"]> => {
+    const url = SECTION_VISUALS[key];
+    return url
+      ? [
+          {
+            id: `illustration-${key}`,
+            type: "image",
+            path: url,
+            url,
+            mimeType: "image/webp",
+            sortOrder: 0,
+            caption: fr ? "Image illustrative" : "Illustrative image",
+            altText: fr ? "Image illustrative" : "Illustrative image",
+          },
+        ]
+      : [];
+  };
   const guide: GuideViewData = preview
     ? {
         id: "import-preview",
-        name: fr ? "Votre logement" : "Your property",
+        name: preview.name ?? (fr ? "Votre logement" : "Your property"),
         originalLocale: locale,
         coverUrl:
           preview.illustration === "villa-sea"
@@ -61,9 +102,16 @@ function PhonePreview() {
             id: "arrival",
             key: "arrival",
             title: t("section.arrival"),
+            media: illustration("arrival"),
             content: { items: preview.arrival ? [{ label: "", text: preview.arrival }] : [] },
           },
-          { id: "wifi", key: "wifi", title: t("section.wifi"), content: { items: [] } },
+          {
+            id: "wifi",
+            key: "wifi",
+            title: t("section.wifi"),
+            content: { items: [] },
+            media: illustration("wifi"),
+          },
           {
             id: "departure",
             key: "departure",
@@ -97,6 +145,34 @@ function PhonePreview() {
                 : [],
             },
           },
+          ...(preview.amenities?.length
+            ? [
+                {
+                  id: "amenities",
+                  key: "amenities",
+                  title: t("section.amenities"),
+                  content: {
+                    items: preview.amenities.map((key) => ({
+                      label: "",
+                      text: amenityLabels[key],
+                    })),
+                  },
+                  media: illustration("house"),
+                },
+              ]
+            : []),
+          ...(preview.rules?.length
+            ? [
+                {
+                  id: "rules",
+                  key: "rules",
+                  title: t("section.rules"),
+                  content: {
+                    items: preview.rules.map((key) => ({ label: "", text: ruleLabels[key] })),
+                  },
+                },
+              ]
+            : []),
           { id: "services", key: "services", title: t("section.services"), content: { items: [] } },
         ],
       }

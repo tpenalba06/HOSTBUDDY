@@ -2,9 +2,38 @@ import { z } from "zod";
 import type { ExtractionResult } from "./types";
 import { detectAccommodationMood } from "@/components/guest/property-media";
 
-// Only bounded, typed facts cross into the marketing preview. Source titles,
-// free text, evidence, URLs, images and credentials never enter the phone.
+// Source evidence and private free text stay out of the marketing preview.
+const amenities = {
+  kitchen: /^(?:cuisine(?: équipée)?|kitchen(?:ette)?)$/iu,
+  laundry: /^(?:lave[ -]linge|washing machine|washer)$/iu,
+  parking: /^(?:parking(?: gratuit| privé)?|free parking|private parking)$/iu,
+  climate: /^(?:climatisation|air conditioning)$/iu,
+  heating: /^(?:chauffage|heating)$/iu,
+  television: /^(?:télévision|tv|television)$/iu,
+  pool: /^(?:piscine(?: privée)?|pool|swimming pool)$/iu,
+} as const;
+
+const rules = {
+  noSmoking: /^(?:non[ -]fumeur|logement non[ -]fumeur|interdiction de fumer|no smoking)[.!]?$/iu,
+  noParties: /^(?:pas de fêtes|fêtes interdites|no parties)[.!]?$/iu,
+} as const;
+
+function matchingKeys<K extends string>(patterns: Record<K, RegExp>, snippets: string[]) {
+  return (Object.keys(patterns) as K[]).filter((key) =>
+    snippets.some((snippet) => patterns[key].test(snippet)),
+  );
+}
+
 export const publicPreviewSchema = z.object({
+  name: z.string().max(100).optional(),
+  amenities: z
+    .array(z.enum(["kitchen", "laundry", "parking", "climate", "heating", "television", "pool"]))
+    .max(7)
+    .optional(),
+  rules: z
+    .array(z.enum(["noSmoking", "noParties"]))
+    .max(2)
+    .optional(),
   arrival: z
     .string()
     .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
@@ -28,7 +57,17 @@ const departure =
 const capacity =
   /^(?:capacité\s*:\s*)?([1-9]\d?)\s+(?:personnes?|voyageurs?|guests?|personas?|gäste|ospiti|hóspedes)$/iu;
 
-export function publicImportPreview(result: ExtractionResult): PublicImportPreview {
+export function publicImportPreview(
+  result: ExtractionResult,
+  fromPublicUrl = false,
+): PublicImportPreview {
+  const title = result.propertyName?.trim() ?? "";
+  const name =
+    fromPublicUrl &&
+    /^[\p{L}][\p{L}\p{M}\d ’'.,&()–-]{1,99}$/u.test(title) &&
+    !/\d{4}|code|password|passwort|wi[ -]?fi|token|mot de passe|senha|contraseña/iu.test(title)
+      ? title
+      : undefined;
   const field = (key: string) => result.fields.find((candidate) => candidate.key === key);
   const value = (key: string) => {
     const candidate = field(key);
@@ -46,7 +85,21 @@ export function publicImportPreview(result: ExtractionResult): PublicImportPrevi
       return match ? [Number(match[1])] : [];
     }),
   );
+  const snippets = (keys: string[]) =>
+    keys.flatMap((key) =>
+      value(key)
+        .split(/[\n·•,]/)
+        .map((part) => part.trim().replace(/^(?:équipements?|amenities)\s*:\s*/iu, "")),
+    );
+  const confirmedAmenities = matchingKeys(
+    amenities,
+    snippets(["equipment", "kitchen", "parking", "climate", "pool"]),
+  );
+  const confirmedRules = matchingKeys(rules, snippets(["rules"]));
   return {
+    ...(name ? { name } : {}),
+    ...(confirmedAmenities.length ? { amenities: confirmedAmenities } : {}),
+    ...(confirmedRules.length ? { rules: confirmedRules } : {}),
     arrival: time("arrival", arrival),
     departure: time("departure", departure),
     capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,

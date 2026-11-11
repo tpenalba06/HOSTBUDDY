@@ -52,7 +52,7 @@ function ImportUrl() {
     let currentRunId: string | null = null;
 
     try {
-      currentRunId = await startImportRun(org.id, adapter.source, { url: clean });
+      currentRunId = await startImportRun(org.id, adapter.source, { url: clean }).catch(() => null);
       setRunId(currentRunId);
       const outcome = await adapter.run(clean).catch(() => ({
         ok: false as const,
@@ -64,11 +64,12 @@ function ImportUrl() {
       setStage(null);
 
       if (!outcome.ok) {
-        await finishImportRun(
-          currentRunId,
-          outcome.reason === "insufficient" ? "insufficient" : "failed",
-          { error: outcome.reason },
-        );
+        if (currentRunId)
+          await finishImportRun(
+            currentRunId,
+            outcome.reason === "insufficient" ? "insufficient" : "failed",
+            { error: outcome.reason },
+          ).catch(() => {});
         setRunId(null);
         setFallback(true);
         return;
@@ -93,7 +94,8 @@ function ImportUrl() {
     setError("");
     try {
       const property = await createPropertyFromExtraction(org.id, source, candidate, cleanUrl);
-      if (runId) await finishImportRun(runId, "succeeded", { propertyId: property.id });
+      if (runId)
+        void finishImportRun(runId, "succeeded", { propertyId: property.id }).catch(() => {});
       qc.invalidateQueries({ queryKey: ["properties"] });
       nav({ to: "/app/p/$id", params: { id: property.id } });
     } catch {

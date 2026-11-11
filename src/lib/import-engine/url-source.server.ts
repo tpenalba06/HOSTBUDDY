@@ -275,7 +275,11 @@ export async function runUrlImport(data: {
   const useful = result.fields.filter(
     (f) => f.status !== "missing" && !(f.key === "description" && !structured.lodging),
   ).length;
-  if (useful < 2) return { ok: false, source, reason: "insufficient" };
+  // A recognized listing with a title is enough to prepare a partial draft.
+  // Never lower the threshold for a generic page with only site metadata.
+  const identifiedListing = structured.lodging || !!sunverGuestDocument(html, resolvedUrl);
+  if (useful < 2 && !(identifiedListing && result.propertyName?.trim()))
+    return { ok: false, source, reason: "insufficient" };
   return {
     ok: true,
     source,

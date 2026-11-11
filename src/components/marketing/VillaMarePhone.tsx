@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useI18n } from "@/lib/i18n";
-import { extractDocument } from "@/lib/import-engine/document-extractor";
-import { publicImportPreview, type PublicImportPreview } from "@/lib/import-engine/public-preview";
+import {
+  previewPastedDocument,
+  type PublicImportPreview,
+} from "@/lib/import-engine/public-preview";
 import { importPublicPreview } from "@/lib/import-engine/public-preview.functions";
 
 export function VillaMarePhone() {
@@ -55,7 +57,7 @@ export function VillaMarePhone() {
     try {
       let result: PublicImportPreview;
       if (mode === "text") {
-        result = publicImportPreview(extractDocument(value));
+        result = previewPastedDocument(value);
       } else {
         const response = await importPublicPreview({ data: { url: value } });
         if (response.status !== "ok") {

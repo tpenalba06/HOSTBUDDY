@@ -1,3 +1,4 @@
+import { extractDocument } from "./document-extractor";
 import { z } from "zod";
 import type { ExtractionResult } from "./types";
 import { detectAccommodationMood } from "@/components/guest/property-media";
@@ -73,10 +74,11 @@ const capacity =
 export function publicImportPreview(
   result: ExtractionResult,
   fromPublicUrl = false,
+  pastedName?: string,
 ): PublicImportPreview {
-  const title = result.propertyName?.trim() ?? "";
+  const title = pastedName ?? result.propertyName?.trim() ?? "";
   const name =
-    fromPublicUrl &&
+    (fromPublicUrl || !!pastedName) &&
     /^[\p{L}][\p{L}\p{M}\d ’'.,&()–-]{1,99}$/u.test(title) &&
     !/\d{4}|code|password|passwort|wi[ -]?fi|token|mot de passe|senha|contraseña/iu.test(title)
       ? title
@@ -87,7 +89,9 @@ export function publicImportPreview(
     return candidate?.issues?.length ? "" : (candidate?.value?.trim() ?? "");
   };
   const time = (key: string, pattern: RegExp) => {
-    const match = value(key).match(pattern);
+    const input = value(key);
+    if (fromPublicUrl && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input)) return input;
+    const match = input.match(pattern);
     return match ? `${match[1]!.padStart(2, "0")}:${match[2] ?? "00"}` : undefined;
   };
   // The source can group occupancy with bedrooms and beds on the same line.
@@ -129,6 +133,44 @@ export function publicImportPreview(
     arrival: time("arrival", arrival),
     departure: time("departure", departure),
     capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,
-    illustration: detectAccommodationMood(result.propertyName ?? ""),
+    illustration: detectAccommodationMood(title),
+  };
+}
+
+/** Keep sentence boundaries before classification so one credential does not taint
+ * the rest of a paragraph. Only named, bounded facts are projected to the phone. */
+export function previewPastedDocument(input: string): PublicImportPreview {
+  const prose = input.replace(/[’]/g, "'");
+  const document = prose
+    .replace(/(?<=[.!?]) +(?=[\p{Lu}])/gu, "\n")
+    .replace(/\bet le départ (?=avant|à )/giu, "\nDépart ");
+  const result = extractDocument(document);
+  const name = prose.match(
+    /\b[Bb]ienvenue à (?:la |le |l')?([\p{Lu}][\p{L}\p{M} '-]{1,70}?)(?=,|[.!?]|\n|$)/u,
+  )?.[1];
+  const preview = publicImportPreview(result, false, name);
+  const address = prose.match(
+    /\b(\d{1,3} (?:rue|avenue|boulevard|chemin|place) [\p{L} '-]{2,60}?) à ([\p{Lu}][\p{L} '-]{1,40})(?=[,.!?]|$)/u,
+  );
+  const times = (pattern: RegExp) => {
+    const matches = new Set(
+      Array.from(
+        prose.matchAll(pattern),
+        (match) => `${match[1]!.padStart(2, "0")}:${match[2] ?? match[3] ?? "00"}`,
+      ),
+    );
+    return matches.size === 1 ? [...matches][0] : undefined;
+  };
+  const checkIn = times(
+    /arriv[ée]e? (?:se fait )?(?:à partir de |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
+  );
+  const checkOut = times(
+    /d[ée]part (?:se fait )?(?:avant |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
+  );
+  return {
+    ...preview,
+    arrival: checkIn ?? preview.arrival,
+    departure: checkOut ?? preview.departure,
+    ...(address ? { text: { ...preview.text, address: `${address[1]}, ${address[2]}` } } : {}),
   };
 }

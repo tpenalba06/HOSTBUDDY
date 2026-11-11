@@ -42,7 +42,7 @@ function Dashboard() {
     <ManagerDashboardScreen
       orgName={org.name}
       data={data}
-      onAdd={() => nav({ to: "/app/new" })}
+      onAdd={() => nav({ to: "/app/import-url" })}
       onOrders={() => nav({ to: "/app/orders" })}
     />
   );

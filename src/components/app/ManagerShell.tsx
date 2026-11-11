@@ -42,7 +42,7 @@ type ManagerPath =
   | "/app/dashboard"
   | "/app/payments"
   | "/app/team"
-  | "/app/new";
+  | "/app/import-url";
 type NavItem = { id: ManagerArea; to: ManagerPath; label: string; icon: LucideIcon };
 
 export function ManagerShell({
@@ -118,7 +118,7 @@ export function ManagerShell({
   };
   const addProperty: NavItem = {
     id: "new",
-    to: "/app/new",
+    to: "/app/import-url",
     label: copy.addProperty,
     icon: Plus,
   };
@@ -140,7 +140,7 @@ export function ManagerShell({
               ? "dashboard"
               : pathname.startsWith("/app/team")
                 ? "team"
-                : pathname.startsWith("/app/new")
+                : /^\/app\/(?:new|import-(?:url|text)|manual)(?:\/|$)/.test(pathname)
                   ? "new"
                   : "properties";
   const current = onNavigate ? active : routeArea;

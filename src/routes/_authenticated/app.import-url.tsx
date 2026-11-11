@@ -192,6 +192,17 @@ function ImportUrl() {
             {t("import.action")}
           </button>
           <p className="text-center text-muted-foreground">{t("import.urlHelp")}</p>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+            <Link to="/app/import-text" className="inline-flex min-h-11 items-center underline">
+              {t("app.paste")}
+            </Link>
+            <Link to="/app/manual" className="inline-flex min-h-11 items-center underline">
+              {t("app.manual")}
+            </Link>
+            <Link to="/app/import-pms" className="inline-flex min-h-11 items-center underline">
+              {locale === "fr" ? "Connecter un logiciel" : "Connect software"}
+            </Link>
+          </div>
         </div>
       )}
     </div>

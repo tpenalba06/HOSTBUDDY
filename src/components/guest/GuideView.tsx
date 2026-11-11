@@ -160,6 +160,7 @@ export function GuideView({
   const [entryId, setEntryId] = useState<string | null>(null);
   const [entryCategory, setEntryCategory] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState(false);
   const [arrivalRequest, setArrivalRequest] = useState(0);
@@ -191,9 +192,18 @@ export function GuideView({
       icon: "✨",
       content: { items: [] },
     });
-  // The manager's order is authoritative; quick shortcuts provide access to essentials
-  // without silently rearranging the guide or hiding reordered cards in another group.
   const { services: serviceSection, main, extra } = homeSections(sections);
+  const shortcuts = [
+    { kind: "arrival", Icon: CalendarDays },
+    { kind: "wifi", Icon: Wifi },
+    { kind: "departure", Icon: Luggage },
+  ].flatMap(({ kind, Icon }) => {
+    const section = sections.find((candidate) => sectionKind(candidate.key) === kind);
+    return section ? [{ section, Icon }] : [];
+  });
+  const more = [...main, ...extra].filter(
+    (section) => !shortcuts.some((shortcut) => shortcut.section.key === section.key),
+  );
   const photos = [
     ...new Set(
       [cover, ...resolvePropertyMedia(sections).gallery.map((photo) => photo.url)].filter(
@@ -491,28 +501,18 @@ export function GuideView({
                   </p>
                 )}
               </div>
-              {sections.some((section) =>
-                ["arrival", "wifi", "places"].includes(sectionKind(section.key)),
-              ) && (
+              {shortcuts.length > 0 && (
                 <nav className="nona-guest-shortcuts" aria-label={ux.quickAccess}>
-                  {["arrival", "wifi", "places"].flatMap((kind) => {
-                    const section = sections.find(
-                      (candidate) => sectionKind(candidate.key) === kind,
-                    );
-                    if (!section) return [];
-                    const Icon =
-                      kind === "arrival" ? CalendarDays : kind === "wifi" ? Wifi : MapPin;
-                    return [
-                      <button
-                        key={section.key}
-                        data-guide-target={`shortcut:${section.key}`}
-                        onClick={() => go(section.key)}
-                      >
-                        <Icon size={17} aria-hidden="true" />
-                        {cleanTitle(section.title)}
-                      </button>,
-                    ];
-                  })}
+                  {shortcuts.map(({ section, Icon }) => (
+                    <button
+                      key={section.key}
+                      data-guide-target={`shortcut:${section.key}`}
+                      onClick={() => go(section.key)}
+                    >
+                      <Icon size={17} aria-hidden="true" />
+                      {cleanTitle(section.title)}
+                    </button>
+                  ))}
                 </nav>
               )}
               <div className="nona-property-visual">
@@ -581,7 +581,6 @@ export function GuideView({
               <div className="hb-index-content">
                 <PresentationVideo video={resolvePropertyMedia(sections).video} />
                 <div className="hb-index-heading">
-                  <h2>{guide.name}</h2>
                   <button
                     className="hb-icon-button"
                     onClick={toggleMenu}
@@ -589,15 +588,6 @@ export function GuideView({
                   >
                     <Search size={20} />
                   </button>
-                </div>
-                <div className="hb-section-grid">
-                  {main.map((section) => (
-                    <SectionCard
-                      key={section.key}
-                      section={section}
-                      onClick={() => go(section.key)}
-                    />
-                  ))}
                 </div>
                 {serviceSection && (
                   <section className="nona-home-services" aria-label={t("section.services")}>
@@ -626,13 +616,17 @@ export function GuideView({
                     )}
                   </section>
                 )}
-                {extra.length > 0 && (
-                  <details className="hb-all-info">
+                {more.length > 0 && (
+                  <details
+                    className="hb-all-info"
+                    open={moreOpen}
+                    onToggle={(event) => setMoreOpen(event.currentTarget.open)}
+                  >
                     <summary>
-                      {t("guide.allInfo")} <span>{extra.length}</span>
+                      {t("guide.allInfo")} <span>{more.length}</span>
                     </summary>
                     <div className="hb-section-grid">
-                      {extra.map((section) => (
+                      {more.map((section) => (
                         <SectionCard
                           key={section.key}
                           section={section}

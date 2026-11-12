@@ -1,7 +1,7 @@
 export const HOSTBUDDY_PLAN = {
   baseCents: 999,
   freeProperties: 1,
-  includedProperties: 2,
+  includedProperties: 3,
   extraCents: 299,
   currency: "eur",
 } as const;

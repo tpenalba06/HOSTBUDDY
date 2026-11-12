@@ -87,7 +87,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit3": "Plus de services vendus",
     "marketing.benefit4": "Aucune application à télécharger",
     "marketing.price": "9,99 € / mois",
-    "marketing.priceNote": "2 logements inclus · +2,99 € par logement supplémentaire",
+    "marketing.priceNote": "3 logements inclus · +2,99 € par logement supplémentaire",
     "marketing.trial": "1 logement gratuit · Sans carte bancaire · Aucune installation voyageur",
     "marketing.for": "Conçu pour",
     "marketing.operators":
@@ -372,7 +372,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit3": "More services sold",
     "marketing.benefit4": "No app to download",
     "marketing.price": "€9.99 / month",
-    "marketing.priceNote": "2 properties included · €2.99 per additional property",
+    "marketing.priceNote": "3 properties included · €2.99 per additional property",
     "marketing.trial": "1 property free · No card · No guest installation",
     "marketing.for": "Designed for",
     "marketing.operators":
@@ -654,7 +654,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit3": "Más servicios vendidos",
     "marketing.benefit4": "Sin aplicación que descargar",
     "marketing.price": "9,99 € / mes",
-    "marketing.priceNote": "2 alojamientos incluidos · 2,99 € por alojamiento adicional",
+    "marketing.priceNote": "3 alojamientos incluidos · 2,99 € por alojamiento adicional",
     "marketing.trial": "1 alojamiento gratis · Sin tarjeta · Sin instalación",
     "marketing.for": "Diseñado para",
     "marketing.operators":
@@ -935,7 +935,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit3": "Mehr verkaufte Services",
     "marketing.benefit4": "Keine App nötig",
     "marketing.price": "9,99 € / Monat",
-    "marketing.priceNote": "2 Unterkünfte inklusive · 2,99 € je weitere Unterkunft",
+    "marketing.priceNote": "3 Unterkünfte inklusive · 2,99 € je weitere Unterkunft",
     "marketing.trial": "1 Unterkunft kostenlos · Keine Karte · Keine Installation",
     "marketing.for": "Entwickelt für",
     "marketing.operators": "Concierges · Ferienwohnungen · Unabhängige Hotels · Aparthotels",
@@ -1215,7 +1215,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit3": "Più servizi venduti",
     "marketing.benefit4": "Nessuna app da scaricare",
     "marketing.price": "9,99 € / mese",
-    "marketing.priceNote": "2 alloggi inclusi · 2,99 € per ogni alloggio aggiuntivo",
+    "marketing.priceNote": "3 alloggi inclusi · 2,99 € per ogni alloggio aggiuntivo",
     "marketing.trial": "1 alloggio gratis · Nessuna carta · Nessuna installazione",
     "marketing.for": "Pensato per",
     "marketing.operators": "Concierge · Case vacanza · Hotel indipendenti · Aparthotel",
@@ -1493,7 +1493,7 @@ export const translations: Record<Locale, Copy> = {
     "marketing.benefit3": "Mais serviços vendidos",
     "marketing.benefit4": "Sem aplicação para descarregar",
     "marketing.price": "9,99 € / mês",
-    "marketing.priceNote": "2 alojamentos incluídos · 2,99 € por alojamento adicional",
+    "marketing.priceNote": "3 alojamentos incluídos · 2,99 € por alojamento adicional",
     "marketing.trial": "1 alojamento grátis · Sem cartão · Sem instalação",
     "marketing.for": "Criado para",
     "marketing.operators": "Concierges · Alojamentos locais · Hotéis independentes · Aparthotéis",
@@ -2913,41 +2913,41 @@ addTeamCopy(translations);
 addMessageCopy(translations);
 
 Object.assign(translations.fr, {
-  "marketing.paidTier": "2 logements",
+  "marketing.paidTier": "3 logements",
   "payments.subscriptionRequired":
     "Un abonnement actif est requis à partir de 2 logements non archivés. Ouvrez Paiements pour vous abonner. Vos données sont conservées.",
   "payments.syncRequired":
     "La facturation doit être synchronisée avant publication. Ouvrez Paiements puis réessayez.",
 });
 Object.assign(translations.en, {
-  "marketing.paidTier": "2 properties",
+  "marketing.paidTier": "3 properties",
   "payments.subscriptionRequired":
     "An active subscription is required for 2 or more non-archived properties. Open Payments to subscribe. Your data is retained.",
   "payments.syncRequired": "Billing must sync before publishing. Open Payments, then try again.",
 });
 Object.assign(translations.es, {
-  "marketing.paidTier": "2 alojamientos",
+  "marketing.paidTier": "3 alojamientos",
   "payments.subscriptionRequired":
     "Se requiere una suscripción activa desde 2 alojamientos no archivados. Abre Pagos para suscribirte. Tus datos se conservan.",
   "payments.syncRequired":
     "La facturación debe sincronizarse antes de publicar. Abre Pagos y vuelve a intentarlo.",
 });
 Object.assign(translations.de, {
-  "marketing.paidTier": "2 Unterkünfte",
+  "marketing.paidTier": "3 Unterkünfte",
   "payments.subscriptionRequired":
     "Ab 2 nicht archivierten Unterkünften ist ein aktives Abo erforderlich. Öffne Zahlungen. Deine Daten bleiben erhalten.",
   "payments.syncRequired":
     "Die Abrechnung muss vor der Veröffentlichung synchronisiert werden. Öffne Zahlungen und versuche es erneut.",
 });
 Object.assign(translations.it, {
-  "marketing.paidTier": "2 alloggi",
+  "marketing.paidTier": "3 alloggi",
   "payments.subscriptionRequired":
     "Da 2 alloggi non archiviati è richiesto un abbonamento attivo. Apri Pagamenti. I dati sono conservati.",
   "payments.syncRequired":
     "La fatturazione deve sincronizzarsi prima della pubblicazione. Apri Pagamenti e riprova.",
 });
 Object.assign(translations.pt, {
-  "marketing.paidTier": "2 alojamentos",
+  "marketing.paidTier": "3 alojamentos",
   "payments.subscriptionRequired":
     "É necessária uma assinatura ativa a partir de 2 alojamentos não arquivados. Abra Pagamentos. Os dados são preservados.",
   "payments.syncRequired":

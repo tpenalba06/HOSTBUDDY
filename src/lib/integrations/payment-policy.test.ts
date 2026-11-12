@@ -8,17 +8,18 @@ import {
 } from "./payment-policy";
 import Stripe from "stripe";
 describe("payment safety", () => {
-  it("makes one property free and prices two included properties", () => {
+  it("makes one property free and prices three included properties", () => {
     for (const [count, expected] of [
       [0, 0],
       [1, 0],
       [2, 999],
-      [3, 1298],
-      [5, 1896],
-      [10, 3391],
+      [3, 999],
+      [4, 1298],
+      [5, 1597],
+      [10, 3092],
     ])
       expect(subscriptionQuote(count!).monthlyCents).toBe(expected);
-    expect(subscriptionQuote(5).extraQuantity).toBe(3);
+    expect(subscriptionQuote(5).extraQuantity).toBe(2);
     for (const n of [-1, 1.5, NaN, Infinity]) expect(() => subscriptionQuote(n)).toThrow();
   });
   it("rounds the separate 2% platform fee in integer cents", () => {

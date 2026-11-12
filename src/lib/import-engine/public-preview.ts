@@ -197,13 +197,12 @@ export function publicImportPreview(
 export function previewPastedDocument(input: string): PublicImportPreview {
   const prose = input
     .replace(/[’]/g, "'")
+    .replace(/(?<=[.!?]) +(?=[\p{Lu}])/gu, "\n")
     .replace(
       /(?:^|\n)[^\n]*(?:mot de passe|password|passwort|senha|contrase[ñn]a|code d.acces|code d.accès|c[oó]dig[oa]|ssid)[^\n]*[:=][ \t]*\n[^\n]*/giu,
       "\n",
     );
-  const document = prose
-    .replace(/(?<=[.!?]) +(?=[\p{Lu}])/gu, "\n")
-    .replace(/\bet le départ (?=avant|à )/giu, "\nDépart ");
+  const document = prose.replace(/\bet le départ (?=avant|à )/giu, "\nDépart ");
   const result = extractDocument(document);
   const name =
     prose.match(

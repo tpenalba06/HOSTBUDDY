@@ -91,6 +91,20 @@ describe("public import preview", () => {
     expect(preview.wifiAvailable).toBe(true);
     expect(JSON.stringify(preview)).not.toMatch(/1234|TEST-NE-PAS-AFFICHER/);
   });
+
+  it("retains a paragraph before a password whose value is on the following line", () => {
+    const preview = previewPastedDocument(
+      "Bienvenue à la Villa Opale, située au 12 rue des Oliviers à Nice. Départ avant 11 h. Pour votre arrivée, présentez-vous à la réception. Arrivée à 16 h. Wi-Fi disponible. Mot de passe :\nESSAI-PRIVE-3212\nCode du portail : 1234.",
+    );
+    expect(preview).toMatchObject({
+      name: "Villa Opale",
+      arrival: "16:00",
+      departure: "11:00",
+      wifiAvailable: true,
+    });
+    expect(preview.text?.arrival).toContain("présentez-vous à la réception");
+    expect(JSON.stringify(preview)).not.toMatch(/ESSAI-PRIVE|1234/);
+  });
   it("projects only recognized dates and capacity without transferring pasted credentials", () => {
     const source = [
       "Villa 1122",

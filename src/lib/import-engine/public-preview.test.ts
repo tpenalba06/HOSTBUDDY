@@ -1,8 +1,110 @@
 import { describe, expect, it } from "vitest";
 import { extractDocument } from "./document-extractor";
-import { publicImportPreview, publicPreviewSchema } from "./public-preview";
+import { publicImportPreview, publicPreviewSchema, previewPastedDocument } from "./public-preview";
 
 describe("public import preview", () => {
+  it.each([
+    [
+      "fr",
+      "Bienvenue à la Villa Opale",
+      "Arrivée à 16 h",
+      "Départ avant 11 h",
+      "La piscine ouvre à midi",
+      "Petit-déjeuner sur la terrasse",
+      "Restaurant La Treille sur la place",
+      "Mot de passe",
+    ],
+    [
+      "en",
+      "Welcome to Villa Opale",
+      "Arrival from 16:00",
+      "Departure before 11:00",
+      "The swimming pool opens at noon",
+      "Breakfast on the terrace",
+      "The restaurant by the market",
+      "Password",
+    ],
+    [
+      "es",
+      "Bienvenidos a Villa Opale",
+      "Llegada desde 16:00",
+      "Salida antes de 11:00",
+      "La piscina abre al mediodía",
+      "Desayuno en la terraza",
+      "Restaurante junto al mercado",
+      "Contraseña",
+    ],
+    [
+      "it",
+      "Benvenuti a Villa Opale",
+      "Arrivo dalle 16:00",
+      "Partenza entro 11:00",
+      "La piscina apre a mezzogiorno",
+      "Colazione sulla terrazza",
+      "Consigli per il mercato",
+      "Password",
+    ],
+    [
+      "de",
+      "Willkommen in Villa Opale",
+      "Ankunft ab 16:00",
+      "Abreise bis 11:00",
+      "Das Schwimmbad öffnet mittags",
+      "Frühstück auf der Terrasse",
+      "Empfehlung für den Markt",
+      "Passwort",
+    ],
+    [
+      "pt",
+      "Bem-vindos à Villa Opale",
+      "Chegada a partir das 16:00",
+      "Partida até 11:00",
+      "A piscina abre ao meio-dia",
+      "Pequeno-almoço na varanda",
+      "Mercado perto da praça",
+      "Senha",
+    ],
+  ])(
+    "maps pasted guide facts and withholds credentials in %s",
+    (_, welcome, arrival, departure, pool, service, recommendation, password) => {
+      const source = `${welcome}. ${pool}. ${departure}. ${recommendation}. ${arrival}. ${service}.\n${password}:\nUNIQUE-TEST-CREDENTIAL\n${pool}.`;
+      const preview = previewPastedDocument(source);
+      expect(publicPreviewSchema.parse(preview)).toMatchObject({
+        name: "Villa Opale",
+        arrival: "16:00",
+        departure: "11:00",
+        text: {
+          pool: `${pool}.`,
+          services: `${service}.`,
+          recommendations: `${recommendation}.`,
+        },
+      });
+      expect(JSON.stringify(preview)).not.toContain("UNIQUE-TEST-CREDENTIAL");
+    },
+  );
+
+  it("keeps safe arrival instructions next to protected access details", () => {
+    const preview = previewPastedDocument(
+      "Arrivée à 16 h. Pour votre arrivée, présentez-vous à la réception. Arrivée par le portail, code 1234. Wi-Fi disponible. Mot de passe Wi-Fi : TEST-NE-PAS-AFFICHER.",
+    );
+    expect(preview.text?.arrival).toContain("présentez-vous à la réception");
+    expect(preview.wifiAvailable).toBe(true);
+    expect(JSON.stringify(preview)).not.toMatch(/1234|TEST-NE-PAS-AFFICHER/);
+  });
+
+  it("retains a paragraph before a password whose value is on the following line", () => {
+    const preview = previewPastedDocument(
+      "Bienvenue à la Villa Opale, située au 12 rue des Oliviers à Nice. Départ avant 11 h. Pour votre arrivée, présentez-vous à la réception. Arrivée à 16 h. Wi-Fi disponible. Mot de passe :\nESSAI-PRIVE-3212\nCode du portail : 1234.",
+    );
+    expect(preview).toMatchObject({
+      name: "Villa Opale",
+      arrival: "16:00",
+      departure: "11:00",
+      wifiAvailable: true,
+    });
+    expect(preview.text?.arrival).toContain("présentez-vous à la réception");
+    expect(JSON.stringify(preview)).not.toMatch(/ESSAI-PRIVE|1234/);
+  });
   it("projects only recognized dates and capacity without transferring pasted credentials", () => {
     const source = [
       "Villa 1122",
@@ -16,6 +118,8 @@ describe("public import preview", () => {
       arrival: "16:00",
       departure: "10:00",
       capacity: 3,
+      illustration: "countryside",
+      text: { arrival: "Arrivée : 16h", departure: "Départ : avant 10h" },
     });
   });
 
@@ -25,5 +129,70 @@ describe("public import preview", () => {
     expect(publicPreviewSchema.parse({ arrival: "16:00", wifi: "secret" })).toEqual({
       arrival: "16:00",
     });
+  });
+  it("reads explicit guest counts in grouped listing details and rejects disagreement", () => {
+    const result = (value: string) => ({
+      propertyName: null,
+      fields: [
+        { key: "capacity", status: "to_verify" as const, value, rawValue: value, confidence: 0.8 },
+      ],
+    });
+    expect(publicImportPreview(result("2 voyageurs · 1 chambre · 1 lit")).capacity).toBe(2);
+    expect(
+      publicImportPreview(result("2 voyageurs · 1 chambre\n4 voyageurs")).capacity,
+    ).toBeUndefined();
+  });
+  it("preserves the Villa Azur paragraph facts without exposing its credentials", () => {
+    const preview = previewPastedDocument(
+      "Bienvenue à la Villa Azur, située au 12 rue des Oliviers à Nice. L'arrivée se fait à partir de 16 h et le départ avant 11 h. Le logement dispose d'une piscine, de la climatisation, d'une cuisine équipée et d'un parking privé. Le réseau Wi-Fi s'appelle VillaAzur_Guest, mot de passe TESTAzur2026. Les clés sont dans une boîte située à droite du portail. Le code fictif de TEST est 1234. Merci de ne pas faire de bruit après 22 h. Pour le départ, fermer toutes les fenêtres et déposer les clés dans la boîte.",
+    );
+    expect(preview).toMatchObject({
+      name: "Villa Azur",
+      arrival: "16:00",
+      departure: "11:00",
+      text: { address: "12 rue des Oliviers, Nice" },
+    });
+    expect(preview.text?.kitchen).toContain("cuisine équipée");
+    expect(preview.text?.rules).toContain("bruit après 22 h");
+    expect(preview.text?.departure).toContain("fermer toutes les fenêtres");
+    expect(JSON.stringify(preview)).not.toMatch(
+      /TESTAzur2026|1234|VillaAzur_Guest|droite du portail/,
+    );
+  });
+  it("shows a structured public description but withholds a credential-bearing block", () => {
+    const project = (value: string) =>
+      publicImportPreview(
+        {
+          propertyName: "Studio",
+          fields: [
+            {
+              key: "description",
+              value,
+              rawValue: null,
+              status: "to_verify",
+              confidence: 0.85,
+              evidence: [{ method: "structured", quote: "JSON-LD description (fixture)" }],
+            },
+          ],
+        },
+        true,
+      );
+    expect(project("Studio calme avec terrasse.").text?.description).toBe(
+      "Studio calme avec terrasse.",
+    );
+    expect(project("Studio calme. Code du portail :\nEXEMPLE").text).toBeUndefined();
+  });
+  it("withholds contradictory times from both normalized values and guide copy", () => {
+    const preview = previewPastedDocument("Arrivée à 16 h. Arrivée à 18 h. Départ avant 11 h.");
+    expect(preview.arrival).toBeUndefined();
+    expect(preview.text?.arrival).toBeUndefined();
+    expect(preview.departure).toBe("11:00");
+  });
+  it("retains a recommendation copied by the host without exposing Wi-Fi credentials", () => {
+    const preview = previewPastedDocument(
+      "Restaurant Le Jardin sur la place du marché. Mot de passe Wi-Fi : SECRET-EXEMPLE.",
+    );
+    expect(preview.text?.recommendations).toContain("Restaurant Le Jardin");
+    expect(JSON.stringify(preview)).not.toContain("SECRET-EXEMPLE");
   });
 });

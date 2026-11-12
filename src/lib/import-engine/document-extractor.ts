@@ -6,18 +6,21 @@ export const MAX_IMPORT_CHARACTERS = 200_000;
 const folded = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 const headings: Record<string, RegExp> = {
   wifi: /^(?:wi[ -]?fi|internet|connexion internet)$/,
-  arrival: /^(?:arrivee|check[ -]?in|arrival|llegada|ankunft|arrivo)$/,
-  departure: /^(?:depart|check[ -]?out|departure|salida|abreise|partenza)$/,
-  access: /^(?:acces|access|keys|cles|acceso|zugang|accesso)$/,
-  address: /^(?:adresse|address|direccion|anschrift|indirizzo)$/,
-  equipment: /^(?:equipements|amenities|equipment|ausstattung|dotazioni)$/,
-  rules: /^(?:regles(?: de la maison)?|house rules|reglas|hausregeln|regole)$/,
-  contact: /^(?:contacts?|coordonnees|host|hote|contatti)$/,
+  arrival: /^(?:arrivee|check[ -]?in|arrival|llegada|ankunft|arrivo|chegada)$/,
+  departure: /^(?:depart|check[ -]?out|departure|salida|abreise|partenza|partida|saida)$/,
+  access:
+    /^(?:acces|access|keys|cles|acceso|zugang|accesso|acesso|chaves|llaves|schlussel|chiavi)$/,
+  address: /^(?:adresse|address|direccion|anschrift|indirizzo|morada|endereco)$/,
+  equipment: /^(?:equipements|amenities|equipment|ausstattung|dotazioni|equipamiento|comodidades)$/,
+  rules: /^(?:regles(?: de la maison)?|house rules|reglas|hausregeln|regole|regras)$/,
+  contact: /^(?:contacts?|coordonnees|host|hote|contatti|contacto|contato|kontakt)$/,
   recommendations:
-    /^(?:bonnes adresses|recommandations|recommendations|nearby|a proximite|consigli)$/,
-  services: /^(?:services(?: additionnels)?|extras|prestations|servizi)$/,
-  description: /^(?:description|bienvenue|welcome|presentation|descrizione)$/,
-  parking: /^(?:parking|stationnement|aparcamiento|parcheggio)$/,
+    /^(?:bonnes adresses|recommandations|recommendations|nearby|a proximite|consigli|empfehlungen|recomendaciones|recomendacoes)$/,
+  services:
+    /^(?:services(?: additionnels)?|extras|prestations|servizi|servicios|servicos|leistungen)$/,
+  description:
+    /^(?:description|bienvenue|welcome|presentation|descrizione|descripcion|descricao|beschreibung)$/,
+  parking: /^(?:parking|stationnement|aparcamiento|parcheggio|parkplatz|estacionamento)$/,
   pool: /^(?:piscine|pool|piscina)$/,
   kitchen: /^(?:cuisine|kitchen|cocina|cucina)$/,
   emergency: /^(?:urgences|emergency|emergencias|notfall)$/,

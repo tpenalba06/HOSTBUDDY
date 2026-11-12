@@ -8,7 +8,7 @@ assert.equal(response.status, 200);
 const html = await response.text();
 const hero = [...html.matchAll(/<img\b[^>]*>/g)]
   .map((match) => match[0])
-  .find((tag) => tag.includes("hostbuddy-arrival.jpg"));
+  .find((tag) => tag.includes("/hostbuddy-media/arrival.webp"));
 assert.ok(hero?.includes('fetchPriority="high"') || hero?.includes('fetchpriority="high"'));
 const assets = JSON.parse(readFileSync(".output/public/offline-assets.json", "utf8")).assets;
 const fonts = assets.filter((path) => path.startsWith("/guide-fonts/") && path.endsWith(".woff2"));

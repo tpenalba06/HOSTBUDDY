@@ -39,8 +39,6 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const sourceLabels = ["Airbnb", "Booking", "Sunver"];
-
 function Landing() {
   const { t, locale } = useI18n();
   const ux = uxCopy(locale);
@@ -98,11 +96,11 @@ function Landing() {
               <p className="mt-6 max-w-xl text-lg font-medium leading-relaxed text-ink-foreground/90 sm:text-xl">
                 {t("marketing.subtitle")}
               </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Link to="/demo" search={{ mode: "guest" }} className="btn btn-primary">
-                  {t("marketing.demoGuestAction")}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a href="#try-your-property" className="btn btn-primary">
+                  {locale === "fr" ? "Essayer avec mon logement" : "Try it with my property"}
                   <ArrowRight className="h-5 w-5" />
-                </Link>
+                </a>
                 <Link
                   to="/demo"
                   search={{ mode: "manager" }}
@@ -111,15 +109,7 @@ function Landing() {
                   {t("marketing.demoManagerAction")}
                 </Link>
               </div>
-              <p className="mt-3 text-sm text-ink-foreground/90">{ux.demoHint}</p>
-              <Link
-                to="/auth"
-                search={{ mode: "signup" }}
-                className="mt-1 inline-flex min-h-12 items-center font-semibold underline underline-offset-4"
-              >
-                {ux.createGuide}
-              </Link>
-              <ul className="mt-4 grid gap-2 text-base font-semibold sm:grid-cols-2">
+              <ul className="mt-4 hidden gap-2 text-base font-semibold lg:grid lg:grid-cols-2">
                 {[
                   "marketing.benefit1",
                   "marketing.benefit2",
@@ -134,13 +124,13 @@ function Landing() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 text-sm font-semibold text-ink-foreground/80">
+              <p className="mt-5 hidden text-sm font-semibold text-ink-foreground/80 lg:block">
                 {t("marketing.paidTier")} ·{" "}
                 <span className="font-display text-2xl font-semibold text-ink-foreground sm:text-3xl">
                   {t("marketing.price")}
                 </span>
               </p>
-              <p className="mt-2 text-sm font-semibold text-ink-foreground/80">
+              <p className="mt-2 hidden text-sm font-semibold text-ink-foreground/80 lg:block">
                 {t("marketing.trial")}
               </p>
             </div>
@@ -186,9 +176,16 @@ function Landing() {
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <span className="mr-2 text-sm font-semibold text-muted-foreground">
-              {t("marketing.sources")}:
+              {locale === "fr" ? "Sources de votre aperçu" : "Preview sources"}
             </span>
-            {[...sourceLabels, t("marketing.sourceWebsite"), t("marketing.sourceText")].map((s) => (
+            {[
+              locale === "fr" ? "Livrets Sunver publics" : "Public Sunver guides",
+              locale === "fr"
+                ? "Texte copié d’Airbnb ou Booking"
+                : "Text copied from Airbnb or Booking",
+              t("marketing.sourceWebsite"),
+              t("marketing.sourceText"),
+            ].map((s) => (
               <span
                 key={s}
                 className="rounded-full border bg-card px-3 py-1.5 text-sm font-semibold"

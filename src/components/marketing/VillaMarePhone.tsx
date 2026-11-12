@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useI18n } from "@/lib/i18n";
+import { MAX_IMPORT_CHARACTERS } from "@/lib/import-engine/document-extractor";
 import {
   previewPastedDocument,
   type PublicImportPreview,
@@ -12,6 +13,8 @@ export function VillaMarePhone() {
   const fr = locale === "fr";
   const screen = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
+  const pastedText = useRef<HTMLTextAreaElement>(null);
+  const focusTextAfterFallback = useRef(false);
   const [scale, setScale] = useState(0);
   const [mode, setMode] = useState<"url" | "text">("url");
   const [preview, setPreview] = useState<PublicImportPreview | null>(null);
@@ -20,6 +23,13 @@ export function VillaMarePhone() {
   useEffect(() => () => photos.forEach((url) => URL.revokeObjectURL(url)), [photos]);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (mode === "text" && !pending && focusTextAfterFallback.current) {
+      focusTextAfterFallback.current = false;
+      pastedText.current?.focus();
+    }
+  }, [mode, pending]);
 
   useEffect(() => {
     const element = screen.current;
@@ -64,7 +74,10 @@ export function VillaMarePhone() {
       } else {
         const response = await importPublicPreview({ data: { url: value } });
         if (response.status !== "ok") {
-          if (response.status !== "limited") setMode("text");
+          if (response.status !== "limited") {
+            focusTextAfterFallback.current = true;
+            setMode("text");
+          }
           setMessage(
             response.status === "limited"
               ? fr
@@ -83,10 +96,26 @@ export function VillaMarePhone() {
         result = response.preview;
       }
       const count =
-        [result.name, result.arrival, result.departure, result.capacity].filter(Boolean).length +
+        [
+          result.name,
+          result.locality,
+          result.arrival,
+          result.departure,
+          result.capacity,
+          result.wifiAvailable,
+        ].filter(Boolean).length +
+        (result.places?.length ?? 0) +
         (result.amenities?.length ?? 0) +
         (result.rules?.length ?? 0) +
         Object.keys(result.text ?? {}).length;
+      if (!count) {
+        setMessage(
+          fr
+            ? "Ajoutez quelques détails, par exemple le nom du logement, l’adresse ou les horaires."
+            : "Add a few details, such as the property name, address, or arrival time.",
+        );
+        return;
+      }
       setPhotos([]);
       setPhotoError("");
       setPreview(result);
@@ -109,17 +138,23 @@ export function VillaMarePhone() {
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-3xl items-center gap-4 xl:grid-cols-2">
       <form
+        id="try-your-property"
         onSubmit={submit}
         className="min-w-0 space-y-3 rounded-2xl bg-card p-4 text-foreground shadow-soft xl:order-2"
       >
         <h2 className="font-display text-2xl">
           {fr ? "Essayez avec votre logement" : "Try it with your property"}
         </h2>
+        <p className="text-sm text-muted-foreground">
+          {fr
+            ? "Aperçu gratuit et sans compte. Si le lien est bloqué, collez le texte de l’annonce."
+            : "Free preview, no account needed. If a link is blocked, paste the listing text."}
+        </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             aria-pressed={mode === "url"}
-            disabled={pending}
+            disabled={pending || !scale}
             className={`btn min-h-11 ${mode === "url" ? "btn-primary" : "btn-secondary"}`}
             onClick={() => setMode("url")}
           >
@@ -128,7 +163,7 @@ export function VillaMarePhone() {
           <button
             type="button"
             aria-pressed={mode === "text"}
-            disabled={pending}
+            disabled={pending || !scale}
             className={`btn min-h-11 ${mode === "text" ? "btn-primary" : "btn-secondary"}`}
             onClick={() => setMode("text")}
           >
@@ -157,16 +192,17 @@ export function VillaMarePhone() {
             />
           ) : (
             <textarea
+              ref={pastedText}
               key="text"
               name="listing"
               required
-              maxLength={12000}
+              maxLength={MAX_IMPORT_CHARACTERS}
               rows={4}
               className="w-full rounded-lg border bg-background px-3 py-2"
             />
           )}
         </label>
-        <button className="btn btn-primary min-h-12 w-full" disabled={pending}>
+        <button className="btn btn-primary min-h-12 w-full" disabled={pending || !scale}>
           {pending
             ? fr
               ? "Lecture…"
@@ -179,6 +215,23 @@ export function VillaMarePhone() {
           <p className="text-sm" role="status">
             {message}
           </p>
+        )}
+        {preview && (
+          <div className="space-y-2 border-t pt-3">
+            <a href="#property-preview" className="btn btn-secondary min-h-11 w-full xl:hidden">
+              {fr ? "Voir mon aperçu" : "View my preview"}
+            </a>
+            <Link
+              to="/auth"
+              search={{ mode: "signup" }}
+              className="btn btn-secondary min-h-11 w-full"
+            >
+              {fr ? "Créer un compte pour créer mon livret" : "Create an account to build my guide"}
+            </Link>
+            <p className="text-xs text-muted-foreground">
+              {fr ? "Cet aperçu reste dans cet onglet." : "This preview stays in this tab."}
+            </p>
+          </div>
         )}
         {preview && (
           <details className="space-y-2">
@@ -245,7 +298,7 @@ export function VillaMarePhone() {
           </button>
         )}
       </form>
-      <div className="mx-auto w-full min-w-0 max-w-[350px]">
+      <div id="property-preview" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[350px]">
         <div className="hb-marketing-phone shadow-phone">
           <div ref={screen} className="hb-marketing-phone-screen">
             <iframe

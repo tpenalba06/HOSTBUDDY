@@ -60,6 +60,7 @@ export function DemoExperience({
   const [message, setMessage] = useState("");
   const [messageSent, setMessageSent] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [arrivalRequest, setArrivalRequest] = useState(0);
   useEffect(() => {
     let property = createVillaMare(locale);
     try {
@@ -149,6 +150,8 @@ export function DemoExperience({
           >
             <GuideView
               guide={demoGuide(villa)}
+              showWifiQr
+              onAskArrival={() => setArrivalRequest((n) => n + 1)}
               sectionKey={section}
               onSectionChange={(key) => {
                 setSection(key);
@@ -207,7 +210,12 @@ export function DemoExperience({
         </div>
       </div>
       <div hidden={mode !== "guest"} className="relative">
-        <NonaConcierge guide={demoGuide(villa)} demo onContact={() => setMessageOpen(true)} />
+        <NonaConcierge
+          guide={demoGuide(villa)}
+          demo
+          arrivalRequest={arrivalRequest}
+          onContact={() => setMessageOpen(true)}
+        />
       </div>
       <Dialog open={messageOpen} onOpenChange={setMessageOpen}>
         <DialogContent>

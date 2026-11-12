@@ -66,7 +66,23 @@ export function createVillaMare(
         },
         { label: translateStatic(locale, "guest.wifiPassword"), text: data.wifi.password },
       ];
-    if (["arrival", "departure", "house", "pool"].includes(key))
+    if (key === "arrival") {
+      const endOfFirstStep = data.arrival.indexOf(". ") + 1;
+      content["items"] = endOfFirstStep
+        ? [
+            {
+              fieldKey: "arrival",
+              label: translateStatic(locale, "guest.arrivalInstructions"),
+              text: data.arrival.slice(0, endOfFirstStep),
+            },
+            {
+              label: translateStatic(locale, "guest.collectKeys"),
+              text: data.arrival.slice(endOfFirstStep).trim(),
+            },
+          ]
+        : [{ fieldKey: "arrival", label: "", text: data.arrival }];
+    }
+    if (["departure", "house", "pool"].includes(key))
       content["items"] = [
         {
           fieldKey: key === "house" ? "equipment" : key,

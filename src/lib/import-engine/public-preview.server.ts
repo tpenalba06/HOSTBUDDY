@@ -23,6 +23,7 @@ export async function runPublicPreview(input: string) {
   const url = normalizeUrl(original.href);
   if (!url) return { status: "invalid" } as const;
   const source = pickAdapter(url).source;
+  if (source === "airbnb") return { status: "authorization_required" } as const;
 
   const now = Date.now();
   if (now >= windowEnds) {
@@ -39,7 +40,7 @@ export async function runPublicPreview(input: string) {
   try {
     const outcome = await runUrlImport({ url, source, localAi: false });
     return outcome.ok
-      ? ({ status: "ok", preview: publicImportPreview(outcome.result) } as const)
+      ? ({ status: "ok", preview: publicImportPreview(outcome.result, true) } as const)
       : ({ status: outcome.reason } as const);
   } finally {
     running--;

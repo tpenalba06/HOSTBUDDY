@@ -137,6 +137,9 @@ export function GuideView({
   offlineAction,
   conciergeSlug,
   displayName,
+  showWifiQr = false,
+  importPreview = false,
+  onAskArrival,
 }: {
   guide: GuideViewData;
   sectionKey?: string | null;
@@ -147,6 +150,9 @@ export function GuideView({
   offlineAction?: ReactNode;
   conciergeSlug?: string;
   displayName?: string;
+  showWifiQr?: boolean;
+  importPreview?: boolean;
+  onAskArrival?: () => void;
 }) {
   const { locale, t } = useI18n();
   const visual = nonaVisualCopy(locale);
@@ -156,9 +162,10 @@ export function GuideView({
   const [entryId, setEntryId] = useState<string | null>(null);
   const [entryCategory, setEntryCategory] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(importPreview);
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState(false);
+  const [arrivalRequest, setArrivalRequest] = useState(0);
   const topRef = useRef<HTMLDivElement>(null);
   const listScroll = useRef<GuideScrollPosition | null>(null);
   const indexScroll = useRef<GuideScrollPosition | null>(null);
@@ -169,7 +176,8 @@ export function GuideView({
       (section) =>
         sectionKind(section.key) === "welcome" &&
         section.media?.some((item) => item.type === "image" && item.url),
-    ) || !!guide.coverUrl;
+    ) ||
+    (!importPreview && !!guide.coverUrl);
   const hasPropertyGallery = sections.some(
     (section) =>
       sectionKind(section.key) === "welcome" &&
@@ -211,7 +219,8 @@ export function GuideView({
     .flatMap((section) => section.content.items ?? [])
     .find((item) =>
       /^(adresse|address|dirección|anschrift|indirizzo|morada)$/i.test(item.label.trim()),
-    )?.text;
+    )
+    ?.text.trim();
   const contact = sections.find((item) => sectionKind(item.key) === "contact");
   const go = (key: string | null) => {
     if (key && !open) indexScroll.current = rememberGuidePosition(topRef.current);
@@ -269,6 +278,9 @@ export function GuideView({
   );
   const entries = open ? sectionEntries(open) : [];
   const selected = entries.find((item) => item.id === entryId);
+  const isArrival = !!open && sectionKind(open.key) === "arrival";
+  const askArrival =
+    onAskArrival ?? (conciergeSlug ? () => setArrivalRequest((n) => n + 1) : undefined);
   const matchingSections = sections.filter((section) =>
     `${section.title} ${(section.content.items ?? []).map((item) => `${item.label} ${item.text}`).join(" ")} ${sectionEntries(
       section,
@@ -304,6 +316,27 @@ export function GuideView({
                   <Search size={20} />
                 </button>
               </div>
+              {isArrival && (address || askArrival) && (
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {address && (
+                    <a
+                      className="hb-button hb-button-light"
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                    >
+                      <MapPin size={16} />
+                      {t("guest.route")}
+                    </a>
+                  )}
+                  {askArrival && (
+                    <button type="button" className="hb-button" onClick={askArrival}>
+                      <MessageCircle size={16} />
+                      {t("guest.askArrival")}
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="hb-section-content">
                 {sectionKind(open.key) === "places" || sectionKind(open.key) === "activities" ? (
                   <EntryList
@@ -334,15 +367,40 @@ export function GuideView({
                       }
                     />
                     <div className="hb-section-information">
-                      {sectionKind(open.key) === "wifi" ? (
+                      {importPreview &&
+                      sectionKind(open.key) !== "services" &&
+                      !open.content.items?.length ? (
+                        <p className="rounded-xl bg-muted p-4">
+                          {locale === "fr"
+                            ? "À compléter dans ton livret après l’import."
+                            : "Add this to your guide after importing."}
+                        </p>
+                      ) : sectionKind(open.key) === "wifi" ? (
                         <WifiTemplate
                           items={open.content.items ?? []}
                           t={t}
                           copied={copied}
                           onCopy={() => setCopied(true)}
+                          qrItems={
+                            showWifiQr
+                              ? guide.sections.find((section) => section.key === open.key)?.content
+                                  .items
+                              : undefined
+                          }
                         />
                       ) : sectionKind(open.key) === "arrival" ? (
-                        <ArrivalTemplate items={open.content.items ?? []} contact={contact} t={t} />
+                        <>
+                          <ArrivalTemplate items={open.content.items ?? []} t={t} />
+                          {contact &&
+                            Boolean(
+                              contact.content.phones?.length || contact.content.emails?.length,
+                            ) && (
+                              <div className="mt-4">
+                                <p className="mb-2 font-semibold">{t("guest.needHelp")}</p>
+                                <ContactButtons section={contact} t={t} />
+                              </div>
+                            )}
+                        </>
                       ) : ["house", "rules", "amenities"].includes(sectionKind(open.key)) ? (
                         <HouseTemplate items={open.content.items ?? []} />
                       ) : sectionKind(open.key) === "departure" ? (
@@ -371,7 +429,7 @@ export function GuideView({
                 )}
               </div>
               <div className="hb-quick-contact">
-                {contact?.content.phones?.[0] && (
+                {!isArrival && contact?.content.phones?.[0] && (
                   <a
                     className="hb-button hb-button-light"
                     href={`tel:${contact.content.phones[0]}`}
@@ -386,7 +444,7 @@ export function GuideView({
                     {t("guest.sendMessage")}
                   </button>
                 )}
-                {address && (
+                {!isArrival && address && (
                   <a
                     className="hb-button hb-button-light"
                     target="_blank"
@@ -662,6 +720,7 @@ export function GuideView({
             key={conciergeSlug}
             guide={guide}
             slug={conciergeSlug}
+            arrivalRequest={arrivalRequest}
             onContact={
               guide.messagingEnabled && onMessage
                 ? onMessage

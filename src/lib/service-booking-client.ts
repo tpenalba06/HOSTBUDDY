@@ -7,6 +7,7 @@ export type BookingReceipt = {
 };
 export interface BookingTransport {
   mode: "public" | "demo";
+  ephemeral?: boolean;
   submit(payload: Record<string, unknown>): Promise<BookingReceipt>;
   read(identity: {
     orderId?: string;

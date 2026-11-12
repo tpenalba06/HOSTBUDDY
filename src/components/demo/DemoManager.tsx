@@ -6,7 +6,6 @@ import {
   ManagerDashboardScreen,
   ManagerFeedbackScreen,
   ManagerMessagesScreen,
-  ManagerNewPropertyScreen,
   ManagerOrdersScreen,
   ManagerPropertiesScreen,
   ManagerTeamScreen,
@@ -27,7 +26,7 @@ import { useI18n } from "@/lib/i18n";
 import { NonaWordmark } from "@/components/shared/NonaBrand";
 
 type DemoArea = ManagerArea | "editor";
-type NewMode = "options" | "text" | "url" | "manual";
+type NewMode = "text" | "url" | "manual";
 
 export function DemoManager({
   villa,
@@ -120,7 +119,7 @@ export function DemoManager({
   const [feedback, setFeedback] = useState(initialOperations.feedback);
   const [team, setTeam] = useState(initialOperations.team);
   const [openConversation, setOpenConversation] = useState<string | null>(null);
-  const [newMode, setNewMode] = useState<NewMode>("options");
+  const [newMode, setNewMode] = useState<NewMode>("url");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [manualName, setManualName] = useState("");
@@ -163,7 +162,7 @@ export function DemoManager({
   };
 
   const resetNewFlow = () => {
-    setNewMode("options");
+    setNewMode("url");
     setCandidate(null);
     setBusy(false);
     setError("");
@@ -180,7 +179,7 @@ export function DemoManager({
     );
     setProperties((items) => [property, ...items]);
     setCandidate(null);
-    setNewMode("options");
+    setNewMode("url");
     setArea("properties");
   };
 
@@ -357,17 +356,6 @@ export function DemoManager({
       );
     }
 
-    if (newMode === "options") {
-      return (
-        <ManagerNewPropertyScreen
-          onBack={() => setArea("properties")}
-          onImportUrl={() => setNewMode("url")}
-          onPasteText={() => setNewMode("text")}
-          onManual={() => setNewMode("manual")}
-        />
-      );
-    }
-
     if (newMode === "text") {
       return (
         <DemoImportFrame
@@ -409,7 +397,7 @@ export function DemoManager({
         <DemoImportFrame
           title={t("import.urlTitle")}
           description="Collez un lien Airbnb : la démo utilise le même moteur d’import que l’application."
-          onBack={() => resetNewFlow()}
+          onBack={() => navigate("properties")}
           error={error}
         >
           <input
@@ -467,6 +455,28 @@ export function DemoManager({
           >
             {busy ? "Analyse…" : t("import.action")}
           </Button>
+          <div className="mt-3 flex flex-wrap justify-center gap-x-5">
+            <button
+              type="button"
+              className="min-h-11 underline"
+              onClick={() => {
+                setError("");
+                setNewMode("text");
+              }}
+            >
+              {t("app.paste")}
+            </button>
+            <button
+              type="button"
+              className="min-h-11 underline"
+              onClick={() => {
+                setError("");
+                setNewMode("manual");
+              }}
+            >
+              {t("app.manual")}
+            </button>
+          </div>
         </DemoImportFrame>
       );
     }

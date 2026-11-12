@@ -248,7 +248,8 @@ export function DemoPropertyEditor({
               actions={actions}
               onPublish={async () => {
                 onChange((current) => ({ ...current, status: "published" }));
-                flash();
+                if (property.status === "published") flash();
+                else onBack();
               }}
               onChanged={flash}
               onPreview={() => setPreview(true)}
@@ -267,7 +268,8 @@ export function DemoPropertyEditor({
             if (next) setEditing(next);
             else {
               onChange((current) => ({ ...current, status: "published" }));
-              flash();
+              if (property.status === "published") flash();
+              else onBack();
             }
           }}
         />

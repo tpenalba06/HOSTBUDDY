@@ -95,12 +95,14 @@ export function extractStructuredFields(html: string, url: string) {
   };
   let name: string | null = null;
   let lodging = false;
+  let locality: string | null = null;
   for (const n of jsonLdNodes(html)) {
     if (!LODGING.test(String(n["@type"] ?? ""))) continue;
     lodging = true;
     name ??= str(n.name);
     put("description", str(n.description), `JSON-LD description (${url})`, 0.85);
     const a = n.address;
+    locality ??= str(a?.addressLocality);
     const addr =
       typeof a === "string"
         ? a
@@ -136,7 +138,7 @@ export function extractStructuredFields(html: string, url: string) {
   // Without a lodging JSON-LD node the meta description stays "to verify".
   if (desc)
     put("description", decode(desc), `meta description: ${decode(desc)}`, lodging ? 0.75 : 0.5);
-  return { name, fields, lodging };
+  return { name, fields, lodging, locality };
 }
 
 /** Rules only run on sentence-sized web snippets; keyword hits inside long link lists or menus are noise. */
@@ -155,6 +157,20 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
     localAi,
   });
   const fields = textual.fields.map((field) => {
+    if (field.key === "description" && sunver?.description)
+      return {
+        ...field,
+        value: sunver.description,
+        rawValue: sunver.description,
+        status: "to_verify" as const,
+        evidence: [
+          {
+            method: "structured" as const,
+            sourceUrl: resolvedUrl,
+            quote: "Sunver public property introduction",
+          },
+        ],
+      };
     if (field.key === "recommendations" && sunver?.recommendations)
       return {
         ...field,
@@ -194,6 +210,10 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
   });
   return {
     ...textual,
+    ...(sunver?.locality || structured.locality
+      ? { publicLocality: (sunver?.locality || structured.locality)! }
+      : {}),
+    ...(sunver?.placeNames.length ? { publicPlaceNames: sunver.placeNames } : {}),
     propertyName: sunver
       ? textual.propertyName
       : (structured.name?.slice(0, 120) ?? textual.propertyName),
@@ -221,7 +241,9 @@ export async function runUrlImport(data: {
     return { ok: false, source, reason: "invalid" };
   if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
     return { ok: false, source, reason: "blocked" };
-  if (!(await robotsAllows(url))) return { ok: false, source, reason: "blocked" };
+  const permitted = (target: URL) =>
+    /(^|\.)airbnb\./i.test(target.hostname) ? Promise.resolve(false) : robotsAllows(target);
+  if (!(await permitted(url))) return { ok: false, source, reason: "blocked" };
 
   let html: string;
   let resolvedUrl = url.href;
@@ -234,7 +256,7 @@ export async function runUrlImport(data: {
         signal: AbortSignal.timeout(12000),
       },
       1_500_000,
-      robotsAllows,
+      permitted,
     );
     const res = fetched.response;
     if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))

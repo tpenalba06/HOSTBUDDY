@@ -159,16 +159,24 @@ function GuestyImport() {
               disabled={busy}
               onClick={() =>
                 run(async () => {
+                  let hadFailure = false;
                   for (const id of [...selected]) {
-                    const result = await manageGuesty({
-                      data: { organizationId: org.id, action: "import", externalId: id },
-                    });
-                    if ("propertyId" in result && result.propertyId) {
+                    try {
+                      const result = await manageGuesty({
+                        data: { organizationId: org.id, action: "import", externalId: id },
+                      });
+                      if (!("propertyId" in result) || !result.propertyId) {
+                        hadFailure = true;
+                        continue;
+                      }
                       const propertyId = result.propertyId;
                       setCreated((current) => [...new Set([...current, propertyId])]);
+                      setSelected((current) => current.filter((item) => item !== id));
+                    } catch {
+                      hadFailure = true;
                     }
-                    setSelected((current) => current.filter((item) => item !== id));
                   }
+                  if (hadFailure) setError(true);
                   await qc.invalidateQueries({ queryKey: ["properties", org.id] });
                 })
               }

@@ -205,9 +205,12 @@ function PropertyPage() {
           property={property}
           fields={fields}
           onEdit={() => setStep("review")}
-          onPublished={() => {
-            qc.invalidateQueries({ queryKey: ["property", id] });
-            qc.invalidateQueries({ queryKey: ["properties"] });
+          onPublished={async (published) => {
+            await Promise.all([
+              qc.invalidateQueries({ queryKey: ["property", id] }),
+              qc.invalidateQueries({ queryKey: ["properties"] }),
+            ]);
+            if (published) await nav({ to: "/app", search: { published: id } });
           }}
         />
       </>
@@ -274,6 +277,8 @@ function PropertyPage() {
                 await publishProperty(property, fields);
                 await qc.invalidateQueries({ queryKey: ["property", id] });
                 await qc.invalidateQueries({ queryKey: ["properties"] });
+                if (property.status !== "published")
+                  await nav({ to: "/app", search: { published: id } });
               }}
             />
           </div>
@@ -356,7 +361,7 @@ function ReadyScreen({
   >[0];
   fields: PropertyField[];
   onEdit: () => void;
-  onPublished: () => void;
+  onPublished: (published: boolean) => Promise<void>;
 }) {
   const { t } = useI18n();
   const [busy, setBusy] = useState(false);
@@ -369,7 +374,7 @@ function ReadyScreen({
     setError("");
     try {
       await publishProperty(property, fields);
-      onPublished();
+      await onPublished(true);
     } catch (e) {
       setError(friendlyMessage(e));
     } finally {
@@ -435,7 +440,7 @@ function ReadyScreen({
             setBusy(true);
             try {
               await unpublishProperty(property.id);
-              onPublished();
+              await onPublished(false);
               onEdit();
             } catch (e) {
               setError(friendlyMessage(e));

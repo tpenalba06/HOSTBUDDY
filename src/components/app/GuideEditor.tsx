@@ -2,7 +2,7 @@ import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, Eye, Home, ImagePlus, Plus, Trash2, Video } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, ImagePlus, Plus, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -129,7 +129,7 @@ export function GuideEditor({
   actions?: GuideEditorActions;
   compact?: boolean;
 }) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const flushers = useRef(new Map<string, () => Promise<void>>());
   const actionLock = useRef(false);
   const [sections, setSections] = useState(data.sections);
@@ -244,31 +244,34 @@ export function GuideEditor({
   return (
     <div className={`guide-editor-workspace ${compact ? "guide-editor-compact" : ""}`}>
       <nav className="guide-editor-rail" aria-label={t("manager.editContent")}>
-        <button type="button" aria-pressed={!open} onClick={() => setOpen(null)}>
-          <Home size={17} />
-          {t("manager.general")}
-        </button>
-        {sorted
-          .filter((section) => ["welcome", "services"].includes(section.section_key.split("-")[0]!))
-          .map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              aria-pressed={open === section.id}
-              onClick={() => setOpen(section.id)}
-            >
-              {sectionLabel(section, t)}
-            </button>
-          ))}
-        <p className="text-xs text-muted-foreground">{t("editor.sectionsOrder")}</p>
-        <SectionOrganizer
-          sections={sorted}
-          selected={open}
-          disabled={saving || mediaBusy || transfers > 0}
-          label={(section) => sectionLabel(section, t)}
-          onSelect={setOpen}
-          onReorder={(next) => void reorder(next)}
-        />
+        <label className="block text-sm font-semibold">
+          {locale === "fr" ? "Rubrique à modifier" : "Section to edit"}
+          <select
+            className="field mt-1 min-h-11"
+            value={open ?? ""}
+            onChange={(event) => setOpen(event.target.value || null)}
+          >
+            <option value="">{t("manager.general")}</option>
+            {sorted.map((section) => (
+              <option key={section.id} value={section.id}>
+                {sectionLabel(section, t)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <details>
+          <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold">
+            {t("editor.sectionsOrder")}
+          </summary>
+          <SectionOrganizer
+            sections={sorted}
+            selected={open}
+            disabled={saving || mediaBusy || transfers > 0}
+            label={(section) => sectionLabel(section, t)}
+            onSelect={setOpen}
+            onReorder={(next) => void reorder(next)}
+          />
+        </details>
       </nav>
       <div className="guide-editor-form space-y-4">
         <div className="grid gap-3 @sm:grid-cols-[minmax(0,1fr)_auto] @sm:items-center">
@@ -296,7 +299,10 @@ export function GuideEditor({
                 : t("property.publish")}
           </Button>
         )}
-        <div hidden={open !== null}>
+        <details hidden={open !== null} className="surface p-4">
+          <summary className="min-h-11 cursor-pointer py-3 font-semibold">
+            {locale === "fr" ? "Photos et vidéo" : "Photos and video"}
+          </summary>
           <PropertyMediaEditor
             property={data.property}
             section={sections.find((section) => section.section_key.split("-")[0] === "welcome")}
@@ -317,7 +323,7 @@ export function GuideEditor({
             onPreview={() => void proceed()}
             onBusyChange={setMediaBusy}
           />
-        </div>
+        </details>
         <Button
           onClick={() => setTemplates(!templates)}
           className="min-h-14 w-full rounded-full text-base"
@@ -570,6 +576,12 @@ function SectionRow({
   }, []);
   const updateItem = (index: number, patch: Partial<GuideContentItem>) =>
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const kind = sectionKind(section);
+  const addItem = (label = "") =>
+    setItems((current) => [
+      ...current.filter((item) => item.label.trim() || item.text.trim()),
+      { ...blankItem(), label },
+    ]);
   const visibleTitle =
     SYSTEM_SECTION_KEYS.has(sectionKind(section)) && !titleEdited ? displayTitle : title;
   return (
@@ -614,7 +626,10 @@ function SectionRow({
               }}
             />
           </label>
-          {section.section_key.split("-")[0] !== "welcome" && (
+          {(kind === "arrival" || kind === "wifi") && (
+            <p className="rounded-lg bg-muted p-3 text-sm">{t("manager.publicSecrets")}</p>
+          )}
+          {kind !== "welcome" && (
             <>
               <div>
                 <p className="font-semibold">{t("manager.media")}</p>
@@ -671,6 +686,28 @@ function SectionRow({
           )}
           <div>
             <p className="mb-2 font-semibold">{t("manager.sectionContent")}</p>
+            {kind === "arrival" && (
+              <>
+                <p className="mb-3 text-sm text-muted-foreground">
+                  {t("manager.arrivalStepsHelp")}
+                </p>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {(
+                    ["guest.findEntrance", "guest.collectKeys", "guest.enterProperty"] as const
+                  ).map((key) => (
+                    <Button
+                      key={key}
+                      type="button"
+                      variant="outline"
+                      onClick={() => addItem(t(key))}
+                    >
+                      <Plus />
+                      {t(key)}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="space-y-3">
               {items.map((item, index) => (
                 <div
@@ -708,10 +745,12 @@ function SectionRow({
             <Button
               variant="outline"
               className="mt-3 w-full"
-              onClick={() => setItems((current) => [...current, blankItem()])}
+              onClick={() =>
+                kind === "arrival" ? addItem() : setItems((current) => [...current, blankItem()])
+              }
             >
               <Plus />
-              {t("manager.addInformation")}
+              {t(kind === "arrival" ? "manager.addArrivalStep" : "manager.addInformation")}
             </Button>
           </div>
           <label className="flex min-h-14 items-center justify-between gap-3 rounded-lg bg-muted px-4">

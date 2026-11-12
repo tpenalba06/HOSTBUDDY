@@ -2,7 +2,6 @@ import {
   Check,
   CheckCircle2,
   Copy,
-  KeyRound,
   Mail,
   MapPin,
   MessageCircle,
@@ -12,12 +11,13 @@ import {
   Star,
   Wifi,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { wifiCredentials } from "@/lib/import-engine/wifi-credentials";
 import { Button } from "@/components/ui/button";
 import type { PublicSection } from "@/lib/data/public-guide.functions";
 import { useI18n } from "@/lib/i18n";
 import { uxCopy } from "@/lib/ux-copy";
+import { generateWifiQr, publishedWifiCredentials, wifiQrPayload } from "@/lib/wifi-qr";
 export const GenericTemplate = ({ items }: { items: { label: string; text: string }[] }) => (
   <div className="space-y-4">
     {items.map((item, index) => (
@@ -30,38 +30,26 @@ export const GenericTemplate = ({ items }: { items: { label: string; text: strin
 );
 export function ArrivalTemplate({
   items,
-  contact,
   t,
 }: {
   items: { label: string; text: string }[];
-  contact?: PublicSection | undefined;
   t: (key: string) => string;
 }) {
+  const steps = items.filter((item) => item.text.trim());
+  if (!steps.length) return <p className="rounded-xl bg-muted p-4">{t("guest.arrivalEmpty")}</p>;
   return (
-    <div className="grid gap-6 md:grid-cols-[1fr_280px]">
-      <div className="space-y-3">
-        {items.map((item, index) => (
-          <div key={index} className="grid grid-cols-[2.5rem_1fr] gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary font-bold text-primary-foreground">
-              {index + 1}
-            </span>
-            <div className="rounded-xl bg-muted p-4">
-              {item.label && <p className="font-bold">{item.label}</p>}
-              <p className="whitespace-pre-line leading-relaxed">{item.text}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-      <aside className="h-fit rounded-xl border bg-card p-5">
-        <KeyRound className="text-primary" />
-        <h2 className="mt-3 text-xl font-semibold">{t("guest.needHelp")}</h2>
-        {contact && (
-          <div className="mt-4">
-            <ContactButtons section={contact} t={t} />
-          </div>
-        )}
-      </aside>
-    </div>
+    <ol className="grid list-none gap-3">
+      {steps.map((item, index) => (
+        <li key={index}>
+          <details open={index === 0} className="rounded-xl border bg-card">
+            <summary className="min-h-12 cursor-pointer break-words px-4 py-3 font-semibold text-primary">
+              {index + 1}. {item.label || t("guest.arrivalInstructions")}
+            </summary>
+            <p className="whitespace-pre-line break-words px-4 pb-4 leading-relaxed">{item.text}</p>
+          </details>
+        </li>
+      ))}
+    </ol>
   );
 }
 export function WifiTemplate({
@@ -69,17 +57,29 @@ export function WifiTemplate({
   t,
   copied,
   onCopy,
+  qrItems,
 }: {
   items: { label: string; text: string }[];
   t: (key: string) => string;
   copied: boolean;
   onCopy: () => void;
+  qrItems?: { label: string; text: string }[] | undefined;
 }) {
   const [copyError, setCopyError] = useState(false);
   const [copyPending, setCopyPending] = useState(false);
   const { locale } = useI18n();
   const ux = uxCopy(locale);
-  const explicit = wifiCredentials(items.map((item) => item.text).join("\n"));
+  const [qr, setQr] = useState<{ payload: string; src: string | null } | null>(null);
+  const qrImage = useRef<HTMLImageElement>(null);
+  const configured = qrItems && publishedWifiCredentials(qrItems);
+  const payload = wifiQrPayload(configured?.network, configured?.password);
+  const currentQr = qr?.payload === payload ? qr : null;
+  const qrSrc = currentQr?.src;
+  useEffect(() => {
+    if (qrSrc) qrImage.current?.scrollIntoView({ block: "center" });
+  }, [qrSrc]);
+  const explicit =
+    (payload && configured) || wifiCredentials(items.map((item) => item.text).join("\n"));
   // A recognized password does not mean the remaining source can be discarded.
   // Keep the original information visible when no explicit network label parsed.
   const network = explicit?.network ?? items[0]?.text ?? "—";
@@ -117,11 +117,53 @@ export function WifiTemplate({
         }}
       >
         <Copy />
-        {copied && !copyError ? t("guest.copied") : t("guest.copy")}
+        {copied && !copyError
+          ? t("guest.copied")
+          : t(password ? "guest.copyWifiPassword" : "guest.copy")}
       </Button>
       <p role="status" aria-live="polite" className={copyError ? "mt-3" : "sr-only"}>
         {copyError ? ux.copyFailed : copied ? ux.copied : ""}
       </p>
+      {payload && (
+        <div className="mt-3">
+          <Button
+            variant="outline"
+            className="w-full bg-card text-foreground"
+            aria-expanded={!!qrSrc}
+            onClick={async () => {
+              if (qrSrc) {
+                setQr(null);
+                return;
+              }
+              try {
+                setQr({ payload, src: await generateWifiQr(payload) });
+              } catch {
+                setQr({ payload, src: null });
+              }
+            }}
+          >
+            {t(qrSrc ? "guest.hideWifiQr" : "guest.showWifiQr")}
+          </Button>
+          {currentQr &&
+            (qrSrc ? (
+              <figure className="mt-4 text-center">
+                <img
+                  ref={qrImage}
+                  src={qrSrc}
+                  alt={t("guest.wifiQr")}
+                  width={240}
+                  height={240}
+                  className="mx-auto h-auto max-w-full rounded-lg"
+                />
+                <figcaption className="mt-2 text-sm">{t("guest.scanWifiQr")}</figcaption>
+              </figure>
+            ) : (
+              <p role="status" className="mt-2 text-sm">
+                {t("guest.wifiQrError")}
+              </p>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -331,16 +373,16 @@ export function ContactButtons({
   const email = section.content.emails?.[0];
   if (!phone && !email) return null;
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="flex flex-wrap gap-2">
       {phone && (
-        <a className="btn btn-primary px-1 text-sm" href={`tel:${phone}`}>
+        <a className="btn btn-primary px-3 text-sm" href={`tel:${phone}`}>
           <Phone className="h-4 w-4" />
           {t("guest.call")}
         </a>
       )}
       {phone && (
         <a
-          className="btn btn-secondary px-1 text-sm"
+          className="btn btn-secondary px-3 text-sm"
           href={`https://wa.me/${phone.replace(/\D/g, "")}`}
           aria-label={t("guest.whatsapp")}
         >
@@ -349,7 +391,7 @@ export function ContactButtons({
         </a>
       )}
       {email && (
-        <a className="btn btn-secondary px-1 text-sm" href={`mailto:${email}`}>
+        <a className="btn btn-secondary px-3 text-sm" href={`mailto:${email}`}>
           <Mail className="h-4 w-4" />
           {t("guest.email")}
         </a>

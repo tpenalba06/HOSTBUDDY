@@ -221,8 +221,8 @@ export function ServiceBookingForm({
   const c = (key: Parameters<typeof serviceCopy>[1]) => serviceCopy(locale, key);
   const config = useMemo(() => readBookingConfig(service?.bookingConfig), [service?.bookingConfig]);
   const hasPrefill = prefill !== undefined;
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
+  const [name, setName] = useState(transport.ephemeral ? "Voyageur Démo" : "");
+  const [contact, setContact] = useState(transport.ephemeral ? "demo@example.invalid" : "");
   const [quantity, setQuantity] = useState(prefill?.quantity ?? 1);
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<BookingReceipt | null>(null);
@@ -316,6 +316,7 @@ export function ServiceBookingForm({
   useEffect(() => {
     let active = true;
     try {
+      if (transport.ephemeral) return;
       const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
       if (
         saved &&
@@ -439,7 +440,11 @@ export function ServiceBookingForm({
           <p>{Number(receipt.amount).toFixed(2)} €</p>
           <p>
             {receipt.paymentStatus === "paid"
-              ? t("payments.success")
+              ? transport.ephemeral
+                ? locale === "fr"
+                  ? "Réservation fictive confirmée — démonstration NONA"
+                  : "Simulated booking confirmed — NONA demo"
+                : t("payments.success")
               : receipt.paymentStatus === "refunded"
                 ? t("payments.refunded")
                 : receipt.paymentStatus === "partially_refunded"
@@ -464,7 +469,11 @@ export function ServiceBookingForm({
                     void transport.simulatePayment(receipt.id).then(setReceipt);
                 }}
               >
-                {conciergeCopy(locale).demoPay}
+                {transport.ephemeral
+                  ? locale === "fr"
+                    ? "Payer en mode démo"
+                    : "Pay in demo mode"
+                  : conciergeCopy(locale).demoPay}
               </Button>
             ) : (
               <a
@@ -500,10 +509,11 @@ export function ServiceBookingForm({
             setError("");
             try {
               try {
-                localStorage.setItem(
-                  storageKey,
-                  JSON.stringify({ ...identity, schema: "nona.booking-receipt.v1" }),
-                );
+                if (!transport.ephemeral)
+                  localStorage.setItem(
+                    storageKey,
+                    JSON.stringify({ ...identity, schema: "nona.booking-receipt.v1" }),
+                  );
               } catch {
                 /* Keep the same in-memory request identity on retry. */
               }
@@ -529,14 +539,15 @@ export function ServiceBookingForm({
               };
               setReceipt(result.booking);
               try {
-                localStorage.setItem(
-                  storageKey,
-                  JSON.stringify({
-                    ...result.booking,
-                    ...identity,
-                    schema: "nona.booking-receipt.v1",
-                  }),
-                );
+                if (!transport.ephemeral)
+                  localStorage.setItem(
+                    storageKey,
+                    JSON.stringify({
+                      ...result.booking,
+                      ...identity,
+                      schema: "nona.booking-receipt.v1",
+                    }),
+                  );
               } catch {
                 /* Sending still succeeds without local storage. */
               }
@@ -548,7 +559,7 @@ export function ServiceBookingForm({
             }
           }}
         >
-          {service.imagePath && (
+          {service.imagePath && !transport.ephemeral && (
             <img src={service.imagePath} alt={service.name} className="w-full rounded-xl" />
           )}
           {compact && (
@@ -663,7 +674,7 @@ export function ServiceBookingForm({
                 />
               </label>
             )}
-            <label className="block">
+            <label className="block" hidden={transport.ephemeral}>
               {c("details")}
               <textarea
                 className="field"
@@ -673,13 +684,17 @@ export function ServiceBookingForm({
               />
             </label>
           </details>
-          <Field
-            label={compact && locale === "fr" ? "Ton nom" : t("form.name")}
-            value={name}
-            onChange={setName}
-            required
-          />
-          <Field label={c("contactRequired")} required value={contact} onChange={setContact} />
+          {!transport.ephemeral && (
+            <>
+              <Field
+                label={compact && locale === "fr" ? "Ton nom" : t("form.name")}
+                value={name}
+                onChange={setName}
+                required
+              />
+              <Field label={c("contactRequired")} required value={contact} onChange={setContact} />
+            </>
+          )}
           <label className="block" hidden={compact}>
             <span className="mb-1 block font-semibold">{t("form.quantity")}</span>
             <input

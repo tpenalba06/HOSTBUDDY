@@ -73,7 +73,9 @@ function PhoneGuide({
   const fr = locale === "fr";
   const text = preview?.text;
   const items = (...values: (string | undefined)[]) =>
-    values.filter((value): value is string => !!value).map((value) => ({ label: "", text: value }));
+    [...new Set(values.flatMap((value) => value?.split("\n") ?? []).filter(Boolean))].map(
+      (value) => ({ label: "", text: value }),
+    );
   const amenityLabels = fr
     ? {
         kitchen: "Cuisine",
@@ -144,7 +146,11 @@ function PhoneGuide({
             id: "wifi",
             key: "wifi",
             title: t("section.wifi"),
-            content: { items: [] },
+            content: {
+              items: items(
+                preview.wifiAvailable ? (fr ? "Wi-Fi disponible" : "Wi-Fi available") : undefined,
+              ),
+            },
             media: illustration("wifi"),
           },
           {
@@ -171,7 +177,7 @@ function PhoneGuide({
             id: "access",
             key: "access",
             title: fr ? "Accès et clés" : "Access and keys",
-            content: { items: [] },
+            content: { items: items(text?.access) },
           },
           {
             id: "house",
@@ -188,7 +194,12 @@ function PhoneGuide({
                 : [],
             },
           },
-          ...(preview.amenities?.length || text?.equipment || text?.kitchen || text?.parking
+          ...(preview.amenities?.length ||
+          text?.equipment ||
+          text?.kitchen ||
+          text?.parking ||
+          text?.pool ||
+          text?.climate
             ? [
                 {
                   id: "amenities",
@@ -196,7 +207,13 @@ function PhoneGuide({
                   title: t("section.amenities"),
                   content: {
                     items: [
-                      ...items(text?.equipment, text?.kitchen, text?.parking),
+                      ...items(
+                        text?.equipment,
+                        text?.kitchen,
+                        text?.parking,
+                        text?.pool,
+                        text?.climate,
+                      ),
                       ...(preview.amenities ?? []).map((key) => ({
                         label: "",
                         text: amenityLabels[key],
@@ -250,8 +267,31 @@ function PhoneGuide({
                 },
               ]
             : []),
+          {
+            id: "provided-services",
+            key: "provided-services",
+            title: fr ? "Services mentionnés dans votre texte" : "Services mentioned in your text",
+            content: { items: items(text?.services) },
+          },
+          {
+            id: "emergency",
+            key: "emergency",
+            title: fr ? "Urgences" : "Emergency information",
+            content: { items: items(text?.emergency) },
+          },
+          {
+            id: "contact",
+            key: "contact",
+            title: t("section.contact"),
+            content: { items: items(text?.contact) },
+          },
           { id: "services", key: "services", title: t("section.services"), content: { items: [] } },
-        ],
+        ].filter(
+          (section) =>
+            section.key === "services" ||
+            section.content.items?.length ||
+            section.content.entries?.length,
+        ),
       }
     : demoGuide(createVillaMare(locale));
   if (preview && photos.length) {

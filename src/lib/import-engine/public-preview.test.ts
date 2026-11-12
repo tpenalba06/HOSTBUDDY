@@ -3,6 +3,94 @@ import { extractDocument } from "./document-extractor";
 import { publicImportPreview, publicPreviewSchema, previewPastedDocument } from "./public-preview";
 
 describe("public import preview", () => {
+  it.each([
+    [
+      "fr",
+      "Bienvenue à la Villa Opale",
+      "Arrivée à 16 h",
+      "Départ avant 11 h",
+      "La piscine ouvre à midi",
+      "Petit-déjeuner sur la terrasse",
+      "Restaurant La Treille sur la place",
+      "Mot de passe",
+    ],
+    [
+      "en",
+      "Welcome to Villa Opale",
+      "Arrival from 16:00",
+      "Departure before 11:00",
+      "The swimming pool opens at noon",
+      "Breakfast on the terrace",
+      "The restaurant by the market",
+      "Password",
+    ],
+    [
+      "es",
+      "Bienvenidos a Villa Opale",
+      "Llegada desde 16:00",
+      "Salida antes de 11:00",
+      "La piscina abre al mediodía",
+      "Desayuno en la terraza",
+      "Restaurante junto al mercado",
+      "Contraseña",
+    ],
+    [
+      "it",
+      "Benvenuti a Villa Opale",
+      "Arrivo dalle 16:00",
+      "Partenza entro 11:00",
+      "La piscina apre a mezzogiorno",
+      "Colazione sulla terrazza",
+      "Consigli per il mercato",
+      "Password",
+    ],
+    [
+      "de",
+      "Willkommen in Villa Opale",
+      "Ankunft ab 16:00",
+      "Abreise bis 11:00",
+      "Das Schwimmbad öffnet mittags",
+      "Frühstück auf der Terrasse",
+      "Empfehlung für den Markt",
+      "Passwort",
+    ],
+    [
+      "pt",
+      "Bem-vindos à Villa Opale",
+      "Chegada a partir das 16:00",
+      "Partida até 11:00",
+      "A piscina abre ao meio-dia",
+      "Pequeno-almoço na varanda",
+      "Mercado perto da praça",
+      "Senha",
+    ],
+  ])(
+    "maps pasted guide facts and withholds credentials in %s",
+    (_, welcome, arrival, departure, pool, service, recommendation, password) => {
+      const source = `${welcome}. ${pool}. ${departure}. ${recommendation}. ${arrival}. ${service}.\n${password}:\nUNIQUE-TEST-CREDENTIAL\n${pool}.`;
+      const preview = previewPastedDocument(source);
+      expect(publicPreviewSchema.parse(preview)).toMatchObject({
+        name: "Villa Opale",
+        arrival: "16:00",
+        departure: "11:00",
+        text: {
+          pool: `${pool}.`,
+          services: `${service}.`,
+          recommendations: `${recommendation}.`,
+        },
+      });
+      expect(JSON.stringify(preview)).not.toContain("UNIQUE-TEST-CREDENTIAL");
+    },
+  );
+
+  it("keeps safe arrival instructions next to protected access details", () => {
+    const preview = previewPastedDocument(
+      "Arrivée à 16 h. Pour votre arrivée, présentez-vous à la réception. Arrivée par le portail, code 1234. Wi-Fi disponible. Mot de passe Wi-Fi : TEST-NE-PAS-AFFICHER.",
+    );
+    expect(preview.text?.arrival).toContain("présentez-vous à la réception");
+    expect(preview.wifiAvailable).toBe(true);
+    expect(JSON.stringify(preview)).not.toMatch(/1234|TEST-NE-PAS-AFFICHER/);
+  });
   it("projects only recognized dates and capacity without transferring pasted credentials", () => {
     const source = [
       "Villa 1122",

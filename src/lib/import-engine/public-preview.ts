@@ -32,10 +32,16 @@ const textKeys = [
   "departure",
   "equipment",
   "kitchen",
+  "climate",
+  "pool",
   "rules",
   "parking",
   "trash",
   "recommendations",
+  "services",
+  "emergency",
+  "access",
+  "contact",
 ] as const;
 
 export const publicPreviewSchema = z.object({
@@ -55,6 +61,7 @@ export const publicPreviewSchema = z.object({
     .string()
     .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
     .optional(),
+  wifiAvailable: z.boolean().optional(),
   departure: z
     .string()
     .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
@@ -121,16 +128,31 @@ export function publicImportPreview(
     snippets(["equipment", "kitchen", "parking", "climate", "pool"]),
   );
   const confirmedRules = matchingKeys(rules, snippets(["rules"]));
-  // Only carry over whole, non-sensitive lines. Drop any field whose source
-  // evidence mentions credentials, including possible continuation lines.
+  const wifiAvailable = value("wifi")
+    .split("\n")
+    .some((line) =>
+      /^(?:wi[ -]?fi (?:disponible|gratuit|available|dispon[ií]vel|gratuito)|free wi[ -]?fi|kostenloses wlan|wlan verf[uü]gbar)[.!]?$/iu.test(
+        line.trim(),
+      ),
+    );
+  // Reject credential-bearing evidence as a unit, including continuation lines.
   const sensitive =
-    /code|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|password|mot de passe|passwort|senha|contrase[ñn]a|token|secret|identifiant|ssid|wi[ -]?fi|\d{4,}|@/iu;
+    /code|c[oó]dig[oa]|pin\b|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|caja.{0,12}llaves|cassetta.{0,12}chiavi|schl[üu]sselkasten|caixa.{0,12}chaves|password|mot de passe|passwort|senha|contrase[ñn]a|token|secret|identifiant|ssid|wi[ -]?fi|\d{4,}|(?:\d[ .()+-]*){7,}|@/iu;
   const text = fromPublicUrl
     ? {}
     : Object.fromEntries(
         textKeys.flatMap((key) => {
-          const content = value(key);
-          return content && !sensitive.test(content) ? [[key, content.slice(0, 2400)]] : [];
+          if (field(key)?.issues?.length) return [];
+          const quotes = field(key)?.evidence?.map(({ quote }) => quote) ?? [value(key)];
+          const lines = [...new Set(quotes)].filter(
+            (quote) =>
+              quote &&
+              !sensitive.test(quote) &&
+              (key !== "access" ||
+                !/bo[iî]te|portail|\bgate\b|\bportal\b|cache|hidden|versteck|escond/iu.test(quote)),
+          );
+          const content = lines.join("\n");
+          return content ? [[key, content.slice(0, 2400)]] : [];
         }),
       );
   const safeLabel = (label: string) =>
@@ -156,6 +178,7 @@ export function publicImportPreview(
     ...(name ? { name } : {}),
     ...(confirmedAmenities.length ? { amenities: confirmedAmenities } : {}),
     ...(confirmedRules.length ? { rules: confirmedRules } : {}),
+    ...(wifiAvailable ? { wifiAvailable: true } : {}),
     arrival: time("arrival", arrival),
     departure: time("departure", departure),
     capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,
@@ -172,14 +195,25 @@ export function publicImportPreview(
 /** Keep sentence boundaries before classification so one credential does not taint
  * the rest of a paragraph. Only named, bounded facts are projected to the phone. */
 export function previewPastedDocument(input: string): PublicImportPreview {
-  const prose = input.replace(/[’]/g, "'");
+  const prose = input
+    .replace(/[’]/g, "'")
+    .replace(
+      /(?:^|\n)[^\n]*(?:mot de passe|password|passwort|senha|contrase[ñn]a|code d.acces|code d.accès|c[oó]dig[oa]|ssid)[^\n]*[:=][ \t]*\n[^\n]*/giu,
+      "\n",
+    );
   const document = prose
     .replace(/(?<=[.!?]) +(?=[\p{Lu}])/gu, "\n")
     .replace(/\bet le départ (?=avant|à )/giu, "\nDépart ");
   const result = extractDocument(document);
-  const name = prose.match(
-    /\b[Bb]ienvenue à (?:la |le |l')?([\p{Lu}][\p{L}\p{M} '-]{1,70}?)(?=,|[.!?]|\n|$)/u,
-  )?.[1];
+  const name =
+    prose.match(
+      /(?<!\p{L})(?:[Bb]ienvenue à|[Ww]elcome to|[Bb]ienvenid[oa]s? a|[Ww]illkommen (?:in|im|bei)|[Bb]envenut[oi] (?:a|al|alla)|[Bb]em-vind[oa]s? (?:a|ao|à)) (?:la |le |l'|the |el |der |die |a |o )?([\p{Lu}][\p{L}\p{M} '-]{1,70}?)(?=,|[.!?]|\n|$)/u,
+    )?.[1] ??
+    (/^(?:villa|maison|house|appartement|apartment|apartamento|wohnung|chalet|studio|g[iî]te|loft|casa|ferienwohnung|hotel|hôtel)\s/iu.test(
+      result.propertyName ?? "",
+    )
+      ? (result.propertyName ?? undefined)
+      : undefined);
   const preview = publicImportPreview(result, false, name);
   const address = prose.match(
     /\b(\d{1,3} (?:rue|avenue|boulevard|chemin|place) [\p{L} '-]{2,60}?) à ([\p{Lu}][\p{L} '-]{1,40})(?=[,.!?]|$)/u,

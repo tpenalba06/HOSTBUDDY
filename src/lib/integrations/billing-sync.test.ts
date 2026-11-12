@@ -82,7 +82,7 @@ const stripe = {
 } as unknown as Stripe;
 const items = (count: number) => [
   { price: price("price_base", 999), quantity: 1 },
-  ...(count > 2 ? [{ price: price("price_extra", 299), quantity: count - 2 }] : []),
+  ...(count > 3 ? [{ price: price("price_extra", 299), quantity: count - 3 }] : []),
 ];
 const paidInvoice = (count: number, reason = "subscription_cycle"): FixtureInvoice => ({
   id: `in_${++invoiceSerial}`,
@@ -140,7 +140,7 @@ function renew() {
     current_period_end: 4200,
   }));
   schedule.phases = [{ ...next, end_date: 4200 }];
-  sub.latest_invoice = paidInvoice(2 + (next.items[1]?.quantity ?? 0));
+  sub.latest_invoice = paidInvoice(3 + (next.items[1]?.quantity ?? 0));
 }
 describe("paid-period capacity and renewal (mocked Stripe, not a network validation)", () => {
   beforeEach(() => {
@@ -181,7 +181,7 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
       ) => {
         schedule = { ...schedule, ...structuredClone(params) };
         if (params.proration_behavior === "always_invoice") {
-          const count = 2 + (params.phases[0]!.items[1]?.quantity ?? 0);
+          const count = 3 + (params.phases[0]!.items[1]?.quantity ?? 0);
           sub.items.data = params.phases[0]!.items.map((item, i) => ({
             ...item,
             id: `si_${i}`,
@@ -239,8 +239,8 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
   it("14 → 13 retains paid 14, schedules 13 and never creates a credit", async () => {
     await reconcile(13);
     expect(state).toMatchObject({ paidCapacity: 14, renewalQuantity: 13 });
-    expect(schedule.phases[0]!.items[1]!.quantity).toBe(12);
-    expect(schedule.phases[1]!.items[1]!.quantity).toBe(11);
+    expect(schedule.phases[0]!.items[1]!.quantity).toBe(11);
+    expect(schedule.phases[1]!.items[1]!.quantity).toBe(10);
     expect(schedules.update.mock.calls[0]![1]!.proration_behavior).toBe("none");
     expect(cancel).not.toHaveBeenCalled();
     expect(update).not.toHaveBeenCalled();
@@ -252,14 +252,14 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
     expect(
       schedules.update.mock.calls.every((call) => call[1]!.proration_behavior === "none"),
     ).toBe(true);
-    expect(schedule.phases[1]!.items[1]!.quantity).toBe(12);
+    expect(schedule.phases[1]!.items[1]!.quantity).toBe(11);
   });
   it("14 → 13 → 15 invoices only one additional property immediately", async () => {
     await reconcile(13);
     await reconcile(15, 2);
     const params = schedules.update.mock.calls[1]![1];
     expect(params.proration_behavior).toBe("always_invoice");
-    expect(params.phases[0]!.items[1]!.quantity - 12).toBe(1);
+    expect(params.phases[0]!.items[1]!.quantity - 11).toBe(1);
     expect(state!.paidCapacity).toBe(15);
     await reconcile(15, 2);
     expect(schedules.update).toHaveBeenCalledTimes(2);
@@ -270,12 +270,12 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
     await reconcile(14, 2);
     expect(state).toMatchObject({ periodStart: 2600, paidCapacity: 14 });
     expect(schedules.update.mock.calls[1]![1]!.proration_behavior).toBe("always_invoice");
-    expect(schedules.update.mock.calls[1]![1]!.phases[0]!.items[1]!.quantity - 11).toBe(1);
+    expect(schedules.update.mock.calls[1]![1]!.phases[0]!.items[1]!.quantity - 10).toBe(1);
   });
-  it("2 → 1 becomes free only at period end, without credit", async () => {
-    setup(2);
+  it("3 → 1 becomes free only at period end, without credit", async () => {
+    setup(3);
     await reconcile(1);
-    expect(state).toMatchObject({ paidCapacity: 2, periodEnd: 2600, renewalQuantity: 1 });
+    expect(state).toMatchObject({ paidCapacity: 3, periodEnd: 2600, renewalQuantity: 1 });
     expect(schedule.phases).toHaveLength(1);
     expect(schedule.end_behavior).toBe("cancel");
     expect(schedules.update.mock.calls[0]![1]!.proration_behavior).toBe("none");
@@ -284,7 +284,7 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
     expect(sub.status).toBe("canceled");
   });
   it("2 → 1 → 2 does not charge another 9.99 before expiry", async () => {
-    setup(2);
+    setup(3);
     await reconcile(1);
     await reconcile(2, 2);
     expect(schedule.end_behavior).toBe("release");
@@ -294,7 +294,7 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
     ).toBe(true);
   });
   it("after effective free, 1 → 2 requires a new subscription", async () => {
-    setup(2);
+    setup(3);
     await reconcile(1);
     renew();
     expect((await reconcile(2, 2)).action).toBe("inactive");
@@ -338,8 +338,8 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
     await expect(reconcile(15, 2)).rejects.toThrow("billing_payment_pending");
     await expect(reconcile(13, 3)).rejects.toThrow("billing_payment_pending");
     expect(state).toMatchObject({ paidCapacity: 14, renewalQuantity: 13 });
-    expect(schedule.phases[0]!.items[1]!.quantity).toBe(13);
-    expect(schedule.phases[1]!.items[1]!.quantity).toBe(11);
+    expect(schedule.phases[0]!.items[1]!.quantity).toBe(12);
+    expect(schedule.phases[1]!.items[1]!.quantity).toBe(10);
     expect(schedules.update.mock.calls[2]![1].proration_behavior).toBe("none");
   });
   it("an expired organization lease stops a stale worker before any financial mutation", async () => {
@@ -364,7 +364,7 @@ describe("paid-period capacity and renewal (mocked Stripe, not a network validat
     sub.latest_invoice.status = "open";
     await expect(reconcile(13)).rejects.toThrow("billing_payment_pending");
     setup(14);
-    sub.latest_invoice.lines.data[1]!.quantity = 11;
+    sub.latest_invoice.lines.data[1]!.quantity = 10;
     await expect(reconcile(13)).rejects.toThrow("billing_paid_capacity_unverified");
     setup(14);
     sub.schedule = "sched_foreign";

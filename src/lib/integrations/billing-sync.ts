@@ -88,7 +88,10 @@ export async function reconcileSubscription(
       items.find((item) => item.price.id === base.id)?.quantity !== 1
     )
       throw new Error("payment_price_mismatch");
-    return 2 + (items.find((item) => item.price.id === extra.id)?.quantity ?? 0);
+    return (
+      HOSTBUDDY_PLAN.includedProperties +
+      (items.find((item) => item.price.id === extra.id)?.quantity ?? 0)
+    );
   };
   const invoiceFor = async (value: Stripe.Subscription) => {
     if (!value.latest_invoice) throw new Error("billing_paid_capacity_unverified");
@@ -125,7 +128,9 @@ export async function reconcileSubscription(
   ): Stripe.SubscriptionScheduleUpdateParams.Phase[] => {
     const itemsFor = (count: number) => [
       { price: base.id, quantity: 1 },
-      ...(count > 2 ? [{ price: extra.id, quantity: count - 2 }] : []),
+      ...(count > HOSTBUDDY_PLAN.includedProperties
+        ? [{ price: extra.id, quantity: count - HOSTBUDDY_PLAN.includedProperties }]
+        : []),
     ];
     const currentPhase = schedule.phases.find(
       (phase) => phase.start_date <= periodStart && phase.end_date > periodStart,
@@ -223,7 +228,7 @@ export async function reconcileSubscription(
     const invoiceExtras = recurring.filter(
       (line) => line.pricing?.price_details?.price === extra.id,
     );
-    const invoicedCapacity = 2 + (invoiceExtras[0]?.quantity ?? 0);
+    const invoicedCapacity = HOSTBUDDY_PLAN.includedProperties + (invoiceExtras[0]?.quantity ?? 0);
     if (
       lines.has_more ||
       invoiceBase.length !== 1 ||
@@ -275,7 +280,8 @@ export async function reconcileSubscription(
   }
   const next = schedule.phases.find((phase) => phase.start_date === periodEnd);
   const nextCount = next
-    ? 2 + (next.items.find((item) => id(item.price) === extra.id)?.quantity ?? 0)
+    ? HOSTBUDDY_PLAN.includedProperties +
+      (next.items.find((item) => id(item.price) === extra.id)?.quantity ?? 0)
     : 0;
   if (
     capacity === currentCount &&

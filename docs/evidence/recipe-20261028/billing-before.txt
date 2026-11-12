@@ -1,0 +1,27 @@
+Browser tab: 1, Title: "Plan & Billing · Settings", URL: "https://ollama.com/settings/billing".
+1 AXWebArea Plan & Billing · Settings, URL: ollama.com/settings/billing
+	2 container
+		3 link Description: Ollama home, Value: ollama.com/
+		4 container Settings
+			5 content list
+				6 link Description: Dashboard, Value: ollama.com/dashboard
+				7 link Description: Usage, Value: ollama.com/settings
+				8 link Description: Keys, Value: ollama.com/settings/keys
+				9 link Description: Billing, Value: ollama.com/settings/billing
+				10 link Description: Profile, Value: ollama.com/settings/profile
+			11 content list
+				12 link Description: Models (opens in a new tab), Value: ollama.com/search
+				13 link Description: Documentation (opens in a new tab), Value: docs.ollama.com/
+		14 button (collapsed) profile [masqué] [masqué], Secondary Actions: Expand
+			15 image Description: profile, ID: headerProfileImg
+			16 text [masqué]
+			17 text [masqué]
+	18 container settings-sections
+		19 text Subscription
+		20 text Upgrade your subscription to unlock more usage.
+		21 link Description: Upgrade, Value: ollama.com/pricing
+		22 heading Invoices, Value: 2
+			23 text Invoices
+		24 text No invoices yet.
+
+The focused UI element is 1 AXWebArea Plan & Billing · Settings, URL: ollama.com/settings/billing

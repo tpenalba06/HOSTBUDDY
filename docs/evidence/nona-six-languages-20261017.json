@@ -1,0 +1,198 @@
+{
+  "checkedAt": "2026-10-17T11:06:38.335Z",
+  "paidApiCalls": 0,
+  "checks": [
+    {
+      "locale": "en",
+      "status": 200,
+      "turn": {
+        "mode": "ai",
+        "text": "Welcome! The Wi-Fi details are right here below your message. Just take a look at the information card to connect. Would you like to know more about our other services while you're here?",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Wi-Fi",
+            "text": "Network : VillaMare_5G\nPassword : soleil2026",
+            "original": true,
+            "copyValue": "soleil2026"
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:9b",
+        "localTokens": 991
+      }
+    },
+    {
+      "locale": "fr",
+      "status": 200,
+      "turn": {
+        "mode": "ai",
+        "text": "Regarde les informations Wi-Fi affichées juste ci-dessous pour te connecter !",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Wi-Fi",
+            "text": "Réseau : VillaMare_5G\nMot de passe : soleil2026",
+            "original": false,
+            "copyValue": "soleil2026"
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:9b",
+        "localTokens": 667
+      }
+    },
+    {
+      "locale": "es",
+      "status": 200,
+      "turn": {
+        "mode": "ai",
+        "text": "¡Hola! Para conectarte, echa un vistazo a la información del Wi-Fi que aparece justo debajo de este mensaje. ¡Espero que tengas una excelente conexión!",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Wi-Fi",
+            "text": "Red : VillaMare_5G\nContraseña : soleil2026",
+            "original": true,
+            "copyValue": "soleil2026"
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:9b",
+        "localTokens": 987
+      }
+    },
+    {
+      "locale": "de",
+      "status": 200,
+      "turn": {
+        "mode": "ai",
+        "text": "Gerne helfe ich dir dabei! Schau einfach direkt unter deinem letzten Beitrag – dort findest du die WLAN-Informationen. Hast du noch eine andere Frage zu deinem Aufenthalt?",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "WLAN",
+            "text": "Netzwerk : VillaMare_5G\nPasswort : soleil2026",
+            "original": true,
+            "copyValue": "soleil2026"
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:9b",
+        "localTokens": 989
+      }
+    },
+    {
+      "locale": "it",
+      "status": 200,
+      "turn": {
+        "mode": "ai",
+        "text": "Ciao! Per collegarti alla rete Wi-Fi, dai un'occhiata alle informazioni visualizzate qui sotto nella tua schermata. Fammi sapere se hai bisogno di altro!",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Wi-Fi",
+            "text": "Rete : VillaMare_5G\nPassword : soleil2026",
+            "original": true,
+            "copyValue": "soleil2026"
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:9b",
+        "localTokens": 987
+      }
+    },
+    {
+      "locale": "pt",
+      "status": 200,
+      "turn": {
+        "mode": "ai",
+        "text": "Olá! As informações sobre o Wi-Fi estão disponíveis logo abaixo da nossa conversa. Você pode conferir os detalhes diretamente ali.",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Wi-Fi",
+            "text": "Rede : VillaMare_5G\nPalavra-passe : soleil2026",
+            "original": true
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:9b",
+        "localTokens": 976
+      }
+    }
+  ],
+  "passed": true
+}

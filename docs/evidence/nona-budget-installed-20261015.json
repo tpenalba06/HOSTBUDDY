@@ -1,0 +1,21 @@
+{
+  "runId": 38673138920,
+  "conclusion": "success",
+  "migration_applied": true,
+  "project_ref": "mhhtnqfdkyudwyqlmnce",
+  "read_only": false,
+  "objects": {
+    "authorization": true,
+    "usage": true,
+    "reservation_rpc": true
+  },
+  "authorization": {
+    "enabled": false,
+    "expires_at": "2026-10-15T02:51:09.122225+00:00",
+    "cap_micros": 4000000,
+    "reserved_micros": 0
+  },
+  "default_denies_attempt": true,
+  "anonymous_rpc_denied": true,
+  "note": "Applied only absent migration 0024 on isolated TEST; original workflow read_only label corrected here and in workflow. No model requests."
+}

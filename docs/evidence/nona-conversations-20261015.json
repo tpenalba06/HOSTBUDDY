@@ -1,0 +1,720 @@
+{
+  "provider": "guided-rules-only",
+  "externalCalls": 0,
+  "transcripts": [
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "Je voudrais un petit-déjeuner",
+          "nona": "Rien de tel pour bien commencer la journée ! 🥐 Je prépare ta demande. C’est pour combien de gourmands ? 😊",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Trois.",
+          "nona": "Ce serait pour quel jour ?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "demain",
+          "nona": "Tu préfères quelle heure ?",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "vers 9 h",
+          "nona": "Tu choisis quelle formule ?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "oui",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "On voudrait un massage",
+          "nona": "Un peu de douceur, ça ne se refuse pas ! 💆 Je regarde ça avec toi. C’est pour combien de gourmands ? 😊",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "2",
+          "nona": "Ce serait pour quel jour ?",
+          "nextStep": "date",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Demain après-midi",
+          "nona": "Et à quelle heure ça te ferait plaisir ?",
+          "nextStep": "time",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "15 h",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": 10000,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "On arrive plus tôt que prévu",
+          "nona": "Déjà impatient d’arriver ? 🥰 Je te comprends ! Voici ce que dit ton livret. Pour une arrivée plus tôt, ton hôte doit confirmer : je ne peux rien promettre.",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "On peut arriver plus tôt ?",
+          "nona": "Déjà impatient d’arriver ? 🥰 Je te comprends ! Voici ce que dit ton livret. Pour une arrivée plus tôt, ton hôte doit confirmer : je ne peux rien promettre. C’est pour combien de gourmands ? 😊",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "early"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "1",
+          "nona": "Ce serait pour quel jour ?",
+          "nextStep": "date",
+          "serviceIds": [
+            "early"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "demain",
+          "nona": "Et à quelle heure ça te ferait plaisir ?",
+          "nextStep": "time",
+          "serviceIds": [
+            "early"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "13 h",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "early"
+          ],
+          "quoteCents": 2000,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "J’ai besoin du Wi-Fi",
+          "nona": "Le Wi-Fi, c’est par ici ! 📶 D’après ton livret :",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Wi-Fi",
+          "nona": "Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider.",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "Tu connais un bon italien ?",
+          "nona": "Mamma mia ! 🍕 Une envie d’Italie ? Voici les adresses italiennes que ton hôte recommande :",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Un italien ?",
+          "nona": "Mamma mia ! 🍕 Je n’ai pas d’adresse italienne recommandée par ton hôte. Voici les bonnes adresses du livret, ou demande-lui directement.",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "Petit-déjeuner demain pour 3 personnes",
+          "nona": "Hmmm, miam ! 🥐 Ça donne faim ! Je te prépare ça. Et à quelle heure ça te ferait plaisir ?",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 h",
+          "nona": "Tu choisis quelle formule ?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "Finalement 4",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 10000,
+          "mode": "guided"
+        },
+        {
+          "guest": "Après-demain",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 10000,
+          "mode": "guided"
+        },
+        {
+          "guest": "Un massage",
+          "nona": "Un peu de douceur, ça ne se refuse pas ! 💆 Je regarde ça avec toi. C’est pour combien de gourmands ? 😊",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "2",
+          "nona": "Ce serait pour quel jour ?",
+          "nextStep": "date",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Revenons au petit-déjeuner",
+          "nona": "Oh, un bon petit-déjeuner, quelle bonne idée ! ☕ Je m’en occupe. Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 10000,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "Nona, j’ai faim !",
+          "nona": "Rien de tel pour bien commencer la journée ! 🥐 Je prépare ta demande. Tu prévois pour combien de personnes ?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Je voudrais faire plaisir à ma copine",
+          "nona": "Ohh, un petit moment de détente ! 💆 Tu as bien raison. Tu prévois pour combien de personnes ?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "massage"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "On est enfermés dehors, impossible de rentrer",
+          "nona": "Je suis désolée, je comprends que ce soit stressant. Contacte ton gestionnaire tout de suite avec les coordonnées ci-dessous. En cas de danger, appelle le 112.",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "en",
+      "turns": [
+        {
+          "guest": "Breakfast",
+          "nona": "A good breakfast, great idea! ☕ Let me prepare it. How many people should I plan for?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "three",
+          "nona": "Which day would that be?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "tomorrow",
+          "nona": "And what time? Choose a slot:",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 am",
+          "nona": "Which option would you like?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Perfect, I’m preparing your request! Check the summary: nothing is sent until you confirm, then your host will check availability.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "Wi-Fi",
+          "nona": "Let’s get everyone connected! 📶 Your guide says:",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "es",
+      "turns": [
+        {
+          "guest": "Desayuno",
+          "nona": "¡Mmm, qué rico! 🥐 Te lo preparo. ¿Para cuántas personas?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "tres",
+          "nona": "¿Para qué día sería?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "mañana",
+          "nona": "¿Y a qué hora? Elige un horario:",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 h",
+          "nona": "¿Qué opción te apetece?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "¡Perfecto, preparo tu solicitud! Revisa el resumen: nada se envía hasta que confirmes, y tu anfitrión comprobará la disponibilidad.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "Wi-Fi",
+          "nona": "¡Todos conectados! 📶 Tu guía indica:",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "de",
+      "turns": [
+        {
+          "guest": "Frühstück",
+          "nona": "Mmm, lecker! 🥐 Ich bereite das für dich vor. Für wie viele Personen?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "drei",
+          "nona": "Für welchen Tag?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "morgen",
+          "nona": "Und um wie viel Uhr? Wähle einen Termin:",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 Uhr",
+          "nona": "Welche Variante möchtest du?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Perfekt, ich bereite deine Anfrage vor! Prüf die Zusammenfassung: Nichts wird gesendet, bevor du bestätigst; dann prüft dein Gastgeber die Verfügbarkeit.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "Wi-Fi",
+          "nona": "Alle online! 📶 Laut deinem Gästebuch:",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "it",
+      "turns": [
+        {
+          "guest": "Colazione",
+          "nona": "Mmm, che buono! 🥐 Te lo preparo. Per quante persone?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "tre",
+          "nona": "Per quale giorno?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "domani",
+          "nona": "E a che ora? Scegli un orario:",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 h",
+          "nona": "Quale opzione preferisci?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Perfetto, preparo la tua richiesta! Controlla il riepilogo: nulla viene inviato finché non confermi, poi il tuo host verificherà la disponibilità.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "Wi-Fi",
+          "nona": "Tutti connessi! 📶 La tua guida indica:",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "pt",
+      "turns": [
+        {
+          "guest": "Pequeno-almoço",
+          "nona": "Hmm, que delícia! 🥐 Vou preparar isso para ti. Para quantas pessoas?",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "três",
+          "nona": "Para que dia seria?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "amanhã",
+          "nona": "E a que horas? Escolhe um horário:",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 h",
+          "nona": "Que opção preferes?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Perfeito, estou a preparar o teu pedido! Verifica o resumo: nada é enviado antes de confirmares, e o anfitrião verificará a disponibilidade.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "Wi-Fi",
+          "nona": "Todos ligados! 📶 O teu guia indica:",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    },
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "guest": "Bonjour",
+          "nona": "Coucou ! 👋 Comment je peux t’aider ?",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Petit-déjeuner",
+          "nona": "Rien de tel pour bien commencer la journée ! 🥐 Je prépare ta demande. C’est pour combien de gourmands ? 😊",
+          "nextStep": "quantity",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "3",
+          "nona": "Ce serait pour quel jour ?",
+          "nextStep": "date",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "demain",
+          "nona": "Tu préfères quelle heure ?",
+          "nextStep": "time",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "9 h",
+          "nona": "Tu choisis quelle formule ?",
+          "nextStep": "option",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": null,
+          "mode": "guided"
+        },
+        {
+          "guest": "Classique",
+          "nona": "Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.",
+          "nextStep": "ready",
+          "serviceIds": [
+            "bf"
+          ],
+          "quoteCents": 7500,
+          "mode": "guided"
+        },
+        {
+          "guest": "suivi",
+          "nona": "Regardons où en est ta demande.",
+          "nextStep": null,
+          "serviceIds": [],
+          "quoteCents": 7500,
+          "mode": "guided"
+        }
+      ]
+    }
+  ]
+}

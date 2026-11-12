@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-17T00:16:14.343Z",
+  "externalRequests": [],
+  "transactionRequests": [],
+  "simulatedBooking": true,
+  "errors": [],
+  "checks": [
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Je voudrais un petit-déjeuner",
+      "text": "Ah, quel réveil en or ! Je suis ravie de t'entendre parler de petit-déjeuner. Dis-moi, pour combien de personnes comptes-tu le prendre ?",
+      "nextStep": "quantity",
+      "provider": "ollama-local",
+      "modelCalls": 1
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Pour deux personnes",
+      "text": "Super, pour deux c'est parfait ! Maintenant, quel jour tu souhaites pour ce réveil gourmand ?",
+      "nextStep": "date",
+      "provider": "ollama-local",
+      "modelCalls": 1
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Demain",
+      "text": "Demain, c'est noté ! Pour l'heure de ton réveil, as-tu une préférence particulière parmi les choix affichés, ou dois-je demander à l'hôte de te proposer des créneaux ?",
+      "nextStep": "time",
+      "provider": "ollama-local",
+      "modelCalls": 2
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "09:00",
+      "text": "Parfait ! Puisque l'hôte doit confirmer l'arrivée anticipée, je te conseille de vérifier le récapitulatif avant de partir. Veux-tu que je te propose une formule pour finaliser ta demande ?",
+      "nextStep": "option",
+      "provider": "ollama-local",
+      "modelCalls": 2
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Classique",
+      "text": "Super, la formule classique c'est le choix parfait ! Puisque l'hôte doit confirmer l'arrivée anticipée, je te conseille de vérifier le récapitulatif avant de partir.",
+      "nextStep": "ready",
+      "provider": "ollama-local",
+      "modelCalls": 1
+    }
+  ],
+  "passed": true
+}

@@ -1,31 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImportUrlIssue, normalizeUrl, pickAdapter } from "@/lib/import-engine/url-adapters";
-import type { ExtractionResult, ImportSource } from "@/lib/import-engine/types";
 import {
   createPropertyFromExtraction,
   finishImportRun,
   startImportRun,
 } from "@/lib/data/properties";
 import { ImportProgress, useStageTicker } from "@/components/app/ImportProgress";
-import { ImportReview } from "@/components/app/ImportReview";
 import { useOrg } from "@/components/app/useOrg";
-import { friendlyMessage } from "@/components/app/Friendly";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/app/import-url")({ component: ImportUrl });
 
-const STAGES = [
-  { id: "read", label: "Lecture du logement" },
-  { id: "name", label: "Recherche du nom" },
-  { id: "description", label: "Recherche de la description" },
-  { id: "equipment", label: "Recherche des équipements" },
-  { id: "organize", label: "Informations organisées" },
-];
+const STAGE_KEYS = ["readUrl", "name", "description", "equipment", "organize"] as const;
 
 function ImportUrl() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
+  const stages = STAGE_KEYS.map((key) => ({ id: key, label: t(`importFlow.${key}`) }));
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -34,111 +26,76 @@ function ImportUrl() {
   const [stage, setStage] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [fallback, setFallback] = useState(false);
-  const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
-  const [source, setSource] = useState<ImportSource>("website");
-  const [cleanUrl, setCleanUrl] = useState<string | null>(null);
-  const [runId, setRunId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [photoRights, setPhotoRights] = useState(false);
+  const importing = useRef(false);
 
   const go = async () => {
+    if (importing.current) return;
     const issue = getImportUrlIssue(url);
     if (issue === "airbnb_search_without_single_listing") {
       setFallback(false);
-      return setError(
-        "Ce lien Airbnb correspond à une page de recherche sans logement unique identifiable. Ouvrez le logement voulu puis copiez son lien.",
-      );
+      return setError(t("importFlow.searchLink"));
     }
 
+    if (issue === "sunver_staff_link") {
+      setFallback(false);
+      return setError(
+        locale === "fr"
+          ? "Ce lien Sunver est réservé au personnel. Copie le lien de partage du livret voyageur."
+          : "This Sunver link is for staff. Copy the guest guide’s share link.",
+      );
+    }
     const clean = normalizeUrl(url);
-    if (!clean)
-      return setError("Ce lien ne semble pas complet. Copiez-le depuis la barre d'adresse.");
+    if (!clean) return setError(t("importFlow.invalidLink"));
 
     setError("");
     setFallback(false);
-    setCandidate(null);
-    const stop = tick(setStage, STAGES.length);
+    importing.current = true;
+    const stop = tick(setStage, stages.length);
     const adapter = pickAdapter(clean);
     let currentRunId: string | null = null;
 
     try {
-      currentRunId = await startImportRun(org.id, adapter.source, { url: clean });
-      setRunId(currentRunId);
+      currentRunId = await startImportRun(org.id, adapter.source, { url: clean }).catch(() => null);
       const outcome = await adapter.run(clean).catch(() => ({
         ok: false as const,
         source: adapter.source,
         reason: "unreachable" as const,
       }));
 
-      stop();
-      setStage(null);
-
       if (!outcome.ok) {
-        await finishImportRun(
-          currentRunId,
-          outcome.reason === "insufficient" ? "insufficient" : "failed",
-          { error: outcome.reason },
-        );
-        setRunId(null);
+        if (currentRunId)
+          await finishImportRun(
+            currentRunId,
+            outcome.reason === "insufficient" ? "insufficient" : "failed",
+            { error: outcome.reason },
+          ).catch(() => {});
         setFallback(true);
         return;
       }
 
-      setSource(adapter.source);
-      setCleanUrl(clean);
-      setCandidate(outcome.result);
-    } catch (e) {
+      const property = await createPropertyFromExtraction(
+        org.id,
+        outcome.source,
+        { ...outcome.result, photoRightsConfirmed: photoRights },
+        clean,
+      );
       if (currentRunId)
-        await finishImportRun(currentRunId, "failed", { error: "client" }).catch(() => {});
+        void finishImportRun(currentRunId, "succeeded", { propertyId: property.id }).catch(
+          () => {},
+        );
+      void qc.invalidateQueries({ queryKey: ["properties"] });
+      await nav({ to: "/app/p/$id", params: { id: property.id } });
+    } catch {
+      if (currentRunId)
+        void finishImportRun(currentRunId, "failed", { error: "create_property" }).catch(() => {});
+      setError(t("errors.body"));
+    } finally {
       stop();
       setStage(null);
-      setRunId(null);
-      setError(friendlyMessage(e));
+      importing.current = false;
     }
   };
-
-  const confirm = async () => {
-    if (!candidate || !cleanUrl) return;
-    setBusy(true);
-    setError("");
-    try {
-      const property = await createPropertyFromExtraction(org.id, source, candidate, cleanUrl);
-      if (runId) await finishImportRun(runId, "succeeded", { propertyId: property.id });
-      qc.invalidateQueries({ queryKey: ["properties"] });
-      nav({ to: "/app/p/$id", params: { id: property.id } });
-    } catch (e) {
-      if (runId)
-        await finishImportRun(runId, "failed", { error: "create_property" }).catch(() => {});
-      setError(friendlyMessage(e));
-      setBusy(false);
-    }
-  };
-
-  const backFromReview = async () => {
-    if (runId)
-      await finishImportRun(runId, "insufficient", { error: "review_cancelled" }).catch(() => {});
-    setRunId(null);
-    setCandidate(null);
-    setCleanUrl(null);
-  };
-
-  if (candidate) {
-    return (
-      <>
-        {error && (
-          <p role="alert" className="mt-4 rounded-xl bg-warning-soft p-3">
-            {error}
-          </p>
-        )}
-        <ImportReview
-          value={candidate}
-          onChange={setCandidate}
-          onConfirm={confirm}
-          onBack={backFromReview}
-          busy={busy}
-        />
-      </>
-    );
-  }
 
   if (fallback) {
     return (
@@ -156,7 +113,7 @@ function ImportUrl() {
           className="mt-3 min-h-12 w-full font-medium text-muted-foreground underline"
           onClick={() => setFallback(false)}
         >
-          Essayer un autre lien
+          {t("importFlow.anotherLink")}
         </button>
       </div>
     );
@@ -169,7 +126,7 @@ function ImportUrl() {
       </Link>
       <h1 className="text-3xl font-semibold">{t("import.urlTitle")}</h1>
       {stage !== null ? (
-        <ImportProgress stages={STAGES} current={stage} />
+        <ImportProgress stages={stages} current={stage} />
       ) : (
         <div className="mt-6 space-y-4">
           <input
@@ -177,8 +134,12 @@ function ImportUrl() {
             inputMode="url"
             autoComplete="url"
             placeholder="https://…"
+            aria-label={t("import.urlTitle")}
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setPhotoRights(false);
+            }}
             onKeyDown={(e) => e.key === "Enter" && go()}
           />
           {error && (
@@ -186,10 +147,29 @@ function ImportUrl() {
               {error}
             </p>
           )}
+          <label className="flex min-h-11 items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={photoRights}
+              onChange={(event) => setPhotoRights(event.target.checked)}
+            />
+            {t("importFlow.photoRights")}
+          </label>
           <button className="btn btn-primary w-full text-lg" onClick={go} disabled={!url.trim()}>
             {t("import.action")}
           </button>
           <p className="text-center text-muted-foreground">{t("import.urlHelp")}</p>
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+            <Link to="/app/import-text" className="inline-flex min-h-11 items-center underline">
+              {t("app.paste")}
+            </Link>
+            <Link to="/app/manual" className="inline-flex min-h-11 items-center underline">
+              {t("app.manual")}
+            </Link>
+            <Link to="/app/import-pms" className="inline-flex min-h-11 items-center underline">
+              {locale === "fr" ? "Connecter un logiciel" : "Connect software"}
+            </Link>
+          </div>
         </div>
       )}
     </div>

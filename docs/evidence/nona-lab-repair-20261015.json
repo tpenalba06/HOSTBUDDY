@@ -1,0 +1,73 @@
+{
+  "verifiedAt": "2026-10-15T11:52:26.414Z",
+  "cause": "No listener on loopback port 4181; former UI cleared keys before confirmed save and leaked raw fetch errors.",
+  "url": "http://127.0.0.1:4181/",
+  "uiEvidence": [
+    {
+      "width": 360,
+      "statusButtonHTTP": 200,
+      "chatButtonHTTP": 503,
+      "chatError": "Aucun accès n’a été enregistré sur ce serveur. Renseigne les deux clés puis clique sur Enregistrer les accès chiffrés.",
+      "noOverflow": true,
+      "pageErrors": []
+    },
+    {
+      "width": 390,
+      "statusButtonHTTP": 200,
+      "chatButtonHTTP": 503,
+      "chatError": "Aucun accès n’a été enregistré sur ce serveur. Renseigne les deux clés puis clique sur Enregistrer les accès chiffrés.",
+      "noOverflow": true,
+      "pageErrors": []
+    },
+    {
+      "width": 430,
+      "statusButtonHTTP": 200,
+      "chatButtonHTTP": 503,
+      "chatError": "Aucun accès n’a été enregistré sur ce serveur. Renseigne les deux clés puis clique sur Enregistrer les accès chiffrés.",
+      "noOverflow": true,
+      "pageErrors": []
+    },
+    {
+      "width": 1280,
+      "statusButtonHTTP": 200,
+      "chatButtonHTTP": 503,
+      "chatError": "Aucun accès n’a été enregistré sur ce serveur. Renseigne les deux clés puis clique sur Enregistrer les accès chiffrés.",
+      "noOverflow": true,
+      "pageErrors": []
+    }
+  ],
+  "resilience": {
+    "networkError": "Le serveur local NONA est injoignable sur http://127.0.0.1:4181. Work doit le relancer. Les clés saisies restent dans les champs tant que leur enregistrement n’est pas confirmé.",
+    "failedSaveKeepsFields": true,
+    "expiredSessionRecovered": true
+  },
+  "supervisorRecovery": {
+    "serverRecovered": true,
+    "existingPageSessionRecovered": true
+  },
+  "vault": {
+    "state": "missing",
+    "workspaceSearchFoundVault": false,
+    "DPAPITestPassed": true
+  },
+  "budget": {
+    "jobId": 116406110873,
+    "runId": 38673009523,
+    "conclusion": "success",
+    "read_only": true,
+    "objects": {
+      "authorization": true,
+      "usage": true,
+      "reservation_rpc": true
+    },
+    "authorization": {
+      "enabled": false,
+      "expires_at": "2026-10-15T02:51:09.122225+00:00",
+      "cap_micros": 4000000,
+      "reserved_micros": 0
+    },
+    "project_ref": "mhhtnqfdkyudwyqlmnce"
+  },
+  "externalInferenceCalls": 0,
+  "externalSpendEUR": 0
+}

@@ -1,0 +1,289 @@
+{
+  "checkedAt": "2026-10-19T10:16:25.821Z",
+  "scope": "isolated-test-read-only",
+  "vaultState": "ready",
+  "model": "anthropic/claude-haiku-5.5",
+  "inferenceCalls": 0,
+  "newPayments": 0,
+  "writesToRemoteDatabase": 0,
+  "gateway": {
+    "authenticated": true,
+    "status": 200,
+    "balanceUsd": "0",
+    "totalUsedUsd": "0",
+    "catalogueAllowed": true,
+    "pricing": {
+      "input": "0.0000001",
+      "input_tiers": [
+        {
+          "cost": "0.0000001",
+          "min": 0,
+          "max": 100001
+        },
+        {
+          "cost": "0.0000005",
+          "min": 100001
+        }
+      ],
+      "output": "0.0000005",
+      "output_tiers": [
+        {
+          "cost": "0.0000005",
+          "min": 0,
+          "max": 100001
+        },
+        {
+          "cost": "0.0000025",
+          "min": 100001
+        }
+      ],
+      "input_cache_read": "0.00000001",
+      "input_cache_read_tiers": [
+        {
+          "cost": "0.00000001",
+          "min": 0,
+          "max": 100001
+        },
+        {
+          "cost": "0.00000005",
+          "min": 100001
+        }
+      ],
+      "input_cache_write": "0.000000125",
+      "input_cache_write_tiers": [
+        {
+          "cost": "0.000000125",
+          "min": 0,
+          "max": 100001
+        },
+        {
+          "cost": "0.000000625",
+          "min": 100001
+        }
+      ],
+      "web_search": "10",
+      "regional": {
+        "au": {
+          "input": "0.00000011",
+          "input_tiers": [
+            {
+              "cost": "0.00000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000055",
+              "min": 100001
+            }
+          ],
+          "output": "0.00000055",
+          "output_tiers": [
+            {
+              "cost": "0.00000055",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000275",
+              "min": 100001
+            }
+          ],
+          "input_cache_read": "0.000000011",
+          "input_cache_read_tiers": [
+            {
+              "cost": "0.000000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.000000055",
+              "min": 100001
+            }
+          ],
+          "input_cache_write": "0.0000001375",
+          "input_cache_write_tiers": [
+            {
+              "cost": "0.0000001375",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.0000006875",
+              "min": 100001
+            }
+          ]
+        },
+        "eu": {
+          "input": "0.00000011",
+          "input_tiers": [
+            {
+              "cost": "0.00000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000055",
+              "min": 100001
+            }
+          ],
+          "output": "0.00000055",
+          "output_tiers": [
+            {
+              "cost": "0.00000055",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000275",
+              "min": 100001
+            }
+          ],
+          "input_cache_read": "0.000000011",
+          "input_cache_read_tiers": [
+            {
+              "cost": "0.000000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.000000055",
+              "min": 100001
+            }
+          ],
+          "input_cache_write": "0.0000001375",
+          "input_cache_write_tiers": [
+            {
+              "cost": "0.0000001375",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.0000006875",
+              "min": 100001
+            }
+          ]
+        },
+        "jp": {
+          "input": "0.00000011",
+          "input_tiers": [
+            {
+              "cost": "0.00000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000055",
+              "min": 100001
+            }
+          ],
+          "output": "0.00000055",
+          "output_tiers": [
+            {
+              "cost": "0.00000055",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000275",
+              "min": 100001
+            }
+          ],
+          "input_cache_read": "0.000000011",
+          "input_cache_read_tiers": [
+            {
+              "cost": "0.000000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.000000055",
+              "min": 100001
+            }
+          ],
+          "input_cache_write": "0.0000001375",
+          "input_cache_write_tiers": [
+            {
+              "cost": "0.0000001375",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.0000006875",
+              "min": 100001
+            }
+          ]
+        },
+        "us": {
+          "input": "0.00000011",
+          "input_tiers": [
+            {
+              "cost": "0.00000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000055",
+              "min": 100001
+            }
+          ],
+          "output": "0.00000055",
+          "output_tiers": [
+            {
+              "cost": "0.00000055",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.00000275",
+              "min": 100001
+            }
+          ],
+          "input_cache_read": "0.000000011",
+          "input_cache_read_tiers": [
+            {
+              "cost": "0.000000011",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.000000055",
+              "min": 100001
+            }
+          ],
+          "input_cache_write": "0.0000001375",
+          "input_cache_write_tiers": [
+            {
+              "cost": "0.0000001375",
+              "min": 0,
+              "max": 100001
+            },
+            {
+              "cost": "0.0000006875",
+              "min": 100001
+            }
+          ]
+        }
+      }
+    }
+  },
+  "ledger": {
+    "ok": false,
+    "reason": "unavailable",
+    "code": "unknown",
+    "httpStatus": 0,
+    "keyKind": "server-secret"
+  },
+  "observationSchemaAvailable": false,
+  "publishedGuide": true,
+  "billingControlsVerified": false,
+  "ready": false,
+  "blockedReasons": [
+    "No sufficient prepaid balance demonstrated by the Gateway credits endpoint.",
+    "Existing TEST authorization is disabled, expired or unreadable; not renewed.",
+    "Prepared observation migration is not available on TEST.",
+    "Auto top-up, BYOK, chargeable extras, FX/tax envelope and privacy agreement have not been verified for this account."
+  ],
+  "observationSchemaStatus": 404,
+  "checkoutRevision": "768b88e6a6b8a915b48f9337117ec8ad3771c61d",
+  "checkoutDirty": true
+}

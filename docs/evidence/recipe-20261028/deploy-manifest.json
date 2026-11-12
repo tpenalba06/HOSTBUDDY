@@ -1,0 +1,292 @@
+[
+  {
+    "file": "api/test.mjs",
+    "size": 912,
+    "sha": "8de14f5db2f9b2dc504fbb5a0304471cd3ae9bb9"
+  },
+  {
+    "file": "package.json",
+    "size": 58,
+    "sha": "b94166ccb9923a13e0497eb1dc8a33b26a6d0827"
+  },
+  {
+    "file": "public/assets/chunk-D32TOXHM-CANbtqfe.js",
+    "size": 476198,
+    "sha": "8a87bbf9f285d1f013e1bf5f319a29bc68c3f93f"
+  },
+  {
+    "file": "public/assets/highlighted-body-KQOG7T2V-N2ycqqTz.js",
+    "size": 609,
+    "sha": "80b558dc23e183fbcd05acee535cf11b35ed68f5"
+  },
+  {
+    "file": "public/assets/index-COtGCJgn.js",
+    "size": 589676,
+    "sha": "f9b6052b753ed556a245e1afa9151e1db34a3cfa"
+  },
+  {
+    "file": "public/assets/index-DcDgUzcz.css",
+    "size": 166440,
+    "sha": "c5dedf196398cc4975fdd97b024f9e3c0e1aa3d3"
+  },
+  {
+    "file": "public/assets/mermaid-MCJ5UELQ-BIyqKC7c.js",
+    "size": 70,
+    "sha": "ddc4166cc44e8c0b47b0fa928d6d7efab24aff34"
+  },
+  {
+    "file": "public/assets/NonaConcierge-B7RvpiWz.css",
+    "size": 5770,
+    "sha": "7286da59f8c9d0e0960046a4629cf24f191a1bae"
+  },
+  {
+    "file": "public/assets/NonaConcierge-D3ruZhb1.js",
+    "size": 24373,
+    "sha": "79bad69d498cd6633589c8554972c7c1a84d4839"
+  },
+  {
+    "file": "public/demo-guide/breakfast.webp",
+    "size": 162816,
+    "sha": "5323971e5ee10e5bfed0f5488cf13792dd0fba1f"
+  },
+  {
+    "file": "public/demo-guide/coast.webp",
+    "size": 292208,
+    "sha": "e4dd7f378db0a84b73ee8171a8d36c0db185c281"
+  },
+  {
+    "file": "public/demo-guide/house.webp",
+    "size": 137156,
+    "sha": "537f72c79568dc21a05e24416b6eb3c473a147f1"
+  },
+  {
+    "file": "public/demo-guide/pool.webp",
+    "size": 185718,
+    "sha": "2476f313676794b05eca0b8dad77e40cf3b223a4"
+  },
+  {
+    "file": "public/demo-guide/restaurant.webp",
+    "size": 346966,
+    "sha": "0091383b4f4677757c81324442832edd4c658884"
+  },
+  {
+    "file": "public/favicon.png",
+    "size": 4267,
+    "sha": "880d75cdea404622b809ff0130f91b7a606fdd16"
+  },
+  {
+    "file": "public/guide-fonts/manrope-400.ttf",
+    "size": 94972,
+    "sha": "a79767a1f0765e9452b43ed41b5d2406cf1e2fd7"
+  },
+  {
+    "file": "public/guide-fonts/manrope-400.woff2",
+    "size": 30404,
+    "sha": "84a2ad824079e66d0a06b145408c76a35e5b8ac2"
+  },
+  {
+    "file": "public/guide-fonts/manrope-600.ttf",
+    "size": 95096,
+    "sha": "b5e59950465f67853440f82e2966b36cb0aeaa03"
+  },
+  {
+    "file": "public/guide-fonts/manrope-600.woff2",
+    "size": 30392,
+    "sha": "8b3141963be11ab86fb1de2b383bf11b750386f7"
+  },
+  {
+    "file": "public/guide-fonts/manrope-OFL.txt",
+    "size": 4387,
+    "sha": "12c29b4c541b7ba0f0d5d86818697558c1c28d76"
+  },
+  {
+    "file": "public/guide-fonts/newsreader-400.ttf",
+    "size": 109472,
+    "sha": "a7037e0769360301e56ed25b0df80f028aff2795"
+  },
+  {
+    "file": "public/guide-fonts/newsreader-400.woff2",
+    "size": 39156,
+    "sha": "fdcb6322b5d9b7ca52e92f628eb0d8f1b1baf107"
+  },
+  {
+    "file": "public/guide-fonts/newsreader-OFL.txt",
+    "size": 4394,
+    "sha": "b05a591af3d7afd3bb423b64cf864d14f3612030"
+  },
+  {
+    "file": "public/hostbuddy-media/apartment.webp",
+    "size": 102562,
+    "sha": "399f6ce36782ad274b6242c1bc7d45a86d857fe3"
+  },
+  {
+    "file": "public/hostbuddy-media/arrival.webp",
+    "size": 82626,
+    "sha": "6007fbd044026d90e2450cfcdf8543a0513b1ada"
+  },
+  {
+    "file": "public/hostbuddy-media/chalet.webp",
+    "size": 121990,
+    "sha": "cf512bd50c0ef56b62b809afbe90b9c1c5928ff4"
+  },
+  {
+    "file": "public/hostbuddy-media/contact.webp",
+    "size": 61648,
+    "sha": "e7919151d230adcd5a2a6b3621ffdb853aceb03e"
+  },
+  {
+    "file": "public/hostbuddy-media/countryside.webp",
+    "size": 156114,
+    "sha": "6cb41202cac5d87067bea5d3802b54fc3e8b1bf7"
+  },
+  {
+    "file": "public/hostbuddy-media/departure.webp",
+    "size": 89326,
+    "sha": "3ff82a58929a94c2beb954da708ce0e74a68c0bd"
+  },
+  {
+    "file": "public/hostbuddy-media/glamping.webp",
+    "size": 162442,
+    "sha": "29a9fab20acf2036505d38bc4c78646119d8ac68"
+  },
+  {
+    "file": "public/hostbuddy-media/README.md",
+    "size": 1215,
+    "sha": "b3dd533f3f4efb1b18d0be156c4fd728837b3240"
+  },
+  {
+    "file": "public/hostbuddy-media/urban-hotel.webp",
+    "size": 87668,
+    "sha": "7b9107873efd385baa7e4c9aec859652f1b4ca5f"
+  },
+  {
+    "file": "public/hostbuddy-media/wifi.webp",
+    "size": 67418,
+    "sha": "453d7cbe628db08c7050e2730dc0fa2d201b47a0"
+  },
+  {
+    "file": "public/hostbuddy-offline-sw.js",
+    "size": 2390,
+    "sha": "b627611cb4839b0db44d04dd9a251bd579f2a1d1"
+  },
+  {
+    "file": "public/index.html",
+    "size": 411,
+    "sha": "1cb4737ce55a51c95f03002611747a021813133f"
+  },
+  {
+    "file": "public/mobile.html",
+    "size": 598,
+    "sha": "6c210ee869170603961565f0ba30c82909e0d1d7"
+  },
+  {
+    "file": "public/nona/fonts/lora-500-latin-ext.woff2",
+    "size": 20088,
+    "sha": "2cdfe3e6926cd3faca71f7356148185af69351f7"
+  },
+  {
+    "file": "public/nona/fonts/lora-500-latin.woff2",
+    "size": 37788,
+    "sha": "fcfdbcb885ebabaf7354b134c44269942ae61698"
+  },
+  {
+    "file": "public/nona/fonts/lora-600-latin-ext.woff2",
+    "size": 20088,
+    "sha": "2cdfe3e6926cd3faca71f7356148185af69351f7"
+  },
+  {
+    "file": "public/nona/fonts/lora-600-latin.woff2",
+    "size": 37788,
+    "sha": "fcfdbcb885ebabaf7354b134c44269942ae61698"
+  },
+  {
+    "file": "public/nona/fonts/lora-OFL.txt",
+    "size": 4423,
+    "sha": "ab2ab106f272cbda28040912339aacc462d87419"
+  },
+  {
+    "file": "public/nona/fonts/nunito-sans-400-latin-ext.woff2",
+    "size": 27908,
+    "sha": "6a3aecdb9006c33b8f5148e95d93a75c77cf01fc"
+  },
+  {
+    "file": "public/nona/fonts/nunito-sans-400-latin.woff2",
+    "size": 31076,
+    "sha": "8a514e9985a9ab9a246f1ce31aefb1fd39339d10"
+  },
+  {
+    "file": "public/nona/fonts/nunito-sans-600-latin-ext.woff2",
+    "size": 27908,
+    "sha": "6a3aecdb9006c33b8f5148e95d93a75c77cf01fc"
+  },
+  {
+    "file": "public/nona/fonts/nunito-sans-600-latin.woff2",
+    "size": 31076,
+    "sha": "8a514e9985a9ab9a246f1ce31aefb1fd39339d10"
+  },
+  {
+    "file": "public/nona/fonts/nunito-sans-700-latin-ext.woff2",
+    "size": 27908,
+    "sha": "6a3aecdb9006c33b8f5148e95d93a75c77cf01fc"
+  },
+  {
+    "file": "public/nona/fonts/nunito-sans-700-latin.woff2",
+    "size": 31076,
+    "sha": "8a514e9985a9ab9a246f1ce31aefb1fd39339d10"
+  },
+  {
+    "file": "public/nona/fonts/nunitosans-OFL.txt",
+    "size": 4393,
+    "sha": "6213b4946b3fb7c797a6f4a8c37b061572d236fe"
+  },
+  {
+    "file": "public/nona/fonts/SOURCES.json",
+    "size": 1972,
+    "sha": "6c254dda36cd3bd4c0fe85b566672624d3d1e561"
+  },
+  {
+    "file": "public/nona/logo-reference.png",
+    "size": 17182,
+    "sha": "e12b56c7b97f1234f0e14e4a38cc64286de8217d"
+  },
+  {
+    "file": "public/nona/mascotte-reference.png",
+    "size": 88025,
+    "sha": "cbb99aa854815d1cd96df72969d76e3453319992"
+  },
+  {
+    "file": "public/nona/official-da.png",
+    "size": 2020426,
+    "sha": "b6c58ddc826fbace588cfb04c27fc48d7dff3ee9"
+  },
+  {
+    "file": "public/nona/official-logo.png",
+    "size": 140600,
+    "sha": "6577b95065175dccb274a2aaa04c0ef16697cef0"
+  },
+  {
+    "file": "public/nona/official-mascot.png",
+    "size": 392633,
+    "sha": "23c029b0568b1e8e628330e00200a169c75cd8bf"
+  },
+  {
+    "file": "public/nona/README.md",
+    "size": 800,
+    "sha": "715254160c242b46e8d61868a89bf4159ddcfc9a"
+  },
+  {
+    "file": "public/robots.txt",
+    "size": 160,
+    "sha": "08a1974887bb4d2b2a0d39869bf9d8d6dfe8e5dd"
+  },
+  {
+    "file": "server/nona-hosted-test-entry.js",
+    "size": 1188118,
+    "sha": "25eb8bc4043a9231aec463426ba3d2e0ff06db06"
+  },
+  {
+    "file": "vercel.json",
+    "size": 416,
+    "sha": "d171a5feb1956bc59a66625eaf15556ea7eef56c"
+  }
+]

@@ -1,0 +1,11 @@
+
+ RUN  v5.0.3 C:/Users/trpe0/.codex/.chatgpt-projects/g-p-6abe54a923948191991130394abb3fb6/output/nona-beta-consolidated-20261022
+
+
+ Test Files  102 passed | 1 skipped (103)
+      Tests  674 passed | 2 skipped (676)
+   Start at  21:13:43
+   Duration  17.42s (tests 61%, import 20%, environment 10%, transform 9%, worker 1%)
+
+    Isolate  103 workers spawned · ~176ms startup each (spawn + environment, per file)
+             at least ~4.35s faster with isolate: false — reuses workers across files instead of one per file

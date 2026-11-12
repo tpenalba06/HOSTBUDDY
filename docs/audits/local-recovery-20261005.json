@@ -1,0 +1,20 @@
+{
+  "scope": "synthetic PostgreSQL 18.3 via PGlite; Supabase auth/storage schemas stubbed; no hosted database",
+  "results": [
+    {
+      "migrations": 21,
+      "restored": true,
+      "dataAndRlsChecksum": "4ed5a595cc648f00c38de321f643ad5d96c92548df28eebe84543d7932673ffb",
+      "anonymousPublishedGuide": true,
+      "sqlAssertionsAfterRestore": true,
+      "storageBytesVerified": true,
+      "databaseArchiveSha256": "cc34dccf7e5c40a17875f7012151dae0bcc02419d76725119bae728cb7093264"
+    },
+    {
+      "logicalPgDumpRestore": true,
+      "anonymousGuide": true,
+      "sqlAssertions": true,
+      "sqlSha256": "e3c2a18950bcc98dfa35dd6e5393deb5221ad60190a7fb783d7b0755acdb3816"
+    }
+  ]
+}

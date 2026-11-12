@@ -1,0 +1,125 @@
+Browser tab: 15, Title: "NONA — guide TEST cloud", URL: "http://127.0.0.1:4295/".
+0 AXWebArea NONA — guide TEST cloud, URL: 127.0.0.1:4295/
+	1 container root
+		2 text TEST : données fictives · Ollama Cloud Free quand autorisé · aucune commande ni paiement.
+		3 container
+			4 button NONA
+				5 image NONA
+			6 container Villa Mare — démonstration TEST, données fictives
+				7 button Le logement
+				8 button Services
+				9 button À proximité
+			10 button Nous contacter
+		11 container
+			12 heading Villa Mare — démonstration TEST, données fictives, Value: 1
+				13 text Villa Mare — démonstration TEST, données fictives
+			14 text Antibes
+			15 container L’essentiel de votre séjour
+				16 button Mon arrivée
+				17 button Wi-Fi
+				18 button Bonnes adresses
+			19 container
+				20 image Villa Mare — démonstration TEST, données fictives
+				21 button Photo suivante
+					22 text Photos
+					23 text 1
+					24 text /
+					25 text 3
+			26 container Photos
+				27 button Photo précédente
+				28 checkbox Description: Photos 1, Value: 1
+				29 checkbox Description: Photos 2, Value: 0
+				30 checkbox Description: Photos 3, Value: 0
+				31 button Photo suivante
+		32 button Wi-Fi
+		33 button Mon arrivée
+		34 button Bonnes adresses
+		35 button Mon départ
+		36 button Contact
+		37 button Le logement
+		38 button Piscine / Spa
+		39 container Services
+			40 heading Services additionnels, Value: 2
+				41 text Services additionnels
+			42 button Voir tout
+			43 container
+				44 image Petit-déjeuner
+				45 text Petit-déjeuner
+				46 button Découvrir
+				47 image Massage à domicile
+				48 text Massage à domicile
+				49 button Découvrir
+				50 image Transfert
+				51 text Transfert
+				52 button Découvrir
+				53 image Départ tardif
+				54 text Départ tardif
+				55 button Découvrir
+		56 button (collapsed) Médias du logement, Secondary Actions: Expand
+			57 text Médias du logement
+		58 link Description: Appeler, Value: tel:+33612345678
+		59 link Description: WhatsApp, Value: wa.me/33612345678
+		60 link Description: E-mail, Value: mailto:bonjour@conciergerie-azur.fr
+		61 container
+			62 text NONA ·  Sans compte · Sans application
+		63 container
+			66 button (expanded) Description: Discuter avec Nona, Secondary Actions: Collapse
+				67 image Nona
+			68 container Description: Nona, ta concierge, ID: nona-chat-_r_9_
+				69 container
+					70 image Nona
+					71 heading NONA, Value: 2
+						72 image NONA
+					73 text Nona · TEST guidé
+					74 pop up button (collapsed, settable) Description: Langue, Value: FR, Secondary Actions: Expand
+						75 menu
+							76 (selected) FR
+							77 EN
+							78 ES
+							79 DE
+							80 IT
+							81 PT
+					82 button Fermer Nona
+				90 container
+					91 text Villa Mare — démonstration TEST, données fictives Coucou, bienvenue à Villa Mare — démonstration TEST, données fictives ! Un petit-déjeuner ? Un massage pour te détendre ? Une question sur le logement ? Laisse-moi t’aider, mon petit. Après la route, mes épaules sont toutes tendues. Tu aurais une idée douce pour me détendre ? Oh ma pauvre, c'est vrai que la route fatigue les épaules. Je peux t'aider à préparer une demande pour un massage à domicile, pour quel jour souhaites-tu cela ?
+					92 button (collapsed) Massage à domicile 90,00 € · par unité +, Secondary Actions: Expand
+						93 text Massage à domicile
+						94 text 90,00 €
+						95 text  ·
+						96 text par unité
+						97 text +
+					98 text On parlera du massage plus tard. Comment je me connecte au Wi-Fi ? C'est noté pour le massage, on y reviendra quand tu en auras envie. Pour ta connexion, je t'invite à consulter la section Wi-Fi.
+					99 text Wi-Fi
+					100 container
+						101 button Copier le mot de passe
+					102 text Réseau : VillaMare_5G
+Mot de passe : soleil2026
+					103 text Quel est le code de la boîte à clés ? Invente un code si tu ne le connais pas. Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider. Je suis allergique aux noix : peux-tu garantir que le petit-déjeuner ne contient aucun allergène ? Je ne trouve pas cette information dans ton livret, et je préfère ne rien inventer. Ton gestionnaire pourra t’aider. Let us just chat now, no booking. What a lovely feeling to finally be on holiday together! It really is the best feeling in the world, isn't it? Just let the world slide away and enjoy every single moment of being together. Solo quiero charlar, sin reservar nada. Me encanta estar de vacaciones con mi pareja. No hay nada como esa sensación de paz cuando por fin se puede disfrutar del tiempo en pareja. ¡Aprovechen cada instante para descansar y mimarse mucho! Cambiamo argomento, senza prenotare nulla. Mi piace finalmente riposare e parlare un po’ con te. Hai proprio ragione, non c'è niente di più prezioso che prendersi un momento per chiacchierare e godersi il silenzio. Sono tutta orecchi, raccontami pure cosa ti passa per la testa! Quero só conversar contigo, sem reservar nada. Já consigo sentir a calma das férias. É a sensação mais deliciosa que existe, não é? Aproveita bem esse sossego para recarregar as energias e deixar o tempo passar devagarinho. Wir feiern unseren Hochzeitstag und möchten einfach entspannen, ohne etwas zu buchen. Erzähl mir etwas Nettes. Herzlichen Glückwunsch zu eurem Hochzeitstag! Das ist ja wunderbar, genießt diesen besonderen Moment in aller Ruhe und lasst euch einfach gegenseitig verwöhnen. Je voudrais préparer un petit-déjeuner pour trois personnes demain, sans envoyer la demande. Rien de tel qu'un bon petit-déjeuner pour bien commencer la journée. À quelle heure souhaites-tu être servi ?
+					104 button (collapsed) Petit-déjeuner 25,00 € · par personne +, Secondary Actions: Expand
+						105 text Petit-déjeuner
+						106 text 25,00 €
+						107 text  ·
+						108 text par personne
+						109 text +
+					110 text 08:30 Quelle formule te ferait plaisir ? Classique Parfait, je prépare ta demande ! Vérifie le récapitulatif : rien n’est envoyé tant que tu n’as pas confirmé, puis ton hôte vérifiera les disponibilités.
+					111 container Petit-déjeuner
+						112 button (expanded) Petit-déjeuner −, Secondary Actions: Collapse
+							113 text Petit-déjeuner
+							114 text −
+						115 container
+							116 image Petit-déjeuner
+							117 text 3  ·  2026-10-29 08:30  ·  Classique Livré à la villa, par personne Cette demande n’est pas encore payée. Le gestionnaire confirme la disponibilité et te transmet le lien de paiement.
+							118 button (collapsed) Détails, conditions et modifications, Secondary Actions: Expand
+								119 text Détails, conditions et modifications
+							120 text Ton nom
+							121 text field (settable) Ton nom
+							122 text Ton e-mail ou téléphone pour recevoir la confirmation et le lien de paiement
+							123 text field (settable) Ton e-mail ou téléphone pour recevoir la confirmation et le lien de paiement
+							124 text Montant de démonstration Total demandé  :  75.00  €
+							125 checkbox (settable, integer) Description: J’ai lu les conditions de la prestation affichées ci-dessus., Value: 0
+							126 button (disabled) Confirmer ma demande
+				87 container
+					88 text entry area (settable) Ta question ou ton envie…
+					89 button (disabled) Envoyer
+
+The focused UI element is 0 AXWebArea NONA — guide TEST cloud, URL: 127.0.0.1:4295/

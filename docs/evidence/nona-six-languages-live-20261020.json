@@ -1,0 +1,794 @@
+{
+  "checkedAt": "2026-10-20T12:54:54.444Z",
+  "kind": "real-provider-six-language-recipe",
+  "provider": "ollama-direct",
+  "model": "gemma4:31b",
+  "sourceCheckpoint": "625dc54",
+  "maximumSessionCalls": 20,
+  "newMoneySpentUsd": 0,
+  "calls": 20,
+  "reservations": 20,
+  "conversations": [
+    {
+      "locale": "fr",
+      "turns": [
+        {
+          "visitor": "Salut Nona ! On est enfin en vacances.",
+          "reply": "Quel bonheur ! Installe-toi confortablement et dis-moi si je peux faire quoi que ce soit pour rendre ton séjour encore plus magique.",
+          "mode": "ai",
+          "nextStep": null,
+          "draft": {},
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Quel bonheur ! Installe-toi confortablement et dis-moi si je peux faire quoi que ce soit pour rendre ton séjour encore plus magique.",
+            "questionFor": "none"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1750,
+            "cachedInputTokens": 0,
+            "outputTokens": 72,
+            "latencyMs": 744,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0002738,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Tu peux préparer le petit-déjeuner pour demain, pour trois personnes ?",
+          "reply": "Rien de tel qu'un bon petit-déjeuner pour bien commencer la journée ! À quelle heure souhaites-tu être servi ?",
+          "mode": "ai",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Rien de tel qu'un bon petit-déjeuner pour bien commencer la journée ! À quelle heure souhaites-tu être servi ?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1819,
+            "cachedInputTokens": 1216,
+            "outputTokens": 97,
+            "latencyMs": 737,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00018402,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "À neuf heures",
+          "reply": "C'est noté, je m'occupe de tout pour ton réveil ! Quelle option souhaites-tu choisir parmi celles proposées ?",
+          "mode": "ai",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "C'est noté, je m'occupe de tout pour ton réveil ! Quelle option souhaites-tu choisir parmi celles proposées ?",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1901,
+            "cachedInputTokens": 1216,
+            "outputTokens": 109,
+            "latencyMs": 818,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0002003,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Un excellent choix, c'est une valeur sûre pour se faire plaisir ! Je te laisse vérifier le récapitulatif, et sache que rien n'a encore été envoyé.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "candidate": {
+            "text": "Un excellent choix, c'est une valeur sûre pour se faire plaisir ! Je te laisse vérifier le récapitulatif, et sache que rien n'a encore été envoyé.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1987,
+            "cachedInputTokens": 1216,
+            "outputTokens": 166,
+            "latencyMs": 1177,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00023514,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Et pour le Wi-Fi, comment ça se passe ?",
+          "reply": "Allez hop, tout le monde connecté ! 📶 Voici ce qu’indique ton livret :",
+          "mode": "guided",
+          "nextStep": null,
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 1,
+          "candidate": {
+            "text": "C'est essentiel pour rester connecté avec tes proches ! Je t'invite à consulter la section Wi-Fi pour trouver toutes les informations.",
+            "questionFor": "none"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 2093,
+            "cachedInputTokens": 1216,
+            "outputTokens": 76,
+            "latencyMs": 762,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021398,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ],
+      "stopReason": "guided-fallback-no-retry"
+    },
+    {
+      "locale": "en",
+      "turns": [
+        {
+          "visitor": "Could you prepare breakfast tomorrow for three people?",
+          "reply": "A good breakfast, great idea! ☕ Let me prepare it. And what time? Choose a slot:",
+          "mode": "guided",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "A lovely way to start the day! I've noted the number of people; what time would you like your breakfast delivered?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1675,
+            "cachedInputTokens": 672,
+            "outputTokens": 95,
+            "latencyMs": 1233,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021202,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "At nine in the morning",
+          "reply": "Perfect, that's a lovely time to start the day! Now, which breakfast option would you prefer?",
+          "mode": "ai",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Perfect, that's a lovely time to start the day! Now, which breakfast option would you prefer?",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1746,
+            "cachedInputTokens": 672,
+            "outputTokens": 101,
+            "latencyMs": 836,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00022436,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "A classic choice, timeless and delicious. Please review your summary; nothing has been sent to the host yet.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "candidate": {
+            "text": "A classic choice, timeless and delicious. Please review your summary; nothing has been sent to the host yet.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1826,
+            "cachedInputTokens": 1184,
+            "outputTokens": 143,
+            "latencyMs": 831,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00020628,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ],
+      "stopReason": "guided-fallback-no-retry",
+      "continuedAfterGuardReview": true
+    },
+    {
+      "locale": "es",
+      "turns": [
+        {
+          "visitor": "¿Puedes preparar el desayuno mañana para tres personas?",
+          "reply": "¡Mmm, qué rico! 🥐 Te lo preparo. ¿Y a qué hora? Elige un horario:",
+          "mode": "guided",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "¡Qué alegría empezar el día con un buen festín! Ya tengo anotado el número de personas y la fecha, pero dime, ¿a qué hora prefieres que lo traigan?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1766,
+            "cachedInputTokens": 672,
+            "outputTokens": 107,
+            "latencyMs": 943,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00022956,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "A las nueve de la mañana",
+          "reply": "Anotado, nada como un buen despertar temprano. Ahora dime, ¿qué opción prefieres para el desayuno?",
+          "mode": "ai",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Anotado, nada como un buen despertar temprano. Ahora dime, ¿qué opción prefieres para el desayuno?",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1842,
+            "cachedInputTokens": 672,
+            "outputTokens": 102,
+            "latencyMs": 747,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0002382,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Una elección exquisita, el clásico nunca falla. He preparado el borrador; revísalo ahora mismo, pero recuerda que aún no se ha enviado nada al anfitrión.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "candidate": {
+            "text": "Una elección exquisita, el clásico nunca falla. He preparado el borrador; revísalo ahora mismo, pero recuerda que aún no se ha enviado nada al anfitrión.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1924,
+            "cachedInputTokens": 1184,
+            "outputTokens": 186,
+            "latencyMs": 959,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0002372,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ],
+      "stopReason": "guided-fallback-no-retry",
+      "continuedAfterGuardReview": true
+    },
+    {
+      "locale": "de",
+      "turns": [
+        {
+          "visitor": "Kannst du morgen Frühstück für drei Personen vorbereiten?",
+          "reply": "Das mache ich doch glatt, ein ausgiebiges Frühstück ist der beste Start in den Tag! Für welche Uhrzeit soll ich es einplanen?",
+          "mode": "ai",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Das mache ich doch glatt, ein ausgiebiges Frühstück ist der beste Start in den Tag! Für welche Uhrzeit soll ich es einplanen?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1691,
+            "cachedInputTokens": 672,
+            "outputTokens": 101,
+            "latencyMs": 1709,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021666,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Um neun Uhr morgens",
+          "reply": "Das ist eine wunderbare Zeit zum Aufwachen. Welche Option darf es für euch sein?",
+          "mode": "ai",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Das ist eine wunderbare Zeit zum Aufwachen. Welche Option darf es für euch sein?",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1774,
+            "cachedInputTokens": 1184,
+            "outputTokens": 98,
+            "latencyMs": 848,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.000181,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Eine klassische Wahl, sehr fein! Ich habe alles für dich zusammengestellt. Bitte schau dir die Zusammenfassung an und bestätige sie, denn bisher wurde noch nichts an den Gastgeber gesendet.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "candidate": {
+            "text": "Eine klassische Wahl, sehr fein! Ich habe alles für dich zusammengestellt. Bitte schau dir die Zusammenfassung an und bestätige sie, denn bisher wurde noch nichts an den Gastgeber gesendet.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1851,
+            "cachedInputTokens": 1184,
+            "outputTokens": 162,
+            "latencyMs": 1041,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021738,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    },
+    {
+      "locale": "it",
+      "turns": [
+        {
+          "visitor": "Puoi preparare la colazione per domani per tre persone?",
+          "reply": "Mmm, che buono! 🥐 Te lo preparo. E a che ora? Scegli un orario:",
+          "mode": "guided",
+          "nextStep": "time",
+          "draft": {
+            "quantity": 3,
+            "date": "2026-10-21",
+            "requestedFor": null,
+            "serviceId": "bf"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": null,
+          "measurement": null
+        }
+      ],
+      "stopReason": "guided-fallback-no-retry"
+    },
+    {
+      "locale": "pt",
+      "turns": [
+        {
+          "visitor": "Podes preparar o pequeno-almoço para amanhã para três pessoas?",
+          "reply": "Com certeza, vou preparar tudo para começarem o dia com energia! Qual a hora pretendida para a entrega?",
+          "mode": "ai",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Com certeza, vou preparar tudo para começarem o dia com energia! Qual a hora pretendida para a entrega?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1718,
+            "cachedInputTokens": 672,
+            "outputTokens": 92,
+            "latencyMs": 2589,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00021684,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Às nove da manhã",
+          "reply": "Não encontro essa informação no teu guia e prefiro não inventar. O teu gestor pode ajudar.",
+          "mode": "guided",
+          "nextStep": null,
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": null,
+          "measurement": null
+        },
+        {
+          "visitor": "Às nove da manhã",
+          "reply": "Que opção preferes?",
+          "mode": "guided",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Anotado! Agora falta apenas decidires qual a opção de menu que preferes para todos.",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1844,
+            "cachedInputTokens": 672,
+            "outputTokens": 99,
+            "latencyMs": 758,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00023728,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Uma escolha deliciosa para começar bem o dia! Por favor, revê o resumo abaixo; lembra-te que ainda não enviei nada ao anfitrião, tens de confirmar no sistema.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "candidate": {
+            "text": "Uma escolha deliciosa para começar bem o dia! Por favor, revê o resumo abaixo; lembra-te que ainda não enviei nada ao anfitrião, tens de confirmar no sistema.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1907,
+            "cachedInputTokens": 1184,
+            "outputTokens": 159,
+            "latencyMs": 1032,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00022402,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ],
+      "stopReason": "guided-fallback-no-retry",
+      "continuedAfterGuardReview": true
+    },
+    {
+      "locale": "it",
+      "turns": [
+        {
+          "visitor": "Nona, vorrei una colazione per tre persone domani mattina.",
+          "reply": "Che bella idea iniziare la giornata con un buon pasto insieme! A che ora preferireste fare colazione?",
+          "mode": "ai",
+          "nextStep": "time",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Che bella idea iniziare la giornata con un buon pasto insieme! A che ora preferireste fare colazione?",
+            "questionFor": "time"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1772,
+            "cachedInputTokens": 672,
+            "outputTokens": 92,
+            "latencyMs": 838,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0002244,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Alle nove del mattino",
+          "reply": "Perfetto, l'orario è segnato. Per quanto riguarda il menù, quale opzione preferite?",
+          "mode": "ai",
+          "nextStep": "option",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z"
+          },
+          "quote": null,
+          "factCount": 0,
+          "candidate": {
+            "text": "Perfetto, l'orario è segnato. Per quanto riguarda il menù, quale opzione preferite?",
+            "questionFor": "option"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1849,
+            "cachedInputTokens": 1184,
+            "outputTokens": 103,
+            "latencyMs": 688,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.0001935,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        },
+        {
+          "visitor": "Classique",
+          "reply": "Ottima scelta, un classico non sbaglia mai! Ho preparato tutto: dai un'occhiata al riepilogo, ricordando che per ora non ho ancora inviato nulla al proprietario.",
+          "mode": "ai",
+          "nextStep": "ready",
+          "draft": {
+            "serviceId": "bf",
+            "quantity": 3,
+            "date": "2026-10-21",
+            "time": "09:00",
+            "requestedFor": "2026-10-21T07:00:00.000Z",
+            "optionId": "11111111-1111-4111-8111-111111111111"
+          },
+          "quote": {
+            "totalCents": 7500,
+            "revision": "2026-10-01T00:00:00.000Z"
+          },
+          "factCount": 0,
+          "candidate": {
+            "text": "Ottima scelta, un classico non sbaglia mai! Ho preparato tutto: dai un'occhiata al riepilogo, ricordando che per ora non ho ancora inviato nulla al proprietario.",
+            "questionFor": "ready"
+          },
+          "measurement": {
+            "provider": "ollama-direct",
+            "model": "gemma4:31b",
+            "inputTokens": 1931,
+            "cachedInputTokens": 1184,
+            "outputTokens": 194,
+            "latencyMs": 955,
+            "networkRequests": 1,
+            "retailEstimateUsd": 0.00024138,
+            "actualAccountDebitUsd": null,
+            "funding": "reviewed-included-credits",
+            "state": "estimated"
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "actualNetworkRequests": 20,
+    "reservations": 20,
+    "inputTokens": 36666,
+    "outputTokens": 2354,
+    "retailEstimateUsd": 0.00440732,
+    "providerDisplayedConsumptionUsd": 0.00451,
+    "newMoneySpentUsd": 0,
+    "latencyMs": {
+      "min": 688,
+      "median": 843,
+      "max": 2589
+    },
+    "languages": [
+      {
+        "locale": "fr",
+        "readyReached": true,
+        "aiTurns": 4
+      },
+      {
+        "locale": "en",
+        "readyReached": true,
+        "aiTurns": 2
+      },
+      {
+        "locale": "es",
+        "readyReached": true,
+        "aiTurns": 2
+      },
+      {
+        "locale": "de",
+        "readyReached": true,
+        "aiTurns": 3
+      },
+      {
+        "locale": "it",
+        "readyReached": true,
+        "aiTurns": 3
+      },
+      {
+        "locale": "pt",
+        "readyReached": true,
+        "aiTurns": 2
+      }
+    ],
+    "acceptedAiTurns": 16,
+    "guidedTurns": 6,
+    "testEnabledAfter": false,
+    "monthlyActivated": false,
+    "applicationReservedEurAfter": 0.98
+  },
+  "limitations": [
+    "Exploratory evaluation with guard revision mid-recipe, not a stable benchmark.",
+    "Some read-only admission failures caused guided turns without generation; not established as provider generation failures.",
+    "Only draft preparation; no order submission, manager confirmation or payment.",
+    "Long conversation and broad open-domain naturalness not exhaustively evaluated."
+  ]
+}

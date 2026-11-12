@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="fr" data-local="LOCAL_ONLY">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  /><title>NONA — laboratoire IA Work</title>
+  <style nonce="NONCE">
+    body {
+      font: 16px system-ui;
+      max-width: 780px;
+      margin: 28px auto;
+      padding: 0 18px;
+      color: #222;
+      background: #fafafa;
+    }
+    h1 {
+      font-size: 24px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input,
+    textarea,
+    select,
+    button {
+      font: inherit;
+      padding: 10px;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+    input,
+    textarea {
+      width: 100%;
+    }
+    button {
+      margin: 12px 8px 8px 0;
+      cursor: pointer;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #fff;
+      padding: 14px;
+      border: 1px solid #ddd;
+    }
+    small {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+    #log p {
+      white-space: pre-wrap;
+      padding: 12px;
+      border: 1px solid #ddd;
+      background: white;
+    }
+    #log .user {
+      background: #eee;
+    }
+    #log .source {
+      border-left: 4px solid #555;
+    }
+    #error {
+      color: #9b1620;
+    }
+    a {
+      color: #333;
+    }
+    fieldset {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+    }
+  </style>
+  <h1>NONA — laboratoire IA Work</h1>
+  <small
+    >Version COMMIT · local isolé · assistant automatisé · aucune réservation ni paiement</small
+  >
+  <p>
+    La démo commerciale conserve son mode guidé. Ici, « IA réelle » ne répond qu’après les contrôles
+    d’accès et de budget. Aucun remplacement silencieux par des réponses guidées.
+  </p>
+  <fieldset>
+    <legend>1. Accès sécurisés</legend>
+    <p>
+      AI Gateway donne accès au modèle qui fait parler NONA. Supabase conserve les données de
+      l’application ; ce laboratoire utilise uniquement le projet TEST pour lire le livret et
+      contrôler le compteur de budget.
+    </p>
+    <p>
+      Les clés sont chiffrées sur cet ordinateur avec ton compte Windows. Elles ne sont jamais
+      renvoyées par le serveur ni enregistrées dans le navigateur.
+    </p>
+    <p>
+      <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer">Vercel</a> → AI
+      Gateway → API Keys → Create key, nom NONA-Work-test. Si un budget est proposé : 1 $, sans
+      renouvellement. N’achète aucun crédit.
+    </p>
+    <p>
+      <a
+        href="https://supabase.com/dashboard/project/mhhtnqfdkyudwyqlmnce/settings/api-keys"
+        target="_blank"
+        rel="noreferrer"
+        >Supabase TEST → Settings → API Keys</a
+      >
+      → Secret keys → copie la clé secrète TEST, ou la clé legacy service_role. Projet autorisé :
+      mhhtnqfdkyudwyqlmnce.
+    </p>
+    <form id="config">
+      <label
+        >Clé AI Gateway<input
+          id="gateway"
+          type="password"
+          autocomplete="off"
+          required
+          maxlength="4096" /></label
+      ><label
+        >Clé secrète Supabase TEST<input
+          id="supabase"
+          type="password"
+          autocomplete="off"
+          required
+          maxlength="4096" /></label
+      ><label
+        >Identifiant du livret TEST publié<input
+          id="slug"
+          value="audit-hostbuddy-04-10-2026-7ad333"
+          required
+          maxlength="80" /></label
+      ><button>Enregistrer les accès chiffrés</button>
+    </form>
+  </fieldset>
+  <fieldset>
+    <legend>2. Contrôles avant consommation</legend>
+    <p>
+      Work vérifie les accès en lecture seule, l’état de la migration et du registre global, puis
+      l’enveloppe de facturation. L’enregistrement des clés n’active aucun appel payant. Arrêt
+      interne à 4 € réservés, marge sous ton plafond total de 5 € ; aucune remise à zéro
+      automatique.
+    </p>
+    <button id="refresh">Vérifier les accès</button>
+    <pre id="status">Lecture de l’état…</pre>
+  </fieldset>
+  <fieldset>
+    <legend>3. Conversation sans action réelle</legend>
+    <label
+      >Mode<select id="mode">
+        <option value="ai">IA réelle</option>
+        <option value="guided">Comparaison : ancien mode guidé</option>
+      </select></label
+    ><label
+      >Langue<select id="locale">
+        <option>fr</option>
+        <option>en</option>
+        <option>es</option>
+        <option>de</option>
+        <option>it</option>
+        <option>pt</option>
+      </select></label
+    ><button id="reset">Nouvelle conversation</button>
+    <div id="log" aria-live="polite"></div>
+    <form id="chat">
+      <label>Ton message<textarea id="message" maxlength="1200" rows="3" required></textarea></label
+      ><button>Envoyer</button>
+    </form>
+    <p id="error" role="alert"></p>
+  </fieldset>
+  <script nonce="NONCE">
+    const el = (id) => document.getElementById(id);
+    const isLocal = document.documentElement.dataset.local === "true";
+    if (isLocal) {
+      el("gateway").closest("fieldset").hidden = true;
+      document.querySelector("h1 + small + p").textContent =
+        "NONA génère ses réponses sur ton PC avec Qwen3.5 9B. Données de démonstration Villa Mare, massage fictif de recette. Aucune réservation réelle ni API payante. Haiku reste désactivé.";
+      el("refresh").closest("fieldset").querySelector("legend").textContent = "État de l’IA locale";
+      el("refresh").closest("fieldset").querySelector("p").textContent =
+        "Les réponses sont générées localement. Les informations, champs et montants restent contrôlés par le serveur NONA. Cette recette ne valide pas la qualité de Haiku.";
+      el("refresh").textContent = "Vérifier le modèle local";
+      const option = document.createElement("option");
+      option.value = "local";
+      option.textContent = "IA locale réelle — Qwen3.5 9B";
+      el("mode").prepend(option);
+      el("mode").value = "local";
+      el("mode").querySelector('[value="ai"]').remove();
+      el("message").focus();
+    }
+    let draft = {},
+      savedDrafts = [],
+      history = [],
+      dialogueHistory = [],
+      conversationId = crypto.randomUUID(),
+      busy = false;
+    async function call(path, body, renewSession = true) {
+      let r;
+      try {
+        r = await fetch(new URL(path, window.location.origin), {
+          method: body ? "POST" : "GET",
+          headers: body ? { "content-type": "application/json" } : {},
+          body: body ? JSON.stringify(body) : undefined,
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: AbortSignal.timeout(isLocal ? 130000 : 20000),
+        });
+      } catch (e) {
+        throw Error(
+          e.name === "TimeoutError"
+            ? "Le serveur NONA met trop de temps à répondre. Aucun nouvel envoi automatique : tu peux réessayer le contrôle des accès."
+            : "Le serveur local NONA est injoignable sur " +
+                window.location.origin +
+                ". Work doit le relancer. Les clés saisies restent dans les champs tant que leur enregistrement n’est pas confirmé.",
+        );
+      }
+      let data;
+      try {
+        data = await r.json();
+      } catch {
+        throw Error("Le serveur NONA a renvoyé une réponse illisible (HTTP " + r.status + ").");
+      }
+      if (r.status === 403 && data.code === "SESSION_EXPIRED" && renewSession) {
+        // Renew only the local HttpOnly session after a server restart. A rejected
+        // request never reached its handler; never replay an uncertain chat call.
+        try {
+          const session = await fetch("/", {
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: AbortSignal.timeout(5000),
+          });
+          if (!session.ok) throw Error("session");
+        } catch {
+          throw Error(
+            "La session locale NONA n’a pas pu être renouvelée. Recharge la page quand le serveur est disponible.",
+          );
+        }
+        return call(path, body, false);
+      }
+      if (!r.ok) throw Error(data.error || "Service NONA indisponible (HTTP " + r.status + ").");
+      return data;
+    }
+    async function status() {
+      try {
+        const result = await call("/status");
+        if (result.localOnly) {
+          el("status").textContent = [
+            result.ready ? "IA locale prête : " + result.localModel : "Modèle local indisponible.",
+            ...(result.issues || []),
+            "Aucune API facturable. Haiku désactivé. " + result.guideSource,
+          ].join("\n");
+          return;
+        }
+        el("status").textContent = [
+          "Connexion au serveur NONA : OK",
+          ...(result.issues || []),
+          result.ready ? "IA réelle : prête." : "IA réelle : désactivée. Aucun appel facturable.",
+          "",
+          JSON.stringify(result, null, 2),
+        ].join("\n");
+      } catch (e) {
+        el("status").textContent = e.message;
+      }
+    }
+    el("refresh").onclick = status;
+    el("config").onsubmit = async (e) => {
+      e.preventDefault();
+      const gateway = el("gateway").value,
+        supabase = el("supabase").value;
+      try {
+        await call("/configure", { gateway, supabase, slug: el("slug").value });
+        el("gateway").value = "";
+        el("supabase").value = "";
+        await status();
+        el("error").textContent =
+          "Accès chiffrés enregistrés. Work peut maintenant vérifier le budget avant activation.";
+      } catch (e) {
+        el("error").textContent = e.message;
+      }
+    };
+    function line(text, kind = "") {
+      const p = document.createElement("p");
+      p.className = kind;
+      p.textContent = text;
+      el("log").append(p);
+    }
+    el("reset").onclick = () => {
+      draft = {};
+      savedDrafts = [];
+      history = [];
+      dialogueHistory = [];
+      conversationId = crypto.randomUUID();
+      el("log").replaceChildren();
+    };
+    el("chat").onsubmit = async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      busy = true;
+      const submit = el("chat").querySelector("button");
+      submit.disabled = true;
+      submit.textContent = "NONA réfléchit…";
+      el("log").setAttribute("aria-busy", "true");
+      el("error").textContent = "";
+      const message = el("message").value;
+      try {
+        const t = performance.now();
+        const turn = await call("/chat", {
+          mode: el("mode").value,
+          locale: el("locale").value,
+          message,
+          draft,
+          savedDrafts,
+          history,
+          dialogueHistory,
+          conversationId,
+          requestId: crypto.randomUUID(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        });
+        line(message, "user");
+        line(
+          "NONA · " +
+            (turn.provider === "ollama-local" ? "IA locale · " + turn.localModel : turn.mode) +
+            " · " +
+            Math.round(performance.now() - t) +
+            " ms\n" +
+            turn.text,
+        );
+        for (const f of turn.facts) line(f.title + "\n" + f.text, "source");
+        for (const p of turn.places)
+          line(p.title + "\n" + (p.text || "") + "\n" + (p.address || ""), "source");
+        for (const s of turn.services)
+          line("Service du catalogue : " + s.name + "\n" + s.description, "source");
+        if (turn.quote)
+          line(
+            "Montant calculé par le serveur : " + (turn.quote.totalCents / 100).toFixed(2) + " €",
+            "source",
+          );
+        for (const c of turn.choices) line("Choix disponible : " + c.label, "source");
+        draft = turn.draft;
+        if (draft.serviceId)
+          savedDrafts = [
+            ...savedDrafts.filter((d) => d.serviceId !== draft.serviceId),
+            draft,
+          ].slice(-4);
+        history = [...history, message].slice(-6);
+        dialogueHistory = [
+          ...dialogueHistory,
+          { role: "user", text: message.slice(0, 700) },
+          { role: "assistant", text: turn.text.slice(0, 700) },
+        ].slice(-10);
+        el("message").value = "";
+      } catch (e) {
+        el("error").textContent = e.message;
+      } finally {
+        busy = false;
+        submit.disabled = false;
+        submit.textContent = "Envoyer";
+        el("log").removeAttribute("aria-busy");
+      }
+    };
+    status();
+  </script>
+</html>

@@ -1,0 +1,65 @@
+name: NONA isolated cloud QA
+on:
+  push:
+    branches: [qa/nona-cloud-free-20261020]
+    paths: [ci/nona-cloud-qa.patch]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recipe:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply exact isolated source patch
+        id: source
+        run: mkdir -p qa-results && git apply --check ci/nona-cloud-qa.patch && git apply ci/nona-cloud-qa.patch
+      - run: bun install --frozen-lockfile
+      - name: Full non-regression without provider credentials
+        run: |
+          mkdir -p qa-results
+          set -o pipefail
+          npm run test 2>&1 | tee qa-results/regression.log
+      - name: TypeScript and lint
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee qa-results/typescript.log
+          npm run lint 2>&1 | tee qa-results/lint.log
+      - name: Build isolated real renderer and compiled backend
+        if: ${{ !cancelled() }}
+        run: node scripts/validation/build-nona-cloud-isolated.mjs
+      - name: Install browser runtime already used by this repository
+        if: ${{ !cancelled() }}
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hb-browser" --no-package-lock playwright@1.62.1
+          "$RUNNER_TEMP/hb-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Start isolated synthetic application
+        if: ${{ !cancelled() }}
+        run: |
+          node scripts/validation/nona-cloud-preview.mjs > qa-results/preview.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4196/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat qa-results/preview.log
+          exit 1
+      - name: Real browser desktop and mobile chat
+        if: ${{ !cancelled() }}
+        env:
+          HOSTBUDDY_PLAYWRIGHT_MODULE: ${{ runner.temp }}/hb-browser/node_modules/playwright/index.mjs
+        run: |
+          node scripts/validation/nona-beta-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nona-cloud-qa-evidence
+          path: qa-results/
+          retention-days: 7

@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-19T10:14:55.377Z",
+  "scope": "compiled server; synthetic backend; no browser",
+  "passed": true,
+  "status": 200,
+  "unreviewedCloudCalls": 0,
+  "noStore": true,
+  "foreignPropertyRejected": true,
+  "crossOriginRejected": true,
+  "sourceWifiPreserved": true,
+  "externalNetworkRequests": 0,
+  "generatedModelResponses": 0
+}

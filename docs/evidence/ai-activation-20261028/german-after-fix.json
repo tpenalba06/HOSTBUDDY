@@ -1,0 +1,74 @@
+[
+  {
+    "locale": "de",
+    "diagnostics": [
+      {
+        "stage": "accepted",
+        "reason": "validated"
+      }
+    ],
+    "proposal": {
+      "intent": "greeting",
+      "serviceIds": [
+        "ms"
+      ],
+      "factKeys": [],
+      "draft": {},
+      "tonalHint": "massage",
+      "dialogue": {
+        "text": "Wie wundervoll, alles Liebe zum Hochzeitstag! Um so richtig zur Ruhe zu kommen, könntest du dir vielleicht eine Massage gönnen?",
+        "questionFor": "none"
+      }
+    },
+    "turn": {
+      "mode": "ai",
+      "text": "Wie wundervoll, alles Liebe zum Hochzeitstag! Um so richtig zur Ruhe zu kommen, könntest du dir vielleicht eine Massage gönnen?",
+      "nextStep": null,
+      "usage": {
+        "modelCalls": 1,
+        "estimatedCostMicros": 20000,
+        "metering": {
+          "state": "estimated",
+          "inputTokens": 2083,
+          "outputTokens": 77,
+          "costUsd": 0.00027922,
+          "latencyMs": 1320
+        }
+      }
+    },
+    "providerRaw": {
+      "model": "gemma4:31b",
+      "created_at": "2026-10-28T20:04:21.606670775Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_pyvajkqw",
+            "function": {
+              "index": 0,
+              "name": "submit_nona_proposal",
+              "arguments": {
+                "dialogue": {
+                  "questionFor": "none",
+                  "text": "Wie wundervoll, alles Liebe zum Hochzeitstag! Um so richtig zur Ruhe zu kommen, könntest du dir vielleicht eine Massage gönnen?"
+                },
+                "intent": "greeting",
+                "serviceIds": [
+                  "ms"
+                ],
+                "tonalHint": "massage"
+              }
+            }
+          }
+        ]
+      },
+      "done": true,
+      "done_reason": "stop",
+      "total_duration": 1129883576,
+      "prompt_eval_count": 2083,
+      "prompt_eval_cached_count": 480,
+      "eval_count": 77
+    }
+  }
+]

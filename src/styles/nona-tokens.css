@@ -1,0 +1,29 @@
+/* NONA — cibles de couleur des dernières planches A.
+ * Fontes et dimensions : proposition d'intégration à valider sur écran.
+ * Charger séparément Lora et Nunito Sans depuis des fichiers sous licence.
+ * Ne pas utiliser une police pour recréer le logo graphique. */
+:root {
+  --nona-cream: #fcf9f2;
+  --nona-burgundy: #780e2f;
+  --nona-cocoa: #210804;
+  --nona-peach: #f8e3d4;
+  --nona-taupe: #a48f80;
+  --nona-guide-border: rgb(33 8 4 / 80%);
+  --nona-separator: rgb(33 8 4 / 12%);
+  --nona-focus: rgb(120 14 47 / 22%);
+  --nona-font-heading: "Lora", Georgia, serif;
+  --nona-font-ui: "Nunito Sans", system-ui, sans-serif;
+  --nona-radius-control: 12px;
+  --nona-radius-card: 16px;
+  --nona-border-width: 1px;
+  --nona-space-1: 4px;
+  --nona-space-2: 8px;
+  --nona-space-3: 12px;
+  --nona-space-4: 16px;
+  --nona-space-6: 24px;
+  --nona-space-8: 32px;
+  --nona-space-12: 48px;
+  --nona-min-target: 44px;
+  --nona-wave-duration: 2s;
+  --nona-wave-period: 30s;
+}

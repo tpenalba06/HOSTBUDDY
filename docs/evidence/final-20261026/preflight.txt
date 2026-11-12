@@ -1,0 +1,7 @@
+Browser tab: 2, Title: "nona-concierge-test-20261020-lsz2i7ggk.vercel.app/api/preflight", URL: "https://nona-concierge-test-20261020-lsz2i7ggk.vercel.app/api/preflight".
+0 AXWebArea nona-concierge-test-20261020-lsz2i7ggk.vercel.app/api/preflight
+	1 text {"modelCalls":0,"mutations":0,"checkedAt":"2026-10-25T17:41:08.770Z","balanceStatus":200,"balance":{"included":{"balance_usd":2.4858,"allowance_usd":2.5,"period":{}},"purchased":{"balance_usd":0}},"balanceFieldNames":["included","purchased"]}
+	2 container
+		3 checkbox 0
+
+The focused UI element is 0 AXWebArea nona-concierge-test-20261020-lsz2i7ggk.vercel.app/api/preflight

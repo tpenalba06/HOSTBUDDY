@@ -1,0 +1,29 @@
+✔ prepared inputs never imply activation or live verification (0.8808ms)
+✔ reject mixed targets and preserved TEST destinations (0.7922ms)
+✔ reject absent scheduler, test Stripe and merged webhooks (0.1205ms)
+✔ reject frontend secret and unexpected activation, output only fixed codes (0.1355ms)
+✔ reject service role JWT in public inputs (0.4343ms)
+✔ new TEST receiver: service-only access, fixed payload and global cap (1493.8191ms)
+✔ new scheduler preparation cannot call anything without explicit commercial/Live approval (17.7143ms)
+✔ browser network refuses source, other hosts and financial routes (0.5227ms)
+✔ synthetic upload has valid PNG checksums and complete RGB pixels (1.1476ms)
+✔ source credentials, Stripe and outgoing transports cannot enter the TEST process (1.3029ms)
+﹣ POSIX private key files refuse insecure permissions and symlink substitution (0.0782ms) # POSIX modes are verified by Linux CI; Windows uses the separate DPAPI vault
+✔ preflight refuses enabled signup, HTTP failure and redirects (16.9038ms)
+✔ DPAPI encrypts credentials and restores them only through the local vault (1956.8379ms)
+✔ loopback lab rejects unauthenticated, foreign-origin and booking requests (9042.1043ms)
+✔ classify public and server credentials without returning credential material (0.6618ms)
+✔ diagnostics separate permission, schema, invisible row and authentication errors (0.1683ms)
+✔ a public key never triggers a remote request (0.17ms)
+✔ distinguishes DNS, permissions, TLS and timeouts (0.4691ms)
+✔ does not expose upstream messages, keys, URLs or unknown error codes (1.2831ms)
+NEW_SERVICE_FLOW_PASS: same-tenant multi-property catalogue, server quote 25 EUR, one order on retry, private receipt, confirmed never means paid, soft delete retains order.
+✔ service catalogue: assignments, authoritative option quote, deduplication, receipt and tenant boundary (1649.2513ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 11180.6936

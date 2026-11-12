@@ -1,6 +1,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { useI18n } from "@/lib/i18n";
+import { translateStatic, type Locale, LOCALES, useI18n } from "@/lib/i18n";
 
 export function FriendlyError({ message }: { message?: string }) {
   const { t } = useI18n();
@@ -33,7 +33,19 @@ export function Loading({ label }: { label?: string }) {
   );
 }
 
-export const friendlyMessage = (e: unknown) =>
-  e instanceof Error && e.constructor.name === "FriendlyError"
+export const friendlyMessage = (e: unknown) => {
+  if (
+    e instanceof Error &&
+    ["payments.subscriptionRequired", "payments.syncRequired"].includes(e.message)
+  ) {
+    const stored =
+      typeof document === "undefined"
+        ? "fr"
+        : document.documentElement.lang || window.navigator.language;
+    const short = stored.split("-")[0] as Locale;
+    return translateStatic(LOCALES.includes(short) ? short : "fr", e.message);
+  }
+  return e instanceof Error && e.constructor.name === "FriendlyError"
     ? e.message
     : "Votre connexion a été interrompue. Vos informations déjà enregistrées sont conservées.";
+};

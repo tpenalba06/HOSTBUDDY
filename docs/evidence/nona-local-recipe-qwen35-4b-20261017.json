@@ -1,0 +1,227 @@
+{
+  "checkedAt": "2026-10-16T23:38:42.360Z",
+  "status": {
+    "backend": "ok",
+    "commit": "036a5ac3bf471ebb1859d4cfa32ef3d6a87dae79",
+    "worktreeDirty": true,
+    "configured": true,
+    "provider": "ollama-local",
+    "localModel": "qwen3.5:4b",
+    "localOnly": true,
+    "paidApisEnabled": false,
+    "costEuros": 0,
+    "guideSource": "Villa Mare — données de démonstration locales ; massage fictif de recette",
+    "ready": true,
+    "issues": []
+  },
+  "paidApiCalls": 0,
+  "checks": [
+    {
+      "scenario": "bonjour",
+      "message": "Coucou Nona, tu vas bien ?",
+      "elapsedMs": 1055,
+      "turn": {
+        "mode": "ai",
+        "text": "Salut ! Je suis là pour t'aider, tout est prêt. Dis-moi ce dont tu as besoin.",
+        "draft": {},
+        "services": [],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "unknown",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:4b",
+        "localTokens": 525
+      },
+      "passed": true
+    },
+    {
+      "scenario": "petit-dejeuner",
+      "message": "Je voudrais un petit-déjeuner, mon ventre commence à râler",
+      "elapsedMs": 2573,
+      "turn": {
+        "error": "Le modèle local n’a pas produit de réponse valide. Aucun texte guidé substitué, aucune dépense. Tu peux reformuler ton message."
+      },
+      "passed": false,
+      "error": "{\"error\":\"Le modèle local n’a pas produit de réponse valide. Aucun texte guidé substitué, aucune dépense. Tu peux reformuler ton message.\"}\n\n503 !== 200\n"
+    },
+    {
+      "scenario": "massage",
+      "message": "Un massage, je suis complètement noué des épaules",
+      "elapsedMs": 819,
+      "turn": {
+        "mode": "ai",
+        "text": "Ah, des épaules nouées, c'est le signe d'une vie trop tendue ! Prends un bon moment pour te détendre. Combien de personnes pour ce massage ?",
+        "draft": {
+          "serviceId": "ms"
+        },
+        "services": [
+          {
+            "id": "ms",
+            "name": "Massage à domicile",
+            "description": "1 heure, au bord de la piscine",
+            "price": 90,
+            "pricingType": "fixed",
+            "revision": "2026-10-01T00:00:00.000Z",
+            "bookingConfig": {
+              "maxQuantity": 20,
+              "requestDate": true,
+              "instructions": "",
+              "cancellation": "Recette locale uniquement, aucune commande réelle.",
+              "seller": "Prestataire fictif du laboratoire NONA",
+              "options": [],
+              "slots": []
+            },
+            "imagePath": "/demo-guide/pool.webp"
+          }
+        ],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "massage",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": "quantity",
+        "choices": [
+          {
+            "label": "1",
+            "message": "1"
+          },
+          {
+            "label": "2",
+            "message": "2"
+          },
+          {
+            "label": "3",
+            "message": "3"
+          },
+          {
+            "label": "4",
+            "message": "4"
+          }
+        ],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:4b",
+        "localTokens": 545
+      },
+      "passed": true
+    },
+    {
+      "scenario": "massage",
+      "message": "Pour deux personnes",
+      "elapsedMs": 1300,
+      "turn": {
+        "error": "Le modèle local n’a pas produit de réponse valide. Aucun texte guidé substitué, aucune dépense. Tu peux reformuler ton message."
+      },
+      "passed": false,
+      "error": "{\"error\":\"Le modèle local n’a pas produit de réponse valide. Aucun texte guidé substitué, aucune dépense. Tu peux reformuler ton message.\"}\n\n503 !== 200\n"
+    },
+    {
+      "scenario": "arrivee-anticipee",
+      "message": "Est-ce que je peux arriver plus tôt que prévu ?",
+      "elapsedMs": 911,
+      "turn": {
+        "mode": "ai",
+        "text": "Ah, l'idée de venir en avance, c'est tentant ! Mais tu ne sais pas si l'hôte sera disponible, alors il faut qu'il confirme. Tu peux lui poser la question quand tu arrives.",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Mon arrivée",
+            "text": "Arrivée à partir de 16 h. La boîte à clés est à droite du portail, code 1907.",
+            "original": false
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "earlyArrival",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:4b",
+        "localTokens": 556
+      },
+      "passed": true
+    },
+    {
+      "scenario": "wifi",
+      "message": "Comment je me connecte au Wi-Fi ?",
+      "elapsedMs": 835,
+      "turn": {
+        "mode": "ai",
+        "text": "Tu regardes les informations Wi-Fi affichées juste ici, c'est tout ce qu'il faut savoir. Si tu as des questions sur les restaurants, tu verras les détails dans la section dédiée.",
+        "draft": {},
+        "services": [],
+        "facts": [
+          {
+            "title": "Wi-Fi",
+            "text": "Réseau : VillaMare_5G\nMot de passe : soleil2026",
+            "original": false,
+            "copyValue": "soleil2026"
+          }
+        ],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "wifi",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:4b",
+        "localTokens": 557
+      },
+      "passed": true
+    },
+    {
+      "scenario": "restaurant-italien",
+      "message": "Tu me conseilles un restaurant italien ?",
+      "elapsedMs": 988,
+      "turn": {
+        "mode": "ai",
+        "text": "Oh, tu cherches un bon restaurant italien ? Je ne trouve aucune adresse italienne dans le livret, donc je ne peux pas te conseiller de mon propre gré. L'hôte pourra t'aider à voir ce qui est disponible.",
+        "draft": {},
+        "services": [],
+        "facts": [],
+        "places": [],
+        "tracking": false,
+        "quote": null,
+        "usage": {
+          "modelCalls": 1,
+          "estimatedCostMicros": 0
+        },
+        "persona": "italianNone",
+        "personaVersion": "nona-voice-2026-10-15.3",
+        "nextStep": null,
+        "choices": [],
+        "provider": "ollama-local",
+        "localModel": "qwen3.5:4b",
+        "localTokens": 571
+      },
+      "passed": true
+    }
+  ],
+  "passed": false
+}

@@ -1,0 +1,137 @@
+{
+  "checkedAt": "2026-10-19T10:17:45.789Z",
+  "state": "BLOCKED_FOR_LIVE_CLOUD_RECIPE",
+  "branch": "feat/nona-cloud-metered-20261019",
+  "baseCommit": "768b88e6a6b8a915b48f9337117ec8ad3771c61d",
+  "newPayments": 0,
+  "paidModelCalls": 0,
+  "productionChanges": 0,
+  "remoteDatabaseWrites": 0,
+  "lovableServiceCalls": 0,
+  "model": "anthropic/claude-haiku-5.5",
+  "tests": {
+    "vitestPassed": 512,
+    "nativeNodePassed": 19,
+    "totalPassed": 531,
+    "totalSkipped": 3,
+    "fullSuiteBeforeLastPermissionCase": 511,
+    "lastPermissionSuitePassed": 9,
+    "finalDialogueTargetedTestsPassed": 41,
+    "modelResponseTests": "simulated output only; not a real quality benchmark"
+  },
+  "typecheck": "pass",
+  "changedFilesLint": "pass",
+  "globalLint": {
+    "preexistingFormattingErrors": 203,
+    "errorFiles": [
+      "src/components/guest/GuideView.tsx",
+      "src/routes/guide-preview.tsx"
+    ],
+    "bothErrorFilesUnchanged": true,
+    "preexistingWarnings": 23
+  },
+  "isolatedBuild": {
+    "server": "pass",
+    "sharedChatClient": "pass",
+    "fullHostingApplication": "not verified; forbidden vendor package installation rejected; abandoned"
+  },
+  "compiledServerSmoke": "pass; zero external network requests",
+  "browser": {
+    "attempts": 1,
+    "sandboxActive": true,
+    "result": "Chrome closed before page creation; no new visual evidence"
+  },
+  "remoteTest": {
+    "authorizationEnabled": false,
+    "capEurMicros": 4000000,
+    "reservedEurMicros": 0,
+    "monthlyPolicyDeployed": false,
+    "observationSchemaAvailable": false,
+    "readOnlyGuideAccessible": true,
+    "remoteGrantIntrospection": "not available"
+  },
+  "supabasePlugin": {
+    "installed": true,
+    "userEnabled": true,
+    "sqlOperationsExposedInSession": 0,
+    "doNotAskToReinstall": true
+  },
+  "budget": {
+    "applicationTestCapEur": 4,
+    "existingMaximumTestAuthorizationEur": 5,
+    "monthlyPreparedCapEur": 20,
+    "monthlyEnabled": false,
+    "strictFinancialCeilingVerified": false,
+    "reviewEvidenceCreated": false,
+    "gatewayBalanceUsd": "0",
+    "gatewayTotalUsedUsd": "0",
+    "prepaidAccountControls": "unverified",
+    "appReservationEur": 0.02,
+    "calculatedBoundAtReviewedConversionCeilingEur": 0.008089,
+    "financialCaveat": "bounds depend on verified prices, request limits and all-in conversion; independent account prepayment control is mandatory"
+  },
+  "costAssumptions": {
+    "conversationsPerPropertyPerMonth": 20,
+    "answersPerConversation": 6,
+    "inputTokensPerAnswer": 5000,
+    "outputTokensPerAnswer": 180,
+    "inputUsdPerMillion": 0.1,
+    "outputUsdPerMillion": 0.5,
+    "usdPerEur": 1.1253,
+    "exchangeReferenceDate": "2026-10-16",
+    "providerLatencyMs": null,
+    "realConversationQuality": null,
+    "hostingDatabasePaymentFeesExcluded": true
+  },
+  "costScenarios": [
+    {
+      "properties": 10,
+      "conversations": 200,
+      "calls": 1200,
+      "usd": 0.708,
+      "eurBeforeTax": 0.63,
+      "eurWithIllustrative20PercentVat": 0.75
+    },
+    {
+      "properties": 100,
+      "conversations": 2000,
+      "calls": 12000,
+      "usd": 7.08,
+      "eurBeforeTax": 6.29,
+      "eurWithIllustrative20PercentVat": 7.55
+    },
+    {
+      "properties": 500,
+      "conversations": 10000,
+      "calls": 60000,
+      "usd": 35.4,
+      "eurBeforeTax": 31.46,
+      "eurWithIllustrative20PercentVat": 37.75
+    },
+    {
+      "properties": 1000,
+      "conversations": 20000,
+      "calls": 120000,
+      "usd": 70.8,
+      "eurBeforeTax": 62.92,
+      "eurWithIllustrative20PercentVat": 75.5
+    }
+  ],
+  "sourceHashes": {
+    "src/lib/concierge-cloud.server.ts": "07f9ab84ccdb5f4c43e6e6dbdb1cdfefa3384d6557af0ffbe6ed587187db2398",
+    "src/lib/concierge-metering.server.ts": "d8388597ca1ca11f54b0490921efbcf5ff843c563289371efb6084732292bce5",
+    "src/lib/concierge-identity.server.ts": "72f1aeb14fc977d9220184b86522eb638bd3d292dac718201aa67cf875977eef",
+    "src/lib/concierge-model.server.ts": "cb1976cfebac5681f312f8a856c4bc7a5860ebf9ac55a8bd56ab016bf3d933c3",
+    "src/lib/concierge-cost-guard.server.ts": "cdd1593511a6d84d1c8d94dbc38651690ca9b28fd820885b68e598fd956dbca4",
+    "src/lib/nona-dialogue.server.ts": "462f7ab4e86f7893d251bc319cd8c3db8a658b35e37479e37971096ed2fe2270",
+    "src/lib/nona-personality.ts": "16202de2b146b10822593f7a47a20bbdf1bcca27135385d54e3c2f5b3f9be760",
+    "drizzle/migrations/0026_concierge_metered_cloud.sql": "44dd37083f4c6817e2f2b0a9e64a8eebd90d6c80ee0141de31c21f90064a03dd"
+  },
+  "remaining": [
+    "Supabase SQL operations must become available; installation already confirmed.",
+    "Inspect and apply TEST-only additive observation migration with policy disabled.",
+    "Establish payment/FX/tax/privacy evidence and prepaid financing within existing authorization; no new charge without approval.",
+    "Only after budget validation renew temporary TEST, run first real call and check its bill, then run conversational and browser recipes.",
+    "Separate approval remains mandatory for monthly 20 EUR activation and any hosted rollout."
+  ]
+}

@@ -1,0 +1,70 @@
+# PRIVATE NONA-OPS only. One explicit manual new-feature validation; no schedule,
+# financial suite, Stripe call, production binding or customer-data deletion.
+name: Nona new services isolated TEST
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Approved immutable HOSTBUDDY feature commit
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: nona-new-service-test
+  cancel-in-progress: false
+jobs:
+  service_catalog:
+    if: github.event.repository.private == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Validate immutable source before credentials
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          python3 - <<'PY'
+          import os,re
+          if not re.fullmatch('[0-9a-f]{40}',os.environ.get('SOURCE_SHA','')):
+              raise SystemExit('Immutable source required')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: tpenalba06/HOSTBUDDY
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - name: Install existing official TEST tools before private inputs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-common curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main\n' | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install --no-install-recommends -y postgresql-client-17
+          python3 -m pip install -r scripts/ops/requirements.txt
+      - name: Prepare existing isolated TEST connection
+        env:
+          DATABASE: ${{ secrets.NONA_TEST_DATABASE_JSON }}
+          CA: ${{ vars.NONA_TEST_DATABASE_CA_PEM }}
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'nona-new-service-test'
+          root.mkdir(mode=0o700)
+          for name,key in [('database.json','DATABASE'),('ca.crt','CA')]:
+              value=os.environ.get(key,'')
+              if not value:raise SystemExit('Existing TEST input required')
+              fd=os.open(root/name,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
+              with os.fdopen(fd,'w') as f:f.write(value)
+          PY
+      - name: Apply additive catalogue only to isolated TEST and roll back synthetic rows
+        run: python3 scripts/ops/install-test-service-catalog.py --connection-file "$RUNNER_TEMP/nona-new-service-test/database.json" --ca-file "$RUNNER_TEMP/nona-new-service-test/ca.crt"
+      - name: Remove this job temporary credentials only
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'nona-new-service-test'
+          for name in ['database.json','ca.crt']:(root/name).unlink(missing_ok=True)
+          PY

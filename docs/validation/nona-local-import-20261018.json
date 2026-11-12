@@ -1,0 +1,33 @@
+{
+  "executedAt": "2026-10-18T12:25:05.310Z",
+  "scope": "Actual pinned local Qwen3.5 9B on CPU. Synthetic document, no real property or database write.",
+  "state": "done",
+  "elapsedMs": 13912,
+  "analysis": {
+    "engine": "document+local-ai",
+    "inputCharacters": 202,
+    "warnings": []
+  },
+  "fields": [
+    {
+      "key": "arrival",
+      "aiQuotes": 1
+    },
+    {
+      "key": "wifi",
+      "aiQuotes": 0
+    },
+    {
+      "key": "rules",
+      "aiQuotes": 1
+    },
+    {
+      "key": "departure",
+      "aiQuotes": 1
+    },
+    {
+      "key": "contact",
+      "aiQuotes": 1
+    }
+  ]
+}

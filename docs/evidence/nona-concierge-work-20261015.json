@@ -1,0 +1,152 @@
+{
+  "schema": "nona.concierge.work.v2",
+  "date": "2026-10-15",
+  "recoveredHead": "0a1ee072c513e1fe928d28b5379d904efef701a2",
+  "previousBase": "5a842e3",
+  "preservedContracts": [
+    "service-database",
+    "public/orders",
+    "public/order-status",
+    "Stripe Connect engine",
+    "2% commission"
+  ],
+  "externalAi": {
+    "connected": false,
+    "modelCalls": 0,
+    "spentEur": 0,
+    "candidateModel": "anthropic/claude-haiku-5.5",
+    "adapterTestedWithMocks": true,
+    "freeStyleGeneration": false
+  },
+  "budget": {
+    "migration": "0024_concierge_budget",
+    "remoteApplied": false,
+    "localPGlitePass": true,
+    "reservationMicros": 20000,
+    "capMicros": 4000000,
+    "concurrentAttempts": 205,
+    "admitted": 200,
+    "settledSupplierCostGuarantee": false
+  },
+  "tests": {
+    "files": 10,
+    "passed": 66,
+    "failed": 0,
+    "realModelConversations": 0,
+    "guidedConversations": 14,
+    "turns": 67
+  },
+  "browser": [
+    {
+      "viewport": {
+        "width": 360,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    },
+    {
+      "viewport": {
+        "width": 430,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 844
+      },
+      "runtime": "local Vite",
+      "scenario": "demo only",
+      "facts": {
+        "quantityRetained": true,
+        "dateRetained": true,
+        "explicitConfirmationOnly": true,
+        "doubleSubmissionDeduplicated": true,
+        "managerConfirmedInDemoUi": true,
+        "paymentButtonGated": true,
+        "simulatedPaymentStatus": "paid",
+        "closeReopenPreservesProgress": true,
+        "horizontalOverflow": false,
+        "browserErrors": [],
+        "outgoingMutations": []
+      },
+      "stripePaymentExecuted": false,
+      "aiProviderCalled": false
+    }
+  ],
+  "checks": {
+    "typescript": "PASS",
+    "build": "PASS",
+    "migrationInventory": "PASS",
+    "lintErrors": 0,
+    "preExistingLintWarnings": 23
+  },
+  "preview": {
+    "url": "http://127.0.0.1:4179/demo",
+    "scope": "local PC only",
+    "backend": "demo local memory, no usable database credentials"
+  },
+  "constraints": {
+    "lovableCalls": 0,
+    "creditsPurchased": 0,
+    "realStripePayments": 0,
+    "productionDeployments": 0,
+    "productionMigrations": 0
+  }
+}

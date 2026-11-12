@@ -1,5 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  deletePropertyPermanently,
+  listPropertyDeletionCleanup,
+} from "@/lib/data/property-deletion.functions";
 import { useState } from "react";
 import { listProperties, saveOrganizationPreferences } from "@/lib/data/properties";
 import { orgQuery, useOrg } from "@/components/app/useOrg";
@@ -14,10 +18,25 @@ import {
 export const propertiesQuery = (orgId: string) =>
   queryOptions({ queryKey: ["properties", orgId], queryFn: () => listProperties(orgId) });
 
+const cleanupQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["property-deletion-cleanup", orgId],
+    queryFn: () => listPropertyDeletionCleanup({ data: { organizationId: orgId } }),
+  });
+
 export const Route = createFileRoute("/_authenticated/app/")({
+  validateSearch: (search: Record<string, unknown>): { published?: string | undefined } => ({
+    published:
+      typeof search["published"] === "string" && /^[0-9a-f-]{36}$/i.test(search["published"])
+        ? search["published"]
+        : undefined,
+  }),
   loader: async ({ context }) => {
     const org = await context.queryClient.ensureQueryData(orgQuery);
-    await context.queryClient.ensureQueryData(propertiesQuery(org.id));
+    await Promise.all([
+      context.queryClient.ensureQueryData(propertiesQuery(org.id)),
+      context.queryClient.ensureQueryData(cleanupQuery(org.id)),
+    ]);
   },
   pendingComponent: () => <Loading />,
   errorComponent: () => <FriendlyError />,
@@ -26,10 +45,15 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 function Home() {
   const { locale } = useI18n();
+  const { published } = Route.useSearch();
+  const [copyStatus, setCopyStatus] = useState<"copied" | "failed">();
   const nav = useNavigate();
   const org = useOrg();
+  const queryClient = useQueryClient();
   const { data: properties } = useSuspenseQuery(propertiesQuery(org.id));
-  if (!properties.length)
+  const { data: pendingDeletions } = useSuspenseQuery(cleanupQuery(org.id));
+  const [startedWithProperties] = useState(properties.length > 0);
+  if (!properties.length && !startedWithProperties && !pendingDeletions.length)
     return (
       <Start
         firstName={org.firstName}
@@ -38,25 +62,82 @@ function Home() {
         locale={locale}
       />
     );
+  const publishedProperty = properties.find(
+    (property) => property.id === published && property.status === "published",
+  );
   return (
-    <ManagerPropertiesScreen
-      properties={properties}
-      role={org.role}
-      onAdd={() => nav({ to: "/app/new" })}
-      onEdit={(id) => nav({ to: "/app/p/$id", params: { id } })}
-      onView={(slug) => window.open(`/l/${slug}`, "_blank", "noopener,noreferrer")}
-      renderEdit={(property, className, label) => (
-        <Link to="/app/p/$id" params={{ id: property.id }} className={className}>
-          {label}
-        </Link>
+    <>
+      {publishedProperty && (
+        <section className="surface mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
+          <p role="status">
+            {locale === "fr"
+              ? `Livret publié · ${publishedProperty.name}`
+              : `Guide published · ${publishedProperty.name}`}
+          </p>
+          <button
+            type="button"
+            className="btn btn-secondary min-h-11"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(
+                  new URL(`/l/${encodeURIComponent(publishedProperty.slug)}`, location.origin).href,
+                );
+                setCopyStatus("copied");
+              } catch {
+                setCopyStatus("failed");
+              }
+            }}
+          >
+            {copyStatus === "copied"
+              ? locale === "fr"
+                ? "Lien copié"
+                : "Link copied"
+              : locale === "fr"
+                ? "Copier le lien"
+                : "Copy link"}
+          </button>
+          {copyStatus === "failed" && (
+            <a className="underline" href={`/l/${encodeURIComponent(publishedProperty.slug)}`}>
+              {locale === "fr" ? "Ouvrir le livret" : "Open guide"}
+            </a>
+          )}
+        </section>
       )}
-      renderView={(property, className, label) => (
-        <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className={className}>
-          {label}
-        </a>
-      )}
-      renderQr={(property) => <QrCard slug={property.slug} name={property.name} />}
-    />
+      <ManagerPropertiesScreen
+        properties={properties}
+        pendingDeletions={pendingDeletions}
+        role={org.role}
+        onAdd={() => nav({ to: "/app/import-url" })}
+        onEdit={(id) => nav({ to: "/app/p/$id", params: { id } })}
+        onView={(slug) => window.open(`/l/${slug}`, "_blank", "noopener,noreferrer")}
+        renderEdit={(property, className, label) => (
+          <Link to="/app/p/$id" params={{ id: property.id }} className={className}>
+            {label}
+          </Link>
+        )}
+        renderView={(property, className, label) => (
+          <a href={`/l/${property.slug}`} target="_blank" rel="noreferrer" className={className}>
+            {label}
+          </a>
+        )}
+        renderQr={(property) => <QrCard slug={property.slug} name={property.name} />}
+        onDelete={async (propertyId, confirmedName) => {
+          const result = await deletePropertyPermanently({ data: { propertyId, confirmedName } });
+          queryClient.setQueryData(
+            propertiesQuery(org.id).queryKey,
+            properties.filter((p) => p.id !== propertyId),
+          );
+          await queryClient.invalidateQueries({ queryKey: ["properties", org.id] });
+          await queryClient.invalidateQueries({ queryKey: ["property", propertyId] });
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["dashboard", org.id] }),
+            queryClient.invalidateQueries({ queryKey: ["payments", org.id] }),
+            queryClient.invalidateQueries({ queryKey: cleanupQuery(org.id).queryKey }),
+          ]);
+          return result;
+        }}
+      />
+    </>
   );
 }
 

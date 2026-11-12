@@ -1,0 +1,123 @@
+{
+  "checkedAt": "2026-10-19T18:39:07.504Z",
+  "source": "Authenticated Ollama Usage UI",
+  "plan": "Free",
+  "purchasedBalanceUsd": 0,
+  "autoReloadEnabled": false,
+  "freeUsageUsedPercent": 0.2,
+  "rows": [
+    {
+      "displayedConsumptionUsd": 0.00033,
+      "model": "gpt-oss:20b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00018,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00016,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00021,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00022,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00021,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00022,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.0002,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:36"
+    },
+    {
+      "displayedConsumptionUsd": 0.00024,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:35"
+    },
+    {
+      "displayedConsumptionUsd": 0.00019,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:35"
+    },
+    {
+      "displayedConsumptionUsd": 0.00017,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:35"
+    },
+    {
+      "displayedConsumptionUsd": 0.00012,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:35"
+    },
+    {
+      "displayedConsumptionUsd": 0.00017,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:34"
+    },
+    {
+      "displayedConsumptionUsd": 0.00015,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:34"
+    },
+    {
+      "displayedConsumptionUsd": 0.00019,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:33"
+    },
+    {
+      "displayedConsumptionUsd": 0.00018,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:33"
+    },
+    {
+      "displayedConsumptionUsd": 0.00016,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:33"
+    },
+    {
+      "displayedConsumptionUsd": 0.00017,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:33"
+    },
+    {
+      "displayedConsumptionUsd": 0.0002,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:33"
+    },
+    {
+      "displayedConsumptionUsd": 0.00012,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:32"
+    },
+    {
+      "displayedConsumptionUsd": 0.00018,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:32"
+    },
+    {
+      "displayedConsumptionUsd": 0.00024,
+      "model": "gemma4:31b",
+      "time": "lun. 19 oct., 20:31"
+    }
+  ],
+  "displayedTotalUsd": 0.00421,
+  "newMoneySpentUsd": 0,
+  "precision": "Individual provider UI values rounded; not an invoice or bank debit"
+}

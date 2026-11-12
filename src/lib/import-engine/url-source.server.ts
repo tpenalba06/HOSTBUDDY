@@ -227,7 +227,9 @@ export async function runUrlImport(data: {
     return { ok: false, source, reason: "invalid" };
   if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
     return { ok: false, source, reason: "blocked" };
-  if (!(await robotsAllows(url))) return { ok: false, source, reason: "blocked" };
+  const permitted = (target: URL) =>
+    /(^|\.)airbnb\./i.test(target.hostname) ? Promise.resolve(false) : robotsAllows(target);
+  if (!(await permitted(url))) return { ok: false, source, reason: "blocked" };
 
   let html: string;
   let resolvedUrl = url.href;
@@ -240,7 +242,7 @@ export async function runUrlImport(data: {
         signal: AbortSignal.timeout(12000),
       },
       1_500_000,
-      robotsAllows,
+      permitted,
     );
     const res = fetched.response;
     if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))

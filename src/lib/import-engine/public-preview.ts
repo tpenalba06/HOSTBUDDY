@@ -93,8 +93,13 @@ export function publicImportPreview(
   const time = (key: string, pattern: RegExp) => {
     const input = value(key);
     if (fromPublicUrl && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input)) return input;
-    const match = input.match(pattern);
-    return match ? `${match[1]!.padStart(2, "0")}:${match[2] ?? "00"}` : undefined;
+    const matches = new Set(
+      input.split("\n").flatMap((line) => {
+        const match = line.trim().replace(/[.!]$/, "").match(pattern);
+        return match ? [match[1]!.padStart(2, "0") + ":" + (match[2] ?? "00")] : [];
+      }),
+    );
+    return matches.size === 1 ? [...matches][0] : undefined;
   };
   // The source can group occupancy with bedrooms and beds on the same line.
   // Keep only explicit guest counts and withhold contradictory counts.

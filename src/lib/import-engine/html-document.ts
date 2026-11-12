@@ -51,6 +51,7 @@ export function sunverGuestDocument(
   photos: string[];
   recommendations: string;
   locality: string;
+  description: string;
   placeNames: string[];
 } | null {
   const url = new URL(source);
@@ -171,6 +172,7 @@ export function sunverGuestDocument(
     text: lines.join("\n"),
     photos: [...new Set(photos)].slice(0, 30),
     locality: string("city"),
+    description: htmlDocumentText(string("info_text")).trim(),
     placeNames: [...new Set(placeNames)].slice(0, 12),
     recommendations: [...new Set(recommendations)].join("\n"),
   };

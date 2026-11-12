@@ -157,6 +157,20 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
     localAi,
   });
   const fields = textual.fields.map((field) => {
+    if (field.key === "description" && sunver?.description)
+      return {
+        ...field,
+        value: sunver.description,
+        rawValue: sunver.description,
+        status: "to_verify" as const,
+        evidence: [
+          {
+            method: "structured" as const,
+            sourceUrl: resolvedUrl,
+            quote: "Sunver public property introduction",
+          },
+        ],
+      };
     if (field.key === "recommendations" && sunver?.recommendations)
       return {
         ...field,

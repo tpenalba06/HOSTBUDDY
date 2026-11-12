@@ -80,4 +80,17 @@ describe("public import preview", () => {
     );
     expect(project("Studio calme. Code du portail :\nEXEMPLE").text).toBeUndefined();
   });
+  it("withholds contradictory times from both normalized values and guide copy", () => {
+    const preview = previewPastedDocument("Arrivée à 16 h. Arrivée à 18 h. Départ avant 11 h.");
+    expect(preview.arrival).toBeUndefined();
+    expect(preview.text?.arrival).toBeUndefined();
+    expect(preview.departure).toBe("11:00");
+  });
+  it("retains a recommendation copied by the host without exposing Wi-Fi credentials", () => {
+    const preview = previewPastedDocument(
+      "Restaurant Le Jardin sur la place du marché. Mot de passe Wi-Fi : SECRET-EXEMPLE.",
+    );
+    expect(preview.text?.recommendations).toContain("Restaurant Le Jardin");
+    expect(JSON.stringify(preview)).not.toContain("SECRET-EXEMPLE");
+  });
 });

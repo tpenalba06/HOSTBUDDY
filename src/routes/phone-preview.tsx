@@ -222,6 +222,16 @@ function PhoneGuide({
                 },
               ]
             : []),
+          ...(text?.recommendations
+            ? [
+                {
+                  id: "local",
+                  key: "local",
+                  title: t("section.places"),
+                  content: { items: items(text.recommendations) },
+                },
+              ]
+            : []),
           ...(preview.places?.length
             ? [
                 {

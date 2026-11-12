@@ -35,6 +35,7 @@ const textKeys = [
   "rules",
   "parking",
   "trash",
+  "recommendations",
 ] as const;
 
 export const publicPreviewSchema = z.object({
@@ -140,7 +141,10 @@ export function publicImportPreview(
   const description =
     fromPublicUrl &&
     publicDescription?.evidence?.some(
-      (entry) => entry.method === "structured" && entry.quote.startsWith("JSON-LD description"),
+      (entry) =>
+        entry.method === "structured" &&
+        (entry.quote.startsWith("JSON-LD description") ||
+          entry.quote === "Sunver public property introduction"),
     ) &&
     !sensitive.test(value("description"))
       ? value("description").slice(0, 800)
@@ -187,7 +191,7 @@ export function previewPastedDocument(input: string): PublicImportPreview {
         (match) => `${match[1]!.padStart(2, "0")}:${match[2] ?? match[3] ?? "00"}`,
       ),
     );
-    return matches.size === 1 ? [...matches][0] : undefined;
+    return matches.size > 1 ? null : [...matches][0];
   };
   const checkIn = times(
     /arriv[ée]e? (?:se fait )?(?:à partir de |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
@@ -195,10 +199,14 @@ export function previewPastedDocument(input: string): PublicImportPreview {
   const checkOut = times(
     /d[ée]part (?:se fait )?(?:avant |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
   );
+  const text = { ...preview.text };
+  if (checkIn === null) delete text.arrival;
+  if (checkOut === null) delete text.departure;
+  if (address) text.address = `${address[1]}, ${address[2]}`;
   return {
     ...preview,
-    arrival: checkIn ?? preview.arrival,
-    departure: checkOut ?? preview.departure,
-    ...(address ? { text: { ...preview.text, address: `${address[1]}, ${address[2]}` } } : {}),
+    ...(Object.keys(text).length || preview.text ? { text } : {}),
+    arrival: checkIn === null ? undefined : (checkIn ?? preview.arrival),
+    departure: checkOut === null ? undefined : (checkOut ?? preview.departure),
   };
 }

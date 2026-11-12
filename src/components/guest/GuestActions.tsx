@@ -219,6 +219,14 @@ export function ServiceBookingForm({
 }) {
   const { t, locale } = useI18n();
   const c = (key: Parameters<typeof serviceCopy>[1]) => serviceCopy(locale, key);
+  const simulatedPaymentNotice = {
+    fr: "Réservation fictive. Aucun paiement réel.",
+    en: "Simulated booking. No real payment.",
+    es: "Reserva ficticia. No se realizará ningún pago real.",
+    de: "Simulierte Buchung. Es erfolgt keine echte Zahlung.",
+    it: "Prenotazione simulata. Nessun pagamento reale.",
+    pt: "Reserva fictícia. Nenhum pagamento real.",
+  }[locale];
   const config = useMemo(() => readBookingConfig(service?.bookingConfig), [service?.bookingConfig]);
   const hasPrefill = prefill !== undefined;
   const [name, setName] = useState(transport.ephemeral ? "Voyageur Démo" : "");
@@ -397,7 +405,13 @@ export function ServiceBookingForm({
     <div data-booking-form className="space-y-4">
       {receipt ? (
         <div className="space-y-4" role="status">
-          <h3 className="font-semibold">{c("requestReceived")}</h3>
+          <h3 className="font-semibold">
+            {transport.ephemeral
+              ? locale === "fr"
+                ? "Récapitulatif de démonstration"
+                : "Demo booking summary"
+              : c("requestReceived")}
+          </h3>
           <Button
             type="button"
             variant="outline"
@@ -426,35 +440,39 @@ export function ServiceBookingForm({
             {c("reference")} : {receipt.id.slice(0, 8)}
           </p>
           <p>
-            {c(
-              (
-                {
-                  pending: "pending",
-                  confirmed: "confirmed",
-                  completed: "completed",
-                  cancelled: "cancelled",
-                } as const
-              )[receipt.status as "pending"] ?? "pending",
-            )}
+            {transport.ephemeral
+              ? simulatedPaymentNotice
+              : c(
+                  (
+                    {
+                      pending: "pending",
+                      confirmed: "confirmed",
+                      completed: "completed",
+                      cancelled: "cancelled",
+                    } as const
+                  )[receipt.status as "pending"] ?? "pending",
+                )}
           </p>
           <p>{Number(receipt.amount).toFixed(2)} €</p>
-          <p>
-            {receipt.paymentStatus === "paid"
-              ? transport.ephemeral
-                ? locale === "fr"
-                  ? "Réservation fictive confirmée — démonstration NONA"
-                  : "Simulated booking confirmed — NONA demo"
-                : t("payments.success")
-              : receipt.paymentStatus === "refunded"
-                ? t("payments.refunded")
-                : receipt.paymentStatus === "partially_refunded"
-                  ? t("payments.partialRefund")
-                  : receipt.paymentStatus === "failed"
-                    ? t("payments.failed")
-                    : receipt.paymentStatus === "expired"
-                      ? c("expired")
-                      : c("notPaid")}
-          </p>
+          {(!transport.ephemeral || receipt.paymentStatus === "paid") && (
+            <p>
+              {receipt.paymentStatus === "paid"
+                ? transport.ephemeral
+                  ? locale === "fr"
+                    ? "Réservation fictive confirmée — démonstration NONA"
+                    : "Simulated booking confirmed — NONA demo"
+                  : t("payments.success")
+                : receipt.paymentStatus === "refunded"
+                  ? t("payments.refunded")
+                  : receipt.paymentStatus === "partially_refunded"
+                    ? t("payments.partialRefund")
+                    : receipt.paymentStatus === "failed"
+                      ? t("payments.failed")
+                      : receipt.paymentStatus === "expired"
+                        ? c("expired")
+                        : c("notPaid")}
+            </p>
+          )}
           {receipt.status === "cancelled" && receipt.paymentStatus === "paid" && (
             <p>{c("cancelNote")}</p>
           )}
@@ -568,7 +586,9 @@ export function ServiceBookingForm({
             </p>
           )}
           <p>{service.description}</p>
-          <p className="rounded-xl bg-warning-soft p-3 text-sm">{c("notPaid")}</p>
+          <p className="rounded-xl bg-warning-soft p-3 text-sm">
+            {transport.ephemeral ? simulatedPaymentNotice : c("notPaid")}
+          </p>
           <details open={!compact}>
             <summary hidden={!compact}>
               {

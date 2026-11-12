@@ -39,8 +39,6 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const sourceLabels = ["Airbnb", "Booking", "Sunver"];
-
 function Landing() {
   const { t, locale } = useI18n();
   const ux = uxCopy(locale);
@@ -178,9 +176,16 @@ function Landing() {
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <span className="mr-2 text-sm font-semibold text-muted-foreground">
-              {t("marketing.sources")}:
+              {locale === "fr" ? "Sources de votre aperçu" : "Preview sources"}
             </span>
-            {[...sourceLabels, t("marketing.sourceWebsite"), t("marketing.sourceText")].map((s) => (
+            {[
+              locale === "fr" ? "Livrets Sunver publics" : "Public Sunver guides",
+              locale === "fr"
+                ? "Texte copié d’Airbnb ou Booking"
+                : "Text copied from Airbnb or Booking",
+              t("marketing.sourceWebsite"),
+              t("marketing.sourceText"),
+            ].map((s) => (
               <span
                 key={s}
                 className="rounded-full border bg-card px-3 py-1.5 text-sm font-semibold"

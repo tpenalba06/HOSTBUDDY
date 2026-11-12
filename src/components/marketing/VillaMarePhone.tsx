@@ -154,7 +154,7 @@ export function VillaMarePhone() {
           <button
             type="button"
             aria-pressed={mode === "url"}
-            disabled={pending}
+            disabled={pending || !scale}
             className={`btn min-h-11 ${mode === "url" ? "btn-primary" : "btn-secondary"}`}
             onClick={() => setMode("url")}
           >
@@ -163,7 +163,7 @@ export function VillaMarePhone() {
           <button
             type="button"
             aria-pressed={mode === "text"}
-            disabled={pending}
+            disabled={pending || !scale}
             className={`btn min-h-11 ${mode === "text" ? "btn-primary" : "btn-secondary"}`}
             onClick={() => setMode("text")}
           >
@@ -202,7 +202,7 @@ export function VillaMarePhone() {
             />
           )}
         </label>
-        <button className="btn btn-primary min-h-12 w-full" disabled={pending}>
+        <button className="btn btn-primary min-h-12 w-full" disabled={pending || !scale}>
           {pending
             ? fr
               ? "Lecture…"

@@ -131,10 +131,19 @@ export function publicImportPreview(
     /^[\p{L}][\p{L}\p{M} .’'&()-]{1,79}$/u.test(label) && !sensitive.test(label);
   const locality = result.publicLocality?.trim();
   const places = result.publicPlaceNames?.map((label) => label.trim()).filter(safeLabel);
+  const publicDescription = field("description");
+  const description =
+    fromPublicUrl &&
+    publicDescription?.evidence?.some(
+      (entry) => entry.method === "structured" && entry.quote.startsWith("JSON-LD description"),
+    ) &&
+    !sensitive.test(value("description"))
+      ? value("description").slice(0, 800)
+      : "";
   return {
     ...(fromPublicUrl && locality && safeLabel(locality) ? { locality } : {}),
     ...(fromPublicUrl && places?.length ? { places: places.slice(0, 12) } : {}),
-    ...(Object.keys(text).length ? { text } : {}),
+    ...(description ? { text: { description } } : Object.keys(text).length ? { text } : {}),
     ...(name ? { name } : {}),
     ...(confirmedAmenities.length ? { amenities: confirmedAmenities } : {}),
     ...(confirmedRules.length ? { rules: confirmedRules } : {}),

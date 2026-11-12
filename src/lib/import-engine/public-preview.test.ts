@@ -16,6 +16,7 @@ describe("public import preview", () => {
       arrival: "16:00",
       departure: "10:00",
       capacity: 3,
+      illustration: "countryside",
       text: { arrival: "Arrivée : 16h", departure: "Départ : avant 10h" },
     });
   });
@@ -55,5 +56,28 @@ describe("public import preview", () => {
     expect(JSON.stringify(preview)).not.toMatch(
       /TESTAzur2026|1234|VillaAzur_Guest|droite du portail/,
     );
+  });
+  it("shows a structured public description but withholds a credential-bearing block", () => {
+    const project = (value: string) =>
+      publicImportPreview(
+        {
+          propertyName: "Studio",
+          fields: [
+            {
+              key: "description",
+              value,
+              rawValue: null,
+              status: "to_verify",
+              confidence: 0.85,
+              evidence: [{ method: "structured", quote: "JSON-LD description (fixture)" }],
+            },
+          ],
+        },
+        true,
+      );
+    expect(project("Studio calme avec terrasse.").text?.description).toBe(
+      "Studio calme avec terrasse.",
+    );
+    expect(project("Studio calme. Code du portail :\nEXEMPLE").text).toBeUndefined();
   });
 });

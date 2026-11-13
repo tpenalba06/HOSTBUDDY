@@ -49,8 +49,8 @@ export async function ensureOrganization() {
   const first = (user.user_metadata?.["first_name"] as string | undefined) ?? "";
   // Keep all bootstrap requests bound to the same user during account switches.
   const rest = createClient<Database>(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    import.meta.env["VITE_SUPABASE_URL"],
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"],
     {
       accessToken: async () => session.access_token,
     },

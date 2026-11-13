@@ -4,7 +4,8 @@ import type { UploadPreparation } from "@/lib/media/video-policy";
 import type { PropertyMediaConfig } from "@/components/guest/property-media";
 // Concierge data layer (browser client, protected by RLS).
 import { supabase } from "@/integrations/supabase/client";
-import type { Json, Tables } from "@/integrations/supabase/types";
+import { createClient } from "@supabase/supabase-js";
+import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { validateMediaUpload } from "./media-validation";
 import { importPropertyPhotos } from "@/lib/import-engine/url-import.functions";
 import { initialGuideSections } from "./section-policy";
@@ -35,26 +36,45 @@ const fail = (
 };
 
 export async function ensureOrganization() {
-  const { data: u } = await supabase.auth.getUser();
-  const first = (u.user?.user_metadata?.["first_name"] as string | undefined) ?? "";
-  const { data: orgId, error } = await supabase.rpc("ensure_my_organization", {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+  if (sessionError || !session) return fail(sessionError);
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(session.access_token);
+  if (userError || !user) return fail(userError);
+  const first = (user.user_metadata?.["first_name"] as string | undefined) ?? "";
+  // Keep all bootstrap requests bound to the same user during account switches.
+  const rest = createClient<Database>(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    {
+      accessToken: async () => session.access_token,
+    },
+  );
+  const { data: orgId, error } = await rest.rpc("ensure_my_organization", {
     _first_name: first,
   });
   if (error || !orgId) return fail(error);
   const [{ data: org, error: e2 }, { data: membership, error: e3 }] = await Promise.all([
-    supabase
+    rest
       .from("organizations")
       .select("id,name,trial_ends_at,preferred_locale,operator_type")
       .eq("id", orgId)
       .single(),
-    supabase
+    rest
       .from("organization_members")
       .select("role")
       .eq("organization_id", orgId)
-      .eq("user_id", u.user!.id)
+      .eq("user_id", user.id)
       .single(),
   ]);
   if (e2 || e3) return fail(e2 ?? e3);
+  const { data: current } = await supabase.auth.getSession();
+  if (current.session?.user.id !== user.id) return fail(new Error("organization_session_changed"));
   return { ...org, role: membership.role, firstName: first };
 }
 

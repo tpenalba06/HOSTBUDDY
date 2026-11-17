@@ -10,7 +10,7 @@ import {
 } from "../../src/lib/import-engine/reference-corpus.ts";
 const { chromium } = await import(process.env.NONA_PLAYWRIGHT_MODULE || "playwright");
 
-const origin = "http://127.0.0.1:4261";
+const origin = "http://127.0.0.1:4273";
 const local = origin.startsWith("http://127.0.0.1:");
 const server = local
   ? spawn(
@@ -21,7 +21,7 @@ const server = local
         "--host",
         "127.0.0.1",
         "--port",
-        "4261",
+        "4273",
         "--strictPort",
       ],
       {
@@ -76,7 +76,9 @@ try {
       );
     await page.goto(origin);
     for (const locale of Object.keys(referenceLocales))
-      for (const words of [500, 2000, 5000]) {
+      for (const words of process.env.NONA_IMPORT_E2E_SMOKE === "true"
+        ? [5000]
+        : [500, 2000, 5000]) {
         const doc = referenceDocument(locale, words);
         await page.getByRole("button", { name: "Coller du texte", exact: true }).click();
         await page.getByRole("textbox", { name: "Texte de l’annonce" }).fill(doc.text);
@@ -107,6 +109,7 @@ try {
             .getByRole("textbox", { name: "Rechercher dans le guide", exact: true })
             .fill(title);
           await phone.getByRole("dialog").getByRole("button", { name: title, exact: true }).click();
+          await phone.getByRole("dialog").waitFor({ state: "hidden" });
           for (const fact of facts) {
             const content = phone.getByText(fact.text, { exact: true }).first();
             await content.waitFor({ state: "attached" });
@@ -116,6 +119,11 @@ try {
             visibleFacts++;
           }
           const body = await phone.locator("body").innerText();
+          if (title === "Mon arrivée")
+            assert.ok(
+              !body.includes("18:00") && !body.includes("16:00"),
+              "conflicting arrival exposed",
+            );
           assert.ok(
             !/7319|(?:RECETTE|RECIPE|RECETA|REZEPT|RICETTA|RECEITA)_WIFI|@example\.invalid/.test(
               body,
@@ -132,6 +140,14 @@ try {
             });
           }
         }
+        await phone.getByRole("button", { name: "Rechercher dans le guide", exact: true }).click();
+        await phone
+          .getByRole("dialog")
+          .getByRole("textbox", { name: "Rechercher dans le guide", exact: true })
+          .fill("Wi-Fi");
+        await phone.getByRole("dialog").getByRole("button", { name: "Wi-Fi", exact: true }).click();
+        await phone.getByRole("dialog").waitFor({ state: "hidden" });
+        await phone.getByText("Wi-Fi disponible", { exact: true }).first().waitFor();
         results.push({
           locale,
           words,
@@ -141,6 +157,7 @@ try {
             (f) => !f.private && !f.conflict && f.key !== "wifi",
           ).length,
           secretsHidden: true,
+          wifiAvailableVisible: true,
           generationMs,
         });
         await page.getByRole("button", { name: "Revenir à Villa Mare", exact: true }).click();

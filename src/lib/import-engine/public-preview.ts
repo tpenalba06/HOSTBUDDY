@@ -133,7 +133,7 @@ export function publicImportPreview(
   const wifiAvailable = value("wifi")
     .split("\n")
     .some((line) =>
-      /^(?:wi[ -]?fi (?:disponible|gratuit|available|dispon[ií]vel|gratuito)|free wi[ -]?fi|kostenloses wlan|wlan verf[uü]gbar)[.!]?$/iu.test(
+      /^(?:wi[ -]?fi (?:disponible|disponibile|gratuit|available|dispon[ií]vel|gratuito)|free wi[ -]?fi|kostenloses wlan|wlan verf[uü]gbar)[.!]?$/iu.test(
         line.trim(),
       ),
     );

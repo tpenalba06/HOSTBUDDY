@@ -47,6 +47,7 @@ export function scoreReference(locale: keyof typeof referenceLocales, words: 500
     misclassified,
     publicMissing,
     secretsHidden,
+    wifiAvailable: preview.wifiAvailable === true,
     publicConflictHidden: preview.arrival === undefined && preview.text?.arrival === undefined,
     invented: invented.length,
     arrivalReview:
@@ -73,6 +74,7 @@ describe("annotated six-language reference corpus (authored synthetic documents)
       expect(score.invented).toBe(0);
       expect(score.arrivalReview).toBe(true);
       expect(score.publicConflictHidden).toBe(true);
+      expect(score.wifiAvailable).toBe(true);
     },
   );
 });

@@ -62,6 +62,14 @@ export const FIELD_DEFS: FieldDef[] = [
     section: S.arrival,
   },
   {
+    key: "transport",
+    label: "Transports",
+    category: "location",
+    essential: false,
+    question: "Comment rejoindre le logement en transports ?",
+    section: S.arrival,
+  },
+  {
     key: "wifi",
     label: "Wi-Fi",
     category: "wifi",

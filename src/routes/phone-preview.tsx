@@ -140,7 +140,13 @@ function PhoneGuide({
             key: "arrival",
             title: t("section.arrival"),
             media: illustration("arrival"),
-            content: { items: items(text?.arrival ?? preview.arrival) },
+            content: { items: items(text?.arrival ?? preview.arrival, text?.access) },
+          },
+          {
+            id: "transport",
+            key: "transport",
+            title: fr ? "Transports" : "Transport",
+            content: { items: items(text?.transport) },
           },
           {
             id: "wifi",

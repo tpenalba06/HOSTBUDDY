@@ -3,6 +3,28 @@ import { extractDocument } from "./document-extractor";
 import { publicImportPreview, publicPreviewSchema, previewPastedDocument } from "./public-preview";
 
 describe("public import preview", () => {
+  it.each([
+    "Code d'accès",
+    "Access code",
+    "Código de acceso",
+    "Zugangscode",
+    "Codice di accesso",
+    "Código de acesso",
+  ])("protects a continuation value for %s", (label) => {
+    const preview = previewPastedDocument(
+      `${label} :\nRestaurant Confidentiel\nRestaurant Public sur la place.`,
+    );
+    expect(JSON.stringify(preview)).not.toContain("Confidentiel");
+    expect(preview.text?.recommendations).toContain("Restaurant Public");
+  });
+  it("retains lower-case sentences surrounding a private credential in one paragraph", () => {
+    const preview = previewPastedDocument(
+      "Bienvenue à la Villa Opale. le musée municipal expose des céramiques. mot de passe : NE-PAS-PUBLIER. le bus dessert la gare.",
+    );
+    expect(preview.text?.recommendations).toContain("le musée municipal expose des céramiques.");
+    expect(preview.text?.transport).toContain("le bus dessert la gare.");
+    expect(JSON.stringify(preview)).not.toContain("NE-PAS-PUBLIER");
+  });
   it("selects its illustration from an explicit description when the title is neutral", () => {
     const preview = previewPastedDocument(
       "Bienvenue à la Résidence Rhéa. Ce magnifique chalet dispose d'une vue sur la montagne.",

@@ -9,10 +9,10 @@ const RAW_RULES: Record<string, RegExp> = {
   arrival:
     /(arriv[ée]e?|check.?in|arrival|llegada|ankunft|arrivo|chegada|à partir de \d{1,2}\s?h|from \d{1,2}(:\d{2})?|ab \d{1,2}(:\d{2})?)/i,
   access:
-    /(cl[ée]s?|keys?|llaves?|schl[üu]ssel|chiav[ei]|chaves?|bo[iî]te [àa] cl|lockbox|key box|caja de llaves|schl[üu]sselkasten|cassetta.*chiav|caixa.*chav|access code|code d'acc[eè]s|digicode|portail|gate|portal|t[üu]r(?!\p{L})|porta|serrure|lock|badge|keynest|cadenas)/iu,
+    /(cl[ée]s?|keys?|llaves?|schl[üu]ssel|chiav[ei]|chaves?|bo[iî]te [àa] cl|lockbox|key box|caja de llaves|schl[üu]sselkasten|cassetta.*chiav|caixa.*chav|access code|code d'acc[eè]s|c[oó]digo de (?:acceso|acesso)|codice di accesso|zugangscode|digicode|portail|gate|portal|t[üu]r(?!\p{L})|porta|serrure|lock|badge|keynest|cadenas)/iu,
   parking:
     /(parking|se garer|stationn|garage|car park|parkplatz|aparcamiento|estacionamiento|parcheggio|estacionamento)/i,
-  wifi: /(wi.?fi|mot de passe|mdp|password|contraseña|passwort|senha|password|r[ée]seau|network|red wi.?fi|netzwerk|rete wi.?fi|ssid|livebox|freebox)/i,
+  wifi: /(wi.?fi|wlan|mot de passe|mdp|password|contraseña|passwort|senha|r[ée]seau|network|red wi.?fi|netzwerk|rete wi.?fi|ssid|livebox|freebox)/i,
   capacity:
     /(\d+\s*(personnes|voyageurs|guests?|people|personas|gäste|ospiti|hóspedes|couchages|chambres?|bedrooms?|habitaciones?|schlafzimmer|camere|quartos|lits?|beds?))/i,
   equipment:
@@ -23,17 +23,19 @@ const RAW_RULES: Record<string, RegExp> = {
     /(clim|climatisation|air conditioning|air conditioner|aire acondicionado|klimaanlage|aria condizionata|ar condicionado|chauffage|heating|calefacción|heizung|riscaldamento|aquecimento|thermostat)/i,
   pool: /(piscine|pool\b|swimming pool|piscina|schwimmbad|spa\b|jacuzzi|baignade)/i,
   rules:
-    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?(?![\p{L}\d_])|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|bruit|noise|silence|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/iu,
+    /(interdit|interdiction|non.?fumeur|ne pas fumer|no smoking|smoking prohibited|no fumar|nicht rauchen|vietato fumare|não fumar|animaux|pets?(?![\p{L}\d_])|mascotas|haustiere|animali|f[êe]tes?|parties|fiestas|partys|feste|festas|bruit|noise|silence|sil[eê]ncio|r[èe]gles?|rules|reglas|hausregeln|regole|regras)/iu,
   trash:
     /(poubelles?|d[ée]chets?|trash|garbage|waste|bins?(?!\p{L})|basura|residuos|müll|abfall|rifiuti|lixo|recycl|tri s[ée]lectif|conteneurs?\s+(à\s+)?ordures)/iu,
   departure:
-    /(d[ée]part|check.?out|departure|salida|abreise|partenza|partida|quitter le logement|avant \d{1,2}\s?h|before \d{1,2}|antes de \d{1,2}|bis \d{1,2}|entro le \d{1,2}|até às? \d{1,2})/i,
+    /(d[ée]part|check.?out|departure|salida|sa[ií]da|abreise|partenza|partida|quitter le logement|avant \d{1,2}\s?h|before \d{1,2}|antes de \d{1,2}|bis \d{1,2}|entro le \d{1,2}|até às? \d{1,2})/i,
   contact:
-    /(t[ée]l[ée]?phone|phone|telefono|telefon|telefone|whatsapp|contact|e.?mail|correo|email|@[w.-]+\.[a-z]{2,}|(\+\d{1,3}|0)\s?[1-9](?:[\s.-]?\d{2}){4})/i,
+    /(t[ée]l[ée]?phone|phone|telefono|telefon|telefone|whatsapp|contact|contatt[oi]|kontakt|e.?mail|correo|@[\w.-]+\.[a-z]{2,}|(\+\d{1,3}|0)\s?[1-9](?:[\s.-]?\d{2}){4})/i,
   emergency:
     /(urgence|emergency|emergencia|notfall|emergenza|emergência|pompiers|fire brigade|samu|\b112\b|h[oô]pital|hospital\s+(de|near|proche)|krankenhaus|ospedale)/i,
   recommendations:
-    /(restaurant|boulangerie|bakery|panadería|bäckerei|panificio|padaria|march[ée]|market|mercado|markt|plage|beach|playa|strand|spiaggia|praia|recommand|recommend|empfehl|consigli|recomenda|caf[ée]|bar\b|balade|hike|randonn)/i,
+    /(restaurant|ristorant|boulangerie|bakery|panadería|bäckerei|panificio|padaria|march[ée]|market|mercado|markt|plage|beach|playa|strand|spiaggia|praia|recommand|recommend|empfehl|consigli|recomenda|caf[ée]|bar\b|balade|hike|randonn|mus[ée]e|[\p{L}]*museum|museo|museu|spaziergang|passeggiata|passeio|paseo|coastal walk|walking trail|sentier|sendero|trilho)/iu,
+  transport:
+    /(transports?\b|public transit|[\p{L}]*bus\b|autob[uú]s|autocarro|bahnhof|haltestelle|railway station|train station|gare\b|stazione|estaci[oó]n|esta[çc][aã]o|m[ée]tro|subway|tram(?:way)?\b)/iu,
   services:
     /(petit.?d[ée]jeuner|breakfast|desayuno|frühstück|colazione|pequeno.?almoço|m[ée]nage|cleaning|limpieza|reinigung|pulizia|limpeza|massage|transfert|transfer|navette|shuttle|location de v[ée]lo|bike rental|chef [àa] domicile)/i,
   description:
@@ -60,7 +62,7 @@ const TIME_FIELDS = new Set(["arrival", "departure"]);
 // Explicit topic markers disambiguate arrival/departure clauses. Generic phrases
 // such as "before 18h" cannot safely identify a departure when arrival is named.
 const TIME_MARKERS =
-  /(?<![\p{L}\d_])(?:(arriv[ée]e?|check[ .-]?in|arrival|llegada|ankunft|arrivo|chegada)|(d[ée]part|check[ .-]?out|departure|salida|abreise|partenza|partida))(?![\p{L}\d_])/giu;
+  /(?<![\p{L}\d_])(?:(arriv[ée]e?|check[ .-]?in|arrival|llegada|ankunft|arrivo|chegada)|(d[ée]part|check[ .-]?out|departure|salida|sa[ií]da|abreise|partenza|partida))(?![\p{L}\d_])/giu;
 
 function timeMarkers(text: string) {
   return [...text.matchAll(TIME_MARKERS)].map((match) => ({
@@ -101,12 +103,31 @@ function hasConflictingEvidence(key: string, hits: string[]) {
   return times.length > 1;
 }
 
-export function splitSnippets(text: string): string[] {
+/** Unicode sentence boundaries also handle lower-case pasted prose. Keep exact
+ * substrings, numbers and abbreviations rather than rewriting the evidence. */
+export function sourceSentences(text: string): string[] {
   return text
-    .replace(/\r/g, "")
-    .split(
-      /\n+|(?<=[.!?])\s+(?=[A-ZÀ-Ý]|\d+\s*(?:personnes|voyageurs|guests?|people|personas|gäste|ospiti|hóspedes|couchages|chambres?|bedrooms?|habitaciones?|schlafzimmer|camere|quartos|lits?|beds?)\b)/,
-    )
+    .replace(/\r\n?/g, "\n")
+    .split(/\n+/)
+    .flatMap((line) => {
+      const parts = line.split(/(?<=[.!?])\s+(?=[\p{L}\d])/u);
+      const combined: string[] = [];
+      for (const part of parts) {
+        const previous = combined.at(-1);
+        if (previous && /\b(?:Mr|Mrs|Ms|Dr|St|Mme|M|Av|Bd)\.$/iu.test(previous)) {
+          // Restore the exact whitespace between an abbreviation and its continuation.
+          const start = line.indexOf(previous);
+          const end = line.indexOf(part, start + previous.length) + part.length;
+          combined[combined.length - 1] = line.slice(start, end);
+        } else combined.push(part.trim());
+      }
+      return combined;
+    })
+    .filter(Boolean);
+}
+
+export function splitSnippets(text: string): string[] {
+  return sourceSentences(text)
     .map((s) => s.replace(/^[\s•\-*–]+/, "").trim())
     .flatMap(splitMixedTimeClauses)
     .filter((s) => s.length > 1);

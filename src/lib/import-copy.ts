@@ -344,8 +344,42 @@ export function addImportCopy(translations: Record<Locale, Record<string, string
     keys.forEach((key, index) => {
       translations[locale][`importFlow.${key}`] = copy[locale][index]!;
     });
-    FIELD_DEFS.forEach((field, index) => {
-      translations[locale][`field.${field.key}`] = labels[locale][index]!;
+    const originalKeys = [
+      "description",
+      "address",
+      "arrival",
+      "access",
+      "parking",
+      "wifi",
+      "capacity",
+      "equipment",
+      "kitchen",
+      "climate",
+      "rules",
+      "trash",
+      "pool",
+      "recommendations",
+      "services",
+      "departure",
+      "contact",
+      "emergency",
+    ];
+    const transportLabels: Record<Locale, string> = {
+      fr: "Transports",
+      en: "Transport",
+      es: "Transporte",
+      de: "Verkehrsmittel",
+      it: "Trasporti",
+      pt: "Transportes",
+    };
+    FIELD_DEFS.forEach((field) => {
+      const originalIndex = originalKeys.indexOf(field.key);
+      translations[locale][`field.${field.key}`] =
+        locale === "fr"
+          ? field.label
+          : field.key === "transport"
+            ? transportLabels[locale]
+            : labels[locale][originalIndex]!;
     });
   }
 }

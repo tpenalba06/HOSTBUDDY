@@ -2,6 +2,7 @@ import { extractDocument, MAX_IMPORT_CHARACTERS } from "./document-extractor";
 import { z } from "zod";
 import type { ExtractionResult } from "./types";
 import { detectAccommodationMood } from "@/components/guest/property-media";
+import { sourceSentences } from "./rules-extractor";
 
 // Source evidence and private free text stay out of the marketing preview.
 const amenities = {
@@ -36,6 +37,7 @@ const textKeys = [
   "pool",
   "rules",
   "parking",
+  "transport",
   "trash",
   "recommendations",
   "services",
@@ -137,7 +139,7 @@ export function publicImportPreview(
     );
   // Reject credential-bearing evidence as a unit, including continuation lines.
   const sensitive =
-    /code|c[oó]dig[oa]|pin\b|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|caja.{0,12}llaves|cassetta.{0,12}chiavi|schl[üu]sselkasten|caixa.{0,12}chaves|password|mot de passe|passwort|senha|contrase[ñn]a|token|secret|identifiant|ssid|wi[ -]?fi|\d{4,}|(?:\d[ .()+-]*){7,}|@/iu;
+    /code|codice|c[oó]dig[oa]|pin\b|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|caja.{0,12}llaves|cassetta.{0,12}chiavi|schl[üu]sselkasten|caixa.{0,12}chaves|password|mot de passe|passwort|senha|contrase[ñn]a|token|secret|identifiant|ssid|wi[ -]?fi|\d{4,}|(?:\d[ .()+-]*){7,}|@/iu;
   const text = fromPublicUrl
     ? {}
     : Object.fromEntries(
@@ -199,12 +201,10 @@ export function publicImportPreview(
 /** Keep sentence boundaries before classification so one credential does not taint
  * the rest of a paragraph. Only named, bounded facts are projected to the phone. */
 export function previewPastedDocument(input: string): PublicImportPreview {
-  const prose = input
-    .replace(/\r\n?/g, "\n")
-    .replace(/[’]/g, "'")
-    .replace(/(?<=[.!?]) +(?=[\p{Lu}])/gu, "\n")
+  const prose = sourceSentences(input.replace(/[’]/g, "'"))
+    .join("\n")
     .replace(
-      /(?:^|\n)[^\n]*(?:mot de passe|password|passwort|senha|contrase[ñn]a|code d.acces|code d.accès|c[oó]dig[oa]|ssid)[^\n]*[:=][ \t]*\n[^\n]*/giu,
+      /(?:^|\n)[^\n]*(?:mot de passe|mdp|password|passwort|senha|contrase[ñn]a|code|codice|c[oó]dig[oa]|pin\b|ssid)[^\n]*[:=][ \t]*\n[^\n]*/giu,
       "\n",
     );
   const document = prose.replace(/\bet le départ (?=avant|à )/giu, "\nDépart ");
@@ -231,12 +231,20 @@ export function previewPastedDocument(input: string): PublicImportPreview {
     );
     return matches.size > 1 ? null : [...matches][0];
   };
-  const checkIn = times(
-    /arriv[ée]e? (?:se fait )?(?:à partir de |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
-  );
-  const checkOut = times(
-    /d[ée]part (?:se fait )?(?:avant |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
-  );
+  const checkIn = result.fields
+    .find((field) => field.key === "arrival")
+    ?.issues?.includes("conflicting_sources")
+    ? null
+    : times(
+        /arriv[ée]e? (?:se fait )?(?:à partir de |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
+      );
+  const checkOut = result.fields
+    .find((field) => field.key === "departure")
+    ?.issues?.includes("conflicting_sources")
+    ? null
+    : times(
+        /d[ée]part (?:se fait )?(?:avant |à )?([01]?\d|2[0-3])\s*(?:h\s*([0-5]\d)?|:([0-5]\d))/giu,
+      );
   const text = { ...preview.text };
   if (checkIn === null) delete text.arrival;
   if (checkOut === null) delete text.departure;

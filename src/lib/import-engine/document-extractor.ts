@@ -21,6 +21,8 @@ const headings: Record<string, RegExp> = {
   description:
     /^(?:description|bienvenue|welcome|presentation|descrizione|descripcion|descricao|beschreibung)$/,
   parking: /^(?:parking|stationnement|aparcamiento|parcheggio|parkplatz|estacionamento)$/,
+  transport:
+    /^(?:transports?|public transit|offentliche verkehrsmittel|trasporti|transporte|transportes)$/,
   pool: /^(?:piscine|pool|piscina)$/,
   kitchen: /^(?:cuisine|kitchen|cocina|cucina)$/,
   emergency: /^(?:urgences|emergency|emergencias|notfall)$/,

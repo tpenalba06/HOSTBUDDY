@@ -1,0 +1,326 @@
+[
+  {
+    "locale": "fr",
+    "words": 500,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 170
+  },
+  {
+    "locale": "fr",
+    "words": 2000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 56
+  },
+  {
+    "locale": "fr",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 63
+  },
+  {
+    "locale": "en",
+    "words": 500,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 50
+  },
+  {
+    "locale": "en",
+    "words": 2000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 58
+  },
+  {
+    "locale": "en",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 69
+  },
+  {
+    "locale": "es",
+    "words": 500,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 58
+  },
+  {
+    "locale": "es",
+    "words": 2000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 57
+  },
+  {
+    "locale": "es",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 63
+  },
+  {
+    "locale": "de",
+    "words": 500,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 51
+  },
+  {
+    "locale": "de",
+    "words": 2000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 64
+  },
+  {
+    "locale": "de",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 73
+  },
+  {
+    "locale": "it",
+    "words": 500,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 55
+  },
+  {
+    "locale": "it",
+    "words": 2000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 60
+  },
+  {
+    "locale": "it",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 70
+  },
+  {
+    "locale": "pt",
+    "words": 500,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 46
+  },
+  {
+    "locale": "pt",
+    "words": 2000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 54
+  },
+  {
+    "locale": "pt",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 114
+  },
+  {
+    "locale": "fr",
+    "words": 500,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 123
+  },
+  {
+    "locale": "fr",
+    "words": 2000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 110
+  },
+  {
+    "locale": "fr",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 121
+  },
+  {
+    "locale": "en",
+    "words": 500,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 91
+  },
+  {
+    "locale": "en",
+    "words": 2000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 101
+  },
+  {
+    "locale": "en",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 75
+  },
+  {
+    "locale": "es",
+    "words": 500,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 61
+  },
+  {
+    "locale": "es",
+    "words": 2000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 66
+  },
+  {
+    "locale": "es",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 115
+  },
+  {
+    "locale": "de",
+    "words": 500,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 92
+  },
+  {
+    "locale": "de",
+    "words": 2000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 74
+  },
+  {
+    "locale": "de",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 79
+  },
+  {
+    "locale": "it",
+    "words": 500,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 61
+  },
+  {
+    "locale": "it",
+    "words": 2000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 66
+  },
+  {
+    "locale": "it",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 77
+  },
+  {
+    "locale": "pt",
+    "words": 500,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 55
+  },
+  {
+    "locale": "pt",
+    "words": 2000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 65
+  },
+  {
+    "locale": "pt",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "generationMs": 69
+  }
+]

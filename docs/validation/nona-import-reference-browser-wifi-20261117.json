@@ -1,0 +1,122 @@
+[
+  {
+    "locale": "fr",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 152
+  },
+  {
+    "locale": "en",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 75
+  },
+  {
+    "locale": "es",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 119
+  },
+  {
+    "locale": "de",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 131
+  },
+  {
+    "locale": "it",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 130
+  },
+  {
+    "locale": "pt",
+    "words": 5000,
+    "width": 390,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 119
+  },
+  {
+    "locale": "fr",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 172
+  },
+  {
+    "locale": "en",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 84
+  },
+  {
+    "locale": "es",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 85
+  },
+  {
+    "locale": "de",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 88
+  },
+  {
+    "locale": "it",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 88
+  },
+  {
+    "locale": "pt",
+    "words": 5000,
+    "width": 1440,
+    "visibleFacts": 19,
+    "expectedPublicFacts": 19,
+    "secretsHidden": true,
+    "wifiAvailableVisible": true,
+    "generationMs": 133
+  }
+]

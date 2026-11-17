@@ -196,6 +196,7 @@ export function publicImportPreview(
  * the rest of a paragraph. Only named, bounded facts are projected to the phone. */
 export function previewPastedDocument(input: string): PublicImportPreview {
   const prose = input
+    .replace(/\r\n?/g, "\n")
     .replace(/[’]/g, "'")
     .replace(/(?<=[.!?]) +(?=[\p{Lu}])/gu, "\n")
     .replace(

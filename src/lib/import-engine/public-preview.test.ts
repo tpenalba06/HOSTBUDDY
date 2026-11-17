@@ -3,6 +3,14 @@ import { extractDocument } from "./document-extractor";
 import { publicImportPreview, publicPreviewSchema, previewPastedDocument } from "./public-preview";
 
 describe("public import preview", () => {
+  it("protects a multiline password copied from a Windows document", () => {
+    const preview = previewPastedDocument(
+      "Bienvenue à la Villa Rhéa.\r\nMot de passe :\r\nRestaurant Indigo\r\nRestaurant La Treille sur la place.",
+    );
+    expect(preview.name).toBe("Villa Rhéa");
+    expect(preview.text?.recommendations).toContain("Restaurant La Treille");
+    expect(JSON.stringify(preview)).not.toContain("Restaurant Indigo");
+  });
   it.each([
     [
       "fr",

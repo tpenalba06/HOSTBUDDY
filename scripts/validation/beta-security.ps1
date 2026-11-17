@@ -15,13 +15,13 @@ if ($Renew) {
     foreach ($label in @('A','B')) {
       $uri = "$testOrigin/auth/v1/admin/users/$($managerIds[$label])"
       $headers = @{ apikey = $admin }
-      $user = Invoke-RestMethod -Uri $uri -Headers $headers -MaximumRedirection 0
+      $user = Invoke-RestMethod -UserAgent "NONA-TEST-Recipe/1.0" -Uri $uri -Headers $headers -MaximumRedirection 0
       if ($user.id -ne $managerIds[$label] -or $user.email -notlike 'nona-pilot-*@example.invalid') {
         throw "Le compte $label ne correspond pas à la recette."
       }
       $password = 'Nona!' + [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
       try {
-        $null = Invoke-RestMethod -Uri $uri -Method Put -Headers $headers -MaximumRedirection 0 -ContentType 'application/json' -Body (@{ password = $password } | ConvertTo-Json -Compress)
+        $null = Invoke-RestMethod -UserAgent "NONA-TEST-Recipe/1.0" -Uri $uri -Method Put -Headers $headers -MaximumRedirection 0 -ContentType 'application/json' -Body (@{ password = $password } | ConvertTo-Json -Compress)
       } catch {
         throw "Le renouvellement du compte $label a échoué. Vérifier la clé TEST et les droits Auth."
       }

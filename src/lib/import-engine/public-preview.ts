@@ -171,7 +171,7 @@ export function publicImportPreview(
     !sensitive.test(value("description"))
       ? value("description")
       : "";
-  const illustrationText = [title, fromPublicUrl ? description : text.description]
+  const illustrationText = [title, fromPublicUrl ? description : text["description"]]
     .filter(Boolean)
     .join("\n");
   return {

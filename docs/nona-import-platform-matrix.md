@@ -6,8 +6,6 @@
 | Booking · Vallais Villa | L’URL directe a été normalisée et les paramètres de session supprimés. Le serveur a rencontré une vérification anti-robot avant de recevoir des données de logement. | Aucune extraction ni création de livret Booking. Repli vers le texte, suivi si besoin de photos fournies par le propriétaire. | Connectivity Partner avec onboarding, autorisation de l’établissement et capacités de contenu et photos. Pour les clients déjà équipés, privilégier leur PMS autorisé. |
 | Sunver · Villa Dolce Vecchia | Le lien voyageur expose des données structurées du logement, des FAQ et des recommandations. Les chemins personnel et le contenu temporisé sont exclus de l’adaptateur. Une image est détectée mais son hébergeur n’a pas permis le téléchargement lors de l’essai. | 10 catégories candidates lors de la lecture précédente. Le téléphone affiche le titre et 11 noms de recommandations. Les coordonnées, Wi-Fi, consignes libres et autres catégories candidates ne traversent pas toutes la projection publique. Les horaires clairement libellés peuvent maintenant être reconnus sur une ligne d’un champ multiligne. | Sunver documente le partage de livrets et des intégrations avec des PMS. Un export ou une API de migration Sunver ouverte à NONA n’a pas été confirmé. L’accord sur la réutilisation des textes et médias reste distinct de la visibilité du lien. |
 
-## Import de portefeuilles
-
 ## Vérification du 17 novembre 2026
 
 Airbnb documente la connexion de logiciels de gestion et de channel managers avec autorisation de l'hôte. L'ajout se fait depuis le logiciel connecté. Ces pages confirment un parcours autorisé, mais ne confèrent aucun accès API à NONA. Une URL d'annonce seule ne fournit pas cette autorisation. [Connexion des logiciels](https://www.airbnb.com/help/article/2958), [channel managers](https://www.airbnb.com/help/article/3304).
@@ -17,6 +15,8 @@ Booking distingue les accès des Connectivity Partners, les capacités de chaque
 Pour le parcours commercial immédiat, conserver l'import Sunver public et le texte fourni par le gestionnaire. Pour une conciergerie équipée, utiliser l'adaptateur PMS existant lorsque son accès est autorisé. L'aperçu doit annoncer les limites de chaque source. La promesse universelle « une URL suffit » reste conditionnée à la disponibilité et aux droits sur les données.
 
 Le moteur d'aperçu ne tronque plus les rubriques de texte collé à 2 400 caractères. Il conserve les faits sûrs déjà extraits jusqu'à la limite de document existante. La sélection d'une illustration peut maintenant utiliser la description explicite lorsque le titre seul ne permet pas de déterminer le type de logement.
+
+## Import de portefeuilles
 
 1. Priorité au PMS que la conciergerie utilise déjà. Guesty documente l’accès authentifié et les photos par logement. Vérifier les droits de lecture, les champs réels, les coûts du compte, les limites et l’autorisation de stockage avant un pilote. Aucun tarif ni contrat supposé.
 2. Proposer un export fourni par le propriétaire lorsqu’il existe. Normaliser par identifiant stable PMS et organisation, préparer les brouillons en lot, présenter les différences à valider et garder les droits média comme attribut de chaque fichier. Les schémas d’export et la disponibilité par abonnement sont à confirmer.

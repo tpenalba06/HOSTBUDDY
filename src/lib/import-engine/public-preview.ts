@@ -1,4 +1,4 @@
-import { extractDocument } from "./document-extractor";
+import { extractDocument, MAX_IMPORT_CHARACTERS } from "./document-extractor";
 import { z } from "zod";
 import type { ExtractionResult } from "./types";
 import { detectAccommodationMood } from "@/components/guest/property-media";
@@ -45,7 +45,7 @@ const textKeys = [
 ] as const;
 
 export const publicPreviewSchema = z.object({
-  text: z.record(z.enum(textKeys), z.string().max(2400)).optional(),
+  text: z.record(z.enum(textKeys), z.string().max(MAX_IMPORT_CHARACTERS)).optional(),
   name: z.string().max(100).optional(),
   locality: z.string().max(80).optional(),
   places: z.array(z.string().max(80)).max(12).optional(),
@@ -152,7 +152,7 @@ export function publicImportPreview(
                 !/bo[iî]te|portail|\bgate\b|\bportal\b|cache|hidden|versteck|escond/iu.test(quote)),
           );
           const content = lines.join("\n");
-          return content ? [[key, content.slice(0, 2400)]] : [];
+          return content ? [[key, content]] : [];
         }),
       );
   const safeLabel = (label: string) =>
@@ -169,8 +169,11 @@ export function publicImportPreview(
           entry.quote === "Sunver public property introduction"),
     ) &&
     !sensitive.test(value("description"))
-      ? value("description").slice(0, 800)
+      ? value("description")
       : "";
+  const illustrationText = [title, fromPublicUrl ? description : text.description]
+    .filter(Boolean)
+    .join("\n");
   return {
     ...(fromPublicUrl && locality && safeLabel(locality) ? { locality } : {}),
     ...(fromPublicUrl && places?.length ? { places: places.slice(0, 12) } : {}),
@@ -184,6 +187,7 @@ export function publicImportPreview(
     capacity: guestCounts.size === 1 ? [...guestCounts][0] : undefined,
     illustration:
       detectAccommodationMood(title) ??
+      detectAccommodationMood(illustrationText) ??
       (/\b(?:villa|maison|house)\b/i.test(title)
         ? "countryside"
         : /\b(?:hôtel|hotel)\b/i.test(title)

@@ -8,6 +8,16 @@
 
 ## Import de portefeuilles
 
+## Vérification du 17 novembre 2026
+
+Airbnb documente la connexion de logiciels de gestion et de channel managers avec autorisation de l'hôte. L'ajout se fait depuis le logiciel connecté. Ces pages confirment un parcours autorisé, mais ne confèrent aucun accès API à NONA. Une URL d'annonce seule ne fournit pas cette autorisation. [Connexion des logiciels](https://www.airbnb.com/help/article/2958), [channel managers](https://www.airbnb.com/help/article/3304).
+
+Booking distingue les accès des Connectivity Partners, les capacités de chaque API et les certifications. La Content API permet de créer et modifier les contenus des établissements. Son activation exige le processus partenaire documenté et, selon les capacités, une certification et la conformité PII. Avant de développer un connecteur NONA, confirmer les droits de récupération des contenus existants et des photos pour l'établissement. Aucun accès partenaire ni coût de connexion n'a été confirmé. [Connectivity](https://developers.booking.com/connectivity/docs), [Content API](https://developers.booking.com/connectivity/docs/content), [conditions de mise en service](https://developers.booking.com/connectivity/docs/going_live).
+
+Pour le parcours commercial immédiat, conserver l'import Sunver public et le texte fourni par le gestionnaire. Pour une conciergerie équipée, utiliser l'adaptateur PMS existant lorsque son accès est autorisé. L'aperçu doit annoncer les limites de chaque source. La promesse universelle « une URL suffit » reste conditionnée à la disponibilité et aux droits sur les données.
+
+Le moteur d'aperçu ne tronque plus les rubriques de texte collé à 2 400 caractères. Il conserve les faits sûrs déjà extraits jusqu'à la limite de document existante. La sélection d'une illustration peut maintenant utiliser la description explicite lorsque le titre seul ne permet pas de déterminer le type de logement.
+
 1. Priorité au PMS que la conciergerie utilise déjà. Guesty documente l’accès authentifié et les photos par logement. Vérifier les droits de lecture, les champs réels, les coûts du compte, les limites et l’autorisation de stockage avant un pilote. Aucun tarif ni contrat supposé.
 2. Proposer un export fourni par le propriétaire lorsqu’il existe. Normaliser par identifiant stable PMS et organisation, préparer les brouillons en lot, présenter les différences à valider et garder les droits média comme attribut de chaque fichier. Les schémas d’export et la disponibilité par abonnement sont à confirmer.
 3. Évaluer les accès directs Airbnb et Booking après qualification du partenariat et des permissions de contenu. Aucun accès partenaire n’a été obtenu dans cette mission.

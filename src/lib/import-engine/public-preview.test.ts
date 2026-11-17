@@ -3,6 +3,33 @@ import { extractDocument } from "./document-extractor";
 import { publicImportPreview, publicPreviewSchema, previewPastedDocument } from "./public-preview";
 
 describe("public import preview", () => {
+  it("selects its illustration from an explicit description when the title is neutral", () => {
+    const preview = previewPastedDocument(
+      "Bienvenue à la Résidence Rhéa. Ce magnifique chalet dispose d'une vue sur la montagne.",
+    );
+    expect(preview.illustration).toBe("chalet");
+    expect(preview.text?.description).toContain("chalet");
+  });
+  it("retains every safe recommendation beyond the former phone excerpt limit", () => {
+    const facts = Array.from(
+      { length: 35 },
+      (_, i) =>
+        `Restaurant de recette ${i + 1} : cuisine locale, terrasse ombragée, accès à pied par le sentier piéton qui longe le jardin municipal.`,
+    );
+    const preview = previewPastedDocument(
+      [
+        "Bienvenue à la Villa Rhéa.",
+        ...facts.slice(0, 16),
+        "Mot de passe :",
+        "Restaurant SecretTest",
+        ...facts.slice(16),
+      ].join("\r\n"),
+    );
+    expect(facts.join("\n").length).toBeGreaterThan(2400);
+    expect(publicPreviewSchema.safeParse(preview).success).toBe(true);
+    for (const fact of facts) expect(preview.text?.recommendations).toContain(fact);
+    expect(JSON.stringify(preview)).not.toContain("SecretTest");
+  });
   it("protects a multiline password copied from a Windows document", () => {
     const preview = previewPastedDocument(
       "Bienvenue à la Villa Rhéa.\r\nMot de passe :\r\nRestaurant Indigo\r\nRestaurant La Treille sur la place.",

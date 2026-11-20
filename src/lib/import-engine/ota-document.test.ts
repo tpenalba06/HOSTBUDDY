@@ -17,3 +17,16 @@ it("keeps property facts and discards reviews and booking widgets (synthetic)", 
   expect(preview.departure).toBe("11:00");
   expect(preview.text?.kitchen).toContain("Cuisine équipée");
 });
+
+it("ends classified sections at real page headings (synthetic)", () => {
+  const document = otaDocument(
+    "Équipements\nNavigation factice\n# Studio TEST\n## Ce que propose ce logement\nLave-linge\n## Où se situe le logement\nNice, France\n## À savoir\nArrivée à partir de 16:00",
+    "https://www.airbnb.fr/rooms/1086157072408105944",
+    {},
+  );
+  const preview = previewPastedDocument(document.text, document.title);
+  expect(preview.text?.equipment).toContain("Lave-linge");
+  expect(preview.text?.equipment).not.toContain("Nice");
+  expect(preview.text?.equipment).not.toContain("Navigation factice");
+  expect(preview.text?.equipment).not.toContain("Arrivée");
+});

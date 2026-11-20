@@ -2,7 +2,9 @@
  * reviews and platform navigation. No private API or script-state harvesting. */
 export function otaDocument(markdown: string, source: string, metadata: Record<string, unknown>) {
   const airbnb = new URL(source).hostname.endsWith("airbnb.fr");
-  const headings = markdown.split("\n");
+  const allLines = markdown.split("\n");
+  const firstTitle = allLines.findIndex((line) => /^# /.test(line));
+  const headings = firstTitle >= 0 ? allLines.slice(firstTitle) : allLines;
   const title = headings
     .find((line) => /^# /.test(line))
     ?.replace(/^# /, "")
@@ -12,7 +14,7 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
   for (const line of headings) {
     if (/^## /.test(line)) {
       suppressed =
-        /Sélectionnez la date|commentaires|Disponibilité|Questions des voyageurs|Faites connaissance|^## (?:Laure|Améliorez|Imerovigli.*choses à faire)/i.test(
+        /Sélectionnez la date|commentaires|Disponibilité|Questions des voyageurs|Faites connaissance|^## (?:Améliorez|.*choses à faire)/i.test(
           line,
         );
     }
@@ -23,7 +25,7 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     .replace(/!\[[^\]]*\]\([^\n]*?\)/g, "")
     .replace(/\[([^\]]+)\]\([^\n]*?\)/g, "$1")
     .replace(/\\/g, "")
-    .replace(/^#{1,6}\s+/gm, "");
+    .replace(/^## Ce que propose ce logement\s*$/gm, "## Équipements");
   const location = airbnb
     ? markdown.match(/^## Logement entier[^\n]*? - ([^\n]+)/m)?.[1]?.trim()
     : typeof metadata["title"] === "string" && title

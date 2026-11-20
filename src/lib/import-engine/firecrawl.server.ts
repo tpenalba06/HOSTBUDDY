@@ -69,8 +69,10 @@ export async function importAuthorizedEvaluationUrl(
     // document projection as pasted text. Scrape responses are untrusted input.
     const extracted = data.html ? await extractAccessibleHtml(data.html, url, false) : null;
     const source = [
-      data.html ? htmlDocumentText(data.html) : "",
-      data.markdown?.replace(/^#{1,6}\s+/gm, "") ?? "",
+      data.html ? htmlDocumentText(htmlDocumentText(data.html)) : "",
+      data.markdown
+        ? htmlDocumentText(htmlDocumentText(data.markdown.replace(/^#{1,6}\s+/gm, "")))
+        : "",
     ]
       .filter(Boolean)
       .join("\n");

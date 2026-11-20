@@ -46,7 +46,10 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
   );
   it("feeds fetched text into the existing engine, masking credentials and using Smart Fill", async () => {
     const html = readFileSync("docs/fixtures/nona-villa-test.html", "utf8");
-    const markdown = html.replace(/<head>[\s\S]*?<\/head>/, " ").replace(/<[^>]+>/g, "\n");
+    const markdown = html
+      .replace(/<head>[\s\S]*?<\/head>/, " ")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
     const fetcher = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -70,6 +73,8 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
     expect(result.preview.text?.transport).toContain("gare");
     expect(result.preview.text?.kitchen).toContain("four");
     expect(result.preview.capacity).toBe(4);
+    expect(result.preview.wifiAvailable).toBe(true);
+    expect(JSON.stringify(result.preview)).not.toContain("<p>");
     expect(result.preview.illustration).toBeTruthy();
     expect(JSON.stringify(result)).not.toContain("SECRET_FICTIF");
     expect(result.provenance.photosReused).toBe(0);

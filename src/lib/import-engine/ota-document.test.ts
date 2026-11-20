@@ -43,3 +43,16 @@ it("excludes platform-generated review summaries while keeping owner description
   expect(preview.text?.description).toContain("centre du village");
   expect(preview.text?.description).toContain("plafond");
 });
+
+it("keeps Booking property sections but excludes testimonials and FAQ (synthetic)", () => {
+  const document = otaDocument(
+    "# Hôtel TEST\n### Ce que les voyageurs ont adoré\nLes équipements du voisin sont magnifiques.\n## Équipements de l'établissement TEST\nTélévision\n## Règles de la maison\nArrivée\nDe 14:00 à 21:00\n## FAQ sur l'établissement TEST\nÉquipements miraculeux\n## Villes\nNavigation",
+    "https://www.booking.com/hotel/gr/vallais-villa.fr.html",
+    { title: "Hôtel TEST, Nice (tarifs)", ogDescription: "Un appartement lumineux." },
+  );
+  expect(document.text).not.toContain("voisin");
+  expect(document.text).not.toContain("miraculeux");
+  expect(document.text).toContain("Télévision");
+  expect(document.text).toContain("De 14:00 à 21:00");
+  expect(document.location).toBe("Nice");
+});

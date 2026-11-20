@@ -11,8 +11,17 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     .trim();
   let suppressed = false;
   let generatedHighlights = false;
+  let bookingPropertySection = false;
   const lines: string[] = [];
   for (const line of headings) {
+    if (!airbnb) {
+      if (/^## /.test(line))
+        bookingPropertySection =
+          /^## (?:Environs de l'établissement|Équipements de l'établissement|Règles de la maison|À savoir)/.test(
+            line,
+          );
+      if (!bookingPropertySection) continue;
+    }
     if (airbnb && /^## Mise en avant/.test(line)) {
       generatedHighlights = true;
       continue;
@@ -42,6 +51,7 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     .join("\n")
     .replace(/!\[[^\]]*\]\([^\n]*?\)/g, "")
     .replace(/\[([^\]]+)\]\([^\n]*?\)/g, "$1")
+    .replace(/\*\*([^*\n]+)\*\*/g, "$1")
     .replace(/\\/g, "")
     .replace(/^## Ce que propose ce logement\s*$/gm, "## Équipements")
     .replace(/^(?:\*\*)?(?:Le logement|Autres remarques)(?:\*\*)?\s*$/gm, "## Description");

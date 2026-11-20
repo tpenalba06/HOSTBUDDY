@@ -4,6 +4,33 @@ import { importAuthorizedEvaluationUrl } from "./firecrawl.server";
 import { authorizedEvaluationSources } from "./authorized-source";
 
 describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
+  it("projects explicit policy ranges and public Wi-Fi without FAQ contamination (synthetic)", async () => {
+    const url = "https://www.booking.com/hotel/gr/vallais-villa.fr.html";
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            markdown:
+              "# Hôtel TEST\n## Équipements de l'établissement TEST\nTélévision\nConnexion Wi-Fi gratuite\n## Règles de la maison\n**Arrivée**\nDe 14:00 à 21:00\n**Départ**\nDe 08:00 à 11:00\n## FAQ sur l'établissement TEST\nÉquipements imaginaires",
+            metadata: { statusCode: 200, sourceURL: url, ogDescription: "Un hôtel lumineux." },
+          },
+        }),
+        { headers: { "content-type": "application/json" } },
+      ),
+    );
+    const result = await importAuthorizedEvaluationUrl(url, {
+      testEnvironment: true,
+      experimentalPublic: true,
+      fetcher,
+    });
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") throw Error("Expected synthetic projection");
+    expect(result.preview.text?.arrival).toBe("Arrivée : De 14:00 à 21:00");
+    expect(result.preview.text?.departure).toBe("Départ : De 08:00 à 11:00");
+    expect(result.preview.wifiAvailable).toBe(true);
+    expect(JSON.stringify(result.preview)).not.toContain("imaginaires");
+  });
   it("never sends unauthorized platform, sibling path or production requests", async () => {
     const fetcher = vi.fn();
     for (const url of [

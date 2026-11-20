@@ -148,6 +148,31 @@ export async function readFirecrawlEvaluationUrl(
       for (const key of Object.keys(preview.text) as (keyof typeof preview.text)[]) {
         preview.text[key] = preview.text[key]!.replace(/^#{1,6}\s+/gm, "");
       }
+      // Preserve explicit policy ranges verbatim. They are ranges, not a
+      // contradictory pair of single check-in/out times, and contain no secrets.
+      for (const [key, label] of [
+        ["arrival", "Arrivée"],
+        ["departure", "Départ"],
+      ] as const) {
+        const ranges = new Set(
+          Array.from(
+            source.matchAll(
+              new RegExp(
+                `^${label}\\s*\\n+((?:De\\s+)?(?:[01]?\\d|2[0-3]):[0-5]\\d\\s+à\\s+(?:[01]?\\d|2[0-3]):[0-5]\\d)\\s*$`,
+                "gmi",
+              ),
+            ),
+            (match) => match[1]!,
+          ),
+        );
+        if (ranges.size === 1) preview.text[key] = `${label} : ${[...ranges][0]}`;
+      }
+      if (
+        /^(?:Connexion Wi-Fi gratuite|Wi-Fi gratuit|Une connexion Wi-Fi est disponible[^\n.]*gratuitement\.)\s*$/im.test(
+          source,
+        )
+      )
+        preview.wifiAvailable = true;
     }
     // Booking/calendar prose can trigger broad conflict detection. Only an
     // explicit, unique policy sentence can establish a single check-in/out time.

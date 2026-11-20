@@ -1,0 +1,46 @@
+[
+  {
+    "source": "https://raw.githubusercontent.com/tpenalba06/HOSTBUDDY/work/nona-commercial-beta/docs/fixtures/nona-villa-test.html",
+    "status": "ok",
+    "latencyMs": 807,
+    "name": "Villa NONA TEST fictive",
+    "textSections": [
+      "description",
+      "address",
+      "arrival",
+      "departure",
+      "kitchen",
+      "rules",
+      "recommendations"
+    ],
+    "provenance": {
+      "provider": "firecrawl",
+      "sourceUrl": "https://raw.githubusercontent.com/tpenalba06/HOSTBUDDY/work/nona-commercial-beta/docs/fixtures/nona-villa-test.html",
+      "evaluationOnly": true,
+      "photoRights": "unconfirmed",
+      "photosReused": 0
+    }
+  },
+  {
+    "source": "https://raw.githubusercontent.com/tpenalba06/HOSTBUDDY/work/nona-commercial-beta/docs/fixtures/nona-chalet-test.html",
+    "status": "ok",
+    "latencyMs": 667,
+    "name": "Chalet NONA TEST fictional",
+    "textSections": [
+      "description",
+      "address",
+      "arrival",
+      "departure",
+      "rules",
+      "transport",
+      "recommendations"
+    ],
+    "provenance": {
+      "provider": "firecrawl",
+      "sourceUrl": "https://raw.githubusercontent.com/tpenalba06/HOSTBUDDY/work/nona-commercial-beta/docs/fixtures/nona-chalet-test.html",
+      "evaluationOnly": true,
+      "photoRights": "unconfirmed",
+      "photosReused": 0
+    }
+  }
+]

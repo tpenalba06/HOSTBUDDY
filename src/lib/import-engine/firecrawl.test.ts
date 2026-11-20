@@ -47,21 +47,19 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
   it("feeds fetched text into the existing engine, masking credentials and using Smart Fill", async () => {
     const html = readFileSync("docs/fixtures/nona-villa-test.html", "utf8");
     const markdown = html.replace(/<head>[\s\S]*?<\/head>/, " ").replace(/<[^>]+>/g, "\n");
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              markdown,
-              html,
-              metadata: { statusCode: 200, sourceURL: authorizedEvaluationSources[0] },
-            },
-          }),
-          { headers: { "content-type": "application/json" } },
-        ),
-      );
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            markdown,
+            html,
+            metadata: { statusCode: 200, sourceURL: authorizedEvaluationSources[0] },
+          },
+        }),
+        { headers: { "content-type": "application/json" } },
+      ),
+    );
     const result = await importAuthorizedEvaluationUrl(authorizedEvaluationSources[0], {
       testEnvironment: true,
       fetcher,
@@ -71,22 +69,21 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
     expect(result.preview.name).toContain("TEST fictive");
     expect(result.preview.text?.transport).toContain("gare");
     expect(result.preview.text?.kitchen).toContain("four");
+    expect(result.preview.capacity).toBe(4);
     expect(result.preview.illustration).toBeTruthy();
     expect(JSON.stringify(result)).not.toContain("SECRET_FICTIF");
     expect(result.provenance.photosReused).toBe(0);
   });
   it("rejects successful provider envelopes containing a blocked target page", async () => {
-    const fetcher = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            success: true,
-            data: { markdown: "CAPTCHA", metadata: { statusCode: 403 } },
-          }),
-          { headers: { "content-type": "application/json" } },
-        ),
-      );
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          success: true,
+          data: { markdown: "CAPTCHA", metadata: { statusCode: 403 } },
+        }),
+        { headers: { "content-type": "application/json" } },
+      ),
+    );
     expect(
       (
         await importAuthorizedEvaluationUrl(authorizedEvaluationSources[0], {

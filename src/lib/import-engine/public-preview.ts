@@ -81,7 +81,7 @@ const arrival =
 const departure =
   /^(?:départ|departure|check[ -]?out|salida|abreise|partenza|partida)\s*:?\s*(?:avant |before |antes de |bis |entro |até )?([01]?\d|2[0-3])(?:[:h]([0-5]\d)|\s*h)$/iu;
 const capacity =
-  /^(?:capacité\s*:\s*)?([1-9]\d?)\s+(?:personnes?|voyageurs?|guests?|personas?|gäste|ospiti|hóspedes)$/iu;
+  /^(?:(?:capacité|capacity|capacidad|kapazität|capienza|capacidade)\s*:\s*)?([1-9]\d?)\s+(?:personnes?|voyageurs?|guests?|personas?|gäste|ospiti|hóspedes)[.!]?$/iu;
 
 export function publicImportPreview(
   result: ExtractionResult,

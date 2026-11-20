@@ -2,6 +2,7 @@ import { z } from "zod";
 import { authorizedEvaluationSource } from "./authorized-source";
 import { previewPastedDocument } from "./public-preview";
 import { extractAccessibleHtml } from "./url-source.server";
+import { htmlDocumentText } from "./html-document";
 
 const responseSchema = z.object({
   success: z.literal(true),
@@ -67,7 +68,12 @@ export async function importAuthorizedEvaluationUrl(
     // Reuse the existing HTML reader when available, then the same six-language
     // document projection as pasted text. Scrape responses are untrusted input.
     const extracted = data.html ? await extractAccessibleHtml(data.html, url, false) : null;
-    const source = data.markdown?.replace(/^#{1,6}\s+/gm, "") ?? "";
+    const source = [
+      data.html ? htmlDocumentText(data.html) : "",
+      data.markdown?.replace(/^#{1,6}\s+/gm, "") ?? "",
+    ]
+      .filter(Boolean)
+      .join("\n");
     const title = extracted?.propertyName;
     const preview = previewPastedDocument(
       [title ? `Nom du logement : ${title}` : "", source].filter(Boolean).join("\n"),

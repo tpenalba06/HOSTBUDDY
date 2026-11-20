@@ -47,7 +47,7 @@ SSO remains enabled (`all_except_custom_domains`), project live=false. An actual
 | Description | Owner prose → Welcome expanded and original paragraph visibly verified | Public metadata/property description → Welcome expanded; shorter than full page |
 | Capacity | 2 → Property section visibly shows 2 travelers | No unique whole-property capacity; omitted |
 | Arrival | 14:00 → visible in Arrival | 14:00–21:00 → exact policy range visible in Arrival |
-| Departure | 12:00 → projected and previously checked in phone | 07:00–11:00 → exact range visibly verified in final phone |
+| Departure | 12:00 → engine projection; not separately opened in the final browser replay | 07:00–11:00 → exact range visibly verified in final phone |
 | Equipment | Kitchen, laundry and source notes → consultable equipment section | Television, kitchenette, free public parking, climate/heating → visibly verified |
 | Recommendations/transports | Original public location/transport snippets → corresponding sections | Public surroundings/transports → corresponding sections |
 | Wi-Fi | Detected by extractor, not displayed in this anonymous projection | Detected by extractor, not displayed in this anonymous projection |

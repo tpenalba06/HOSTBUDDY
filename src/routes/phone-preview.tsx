@@ -121,9 +121,13 @@ function PhoneGuide({
         name: preview.name ?? (fr ? "Votre logement" : "Your property"),
         originalLocale: locale,
         coverUrl: smartFillCover(preview.illustration),
-        subtitle: fr
-          ? "Image d’illustration · Informations à vérifier"
-          : "Illustration · Details to review",
+        subtitle: preview.experimentalPublic
+          ? fr
+            ? "TEST · Données publiques à vérifier · Image illustrative"
+            : "TEST · Public source details to review · Illustrative image"
+          : fr
+            ? "Image d’illustration · Informations à vérifier"
+            : "Illustration · Details to review",
         sections: [
           ...(text?.description
             ? [

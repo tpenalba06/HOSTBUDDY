@@ -47,6 +47,7 @@ const textKeys = [
 ] as const;
 
 export const publicPreviewSchema = z.object({
+  experimentalPublic: z.literal(true).optional(),
   text: z.record(z.enum(textKeys), z.string().max(MAX_IMPORT_CHARACTERS)).optional(),
   name: z.string().max(100).optional(),
   locality: z.string().max(80).optional(),
@@ -200,7 +201,7 @@ export function publicImportPreview(
 
 /** Keep sentence boundaries before classification so one credential does not taint
  * the rest of a paragraph. Only named, bounded facts are projected to the phone. */
-export function previewPastedDocument(input: string): PublicImportPreview {
+export function previewPastedDocument(input: string, providedName?: string): PublicImportPreview {
   const prose = sourceSentences(input.replace(/[’]/g, "'"))
     .join("\n")
     .replace(
@@ -210,6 +211,7 @@ export function previewPastedDocument(input: string): PublicImportPreview {
   const document = prose.replace(/\bet le départ (?=avant|à )/giu, "\nDépart ");
   const result = extractDocument(document);
   const name =
+    providedName ??
     prose.match(
       /(?<!\p{L})(?:[Bb]ienvenue à|[Ww]elcome to|[Bb]ienvenid[oa]s? a|[Ww]illkommen (?:in|im|bei)|[Bb]envenut[oi] (?:a|al|alla)|[Bb]em-vind[oa]s? (?:a|ao|à)) (?:la |le |l'|the |el |der |die |a |o )?([\p{Lu}][\p{L}\p{M} '-]{1,70}?)(?=,|[.!?]|\n|$)/u,
     )?.[1] ??

@@ -3,6 +3,7 @@ import { normalizeUrl, pickAdapter } from "./url-adapters";
 import { runUrlImport } from "./url-source.server";
 import { publicImportPreview } from "./public-preview";
 import { authorizedEvaluationSource } from "./authorized-source";
+import { otaTestAllowed } from "./ota-test-policy";
 
 const attempts = new Map<string, number>();
 let windowEnds = 0;
@@ -24,7 +25,9 @@ export async function runPublicPreview(input: string) {
   const url = normalizeUrl(original.href);
   if (!url) return { status: "invalid" } as const;
   const source = pickAdapter(url).source;
-  if (source === "airbnb") return { status: "authorization_required" } as const;
+  const experimentalPublic = otaTestAllowed(url, process.env);
+  if (source === "airbnb" && !experimentalPublic)
+    return { status: "authorization_required" } as const;
 
   const now = Date.now();
   if (now >= windowEnds) {
@@ -39,9 +42,10 @@ export async function runPublicPreview(input: string) {
   total++;
   running++;
   try {
-    if (authorizedEvaluationSource(url)) {
+    if (authorizedEvaluationSource(url) || experimentalPublic) {
       const { importAuthorizedEvaluationUrl } = await import("./firecrawl.server");
       return await importAuthorizedEvaluationUrl(url, {
+        experimentalPublic,
         testEnvironment:
           process.env["VERCEL_ENV"] === "preview" &&
           process.env["VITE_SUPABASE_PROJECT_ID"] === "mhhtnqfdkyudwyqlmnce",

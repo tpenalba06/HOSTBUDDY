@@ -3,26 +3,50 @@ import { authorizedEvaluationSource } from "./authorized-source";
 import { previewPastedDocument } from "./public-preview";
 import { extractAccessibleHtml } from "./url-source.server";
 import { htmlDocumentText } from "./html-document";
+import { otaReferenceSources } from "./ota-test-policy";
+import { analyzeImportDocument } from "./intelligence.server";
+import { publicImportPreview } from "./public-preview";
+import { otaDocument } from "./ota-document";
 
 const responseSchema = z.object({
   success: z.literal(true),
   data: z.object({
     markdown: z.string().max(200_000).optional(),
     html: z.string().max(1_500_000).optional(),
+    images: z.array(z.string().max(4000)).max(1000).optional(),
     metadata: z
       .object({ statusCode: z.number(), sourceURL: z.string().url().optional() })
       .passthrough(),
   }),
 });
-export async function importAuthorizedEvaluationUrl(
+export async function readFirecrawlEvaluationUrl(
   url: string,
   options: {
     testEnvironment: boolean;
+    experimentalPublic?: boolean;
     fetcher?: typeof fetch;
   },
 ) {
-  if (!options.testEnvironment || !authorizedEvaluationSource(url))
+  const experimentalPublic =
+    options.experimentalPublic === true && otaReferenceSources.some((source) => source === url);
+  if (!options.testEnvironment || (!authorizedEvaluationSource(url) && !experimentalPublic))
     return { status: "authorization_required" } as const;
+  const started = Date.now();
+  const diagnostics: {
+    experimentalPublic: boolean;
+    providerHttpStatus?: number;
+    targetHttpStatus?: number;
+    markdownCharacters?: number;
+    htmlCharacters?: number;
+    discoveredImages?: number;
+    propertyImageCandidates?: number;
+    providerCode?: string;
+    providerMessage?: string;
+    latencyMs?: number;
+    fields?: { key: string; characters: number; present: boolean }[];
+    displayedFields?: string[];
+    failureStage?: string;
+  } = { experimentalPublic };
   // Keyless evaluation only: no account credential, purchased credit or paid fallback.
   // No browser actions, stealth proxy, captcha handling, crawl or remote AI.
   try {
@@ -31,12 +55,18 @@ export async function importAuthorizedEvaluationUrl(
       redirect: "error",
       signal: AbortSignal.timeout(25_000),
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ url, formats: ["markdown", "html"], proxy: "basic", timeout: 15000 }),
+      body: JSON.stringify({
+        url,
+        formats: ["markdown", "html", "images"],
+        proxy: "basic",
+        timeout: 15000,
+        storeInCache: false,
+        maxAge: 0,
+      }),
     });
-    if (!response.ok)
-      return { status: response.status === 429 ? "limited" : "unreachable" } as const;
+    diagnostics.providerHttpStatus = response.status;
     if (!response.headers.get("content-type")?.includes("json") || !response.body)
-      return { status: "unreachable" } as const;
+      return { status: "unreachable", diagnostics } as const;
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let bytes = 0;
@@ -57,34 +87,104 @@ export async function importAuthorizedEvaluationUrl(
       buffer.set(chunk, offset);
       offset += chunk.byteLength;
     }
-    const result = responseSchema.safeParse(JSON.parse(new TextDecoder().decode(buffer)));
-    if (!result.success) return { status: "insufficient" } as const;
+    const payload: unknown = JSON.parse(new TextDecoder().decode(buffer));
+    if (!response.ok) {
+      const error = z
+        .object({ code: z.string().max(120).optional(), error: z.string().max(2000).optional() })
+        .safeParse(payload);
+      if (error.success) {
+        if (error.data.code) diagnostics.providerCode = error.data.code;
+        if (error.data.error)
+          diagnostics.providerMessage = error.data.error.replace(/[\r\n]/g, " ").slice(0, 240);
+      }
+      diagnostics.latencyMs = Date.now() - started;
+      return { status: response.status === 429 ? "limited" : "blocked", diagnostics } as const;
+    }
+    const result = responseSchema.safeParse(payload);
+    if (!result.success) return { status: "insufficient", diagnostics } as const;
     const data = result.data.data;
+    diagnostics.targetHttpStatus = data.metadata.statusCode;
+    diagnostics.markdownCharacters = data.markdown?.length ?? 0;
+    diagnostics.htmlCharacters = data.html?.length ?? 0;
+    diagnostics.discoveredImages = data.images?.length ?? 0;
     if (
       data.metadata.statusCode !== 200 ||
       (data.metadata.sourceURL && data.metadata.sourceURL !== url)
     )
-      return { status: "blocked" } as const;
+      return { status: "blocked", diagnostics } as const;
+    if (
+      /(?:verify (?:that )?you(?:'re| are) (?:a human|not a robot)|captcha challenge|access denied|just a moment|enable javascript to continue)/i.test(
+        (data.markdown ?? "").slice(0, 2500),
+      )
+    )
+      return {
+        status: "blocked",
+        diagnostics: { ...diagnostics, failureStage: "target_challenge" },
+      } as const;
     // Reuse the existing HTML reader when available, then the same six-language
     // document projection as pasted text. Scrape responses are untrusted input.
     const extracted = data.html ? await extractAccessibleHtml(data.html, url, false) : null;
-    const source = [
-      data.html ? htmlDocumentText(htmlDocumentText(data.html)) : "",
-      data.markdown
-        ? htmlDocumentText(htmlDocumentText(data.markdown.replace(/^#{1,6}\s+/gm, "")))
-        : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-    const title = extracted?.propertyName;
+    const document =
+      experimentalPublic && data.markdown
+        ? otaDocument(data.markdown, url, data.metadata)
+        : undefined;
+    const source =
+      document?.text ??
+      [
+        data.html ? htmlDocumentText(htmlDocumentText(data.html)) : "",
+        data.markdown
+          ? htmlDocumentText(htmlDocumentText(data.markdown.replace(/^#{1,6}\s+/gm, "")))
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+    const title = document?.title ?? extracted?.propertyName;
     const preview = previewPastedDocument(
       [title ? `Nom du logement : ${title}` : "", source].filter(Boolean).join("\n"),
+      title ?? undefined,
     );
+    if (experimentalPublic) preview.experimentalPublic = true;
+    // Booking/calendar prose can trigger broad conflict detection. Only an
+    // explicit, unique policy sentence can establish a single check-in/out time.
+    if (document) {
+      for (const [key, label] of [
+        ["arrival", "Arrivée à partir de"],
+        ["departure", "Départ avant"],
+      ] as const) {
+        const values = new Set(
+          Array.from(
+            source.matchAll(new RegExp(`${label}\\s+([0-2]\\d:[0-5]\\d)`, "gi")),
+            (match) => match[1]!,
+          ),
+        );
+        if (values.size === 1) preview[key] = [...values][0]!;
+      }
+    }
+    const extraction = document
+      ? {
+          ...(await analyzeImportDocument(source, { sourceUrl: url, localAi: false })),
+          propertyName: title ?? null,
+          ...(document.location ? { publicLocality: document.location } : {}),
+        }
+      : (extracted ?? (await analyzeImportDocument(source, { sourceUrl: url, localAi: false })));
+    const locality =
+      document?.location ?? (extracted ? publicImportPreview(extracted, true).locality : undefined);
+    if (locality) preview.locality = locality;
+    diagnostics.propertyImageCandidates = extracted?.photos?.length ?? 0;
+    diagnostics.fields = extraction.fields.map((field) => ({
+      key: field.key,
+      characters: field.value?.length ?? 0,
+      present: !!field.value,
+    }));
+    diagnostics.displayedFields = Object.keys(preview.text ?? {});
+    diagnostics.latencyMs = Date.now() - started;
     if (!preview.name || Object.keys(preview.text ?? {}).length < 2)
-      return { status: "insufficient" } as const;
+      return { status: "insufficient", diagnostics } as const;
     return {
       status: "ok",
       preview,
+      extraction,
+      diagnostics,
       provenance: {
         provider: "firecrawl",
         sourceUrl: url,
@@ -94,6 +194,25 @@ export async function importAuthorizedEvaluationUrl(
       },
     } as const;
   } catch {
-    return { status: "unreachable" } as const;
+    return {
+      status: "unreachable",
+      diagnostics: {
+        ...diagnostics,
+        latencyMs: Date.now() - started,
+        failureStage: "transport_or_parse",
+      },
+    } as const;
   }
+}
+
+/** Raw source/extraction stays server-side. Only redacted projection and counts
+ * cross the anonymous preview boundary; nothing is persisted. */
+export async function importAuthorizedEvaluationUrl(
+  url: string,
+  options: Parameters<typeof readFirecrawlEvaluationUrl>[1],
+) {
+  const outcome = await readFirecrawlEvaluationUrl(url, options);
+  if (outcome.status !== "ok") return outcome;
+  const { extraction: _privateExtraction, ...projection } = outcome;
+  return projection;
 }

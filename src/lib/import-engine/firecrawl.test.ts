@@ -40,7 +40,9 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
       expect(init.headers).toEqual({ "content-type": "application/json" });
       expect(JSON.parse(init.body)).toMatchObject({
         proxy: "basic",
-        formats: ["markdown", "html"],
+        formats: ["markdown", "html", "images"],
+        storeInCache: false,
+        maxAge: 0,
       });
     },
   );

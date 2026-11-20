@@ -5,6 +5,7 @@ import { analyzeImportDocument } from "./intelligence.server";
 import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
+import { otaTestAllowed } from "./ota-test-policy";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
 
@@ -239,6 +240,16 @@ export async function runUrlImport(data: {
   }
   if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
     return { ok: false, source, reason: "invalid" };
+  if (otaTestAllowed(url.href, process.env)) {
+    const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
+    const outcome = await readFirecrawlEvaluationUrl(url.href, {
+      testEnvironment: true,
+      experimentalPublic: true,
+    });
+    return outcome.status === "ok"
+      ? { ok: true, source, result: outcome.extraction }
+      : { ok: false, source, reason: outcome.status === "blocked" ? "blocked" : "unreachable" };
+  }
   if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
     return { ok: false, source, reason: "blocked" };
   const permitted = (target: URL) =>

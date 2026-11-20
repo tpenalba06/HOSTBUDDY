@@ -10,8 +10,26 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     ?.replace(/^# /, "")
     .trim();
   let suppressed = false;
+  let generatedHighlights = false;
   const lines: string[] = [];
   for (const line of headings) {
+    if (airbnb && /^## Mise en avant/.test(line)) {
+      generatedHighlights = true;
+      continue;
+    }
+    if (generatedHighlights && /Ces résumés ont été générés/.test(line)) {
+      generatedHighlights = false;
+      lines.push("## Description");
+      continue;
+    }
+    if (generatedHighlights && !/^## /.test(line)) continue;
+    if (/^## /.test(line)) generatedHighlights = false;
+    if (
+      /^(?:En savoir plus sur les résumés|Afficher les \d+ équipements|Commentaires|Emplacement|Équipements)\s*$/.test(
+        line.trim(),
+      )
+    )
+      continue;
     if (/^## /.test(line)) {
       suppressed =
         /Sélectionnez la date|commentaires|Disponibilité|Questions des voyageurs|Faites connaissance|^## (?:Améliorez|.*choses à faire)/i.test(
@@ -25,7 +43,8 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     .replace(/!\[[^\]]*\]\([^\n]*?\)/g, "")
     .replace(/\[([^\]]+)\]\([^\n]*?\)/g, "$1")
     .replace(/\\/g, "")
-    .replace(/^## Ce que propose ce logement\s*$/gm, "## Équipements");
+    .replace(/^## Ce que propose ce logement\s*$/gm, "## Équipements")
+    .replace(/^(?:\*\*)?(?:Le logement|Autres remarques)(?:\*\*)?\s*$/gm, "## Description");
   const location = airbnb
     ? markdown.match(/^## Logement entier[^\n]*? - ([^\n]+)/m)?.[1]?.trim()
     : typeof metadata["title"] === "string" && title

@@ -144,6 +144,11 @@ export async function readFirecrawlEvaluationUrl(
       title ?? undefined,
     );
     if (experimentalPublic) preview.experimentalPublic = true;
+    if (document && preview.text) {
+      for (const key of Object.keys(preview.text) as (keyof typeof preview.text)[]) {
+        preview.text[key] = preview.text[key]!.replace(/^#{1,6}\s+/gm, "");
+      }
+    }
     // Booking/calendar prose can trigger broad conflict detection. Only an
     // explicit, unique policy sentence can establish a single check-in/out time.
     if (document) {

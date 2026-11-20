@@ -30,3 +30,16 @@ it("ends classified sections at real page headings (synthetic)", () => {
   expect(preview.text?.equipment).not.toContain("Navigation factice");
   expect(preview.text?.equipment).not.toContain("Arrivée");
 });
+
+it("excludes platform-generated review summaries while keeping owner description (synthetic)", () => {
+  const document = otaDocument(
+    "# Studio TEST\n## Mise en avant des annonces\n### Toujours propre\nLes voyageurs trouvent les équipements merveilleux.\nCes résumés ont été générés par l'IA.\nEn savoir plus sur les résumés\nUn studio au centre du village.\nLe logement\nLe plafond de la cuisine est bas.\n## Où vous dormirez\nUn lit",
+    "https://www.airbnb.fr/rooms/1086157072408105944",
+    {},
+  );
+  expect(document.text).not.toContain("merveilleux");
+  expect(document.text).not.toContain("générés par l'IA");
+  const preview = previewPastedDocument(document.text, document.title);
+  expect(preview.text?.description).toContain("centre du village");
+  expect(preview.text?.description).toContain("plafond");
+});

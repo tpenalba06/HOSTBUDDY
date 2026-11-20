@@ -2,6 +2,7 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { normalizeUrl, pickAdapter } from "./url-adapters";
 import { runUrlImport } from "./url-source.server";
 import { publicImportPreview } from "./public-preview";
+import { authorizedEvaluationSource } from "./authorized-source";
 
 const attempts = new Map<string, number>();
 let windowEnds = 0;
@@ -38,6 +39,14 @@ export async function runPublicPreview(input: string) {
   total++;
   running++;
   try {
+    if (authorizedEvaluationSource(url)) {
+      const { importAuthorizedEvaluationUrl } = await import("./firecrawl.server");
+      return await importAuthorizedEvaluationUrl(url, {
+        testEnvironment:
+          process.env["VERCEL_ENV"] === "preview" &&
+          process.env["VITE_SUPABASE_PROJECT_ID"] === "mhhtnqfdkyudwyqlmnce",
+      });
+    }
     const outcome = await runUrlImport({ url, source, localAi: false });
     return outcome.ok
       ? ({ status: "ok", preview: publicImportPreview(outcome.result, true) } as const)

@@ -56,3 +56,20 @@ it("keeps Booking property sections but excludes testimonials and FAQ (synthetic
   expect(document.text).toContain("De 14:00 à 21:00");
   expect(document.location).toBe("Nice");
 });
+
+it("never treats an accessibility skip link as a property name (synthetic)", () => {
+  const source = "https://www.airbnb.fr/rooms/1086157072408105944";
+  expect(
+    otaDocument(
+      "# Aller directement au contenu\n# Studio TEST\n## Ce que propose ce logement\nCuisine",
+      source,
+      {},
+    ).title,
+  ).toBe("Studio TEST");
+  expect(
+    otaDocument("# Aller directement au contenu\nCuisine", source, {
+      ogTitle: "Studio TEST - Appartements à louer à Nice - Airbnb",
+    }).title,
+  ).toBe("Studio TEST");
+  expect(otaDocument("# Aller directement au contenu\nCuisine", source, {}).title).toBeUndefined();
+});

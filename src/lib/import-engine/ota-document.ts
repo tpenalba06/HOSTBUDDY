@@ -3,12 +3,23 @@
 export function otaDocument(markdown: string, source: string, metadata: Record<string, unknown>) {
   const airbnb = new URL(source).hostname.endsWith("airbnb.fr");
   const allLines = markdown.split("\n");
-  const firstTitle = allLines.findIndex((line) => /^# /.test(line));
+  const navigationTitle =
+    /^# (?:Aller directement|Passer au|Skip to|Airbnb$|Booking\.com$|Menu$|Connexion$)/i;
+  const firstTitle = allLines.findIndex((line) => /^# /.test(line) && !navigationTitle.test(line));
   const headings = firstTitle >= 0 ? allLines.slice(firstTitle) : allLines;
-  const title = headings
+  const bodyTitle = headings
     .find((line) => /^# /.test(line))
     ?.replace(/^# /, "")
     .trim();
+  const ogTitle = metadata["ogTitle"] ?? metadata["og:title"];
+  const title =
+    bodyTitle && !navigationTitle.test(`# ${bodyTitle}`)
+      ? bodyTitle
+      : typeof ogTitle === "string" && !navigationTitle.test(`# ${ogTitle}`)
+        ? ogTitle
+            .replace(/ - (?:Appartements?|Maisons?|Villas?|Chambres?|Logements?).* - Airbnb$/, "")
+            .trim()
+        : undefined;
   let suppressed = false;
   let generatedHighlights = false;
   let bookingPropertySection = false;

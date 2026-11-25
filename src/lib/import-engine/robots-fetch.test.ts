@@ -1,9 +1,40 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock("./safe-public-fetch", () => ({ safePublicFetch: mocks.fetch }));
 import { robotsAllows, runUrlImport } from "./url-source.server";
 const target = new URL("https://source.example.invalid/villa");
 describe("robots permission fail closed", () => {
+  beforeEach(() => mocks.fetch.mockReset());
+  it.each([
+    ["airbnb", "https://www.airbnb.fr/rooms/1196872767938009585"],
+    ["booking", "https://www.booking.com/hotel/fr/de-roubaix.fr.html"],
+  ] as const)("sends %s through the normal guarded HTTP path on TEST", async (platform, url) => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VITE_SUPABASE_PROJECT_ID", "mhhtnqfdkyudwyqlmnce");
+    vi.stubEnv("VERCEL_PROJECT_ID", "");
+    try {
+      mocks.fetch
+        .mockResolvedValueOnce({
+          response: new Response("User-agent: *\nAllow: /"),
+          buffer: new TextEncoder().encode("User-agent: *\nAllow: /"),
+        })
+        .mockResolvedValueOnce({
+          response: new Response("Forbidden", { status: 403 }),
+          buffer: new Uint8Array(),
+        });
+      expect(await runUrlImport({ url: url + "?sid=discard", source: "website" })).toEqual({
+        ok: false,
+        source: platform,
+        reason: "blocked",
+      });
+      expect(mocks.fetch.mock.calls.map(([requested]) => requested)).toEqual([
+        new URL("/robots.txt", url).href,
+        url,
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it.each([
     ["airbnb", "https://www.airbnb.fr/rooms/1086157072408105944"],
     ["booking", "https://www.booking.com/hotel/sc/la-digue-island-lodge.fr.html"],

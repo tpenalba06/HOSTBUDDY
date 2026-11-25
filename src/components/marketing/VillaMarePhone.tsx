@@ -74,12 +74,7 @@ export function VillaMarePhone() {
       } else {
         const response = await importPublicPreview({ data: { url: value } });
         if (response.status !== "ok") {
-          const diagnostic = "diagnostics" in response ? response.diagnostics : undefined;
-          if (
-            response.status !== "limited" &&
-            response.status !== "authorization_required" &&
-            !diagnostic?.experimentalPublic
-          ) {
+          if (response.status !== "limited" && response.status !== "authorization_required") {
             focusTextAfterFallback.current = true;
             setMode("text");
           }
@@ -88,15 +83,13 @@ export function VillaMarePhone() {
               ? fr
                 ? "Lien reconnu. L’import attend une connexion autorisée à cette plateforme."
                 : "Link recognized. Import requires an authorized connection to this platform."
-              : diagnostic?.experimentalPublic
-                ? `TEST · ${response.status} · HTTP ${diagnostic.providerHttpStatus ?? "—"} / ${diagnostic.targetHttpStatus ?? "—"}${diagnostic.providerCode ? ` · ${diagnostic.providerCode}` : ""}`
-                : response.status === "limited"
-                  ? fr
-                    ? "Réessaie dans une minute."
-                    : "Try again in a minute."
-                  : fr
-                    ? "Ce lien n’a pas pu être lu. Tu peux coller le texte de l’annonce."
-                    : "This link could not be read. You can paste the listing text.",
+              : response.status === "limited"
+                ? fr
+                  ? "Réessaie dans une minute."
+                  : "Try again in a minute."
+                : fr
+                  ? "Ce lien n’a pas pu être lu. Tu peux coller le texte de l’annonce."
+                  : "This link could not be read. You can paste the listing text.",
           );
           return;
         }

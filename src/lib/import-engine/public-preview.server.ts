@@ -44,14 +44,6 @@ export async function runPublicPreview(input: string) {
   total++;
   running++;
   try {
-    if (access?.mode === "connector") {
-      const { importAuthorizedEvaluationUrl } = await import("./firecrawl.server");
-      return await importAuthorizedEvaluationUrl(url, {
-        testEnvironment:
-          process.env["VERCEL_ENV"] === "preview" &&
-          process.env["VITE_SUPABASE_PROJECT_ID"] === "mhhtnqfdkyudwyqlmnce",
-      });
-    }
     const outcome = await runUrlImport({ url, source, localAi: false });
     return outcome.ok
       ? ({ status: "ok", preview: publicImportPreview(outcome.result, true) } as const)

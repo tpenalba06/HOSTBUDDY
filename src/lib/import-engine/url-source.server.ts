@@ -7,7 +7,8 @@ import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
 import { otaPlatformHost } from "./ota-listing";
-import { otaImportAccess, otaHtmlTrial } from "./ota-access.server";
+import { otaImportAccess } from "./ota-access.server";
+import { accessChallenge } from "./html-snapshot";
 import { authorizedEvaluationSource } from "./authorized-source";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
@@ -205,7 +206,8 @@ export async function extractAccessibleHtml(
 }
 
 export async function fetchAccessibleListingHtml(url: URL) {
-  const direct = otaHtmlTrial(url.href);
+  const access = otaImportAccess(url.href);
+  const direct = access?.mode === "direct" ? access.listing : null;
   if (otaPlatformHost(url.hostname) && !direct) return { reason: "blocked" } as const;
   if (direct) url = new URL(direct.url);
   if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
@@ -247,9 +249,8 @@ export async function fetchAccessibleListingHtml(url: URL) {
     } as const;
   }
   if (
-    /(captcha|cf-challenge|aws-waf|are you a robot|verify that you['’]re not a robot|access denied|enable javascript to continue|javascript is disabled)/i.test(
-      html.slice(0, 20000),
-    )
+    accessChallenge.test(html.slice(0, 20_000)) ||
+    /cf-challenge|aws-waf/i.test(html.slice(0, 20_000))
   ) {
     return { reason: "blocked" } as const;
   }
@@ -261,7 +262,7 @@ export async function runUrlImport(data: {
   source: ImportSource;
   localAi?: boolean;
 }): Promise<UrlImportOutcome> {
-  const source = data.source;
+  let source = data.source;
   let url: URL;
   try {
     url = new URL(data.url);
@@ -274,18 +275,9 @@ export async function runUrlImport(data: {
   if (!access && otaPlatformHost(url.hostname)) return { ok: false, source, reason: "invalid" };
   if (access?.mode === "authorization_required")
     return { ok: false, source: access.listing.platform, reason: "authorization_required" };
-  if (access?.mode === "connector") {
-    const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
-    const outcome = await readFirecrawlEvaluationUrl(access.listing.url, { testEnvironment: true });
-    const platform = access.listing.platform;
-    if (outcome.status === "ok") return { ok: true, source: platform, result: outcome.extraction };
-    const reason =
-      outcome.status === "blocked" ||
-      outcome.status === "insufficient" ||
-      outcome.status === "authorization_required"
-        ? outcome.status
-        : "unreachable";
-    return { ok: false, source: platform, reason };
+  if (access?.mode === "direct") {
+    source = access.listing.platform;
+    url = new URL(access.listing.url);
   }
   const fetched = await fetchAccessibleListingHtml(url);
   if ("reason" in fetched) return { ok: false, source, reason: fetched.reason };

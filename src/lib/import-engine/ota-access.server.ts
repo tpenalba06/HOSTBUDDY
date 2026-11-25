@@ -8,43 +8,24 @@ type Environment = Record<string, string | undefined>;
 export function otaImportAccess(input: string) {
   const listing = otaListing(input);
   if (!listing) return null;
-  const direct = otaHtmlTrial(listing.url);
-  if (direct) return { mode: "direct", listing } as const;
-  if (authorizedOtaSource(listing.url) || otaFirecrawlTrial(listing.url))
-    return { mode: "connector", listing } as const;
-  return { mode: "authorization_required", listing } as const;
+  return {
+    mode: isOtaTestPreview(process.env) ? "direct" : "authorization_required",
+    listing,
+  } as const;
 }
 
-/** Set only for a platform that has permitted this bounded Firecrawl trial. */
-export function otaFirecrawlTrial(input: string, env: Environment = process.env, now = Date.now()) {
-  return otaTrial(input, "FIRECRAWL", env, now);
-}
-
-export function otaHtmlTrial(input: string, env: Environment = process.env, now = Date.now()) {
-  return otaTrial(input, "HTML", env, now);
-}
-
-function otaTrial(input: string, mode: "FIRECRAWL" | "HTML", env: Environment, now: number) {
-  const listing = otaListing(input);
-  if (
-    !listing ||
-    env["VERCEL_ENV"] !== "preview" ||
-    env["VITE_SUPABASE_PROJECT_ID"] !== "mhhtnqfdkyudwyqlmnce"
-  )
-    return null;
-  const until = Date.parse(env[`NONA_${listing.platform.toUpperCase()}_${mode}_TEST_UNTIL`] ?? "");
-  return until > now && until - now <= 48 * 60 * 60 * 1000 ? listing : null;
+function isOtaTestPreview(env: Environment) {
+  return (
+    env["VERCEL_ENV"] === "preview" &&
+    env["VITE_SUPABASE_PROJECT_ID"] === "mhhtnqfdkyudwyqlmnce" &&
+    (!env["VERCEL_PROJECT_ID"] || env["VERCEL_PROJECT_ID"] === "prj_JNddG5i5NkQyvQI83Blh7X02GVzV")
+  );
 }
 
 /** Provision independently for each platform only after access and reuse are approved. */
 export function authorizedOtaSource(input: string, env: Environment = process.env) {
   const listing = otaListing(input);
-  if (
-    !listing ||
-    env["VERCEL_ENV"] !== "preview" ||
-    env["VITE_SUPABASE_PROJECT_ID"] !== "mhhtnqfdkyudwyqlmnce"
-  )
-    return null;
+  if (!listing || !isOtaTestPreview(env)) return null;
   const prefix = `NONA_${listing.platform.toUpperCase()}_AUTHORIZED`;
   const token = env[`${prefix}_TOKEN`];
   if (!token || /[\r\n]/.test(token)) return null;

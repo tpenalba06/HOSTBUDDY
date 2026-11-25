@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { authorizedEvaluationSource } from "./authorized-source";
 import { previewPastedDocument } from "./public-preview";
-import { extractAccessibleHtml, robotsAllows, UA } from "./url-source.server";
+import { extractAccessibleHtml } from "./url-source.server";
 import { htmlDocumentText } from "./html-document";
-import { authorizedOtaSource, otaFirecrawlTrial } from "./ota-access.server";
+import { authorizedOtaSource } from "./ota-access.server";
 import { safePublicFetch } from "./safe-public-fetch";
 import { analyzeImportDocument } from "./intelligence.server";
 import { publicImportPreview } from "./public-preview";
@@ -11,27 +11,6 @@ import { otaDocument } from "./ota-document";
 
 const accessChallenge =
   /(?:verify (?:that )?you(?:['’]re| are) (?:a human|not a robot)|captcha|access denied|just a moment|enable javascript to continue|javascript is disabled|vérifi(?:ez|er) que vous n['’]êtes pas un robot|aws-waf|cf-challenge)/i;
-
-async function publicOtaPageIsAccessible(url: string) {
-  const target = new URL(url);
-  if (!(await robotsAllows(target)) || !(await robotsAllows(target, "Firecrawl"))) return false;
-  const result = await safePublicFetch(
-    url,
-    {
-      headers: { "user-agent": UA, accept: "text/html" },
-      signal: AbortSignal.timeout(6000),
-    },
-    1_500_000,
-    async () => false,
-  );
-  if (!result.response.ok || !result.response.headers.get("content-type")?.includes("text/html"))
-    return false;
-  const html = new TextDecoder().decode(result.buffer);
-  return (
-    !accessChallenge.test(html.slice(0, 20_000)) &&
-    !accessChallenge.test(htmlDocumentText(html).slice(0, 2500))
-  );
-}
 
 const responseSchema = z.object({
   success: z.literal(true),
@@ -53,8 +32,7 @@ export async function readFirecrawlEvaluationUrl(
   },
 ) {
   const ota = authorizedOtaSource(url, options.env);
-  const trial = ota ? null : otaFirecrawlTrial(url, options.env);
-  const listing = ota ?? trial;
+  const listing = ota;
   const experimentalPublic = listing !== null;
   if (!options.testEnvironment || (!authorizedEvaluationSource(url) && !listing))
     return { status: "authorization_required" } as const;
@@ -78,11 +56,6 @@ export async function readFirecrawlEvaluationUrl(
   // Keyless evaluation only: no account credential, purchased credit or paid fallback.
   // No browser actions, stealth proxy, captcha handling, crawl or remote AI.
   try {
-    if (trial && !(await publicOtaPageIsAccessible(url)))
-      return {
-        status: "blocked",
-        diagnostics: { ...diagnostics, failureStage: "source_access" },
-      } as const;
     const request = {
       method: "POST",
       redirect: "error",

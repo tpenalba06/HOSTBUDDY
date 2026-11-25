@@ -9,7 +9,7 @@ Le moteur lit les métadonnées, le JSON-LD, les objets logement typés présent
 
 Les catégories correspondent d’abord à une rubrique existante. Les photos de chambres, cuisine, salon, extérieurs, salle de bain et équipements rejoignent La maison si la rubrique spécifique est absente. La piscine rejoint sa rubrique si elle existe. La couverture rejoint Bienvenue. Il n’y a pas de nouvelle structure de données persistante.
 
-Les essais directs Airbnb et Booking s’autorisent indépendamment sur Preview TEST au moyen de `NONA_AIRBNB_HTML_TEST_UNTIL` ou `NONA_BOOKING_HTML_TEST_UNTIL` lorsque la voie HTTP est autorisée. Les contrôles robots et les limites réseau restent actifs. Aucun identifiant d’annonce n’est nécessaire. Firecrawl et les connecteurs restent des options séparées, sans repli automatique après un refus d’accès.
+Sur la Preview isolée TEST, Airbnb et Booking passent directement par le client HTTP et le parseur HTML du moteur. La vérification robots.txt précède le chargement de l'annonce. En cas de redirection vers une autre URL, de défi anti-robot ou de refus HTTP, le moteur s'arrête. Les limites réseau et la vérification des droits média restent actives.
 
 ## Export HTML du gestionnaire
 

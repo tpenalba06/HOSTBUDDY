@@ -68,3 +68,16 @@ Proof images are local technical artifacts outside Git under `output/nona-commer
 Remaining limits: only two allowlisted reference URLs; variable upstream rendering; incomplete Booking prose; Wi-Fi availability not reliably projected despite keyword detection; no independently established photo reuse rights; no claim that all source facts were mapped. The beta security verdict is unchanged. Test flag expires 21 November 2026 at 14:20 Paris time; no continuous commercial activation.
 
 The pre-existing uncommitted `beta-security.ps1` modification was preserved, excluded from these commits, and separately backed up outside Git.
+
+## Booking user-link retry — 25 November 2026
+
+The user reported that their full Vallais Villa URL failed. The prior Preview had an expired server flag (21 November). Reproduced the actual full link in the old homepage: generic failure and automatic text fallback. No user session/tracking parameter is saved in this report or test fixtures.
+
+Fix `45c0cf0`: distinguish expired TEST configuration from platform extraction failure, retain URL mode and show a precise expiry message. A regression test verifies Booking normalization removes synthetic session/tracking parameters and preserves the closed production guard. Renewed the same two-reference, keyless experiment until **27 November 2026, 16:50 Paris / 15:50 UTC**, Preview target only. No continuous enablement, paid credential or fallback.
+
+New deployment `dpl_4FRnA6xUwWhwLn9C8ZDkp8DXAoyL` on the isolated TEST project:
+https://nona-concierge-test-20261020-r6agutl1i.vercel.app/#try-your-property
+
+Real remote browser replay used the user's complete URL, including its original query parameters, unchanged at submission. It successfully generated Vallais Villa. Verified Imerovigli inside the Address section and the original 14:00–21:00 arrival range inside Arrival. The input was then replaced with the canonical URL without submitting again to avoid keeping private session parameters in the retained browser tab. The imported result remained visible. Mobile screenshot: `output/nona-commercial-browser-tools/booking-user-link-20261125.jpg` (technical artifact, not committed).
+
+Full check passed: 746 Vitest, 23 Node, migration integrity, lint (no errors), TypeScript, build and compiled homepage smoke. Project remains live=false with SSO enabled; production and Lovable were untouched. Original beta-security PowerShell changes remain preserved and outside this commit scope. The older deployment URL remains expired; use the new URL above for this renewed test.

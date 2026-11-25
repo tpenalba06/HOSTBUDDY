@@ -169,6 +169,7 @@ export function publicImportPreview(
       (entry) =>
         entry.method === "structured" &&
         (entry.quote.startsWith("JSON-LD description") ||
+          entry.quote.startsWith("Property structured description") ||
           entry.quote === "Sunver public property introduction"),
     ) &&
     !sensitive.test(value("description"))

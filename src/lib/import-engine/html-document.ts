@@ -6,7 +6,7 @@ const skipped = new Set(["script", "style", "svg", "noscript", "nav", "form"]);
 const block = new Set(["p", "div", "li", "section", "article", "footer", "br", "tr"]);
 
 /** Parse HTML as data, never execute page scripts or fetch their dependencies. */
-export function htmlDocumentText(html: string): string {
+export function htmlDocumentText(html: string | Node): string {
   const parts: string[] = [];
   function visit(node: Node) {
     if (node.nodeName === "#text" && "value" in node) {
@@ -33,7 +33,7 @@ export function htmlDocumentText(html: string): string {
     if ("tagName" in node && (block.has(node.tagName) || /^h[1-6]$/.test(node.tagName)))
       parts.push("\n");
   }
-  visit(parse(html));
+  visit(typeof html === "string" ? parse(html) : html);
   return parts
     .join("")
     .replace(/[\t ]+/g, " ")

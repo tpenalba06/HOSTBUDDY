@@ -1,7 +1,33 @@
 import { describe, it, expect } from "vitest";
-import { propertyPhotoCandidates } from "./photo-candidates";
+import { lodgingPhotoCandidates, propertyPhotoCandidates } from "./photo-candidates";
+import { lodgingDom } from "./lodging-dom";
 import { privateAddress } from "./safe-public-fetch";
 describe("authorized photo import candidates", () => {
+  it("uses gallery context, responsive sources and declared images without loading decorations", () => {
+    const html = `<meta property=og:image content=/cover.webp>
+      <img src=/advert.jpg>
+      <section class="listing-photos">
+        <picture><source srcset="/room.webp?w=640 640w, /room.webp?w=1280 1280w"><img src=/room.webp alt="Chambre double"></picture>
+        <img src="/room.webp?w=320" alt="Chambre double">
+        <figure><img data-src=/cooking.webp><figcaption>Cuisine</figcaption></figure>
+        <img src=/swim.webp alt=Piscine><img src=/garden.webp alt=Terrasse>
+        <img src=/lounge.webp alt=Salon><img src=/wash.webp alt="Salle de bain">
+        <img src=/bbq.webp alt=Barbecue><img src=/host-logo.webp><img width=32 src=/tiny.webp>
+        <img src="https://127.0.0.1/private.webp">
+      </section>`;
+    const photos = lodgingPhotoCandidates(lodgingDom(html), "https://example.test/room");
+    expect(photos.map((photo) => [new URL(photo.url).pathname, photo.role])).toEqual([
+      ["/cover.webp", "cover"],
+      ["/room.webp", "bedrooms"],
+      ["/cooking.webp", "kitchen"],
+      ["/swim.webp", "pool"],
+      ["/garden.webp", "outdoors"],
+      ["/lounge.webp", "living"],
+      ["/wash.webp", "bathroom"],
+      ["/bbq.webp", "equipment"],
+    ]);
+    expect(photos[1]?.url).toContain("w=1280");
+  });
   it("keeps a bounded property gallery with more than eight photos, without copying files", () => {
     const photos = Array.from(
       { length: 45 },

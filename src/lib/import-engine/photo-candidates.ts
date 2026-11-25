@@ -1,53 +1,142 @@
-/** Only property-declared image metadata; never harvest arbitrary page/UI images. */
-export function propertyPhotoCandidates(html: string, source: string): string[] {
-  const raw: string[] = [];
-  const push = (value: unknown) => {
-    if (typeof value === "string") raw.push(value);
-    else if (Array.isArray(value)) value.forEach(push);
-    else if (value && typeof value === "object") {
-      const item = value as Record<string, unknown>;
-      push(item["url"] ?? item["contentUrl"]);
+import { htmlText, lodgingDom, type HtmlNode } from "./lodging-dom";
+import { privateAddress } from "./safe-public-fetch";
+import type { LodgingPhoto, PhotoRole } from "./photo-roles";
+
+const rolePatterns = {
+  bedrooms: /bedroom|chambre|schlafzimmer|dormitorio|camera da letto|quarto/i,
+  kitchen: /kitchen|cuisine|küche|cocina|cucina|cozinha/i,
+  living: /living room|salon|wohnzimmer|sala de estar|soggiorno/i,
+  pool: /pool|piscine|piscina|schwimmbad/i,
+  outdoors:
+    /outside|outdoor|extérieur|garden|jardin|garten|terrace|terrasse|terraza|terrazza|terraço/i,
+  bathroom: /bathroom|salle de bain|badezimmer|baño|bagno|banheiro/i,
+};
+const decoration =
+  /(?:^|[^\p{L}])(?:logo|avatar|favicon|icon|icone|icône|badge|placeholder|sprite|profile|advert|banner)(?:$|[^\p{L}])/iu;
+const galleryPattern =
+  /(?:^|[^a-z])(?:gallery|galerie|galeria|galería|galleria|carousel|slideshow|property-photos|listing-photos)(?:$|[^a-z])/i;
+
+export function lodgingPhotoCandidates(
+  page: ReturnType<typeof lodgingDom>,
+  source: string,
+): LodgingPhoto[] {
+  const found = new Map<string, LodgingPhoto>();
+  const add = (value: unknown, label = "", cover = false) => {
+    if (typeof value !== "string" || !value.trim() || value.length > 2000) return;
+    try {
+      const url = new URL(value, source);
+      if (
+        url.protocol !== "https:" ||
+        url.port ||
+        url.username ||
+        url.password ||
+        privateAddress(url.hostname) ||
+        /\.(?:svg|gif|ico)(?:$|\/)/i.test(url.pathname) ||
+        decoration.test(url.pathname) ||
+        decoration.test(label)
+      )
+        return;
+      url.hash = "";
+      const dedupe = new URL(url.href);
+      for (const key of [
+        "w",
+        "h",
+        "width",
+        "height",
+        "quality",
+        "q",
+        "fit",
+        "format",
+        "auto",
+        "dpr",
+      ])
+        dedupe.searchParams.delete(key);
+      dedupe.searchParams.sort();
+      const cleanLabel = label.trim().slice(0, 180);
+      const category = (Object.keys(rolePatterns) as (keyof typeof rolePatterns)[]).find((key) =>
+        rolePatterns[key].test(cleanLabel),
+      );
+      const role = cover ? "cover" : (category ?? "equipment");
+      const previous = found.get(dedupe.href);
+      if (!previous || cover || (role !== "equipment" && previous.role === "equipment"))
+        found.set(dedupe.href, { url: url.href, role, label: cleanLabel });
+    } catch {
+      /* malformed or unsupported relative URL */
     }
   };
-  for (const match of html.matchAll(
-    /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi,
-  )) {
-    try {
-      const parsed: unknown = JSON.parse(match[1]!);
-      const nodes = Array.isArray(parsed) ? parsed : [parsed];
-      for (const value of nodes) {
-        if (!value || typeof value !== "object") continue;
-        const node = value as Record<string, unknown>;
-        const all = Array.isArray(node["@graph"]) ? [node, ...node["@graph"]] : [node];
-        for (const value of all) {
-          if (!value || typeof value !== "object") continue;
-          const item = value as Record<string, unknown>;
-          if (
-            /Lodging|VacationRental|Accommodation|House|Apartment|Hotel|Residence|Place/i.test(
-              String(item["@type"]),
-            )
-          )
-            push(item["image"]);
-        }
+  for (const record of page.lodging) {
+    const images = Array.isArray(record["image"])
+      ? record["image"].slice(0, 60)
+      : [record["image"]];
+    for (const image of images) {
+      if (typeof image === "string") add(image);
+      else if (image && typeof image === "object") {
+        const info = image as Record<string, unknown>;
+        const label = info["caption"] ?? info["description"] ?? info["name"];
+        add(info["contentUrl"] ?? info["url"], typeof label === "string" ? label : "");
       }
-    } catch {
-      /* malformed source metadata */
     }
   }
-  for (const tag of html.matchAll(/<meta\b[^>]*>/gi)) {
-    const name = tag[0].match(/(?:property|name)=["']([^"']+)["']/i)?.[1];
-    if (name === "og:image") push(tag[0].match(/content=["']([^"']+)["']/i)?.[1]);
-  }
-  return [
-    ...new Set(
-      raw.flatMap((value) => {
-        try {
-          const url = new URL(value.replace(/&amp;/g, "&"), source);
-          return url.protocol === "https:" && !url.username && !url.password ? [url.href] : [];
-        } catch {
-          return [];
-        }
-      }),
-    ),
-  ].slice(0, 30);
+  add(
+    page.metadata.get("og:image") ?? page.metadata.get("og:image:secure_url"),
+    page.metadata.get("og:image:alt"),
+    true,
+  );
+  const visit = (node: HtmlNode, gallery = false, context = "", sourceSet = "") => {
+    if ("tagName" in node) {
+      const attr = (name: string) => node.attrs.find((a) => a.name === name)?.value;
+      if (
+        ["nav", "footer", "header", "aside", "script"].includes(node.tagName) ||
+        attr("hidden") !== undefined ||
+        attr("aria-hidden") === "true" ||
+        /review|testimonial|avatar|advert|cookie/i.test([attr("class"), attr("id")].join(" "))
+      )
+        return;
+      const markers = [attr("id"), attr("class"), attr("aria-label")].join(" ");
+      gallery ||= galleryPattern.test(markers) || attr("itemprop") === "photo";
+      if (node.tagName === "figure") {
+        const caption = node.childNodes.find(
+          (child) => "tagName" in child && child.tagName === "figcaption",
+        );
+        if (caption) context = htmlText(caption);
+      }
+      if (node.tagName === "picture") {
+        const source = node.childNodes.find(
+          (child) =>
+            "tagName" in child &&
+            child.tagName === "source" &&
+            !child.attrs.some((a) => a.name === "media"),
+        );
+        if (source && "attrs" in source)
+          sourceSet = source.attrs.find((a) => a.name === "srcset")?.value ?? "";
+      }
+      if (node.tagName === "img" && (gallery || attr("itemprop") === "image")) {
+        if (
+          [attr("width"), attr("height")].some((value) => Number(value) > 0 && Number(value) < 160)
+        )
+          return;
+        const srcset = attr("srcset") ?? attr("data-srcset") ?? sourceSet;
+        const largest = srcset
+          .split(",")
+          .map((entry) => entry.trim().match(/^(\S+)\s+(\d+)w$/))
+          .filter((match) => match !== null)
+          .sort((a, b) => Number(b[2]) - Number(a[2]))[0]?.[1];
+        add(
+          largest ?? attr("data-src") ?? attr("src"),
+          [attr("alt"), context].filter(Boolean).join(" "),
+        );
+      }
+    }
+    if ("childNodes" in node)
+      node.childNodes.forEach((child) => visit(child, gallery, context, sourceSet));
+  };
+  visit(page.document);
+  const photos = [...found.values()];
+  if (!photos.some((photo) => photo.role === "cover") && photos[0]?.role === "equipment")
+    photos[0].role = "cover";
+  return photos.slice(0, 30);
+}
+
+export function propertyPhotoCandidates(html: string, source: string): string[] {
+  return lodgingPhotoCandidates(lodgingDom(html), source).map((photo) => photo.url);
 }

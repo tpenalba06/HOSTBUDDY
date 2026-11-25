@@ -1,5 +1,6 @@
 import { FIELD_DEFS } from "@/lib/import-engine/fields";
 import type { ExtractionResult } from "@/lib/import-engine/types";
+import { photoRoleLabels } from "@/lib/import-engine/photo-roles";
 import { useI18n } from "@/lib/i18n";
 import { NonaWordmark } from "@/components/shared/NonaBrand";
 
@@ -111,18 +112,17 @@ export function ImportReview({
               ? "Les photos sont copiées à la création du brouillon si tu confirmes les droits. Si le site bloque une image, ajoute le fichier depuis la galerie du logement."
               : "Photos are copied when the draft is created if you confirm the rights. If the source blocks an image, upload the file from the property gallery."}
           </p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {value.photos.map((url) => (
-              <img
-                key={url}
-                src={url}
-                alt={t("importFlow.photoAlt")}
-                referrerPolicy="no-referrer"
-                loading="lazy"
-                className="aspect-square w-full rounded-xl object-cover"
-              />
-            ))}
-          </div>
+          {!!value.photoCandidates?.length && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {[
+                ...new Set(
+                  value.photoCandidates.map(
+                    (photo) => photoRoleLabels[photo.role][locale === "fr" ? 0 : 1],
+                  ),
+                ),
+              ].join(" · ")}
+            </p>
+          )}
           <label className="mt-4 flex items-center gap-3">
             <input
               type="checkbox"

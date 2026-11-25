@@ -2,9 +2,8 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { normalizeUrl, pickAdapter } from "./url-adapters";
 import { runUrlImport } from "./url-source.server";
 import { publicImportPreview } from "./public-preview";
-import { authorizedEvaluationSource } from "./authorized-source";
 import { otaListing, otaPlatformHost } from "./ota-listing";
-import { authorizedOtaSource, otaFirecrawlTrial } from "./ota-access.server";
+import { authorizedOtaSource, otaFirecrawlTrial, otaHtmlTrial } from "./ota-access.server";
 
 const attempts = new Map<string, number>();
 let windowEnds = 0;
@@ -28,7 +27,8 @@ export async function runPublicPreview(input: string) {
   const url = listing?.url ?? normalizeUrl(original.href);
   if (!url) return { status: "invalid" } as const;
   const source = pickAdapter(url).source;
-  if (listing && !authorizedOtaSource(url) && !otaFirecrawlTrial(url))
+  const direct = otaHtmlTrial(url);
+  if (listing && !direct && !authorizedOtaSource(url) && !otaFirecrawlTrial(url))
     return { status: "authorization_required", platform: listing.platform } as const;
 
   const now = Date.now();
@@ -44,7 +44,7 @@ export async function runPublicPreview(input: string) {
   total++;
   running++;
   try {
-    if (authorizedEvaluationSource(url) || listing) {
+    if (listing && !direct) {
       const { importAuthorizedEvaluationUrl } = await import("./firecrawl.server");
       return await importAuthorizedEvaluationUrl(url, {
         testEnvironment:

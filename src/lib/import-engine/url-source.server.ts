@@ -1,4 +1,5 @@
-import { propertyPhotoCandidates } from "./photo-candidates";
+import { lodgingPhotoCandidates } from "./photo-candidates";
+import { lodgingDom, type LodgingRecord } from "./lodging-dom";
 import { safePublicFetch } from "./safe-public-fetch";
 import { robotsTextAllows } from "./robots-policy";
 import { analyzeImportDocument } from "./intelligence.server";
@@ -6,7 +7,8 @@ import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
 import { otaPlatformHost } from "./ota-listing";
-import { authorizedOtaSource, otaFirecrawlTrial } from "./ota-access.server";
+import { authorizedOtaSource, otaFirecrawlTrial, otaHtmlTrial } from "./ota-access.server";
+import { authorizedEvaluationSource } from "./authorized-source";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
 
@@ -39,51 +41,10 @@ export async function robotsAllows(url: URL, agent?: string): Promise<boolean> {
   }
 }
 
-const meta = (html: string, name: string) =>
-  html.match(
-    new RegExp(`<meta[^>]+(?:property|name)=["']${name}["'][^>]*content=["']([^"']*)["']`, "i"),
-  )?.[1] ??
-  html.match(
-    new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*(?:property|name)=["']${name}["']`, "i"),
-  )?.[1] ??
-  null;
-
-const decode = (s: string) =>
-  s
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&nbsp;/g, " ")
-    .trim();
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function jsonLdNodes(html: string): any[] {
-  const out: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
-  for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
-    try {
-      const data = JSON.parse(m[1]!);
-      const stack = Array.isArray(data) ? data : [data];
-      for (const n of stack) {
-        if (n && typeof n === "object") {
-          out.push(n);
-          if (Array.isArray(n["@graph"])) out.push(...n["@graph"]);
-        }
-      }
-    } catch {
-      /* ignore broken blocks */
-    }
-  }
-  return out;
-}
-
-const LODGING =
-  /(Lodging|VacationRental|Accommodation|House|Apartment|Hotel|Residence|SingleFamilyResidence|Product|Place)/i;
 const str = (v: unknown): string | null =>
-  typeof v === "string" && v.trim() ? decode(v) : typeof v === "number" ? String(v) : null;
+  typeof v === "string" && v.trim() ? v.trim() : typeof v === "number" ? String(v) : null;
 
-export function extractStructuredFields(html: string, url: string) {
+export function extractStructuredFields(html: string, url: string, page = lodgingDom(html)) {
   const fields: Record<string, ExtractedField> = {};
   const put = (key: string, value: string | null, raw: string, confidence: number) => {
     if (value && !fields[key])
@@ -96,50 +57,59 @@ export function extractStructuredFields(html: string, url: string) {
       };
   };
   let name: string | null = null;
-  let lodging = false;
+  const lodging = page.lodging.length > 0;
   let locality: string | null = null;
-  for (const n of jsonLdNodes(html)) {
-    if (!LODGING.test(String(n["@type"] ?? ""))) continue;
-    lodging = true;
-    name ??= str(n.name);
-    put("description", str(n.description), `JSON-LD description (${url})`, 0.85);
-    const a = n.address;
-    locality ??= str(a?.addressLocality);
+  for (const n of page.lodging) {
+    name ??= str(n["name"]);
+    put("description", str(n["description"]), `Property structured description (${url})`, 0.85);
+    const a = n["address"] as LodgingRecord | string | undefined;
+    locality ??= typeof a === "object" && a ? str(a["addressLocality"]) : null;
     const addr =
       typeof a === "string"
         ? a
         : a
-          ? [a.streetAddress, a.postalCode, a.addressLocality, a.addressCountry]
+          ? [a["streetAddress"], a["postalCode"], a["addressLocality"], a["addressCountry"]]
               .map(str)
               .filter(Boolean)
               .join(", ")
           : null;
     put("address", addr || null, `JSON-LD address: ${addr}`, 0.85);
-    const occ = n.occupancy?.maxValue ?? n.maximumAttendeeCapacity;
-    const rooms = n.numberOfRooms ?? n.numberOfBedrooms;
-    const cap = [occ && `${str(occ)} voyageurs`, rooms && `${str(rooms)} chambres`]
+    const occupancy = n["occupancy"];
+    const occ =
+      str(
+        occupancy && typeof occupancy === "object"
+          ? (occupancy as LodgingRecord)["maxValue"]
+          : occupancy,
+      ) ?? str(n["maximumAttendeeCapacity"]);
+    const rooms = str(n["numberOfRooms"] ?? n["numberOfBedrooms"]);
+    const cap = [occ && `${occ} voyageurs`, rooms && `${rooms} chambres`]
       .filter(Boolean)
       .join(" · ");
     put("capacity", cap || null, `JSON-LD: ${cap}`, 0.85);
-    const am = Array.isArray(n.amenityFeature)
-      ? (n.amenityFeature as Record<string, unknown>[])
-          .filter((x) => x["value"] !== false && x["value"] !== "false")
+    const am = Array.isArray(n["amenityFeature"])
+      ? (n["amenityFeature"] as (LodgingRecord | null)[])
+          .filter(
+            (x): x is LodgingRecord =>
+              !!x && typeof x === "object" && x["value"] !== false && x["value"] !== "false",
+          )
           .map((x) => str(x["name"]))
           .filter(Boolean)
           .join(", ")
       : null;
     put("equipment", am || null, `JSON-LD amenityFeature: ${am}`, 0.8);
-    put("arrival", str(n.checkinTime), `JSON-LD checkinTime: ${str(n.checkinTime)}`, 0.85);
-    put("departure", str(n.checkoutTime), `JSON-LD checkoutTime: ${str(n.checkoutTime)}`, 0.85);
-    put("contact", str(n.telephone) ?? str(n.email), `JSON-LD telephone/email`, 0.75);
+    put("arrival", str(n["checkinTime"]), `JSON-LD checkinTime: ${str(n["checkinTime"])}`, 0.85);
+    put(
+      "departure",
+      str(n["checkoutTime"]),
+      `JSON-LD checkoutTime: ${str(n["checkoutTime"])}`,
+      0.85,
+    );
+    put("contact", str(n["telephone"]) ?? str(n["email"]), `JSON-LD telephone/email`, 0.75);
   }
-  const ogTitle = meta(html, "og:title");
-  const title = html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1];
-  name ??= ogTitle ? decode(ogTitle) : title ? decode(title) : null;
-  const desc = meta(html, "og:description") ?? meta(html, "description");
+  name ??= page.metadata.get("og:title") ?? (page.title || null);
+  const desc = page.metadata.get("og:description") ?? page.metadata.get("description");
   // Without a lodging JSON-LD node the meta description stays "to verify".
-  if (desc)
-    put("description", decode(desc), `meta description: ${decode(desc)}`, lodging ? 0.75 : 0.5);
+  if (desc) put("description", desc, `meta description: ${desc}`, lodging ? 0.75 : 0.5);
   return { name, fields, lodging, locality };
 }
 
@@ -151,10 +121,15 @@ export function webTextForRules(text: string) {
     .join("\n");
 }
 
-export async function extractAccessibleHtml(html: string, resolvedUrl: string, localAi = false) {
-  const structured = extractStructuredFields(html, resolvedUrl);
+export async function extractAccessibleHtml(
+  html: string,
+  resolvedUrl: string,
+  localAi = false,
+  page = lodgingDom(html),
+) {
+  const structured = extractStructuredFields(html, resolvedUrl, page);
   const sunver = sunverGuestDocument(html, resolvedUrl);
-  const textual = await analyzeImportDocument(sunver?.text ?? htmlDocumentText(html), {
+  const textual = await analyzeImportDocument(sunver?.text ?? htmlDocumentText(page.document), {
     sourceUrl: resolvedUrl,
     localAi,
   });
@@ -210,6 +185,7 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
         : {}),
     };
   });
+  const photoCandidates = lodgingPhotoCandidates(page, resolvedUrl);
   return {
     ...textual,
     ...(sunver?.locality || structured.locality
@@ -221,42 +197,24 @@ export async function extractAccessibleHtml(html: string, resolvedUrl: string, l
       : (structured.name?.slice(0, 120) ?? textual.propertyName),
     fields,
     photos: [
-      ...new Set([...(sunver?.photos ?? []), ...propertyPhotoCandidates(html, resolvedUrl)]),
+      ...new Set([...(sunver?.photos ?? []), ...photoCandidates.map((photo) => photo.url)]),
     ].slice(0, 30),
     photoRightsConfirmed: false,
+    photoCandidates,
   };
 }
 
-export async function runUrlImport(data: {
-  url: string;
-  source: ImportSource;
-  localAi?: boolean;
-}): Promise<UrlImportOutcome> {
-  const source = data.source as ImportSource;
-  let url: URL;
-  try {
-    url = new URL(data.url);
-  } catch {
-    return { ok: false, source, reason: "invalid" };
-  }
-  if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
-    return { ok: false, source, reason: "invalid" };
-  if (otaPlatformHost(url.hostname)) {
-    const authorized = authorizedOtaSource(url.href) ?? otaFirecrawlTrial(url.href);
-    if (!authorized) return { ok: false, source, reason: "blocked" };
-    const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
-    const outcome = await readFirecrawlEvaluationUrl(authorized.url, {
-      testEnvironment: true,
-    });
-    return outcome.status === "ok"
-      ? { ok: true, source, result: outcome.extraction }
-      : { ok: false, source, reason: outcome.status === "blocked" ? "blocked" : "unreachable" };
-  }
+export async function fetchAccessibleListingHtml(url: URL) {
+  const direct = otaHtmlTrial(url.href);
+  if (otaPlatformHost(url.hostname) && !direct) return { reason: "blocked" } as const;
+  if (direct) url = new URL(direct.url);
   if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
-    return { ok: false, source, reason: "blocked" };
+    return { reason: "blocked" } as const;
   const permitted = (target: URL) =>
-    otaPlatformHost(target.hostname) ? Promise.resolve(false) : robotsAllows(target);
-  if (!(await permitted(url))) return { ok: false, source, reason: "blocked" };
+    (direct ? target.href !== direct.url : otaPlatformHost(target.hostname))
+      ? Promise.resolve(false)
+      : robotsAllows(target);
+  if (!(await permitted(url))) return { reason: "blocked" } as const;
 
   let html: string;
   let resolvedUrl = url.href;
@@ -273,38 +231,66 @@ export async function runUrlImport(data: {
     );
     const res = fetched.response;
     if ([401, 402, 403, 407, 429, 451, 503].includes(res.status))
-      return { ok: false, source, reason: "blocked" };
-    if (!res.ok || !(res.headers.get("content-type") ?? "").includes("html"))
-      return { ok: false, source, reason: "unreachable" };
+      return { reason: "blocked" } as const;
+    const mime = res.headers.get("content-type")?.split(";")[0];
+    if (
+      !res.ok ||
+      (mime !== "text/html" && !(mime === "text/plain" && authorizedEvaluationSource(fetched.url)))
+    )
+      return { reason: "unreachable" } as const;
     html = new TextDecoder().decode(fetched.buffer);
     resolvedUrl = fetched.url;
   } catch (e) {
     reportOperationalEvent("import_source_unavailable");
     return {
-      ok: false,
-      source,
       reason: e instanceof Error && e.message === "blocked" ? "blocked" : "unreachable",
-    };
+    } as const;
   }
   if (
     /(captcha|cf-challenge|aws-waf|are you a robot|verify that you['’]re not a robot|access denied|enable javascript to continue|javascript is disabled)/i.test(
       html.slice(0, 20000),
     )
   ) {
-    return { ok: false, source, reason: "blocked" };
+    return { reason: "blocked" } as const;
   }
+  return { html, resolvedUrl } as const;
+}
+
+export async function runUrlImport(data: {
+  url: string;
+  source: ImportSource;
+  localAi?: boolean;
+}): Promise<UrlImportOutcome> {
+  const source = data.source;
+  let url: URL;
+  try {
+    url = new URL(data.url);
+  } catch {
+    return { ok: false, source, reason: "invalid" };
+  }
+  if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
+    return { ok: false, source, reason: "invalid" };
+  if (otaPlatformHost(url.hostname) && !otaHtmlTrial(url.href)) {
+    const authorized = authorizedOtaSource(url.href) ?? otaFirecrawlTrial(url.href);
+    if (!authorized) return { ok: false, source, reason: "blocked" };
+    const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
+    const outcome = await readFirecrawlEvaluationUrl(authorized.url, { testEnvironment: true });
+    if (outcome.status === "ok") return { ok: true, source, result: outcome.extraction };
+    return { ok: false, source, reason: outcome.status === "blocked" ? "blocked" : "unreachable" };
+  }
+  const fetched = await fetchAccessibleListingHtml(url);
+  if ("reason" in fetched) return { ok: false, source, reason: fetched.reason };
+  const { html, resolvedUrl } = fetched;
 
   let result;
+  let page;
   try {
-    result = await extractAccessibleHtml(
-      html,
-      resolvedUrl,
-      data.localAi ?? process.env["NONA_IMPORT_LOCAL_AI"] === "true",
-    );
+    page = lodgingDom(html);
+    result = await extractAccessibleHtml(html, resolvedUrl, data.localAi ?? false, page);
   } catch {
     return { ok: false, source, reason: "insufficient" };
   }
-  const structured = extractStructuredFields(html, resolvedUrl);
+  const structured = extractStructuredFields(html, resolvedUrl, page);
   // A generic meta description is not evidence that the page describes a property.
   const useful = result.fields.filter(
     (f) => f.status !== "missing" && !(f.key === "description" && !structured.lodging),

@@ -6,6 +6,14 @@ type Environment = Record<string, string | undefined>;
 
 /** Set only for a platform that has permitted this bounded Firecrawl trial. */
 export function otaFirecrawlTrial(input: string, env: Environment = process.env, now = Date.now()) {
+  return otaTrial(input, "FIRECRAWL", env, now);
+}
+
+export function otaHtmlTrial(input: string, env: Environment = process.env, now = Date.now()) {
+  return otaTrial(input, "HTML", env, now);
+}
+
+function otaTrial(input: string, mode: "FIRECRAWL" | "HTML", env: Environment, now: number) {
   const listing = otaListing(input);
   if (
     !listing ||
@@ -13,9 +21,7 @@ export function otaFirecrawlTrial(input: string, env: Environment = process.env,
     env["VITE_SUPABASE_PROJECT_ID"] !== "mhhtnqfdkyudwyqlmnce"
   )
     return null;
-  const until = Date.parse(
-    env[`NONA_${listing.platform.toUpperCase()}_FIRECRAWL_TEST_UNTIL`] ?? "",
-  );
+  const until = Date.parse(env[`NONA_${listing.platform.toUpperCase()}_${mode}_TEST_UNTIL`] ?? "");
   return until > now && until - now <= 48 * 60 * 60 * 1000 ? listing : null;
 }
 

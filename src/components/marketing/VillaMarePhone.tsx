@@ -75,24 +75,32 @@ export function VillaMarePhone() {
         const response = await importPublicPreview({ data: { url: value } });
         if (response.status !== "ok") {
           const diagnostic = "diagnostics" in response ? response.diagnostics : undefined;
-          if (response.status !== "limited" && !diagnostic?.experimentalPublic) {
+          if (
+            response.status !== "limited" &&
+            response.status !== "test_expired" &&
+            !diagnostic?.experimentalPublic
+          ) {
             focusTextAfterFallback.current = true;
             setMode("text");
           }
           setMessage(
-            diagnostic?.experimentalPublic
-              ? `TEST · ${response.status} · HTTP ${diagnostic.providerHttpStatus ?? "—"} / ${diagnostic.targetHttpStatus ?? "—"}${diagnostic.providerCode ? ` · ${diagnostic.providerCode}` : ""}`
-              : response.status === "limited"
-                ? fr
-                  ? "Réessaie dans une minute."
-                  : "Try again in a minute."
-                : response.status === "authorization_required"
+            response.status === "test_expired"
+              ? fr
+                ? "La fenêtre de test de l’import a expiré. Cette Preview doit être renouvelée ; ton lien n’est pas en cause."
+                : "The import test window has expired. This Preview needs renewing; your link is not the cause."
+              : diagnostic?.experimentalPublic
+                ? `TEST · ${response.status} · HTTP ${diagnostic.providerHttpStatus ?? "—"} / ${diagnostic.targetHttpStatus ?? "—"}${diagnostic.providerCode ? ` · ${diagnostic.providerCode}` : ""}`
+                : response.status === "limited"
                   ? fr
-                    ? "L’import automatique Airbnb nécessite un accès autorisé. Colle la description de ton annonce pour créer ton aperçu."
-                    : "Automatic Airbnb import requires authorized access. Paste your listing description to create your preview."
-                  : fr
-                    ? "Ce lien n’a pas pu être lu. Tu peux coller le texte de l’annonce."
-                    : "This link could not be read. You can paste the listing text.",
+                    ? "Réessaie dans une minute."
+                    : "Try again in a minute."
+                  : response.status === "authorization_required"
+                    ? fr
+                      ? "L’import automatique Airbnb nécessite un accès autorisé. Colle la description de ton annonce pour créer ton aperçu."
+                      : "Automatic Airbnb import requires authorized access. Paste your listing description to create your preview."
+                    : fr
+                      ? "Ce lien n’a pas pu être lu. Tu peux coller le texte de l’annonce."
+                      : "This link could not be read. You can paste the listing text.",
           );
           return;
         }

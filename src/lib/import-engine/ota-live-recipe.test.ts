@@ -1,7 +1,26 @@
 import { it, expect } from "vitest";
 import { writeFile } from "node:fs/promises";
 import { importAuthorizedEvaluationUrl } from "./firecrawl.server";
-import { otaReferenceSources, otaTestAllowed } from "./ota-test-policy";
+import { otaReferenceSources, otaTestAllowed, otaTestExpired } from "./ota-test-policy";
+import { normalizeUrl } from "./url-adapters";
+
+it("recognizes expiry without exposing production configuration or sending Booking session parameters", () => {
+  const source = otaReferenceSources[1];
+  const now = Date.parse("2026-11-25T16:00:00Z");
+  const env = {
+    VERCEL_ENV: "preview",
+    VITE_SUPABASE_PROJECT_ID: "mhhtnqfdkyudwyqlmnce",
+    NONA_OTA_PUBLIC_TEST_UNTIL: "2026-11-21T13:20:00Z",
+  };
+  const normalized = normalizeUrl(`${source}?aid=123&sid=SYNTHETIC_SESSION&room1=A%2CA&ucfs=1&`);
+  expect(normalized).toBe(source);
+  expect(otaTestExpired(normalized!, env, now)).toBe(true);
+  expect(otaTestAllowed(normalized!, env, now)).toBe(false);
+  expect(otaTestExpired(source, { ...env, VERCEL_ENV: "production" }, now)).toBe(false);
+  expect(
+    otaTestExpired(source, { ...env, NONA_OTA_PUBLIC_TEST_UNTIL: "2026-11-27T15:50:00Z" }, now),
+  ).toBe(false);
+});
 
 it("closes the experiment outside bounded TEST", () => {
   const now = Date.parse("2026-11-20T13:00:00Z");

@@ -3,7 +3,7 @@ import { normalizeUrl, pickAdapter } from "./url-adapters";
 import { runUrlImport } from "./url-source.server";
 import { publicImportPreview } from "./public-preview";
 import { authorizedEvaluationSource } from "./authorized-source";
-import { otaTestAllowed } from "./ota-test-policy";
+import { otaTestAllowed, otaTestExpired } from "./ota-test-policy";
 
 const attempts = new Map<string, number>();
 let windowEnds = 0;
@@ -26,6 +26,7 @@ export async function runPublicPreview(input: string) {
   if (!url) return { status: "invalid" } as const;
   const source = pickAdapter(url).source;
   const experimentalPublic = otaTestAllowed(url, process.env);
+  if (otaTestExpired(url, process.env)) return { status: "test_expired" } as const;
   if (source === "airbnb" && !experimentalPublic)
     return { status: "authorization_required" } as const;
 

@@ -2,8 +2,8 @@ import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { normalizeUrl, pickAdapter } from "./url-adapters";
 import { runUrlImport } from "./url-source.server";
 import { publicImportPreview } from "./public-preview";
-import { otaListing, otaPlatformHost } from "./ota-listing";
-import { authorizedOtaSource, otaFirecrawlTrial, otaHtmlTrial } from "./ota-access.server";
+import { otaPlatformHost } from "./ota-listing";
+import { otaImportAccess } from "./ota-access.server";
 
 const attempts = new Map<string, number>();
 let windowEnds = 0;
@@ -22,14 +22,14 @@ export async function runPublicPreview(input: string) {
   // Avoid sending links containing private query parameters to the fetcher.
   original.search = "";
   original.hash = "";
-  const listing = otaListing(original.href);
+  const access = otaImportAccess(original.href);
+  const listing = access?.listing;
   if (!listing && otaPlatformHost(original.hostname)) return { status: "invalid" } as const;
   const url = listing?.url ?? normalizeUrl(original.href);
   if (!url) return { status: "invalid" } as const;
   const source = pickAdapter(url).source;
-  const direct = otaHtmlTrial(url);
-  if (listing && !direct && !authorizedOtaSource(url) && !otaFirecrawlTrial(url))
-    return { status: "authorization_required", platform: listing.platform } as const;
+  if (access?.mode === "authorization_required")
+    return { status: "authorization_required", platform: access.listing.platform } as const;
 
   const now = Date.now();
   if (now >= windowEnds) {
@@ -44,7 +44,7 @@ export async function runPublicPreview(input: string) {
   total++;
   running++;
   try {
-    if (listing && !direct) {
+    if (access?.mode === "connector") {
       const { importAuthorizedEvaluationUrl } = await import("./firecrawl.server");
       return await importAuthorizedEvaluationUrl(url, {
         testEnvironment:

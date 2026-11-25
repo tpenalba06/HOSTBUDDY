@@ -25,7 +25,9 @@ function ImportUrl() {
   const [url, setUrl] = useState("");
   const [stage, setStage] = useState<number | null>(null);
   const [error, setError] = useState("");
-  const [fallback, setFallback] = useState(false);
+  const [fallback, setFallback] = useState<false | "authorization_required" | "different_failure">(
+    false,
+  );
   const [photoRights, setPhotoRights] = useState(false);
   const importing = useRef(false);
 
@@ -70,7 +72,11 @@ function ImportUrl() {
             outcome.reason === "insufficient" ? "insufficient" : "failed",
             { error: outcome.reason },
           ).catch(() => {});
-        setFallback(true);
+        setFallback(
+          outcome.reason === "authorization_required"
+            ? "authorization_required"
+            : "different_failure",
+        );
         return;
       }
 
@@ -102,9 +108,19 @@ function ImportUrl() {
       <div className="mt-6">
         <p className="text-4xl">🔍</p>
         <h1 className="mt-2 text-3xl font-semibold">{t("import.fallbackTitle")}</h1>
-        <p className="mt-3 text-lg text-muted-foreground">{t("import.fallbackText")}</p>
+        <p className="mt-3 text-lg text-muted-foreground">
+          {fallback === "authorization_required"
+            ? locale === "fr"
+              ? "Lien reconnu. L’accès automatisé à cette plateforme n’est pas activé. Tu peux charger un export HTML que tu es autorisé à utiliser."
+              : "Link recognized. Automated access to this platform is not enabled. You can upload an HTML export you are authorized to use."
+            : t("import.fallbackText")}
+        </p>
         <Link to="/app/import-text" className="btn btn-primary mt-8 w-full text-lg">
-          {t("import.fallbackPrimary")}
+          {fallback === "authorization_required"
+            ? locale === "fr"
+              ? "Charger un export HTML"
+              : "Upload an HTML export"
+            : t("import.fallbackPrimary")}
         </Link>
         <Link to="/app/manual" className="btn btn-secondary mt-3 w-full">
           {t("import.fallbackSecondary")}

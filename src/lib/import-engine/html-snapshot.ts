@@ -1,0 +1,1 @@
+export const HTML_SNAPSHOT_LIMIT = 1_000_000;

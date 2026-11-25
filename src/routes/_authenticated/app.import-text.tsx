@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { extractDocument, MAX_IMPORT_CHARACTERS } from "@/lib/import-engine/document-extractor";
-import { importFromText } from "@/lib/import-engine/text-import.functions";
+import { importFromText, importHtmlSnapshot } from "@/lib/import-engine/text-import.functions";
+import { HTML_SNAPSHOT_LIMIT } from "@/lib/import-engine/html-snapshot";
 import type { ExtractionResult } from "@/lib/import-engine/types";
 import {
   createPropertyFromExtraction,
@@ -35,13 +36,16 @@ Nos adresses : boulangerie Lou Fournil, restaurant Le Cabanon sur la plage.
 Petit-déjeuner livré possible sur demande.`;
 
 function ImportText() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fr = locale === "fr";
   const stages = STAGE_KEYS.map((key) => ({ id: key, label: t(`importFlow.${key}`) }));
   const org = useOrg();
   const nav = useNavigate();
   const qc = useQueryClient();
   const tick = useStageTicker();
   const [text, setText] = useState("");
+  const [snapshot, setSnapshot] = useState<{ html: string; name: string } | null>(null);
+  const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [stage, setStage] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [candidate, setCandidate] = useState<ExtractionResult | null>(null);
@@ -49,6 +53,7 @@ function ImportText() {
   const [busy, setBusy] = useState(false);
 
   const go = async () => {
+    if (snapshot && !rightsConfirmed) return;
     setError("");
     setCandidate(null);
     const stop = tick(setStage, stages.length, 500);
@@ -56,20 +61,25 @@ function ImportText() {
 
     try {
       if (text.length > MAX_IMPORT_CHARACTERS) throw new Error("import_text_too_large");
-      currentRunId = await startImportRun(org.id, "text", { rawText: text });
-      setRunId(currentRunId);
-      const result = await importFromText({ data: { text } }).catch(() => {
-        const fallback = extractDocument(text);
-        fallback.analysis!.warnings.push("analysis_service_unavailable");
-        return fallback;
-      });
+      if (!snapshot) {
+        currentRunId = await startImportRun(org.id, "text", { rawText: text });
+        setRunId(currentRunId);
+      }
+      const result = snapshot
+        ? await importHtmlSnapshot({ data: { html: snapshot.html, rightsConfirmed: true } })
+        : await importFromText({ data: { text } }).catch(() => {
+            const fallback = extractDocument(text);
+            fallback.analysis!.warnings.push("analysis_service_unavailable");
+            return fallback;
+          });
       const useful = result.fields.filter((field) => field.status !== "missing").length;
 
       stop();
       setStage(null);
 
-      if (!result.propertyName && useful === 0) {
-        await finishImportRun(currentRunId, "insufficient", { error: "no_fields_detected" });
+      if ((!result.propertyName && useful === 0) || (snapshot && useful < 2)) {
+        if (currentRunId)
+          await finishImportRun(currentRunId, "insufficient", { error: "no_fields_detected" });
         setRunId(null);
         setError(t("importFlow.notEnough"));
         return;
@@ -124,6 +134,7 @@ function ImportText() {
           onConfirm={confirm}
           onBack={backFromReview}
           busy={busy}
+          snapshot={!!snapshot}
         />
       </>
     );
@@ -152,45 +163,80 @@ function ImportText() {
                 if (!file) return;
                 setError("");
                 try {
-                  if (file.size > 1_000_000 || !/\.(txt|md|html?)$/i.test(file.name))
+                  if (file.size > HTML_SNAPSHOT_LIMIT || !/\.(txt|md|html?)$/i.test(file.name))
                     throw new Error("unsupported_document");
-                  let content = await file.text();
+                  const content = await file.text();
                   if (content.includes("\0")) throw new Error("unsupported_document");
-                  if (/\.html?$/i.test(file.name))
-                    content = (await import("@/lib/import-engine/html-document")).htmlDocumentText(
-                      content,
-                    );
+                  if (/\.html?$/i.test(file.name)) {
+                    setSnapshot({ html: content, name: file.name });
+                    setRightsConfirmed(false);
+                    return;
+                  }
                   if (content.length > MAX_IMPORT_CHARACTERS)
                     throw new Error("import_text_too_large");
+                  setSnapshot(null);
                   setText(content);
                 } catch {
                   setError(
-                    "Ce fichier ne peut pas être lu ici. Utilisez un fichier texte ou HTML de moins de 200 000 caractères, ou collez le texte de votre document.",
+                    fr
+                      ? "Ce fichier ne peut pas être lu. Utilise un fichier HTML de moins de 1 Mo ou un texte de moins de 200 000 caractères."
+                      : "This file could not be read. Use an HTML file under 1 MB or text under 200,000 characters.",
                   );
                 }
               }}
             />
           </label>
-          <textarea
-            className="field min-h-72 text-lg"
-            placeholder={t("importFlow.placeholder")}
-            aria-label={t("import.textTitle")}
-            value={text}
-            maxLength={MAX_IMPORT_CHARACTERS}
-            onChange={(e) => setText(e.target.value)}
-          />
-          <button
-            className="min-h-12 font-semibold text-primary underline"
-            onClick={() => setText(EXAMPLE)}
-          >
-            {t("importFlow.example")}
-          </button>
+          {snapshot ? (
+            <div className="space-y-3">
+              <p className="break-all font-semibold">{snapshot.name}</p>
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={rightsConfirmed}
+                  onChange={(e) => setRightsConfirmed(e.target.checked)}
+                />
+                <span>
+                  {fr
+                    ? "Je suis autorisé à importer le contenu de ce fichier dans NONA."
+                    : "I am authorized to import the contents of this file into NONA."}
+                </span>
+              </label>
+              <button
+                type="button"
+                className="min-h-11 underline"
+                onClick={() => setSnapshot(null)}
+              >
+                {fr ? "Retirer le fichier" : "Remove file"}
+              </button>
+            </div>
+          ) : (
+            <>
+              <textarea
+                className="field min-h-72 text-lg"
+                placeholder={t("importFlow.placeholder")}
+                aria-label={t("import.textTitle")}
+                value={text}
+                maxLength={MAX_IMPORT_CHARACTERS}
+                onChange={(e) => setText(e.target.value)}
+              />
+              <button
+                className="min-h-12 font-semibold text-primary underline"
+                onClick={() => setText(EXAMPLE)}
+              >
+                {t("importFlow.example")}
+              </button>
+            </>
+          )}
           {error && (
             <p role="alert" className="rounded-xl bg-warning-soft p-3">
               {error}
             </p>
           )}
-          <button className="btn btn-primary w-full text-lg" disabled={!text.trim()} onClick={go}>
+          <button
+            className="btn btn-primary w-full text-lg"
+            disabled={snapshot ? !rightsConfirmed : !text.trim()}
+            onClick={go}
+          >
             {t("import.textAction")}
           </button>
           <p className="text-center text-sm text-muted-foreground">{t("importFlow.languages")}</p>

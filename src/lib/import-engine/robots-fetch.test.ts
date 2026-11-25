@@ -4,6 +4,26 @@ vi.mock("./safe-public-fetch", () => ({ safePublicFetch: mocks.fetch }));
 import { robotsAllows, runUrlImport } from "./url-source.server";
 const target = new URL("https://source.example.invalid/villa");
 describe("robots permission fail closed", () => {
+  it.each([
+    ["airbnb", "https://www.airbnb.fr/rooms/1086157072408105944"],
+    ["booking", "https://www.booking.com/hotel/sc/la-digue-island-lodge.fr.html"],
+  ] as const)(
+    "distinguishes missing %s authorization before any request",
+    async (platform, url) => {
+      vi.stubEnv("VERCEL_ENV", "production");
+      try {
+        const before = mocks.fetch.mock.calls.length;
+        expect(await runUrlImport({ url, source: "website" })).toEqual({
+          ok: false,
+          source: platform,
+          reason: "authorization_required",
+        });
+        expect(mocks.fetch).toHaveBeenCalledTimes(before);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    },
+  );
   it("never treats an HTML challenge at robots.txt as permission to fetch a listing", async () => {
     mocks.fetch.mockResolvedValue({
       response: new Response("<html>Checking your browser</html>", {

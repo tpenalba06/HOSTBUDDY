@@ -7,7 +7,7 @@ import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
 import { otaPlatformHost } from "./ota-listing";
-import { authorizedOtaSource, otaFirecrawlTrial, otaHtmlTrial } from "./ota-access.server";
+import { otaImportAccess, otaHtmlTrial } from "./ota-access.server";
 import { authorizedEvaluationSource } from "./authorized-source";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
@@ -270,13 +270,22 @@ export async function runUrlImport(data: {
   }
   if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
     return { ok: false, source, reason: "invalid" };
-  if (otaPlatformHost(url.hostname) && !otaHtmlTrial(url.href)) {
-    const authorized = authorizedOtaSource(url.href) ?? otaFirecrawlTrial(url.href);
-    if (!authorized) return { ok: false, source, reason: "blocked" };
+  const access = otaImportAccess(url.href);
+  if (!access && otaPlatformHost(url.hostname)) return { ok: false, source, reason: "invalid" };
+  if (access?.mode === "authorization_required")
+    return { ok: false, source: access.listing.platform, reason: "authorization_required" };
+  if (access?.mode === "connector") {
     const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
-    const outcome = await readFirecrawlEvaluationUrl(authorized.url, { testEnvironment: true });
-    if (outcome.status === "ok") return { ok: true, source, result: outcome.extraction };
-    return { ok: false, source, reason: outcome.status === "blocked" ? "blocked" : "unreachable" };
+    const outcome = await readFirecrawlEvaluationUrl(access.listing.url, { testEnvironment: true });
+    const platform = access.listing.platform;
+    if (outcome.status === "ok") return { ok: true, source: platform, result: outcome.extraction };
+    const reason =
+      outcome.status === "blocked" ||
+      outcome.status === "insufficient" ||
+      outcome.status === "authorization_required"
+        ? outcome.status
+        : "unreachable";
+    return { ok: false, source: platform, reason };
   }
   const fetched = await fetchAccessibleListingHtml(url);
   if ("reason" in fetched) return { ok: false, source, reason: fetched.reason };

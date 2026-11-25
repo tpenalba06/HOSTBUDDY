@@ -16,12 +16,14 @@ export function ImportReview({
   onConfirm,
   onBack,
   busy = false,
+  snapshot = false,
 }: {
   value: ExtractionResult;
   onChange: (next: ExtractionResult) => void;
   onConfirm: () => void;
   onBack: () => void;
   busy?: boolean;
+  snapshot?: boolean;
 }) {
   const { locale, t } = useI18n();
 
@@ -108,9 +110,13 @@ export function ImportReview({
             {t("importFlow.photos")} ({value.photos.length})
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {locale === "fr"
-              ? "Les photos sont copiées à la création du brouillon si tu confirmes les droits. Si le site bloque une image, ajoute le fichier depuis la galerie du logement."
-              : "Photos are copied when the draft is created if you confirm the rights. If the source blocks an image, upload the file from the property gallery."}
+            {snapshot
+              ? locale === "fr"
+                ? "Références repérées dans le fichier. Ajoute les images que tu es autorisé à réutiliser depuis la galerie du logement."
+                : "References found in the file. Add images you are authorized to reuse from the property gallery."
+              : locale === "fr"
+                ? "Les photos sont copiées à la création du brouillon si tu confirmes les droits. Si le site bloque une image, ajoute le fichier depuis la galerie du logement."
+                : "Photos are copied when the draft is created if you confirm the rights. If the source blocks an image, upload the file from the property gallery."}
           </p>
           {!!value.photoCandidates?.length && (
             <p className="mt-2 text-sm text-muted-foreground">
@@ -123,15 +129,17 @@ export function ImportReview({
               ].join(" · ")}
             </p>
           )}
-          <label className="mt-4 flex items-center gap-3">
-            <input
-              type="checkbox"
-              className="h-6 w-6"
-              checked={value.photoRightsConfirmed ?? false}
-              onChange={(e) => onChange({ ...value, photoRightsConfirmed: e.target.checked })}
-            />
-            <span>{t("importFlow.photoRights")}</span>
-          </label>
+          {!snapshot && (
+            <label className="mt-4 flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="h-6 w-6"
+                checked={value.photoRightsConfirmed ?? false}
+                onChange={(e) => onChange({ ...value, photoRightsConfirmed: e.target.checked })}
+              />
+              <span>{t("importFlow.photoRights")}</span>
+            </label>
+          )}
         </section>
       )}
       <div className="mt-6 space-y-3">

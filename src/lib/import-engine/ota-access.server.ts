@@ -4,6 +4,17 @@ import { otaListing, otaPlatformHost } from "./ota-listing";
 
 type Environment = Record<string, string | undefined>;
 
+/** Routing policy shared by the anonymous preview and manager importer. */
+export function otaImportAccess(input: string) {
+  const listing = otaListing(input);
+  if (!listing) return null;
+  const direct = otaHtmlTrial(listing.url);
+  if (direct) return { mode: "direct", listing } as const;
+  if (authorizedOtaSource(listing.url) || otaFirecrawlTrial(listing.url))
+    return { mode: "connector", listing } as const;
+  return { mode: "authorization_required", listing } as const;
+}
+
 /** Set only for a platform that has permitted this bounded Firecrawl trial. */
 export function otaFirecrawlTrial(input: string, env: Environment = process.env, now = Date.now()) {
   return otaTrial(input, "FIRECRAWL", env, now);

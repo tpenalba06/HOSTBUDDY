@@ -48,6 +48,13 @@ export function lodgingDom(html: string) {
     if ("tagName" in node) {
       const attr = (name: string) => node.attrs.find((a) => a.name === name)?.value;
       if (node.tagName === "title" && !title) title = htmlText(node).trim();
+      if (
+        node.tagName === "link" &&
+        attr("rel")?.toLowerCase().split(/\s+/).includes("canonical")
+      ) {
+        const canonical = attr("href");
+        if (canonical && !metadata.has("canonical")) metadata.set("canonical", canonical);
+      }
       if (node.tagName === "meta") {
         const key = (attr("property") ?? attr("name"))?.toLowerCase();
         const value = attr("content")?.trim();

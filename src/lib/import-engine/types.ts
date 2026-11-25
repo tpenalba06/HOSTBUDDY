@@ -48,7 +48,7 @@ export type UrlImportOutcome =
   | {
       ok: false;
       source: ImportSource;
-      reason: "blocked" | "insufficient" | "unreachable" | "invalid";
+      reason: "blocked" | "insufficient" | "unreachable" | "invalid" | "authorization_required";
     };
 
 /** One adapter per source; official APIs/OAuth can replace an implementation without UI changes. */

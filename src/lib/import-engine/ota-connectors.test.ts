@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { otaListing } from "./ota-listing";
 import { importAuthorizedEvaluationUrl } from "./firecrawl.server";
 import { publicPreviewSchema } from "./public-preview";
+import * as urlSource from "./url-source.server";
+import * as network from "./safe-public-fetch";
 
 const locales = [
   ["fr", "Ce que propose ce logement", "Équipements de l'établissement", "Cuisine équipée"],
@@ -12,6 +14,84 @@ const locales = [
   ["pt", "O que este espaço oferece", "Comodidades do", "Cozinha equipada"],
 ] as const;
 const env = { VERCEL_ENV: "preview", VITE_SUPABASE_PROJECT_ID: "mhhtnqfdkyudwyqlmnce" };
+
+it("uses keyless Firecrawl for new listings only after public access checks", async () => {
+  const policy = vi.spyOn(urlSource, "robotsAllows").mockResolvedValue(true);
+  const access = vi.spyOn(network, "safePublicFetch");
+  const url = "https://www.booking.com/hotel/fr/test-public.fr.html";
+  const settings = {
+    ...env,
+    NONA_BOOKING_FIRECRAWL_TEST_UNTIL: new Date(Date.now() + 60_000).toISOString(),
+  };
+  const input = { testEnvironment: true, env: settings };
+  const markdown = "# Hôtel Test\n## Équipements de l'établissement\nCuisine équipée\nTélévision";
+  const provider = vi.fn(async () =>
+    Response.json({
+      success: true,
+      data: {
+        markdown,
+        metadata: {
+          sourceURL: url,
+          statusCode: 200,
+          ogDescription: "Appartement lumineux près du port.",
+        },
+      },
+    }),
+  );
+  const checkedPage = (body: string) => ({
+    url,
+    buffer: new TextEncoder().encode(body),
+    response: new Response(body, { headers: { "content-type": "text/html" } }),
+  });
+  try {
+    policy.mockResolvedValueOnce(false);
+    expect((await importAuthorizedEvaluationUrl(url, { ...input, fetcher: provider })).status).toBe(
+      "blocked",
+    );
+    expect(access).not.toHaveBeenCalled();
+    access.mockResolvedValueOnce(
+      checkedPage("<h1>JavaScript is disabled</h1><p>Verify that you're not a robot</p>"),
+    );
+    expect((await importAuthorizedEvaluationUrl(url, { ...input, fetcher: provider })).status).toBe(
+      "blocked",
+    );
+    expect(provider).not.toHaveBeenCalled();
+    access.mockResolvedValueOnce(checkedPage("<h1>Hôtel Test</h1><p>Cuisine équipée</p>"));
+    const result = await importAuthorizedEvaluationUrl(`${url}?sid=fictif`, {
+      ...input,
+      fetcher: provider,
+    });
+    expect(result.status).toBe("ok");
+    expect(provider).toHaveBeenCalledTimes(1);
+    expect(provider).toHaveBeenCalledWith(
+      "https://api.firecrawl.dev/v2/scrape",
+      expect.objectContaining({
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          url,
+          formats: ["markdown", "html", "images"],
+          proxy: "basic",
+          timeout: 15000,
+          storeInCache: false,
+          maxAge: 0,
+        }),
+      }),
+    );
+    expect(
+      (
+        await importAuthorizedEvaluationUrl(url, {
+          ...input,
+          env: { ...settings, VERCEL_ENV: "production" },
+          fetcher: provider,
+        })
+      ).status,
+    ).toBe("authorization_required");
+    expect(provider).toHaveBeenCalledTimes(1);
+  } finally {
+    access.mockRestore();
+    policy.mockRestore();
+  }
+});
 
 describe.each(["airbnb", "booking"] as const)("%s authorized adapter", (platform) => {
   const prefix = `NONA_${platform.toUpperCase()}_AUTHORIZED`;

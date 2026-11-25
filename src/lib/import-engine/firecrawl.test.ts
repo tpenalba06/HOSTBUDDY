@@ -90,8 +90,12 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
           success: true,
           data: {
             markdown,
-            html,
-            metadata: { statusCode: 200, sourceURL: authorizedEvaluationSources[0] },
+            html: html.replace(/<head>[\s\S]*?<\/head>/, ""),
+            metadata: {
+              title: "Villa NONA TEST fictive",
+              statusCode: 200,
+              sourceURL: authorizedEvaluationSources[0],
+            },
           },
         }),
         { headers: { "content-type": "application/json" } },

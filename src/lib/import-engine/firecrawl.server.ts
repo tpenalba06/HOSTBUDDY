@@ -1,13 +1,37 @@
 import { z } from "zod";
 import { authorizedEvaluationSource } from "./authorized-source";
 import { previewPastedDocument } from "./public-preview";
-import { extractAccessibleHtml } from "./url-source.server";
+import { extractAccessibleHtml, robotsAllows, UA } from "./url-source.server";
 import { htmlDocumentText } from "./html-document";
-import { authorizedOtaSource } from "./ota-access.server";
+import { authorizedOtaSource, otaFirecrawlTrial } from "./ota-access.server";
 import { safePublicFetch } from "./safe-public-fetch";
 import { analyzeImportDocument } from "./intelligence.server";
 import { publicImportPreview } from "./public-preview";
 import { otaDocument } from "./ota-document";
+
+const accessChallenge =
+  /(?:verify (?:that )?you(?:['’]re| are) (?:a human|not a robot)|captcha|access denied|just a moment|enable javascript to continue|javascript is disabled|vérifi(?:ez|er) que vous n['’]êtes pas un robot|aws-waf|cf-challenge)/i;
+
+async function publicOtaPageIsAccessible(url: string) {
+  const target = new URL(url);
+  if (!(await robotsAllows(target)) || !(await robotsAllows(target, "Firecrawl"))) return false;
+  const result = await safePublicFetch(
+    url,
+    {
+      headers: { "user-agent": UA, accept: "text/html" },
+      signal: AbortSignal.timeout(6000),
+    },
+    1_500_000,
+    async () => false,
+  );
+  if (!result.response.ok || !result.response.headers.get("content-type")?.includes("text/html"))
+    return false;
+  const html = new TextDecoder().decode(result.buffer);
+  return (
+    !accessChallenge.test(html.slice(0, 20_000)) &&
+    !accessChallenge.test(htmlDocumentText(html).slice(0, 2500))
+  );
+}
 
 const responseSchema = z.object({
   success: z.literal(true),
@@ -29,10 +53,12 @@ export async function readFirecrawlEvaluationUrl(
   },
 ) {
   const ota = authorizedOtaSource(url, options.env);
-  const experimentalPublic = ota !== null;
-  if (!options.testEnvironment || (!authorizedEvaluationSource(url) && !ota))
+  const trial = ota ? null : otaFirecrawlTrial(url, options.env);
+  const listing = ota ?? trial;
+  const experimentalPublic = listing !== null;
+  if (!options.testEnvironment || (!authorizedEvaluationSource(url) && !listing))
     return { status: "authorization_required" } as const;
-  if (ota) url = ota.url;
+  if (listing) url = listing.url;
   const started = Date.now();
   const diagnostics: {
     experimentalPublic: boolean;
@@ -52,6 +78,11 @@ export async function readFirecrawlEvaluationUrl(
   // Keyless evaluation only: no account credential, purchased credit or paid fallback.
   // No browser actions, stealth proxy, captcha handling, crawl or remote AI.
   try {
+    if (trial && !(await publicOtaPageIsAccessible(url)))
+      return {
+        status: "blocked",
+        diagnostics: { ...diagnostics, failureStage: "source_access" },
+      } as const;
     const request = {
       method: "POST",
       redirect: "error",
@@ -123,18 +154,14 @@ export async function readFirecrawlEvaluationUrl(
     diagnostics.discoveredImages = data.images?.length ?? 0;
     if (
       data.metadata.statusCode !== 200 ||
-      (ota
+      (listing
         ? data.metadata.sourceURL !== url
         : !!data.metadata.sourceURL && data.metadata.sourceURL !== url)
     )
       return { status: "blocked", diagnostics } as const;
-    if (ota && typeof data.metadata["url"] === "string" && data.metadata["url"] !== url)
+    if (listing && typeof data.metadata["url"] === "string" && data.metadata["url"] !== url)
       return { status: "blocked", diagnostics } as const;
-    if (
-      /(?:verify (?:that )?you(?:'re| are) (?:a human|not a robot)|captcha challenge|access denied|just a moment|enable javascript to continue)/i.test(
-        (data.markdown ?? "").slice(0, 2500),
-      )
-    )
+    if (accessChallenge.test((data.markdown ?? "").slice(0, 2500)))
       return {
         status: "blocked",
         diagnostics: { ...diagnostics, failureStage: "target_challenge" },
@@ -156,7 +183,10 @@ export async function readFirecrawlEvaluationUrl(
       ]
         .filter(Boolean)
         .join("\n");
-    const title = document?.title ?? extracted?.propertyName;
+    // Firecrawl can place the title of our own fixture only in its metadata.
+    const fixtureTitle =
+      !listing && typeof data.metadata["title"] === "string" ? data.metadata["title"] : undefined;
+    const title = document?.title ?? fixtureTitle ?? extracted?.propertyName;
     const preview = previewPastedDocument(
       [title ? `Nom du logement : ${title}` : "", source].filter(Boolean).join("\n"),
       title ?? undefined,

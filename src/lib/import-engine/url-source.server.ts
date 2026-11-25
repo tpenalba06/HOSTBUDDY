@@ -6,7 +6,7 @@ import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
 import { otaPlatformHost } from "./ota-listing";
-import { authorizedOtaSource } from "./ota-access.server";
+import { authorizedOtaSource, otaFirecrawlTrial } from "./ota-access.server";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
 
@@ -20,7 +20,7 @@ function isPrivateHost(host: string) {
   );
 }
 
-export async function robotsAllows(url: URL): Promise<boolean> {
+export async function robotsAllows(url: URL, agent?: string): Promise<boolean> {
   try {
     const fetched = await safePublicFetch(
       `${url.origin}/robots.txt`,
@@ -33,7 +33,7 @@ export async function robotsAllows(url: URL): Promise<boolean> {
     const r = fetched.response;
     if (r.status === 404) return true;
     if (!r.ok || r.headers.get("content-type")?.includes("text/html")) return false;
-    return robotsTextAllows(new TextDecoder().decode(fetched.buffer), url);
+    return robotsTextAllows(new TextDecoder().decode(fetched.buffer), url, agent);
   } catch {
     return false;
   }
@@ -242,7 +242,7 @@ export async function runUrlImport(data: {
   if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
     return { ok: false, source, reason: "invalid" };
   if (otaPlatformHost(url.hostname)) {
-    const authorized = authorizedOtaSource(url.href);
+    const authorized = authorizedOtaSource(url.href) ?? otaFirecrawlTrial(url.href);
     if (!authorized) return { ok: false, source, reason: "blocked" };
     const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
     const outcome = await readFirecrawlEvaluationUrl(authorized.url, {

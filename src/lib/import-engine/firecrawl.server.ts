@@ -3,7 +3,8 @@ import { authorizedEvaluationSource } from "./authorized-source";
 import { previewPastedDocument } from "./public-preview";
 import { extractAccessibleHtml } from "./url-source.server";
 import { htmlDocumentText } from "./html-document";
-import { otaReferenceSources } from "./ota-test-policy";
+import { authorizedOtaSource } from "./ota-access.server";
+import { safePublicFetch } from "./safe-public-fetch";
 import { analyzeImportDocument } from "./intelligence.server";
 import { publicImportPreview } from "./public-preview";
 import { otaDocument } from "./ota-document";
@@ -23,14 +24,15 @@ export async function readFirecrawlEvaluationUrl(
   url: string,
   options: {
     testEnvironment: boolean;
-    experimentalPublic?: boolean;
+    env?: Record<string, string | undefined>;
     fetcher?: typeof fetch;
   },
 ) {
-  const experimentalPublic =
-    options.experimentalPublic === true && otaReferenceSources.some((source) => source === url);
-  if (!options.testEnvironment || (!authorizedEvaluationSource(url) && !experimentalPublic))
+  const ota = authorizedOtaSource(url, options.env);
+  const experimentalPublic = ota !== null;
+  if (!options.testEnvironment || (!authorizedEvaluationSource(url) && !ota))
     return { status: "authorization_required" } as const;
+  if (ota) url = ota.url;
   const started = Date.now();
   const diagnostics: {
     experimentalPublic: boolean;
@@ -50,28 +52,40 @@ export async function readFirecrawlEvaluationUrl(
   // Keyless evaluation only: no account credential, purchased credit or paid fallback.
   // No browser actions, stealth proxy, captcha handling, crawl or remote AI.
   try {
-    const response = await (options.fetcher ?? fetch)("https://api.firecrawl.dev/v2/scrape", {
+    const request = {
       method: "POST",
       redirect: "error",
       signal: AbortSignal.timeout(25_000),
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown", "html", "images"],
-        proxy: "basic",
-        timeout: 15000,
-        storeInCache: false,
-        maxAge: 0,
-      }),
-    });
+      headers: ota
+        ? { "content-type": "application/json", authorization: `Bearer ${ota.token}` }
+        : { "content-type": "application/json" },
+      body: JSON.stringify(
+        ota
+          ? { url, platform: ota.platform }
+          : {
+              url,
+              formats: ["markdown", "html", "images"],
+              proxy: "basic",
+              timeout: 15000,
+              storeInCache: false,
+              maxAge: 0,
+            },
+      ),
+    } satisfies RequestInit;
+    const endpoint = ota?.endpoint ?? "https://api.firecrawl.dev/v2/scrape";
+    const fetched =
+      ota && !options.fetcher
+        ? await safePublicFetch(endpoint, request, 2_000_000, async () => false)
+        : undefined;
+    const response = fetched?.response ?? (await (options.fetcher ?? fetch)(endpoint, request));
     diagnostics.providerHttpStatus = response.status;
     if (!response.headers.get("content-type")?.includes("json") || !response.body)
       return { status: "unreachable", diagnostics } as const;
-    const reader = response.body.getReader();
+    const reader = fetched ? undefined : response.body.getReader();
     const chunks: Uint8Array[] = [];
-    let bytes = 0;
+    let bytes = fetched?.buffer.length ?? 0;
     try {
-      while (true) {
+      while (reader) {
         const { done, value } = await reader.read();
         if (done) break;
         bytes += value.byteLength;
@@ -79,9 +93,9 @@ export async function readFirecrawlEvaluationUrl(
         chunks.push(value);
       }
     } finally {
-      await reader.cancel();
+      await reader?.cancel();
     }
-    const buffer = new Uint8Array(bytes);
+    const buffer = fetched?.buffer ?? new Uint8Array(bytes);
     let offset = 0;
     for (const chunk of chunks) {
       buffer.set(chunk, offset);
@@ -92,7 +106,7 @@ export async function readFirecrawlEvaluationUrl(
       const error = z
         .object({ code: z.string().max(120).optional(), error: z.string().max(2000).optional() })
         .safeParse(payload);
-      if (error.success) {
+      if (!ota && error.success) {
         if (error.data.code) diagnostics.providerCode = error.data.code;
         if (error.data.error)
           diagnostics.providerMessage = error.data.error.replace(/[\r\n]/g, " ").slice(0, 240);
@@ -109,8 +123,12 @@ export async function readFirecrawlEvaluationUrl(
     diagnostics.discoveredImages = data.images?.length ?? 0;
     if (
       data.metadata.statusCode !== 200 ||
-      (data.metadata.sourceURL && data.metadata.sourceURL !== url)
+      (ota
+        ? data.metadata.sourceURL !== url
+        : !!data.metadata.sourceURL && data.metadata.sourceURL !== url)
     )
+      return { status: "blocked", diagnostics } as const;
+    if (ota && typeof data.metadata["url"] === "string" && data.metadata["url"] !== url)
       return { status: "blocked", diagnostics } as const;
     if (
       /(?:verify (?:that )?you(?:'re| are) (?:a human|not a robot)|captcha challenge|access denied|just a moment|enable javascript to continue)/i.test(
@@ -199,7 +217,8 @@ export async function readFirecrawlEvaluationUrl(
       : (extracted ?? (await analyzeImportDocument(source, { sourceUrl: url, localAi: false })));
     const locality =
       document?.location ?? (extracted ? publicImportPreview(extracted, true).locality : undefined);
-    if (locality) preview.locality = locality;
+    if (locality && /^[\p{L}\p{M}][\p{L}\p{M} .,’'&()-]{1,79}$/u.test(locality))
+      preview.locality = locality;
     diagnostics.propertyImageCandidates = extracted?.photos?.length ?? 0;
     diagnostics.fields = extraction.fields.map((field) => ({
       key: field.key,
@@ -216,7 +235,7 @@ export async function readFirecrawlEvaluationUrl(
       extraction,
       diagnostics,
       provenance: {
-        provider: "firecrawl",
+        provider: ota ? "authorized-connector" : "firecrawl",
         sourceUrl: url,
         evaluationOnly: true,
         photoRights: "unconfirmed",

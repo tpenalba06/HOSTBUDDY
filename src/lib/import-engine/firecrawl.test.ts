@@ -21,7 +21,12 @@ describe("bounded Firecrawl evaluation transport (mocked unit tests)", () => {
     );
     const result = await importAuthorizedEvaluationUrl(url, {
       testEnvironment: true,
-      experimentalPublic: true,
+      env: {
+        VERCEL_ENV: "preview",
+        VITE_SUPABASE_PROJECT_ID: "mhhtnqfdkyudwyqlmnce",
+        NONA_BOOKING_AUTHORIZED_ENDPOINT: "https://data.example.com/import",
+        NONA_BOOKING_AUTHORIZED_TOKEN: "synthetic-token",
+      },
       fetcher,
     });
     expect(result.status).toBe("ok");

@@ -1,7 +1,11 @@
 /** Scope public page text to property content, excluding booking widgets,
  * reviews and platform navigation. No private API or script-state harvesting. */
 export function otaDocument(markdown: string, source: string, metadata: Record<string, unknown>) {
-  const airbnb = new URL(source).hostname.endsWith("airbnb.fr");
+  const airbnb = new URL(source).hostname.startsWith("www.airbnb.");
+  const equipmentHeading =
+    /^(?:Ce que propose ce logement|Équipements de l'établissement|What this place offers|Facilities of|Was diese Unterkunft bietet|Ausstattung von|Qué ofrece este lugar|Servicios de|Cosa troverai|Servizi di|O que este espaço oferece|Comodidades d)/iu;
+  const propertyHeading =
+    /^(?:Environs de l'établissement|Règles de la maison|À savoir|Property surroundings|House rules|The fine print|Umgebung|Hausregeln|Kleingedrucktes|Alrededores|Normas de la casa|A tener en cuenta|Dintorni|Regole della casa|Da sapere|Proximidades|Regras da casa|Pormenores)/iu;
   const allLines = markdown.split("\n");
   const navigationTitle =
     /^# (?:Aller directement|Passer au|Skip to|Airbnb$|Booking\.com$|Menu$|Connexion$)/i;
@@ -28,9 +32,7 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     if (!airbnb) {
       if (/^## /.test(line))
         bookingPropertySection =
-          /^## (?:Environs de l'établissement|Équipements de l'établissement|Règles de la maison|À savoir)/.test(
-            line,
-          );
+          equipmentHeading.test(line.slice(3)) || propertyHeading.test(line.slice(3));
       if (!bookingPropertySection) continue;
     }
     if (airbnb && /^## Mise en avant/.test(line)) {
@@ -52,11 +54,14 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
       continue;
     if (/^## /.test(line)) {
       suppressed =
-        /Sélectionnez la date|commentaires|Disponibilité|Questions des voyageurs|Faites connaissance|^## (?:Améliorez|.*choses à faire)/i.test(
+        /Sélectionnez la date|commentaires|Disponibilité|Questions des voyageurs|Faites connaissance|^## (?:Améliorez|.*choses à faire|Select check-in|Reviews|Availability|Meet your host|Bewertungen|Valoraciones|Recensioni|Avaliações)/i.test(
           line,
         );
     }
-    if (!suppressed) lines.push(line);
+    if (!suppressed)
+      lines.push(
+        /^## /.test(line) && equipmentHeading.test(line.slice(3)) ? "## Équipements" : line,
+      );
   }
   const clean = lines
     .join("\n")
@@ -67,7 +72,11 @@ export function otaDocument(markdown: string, source: string, metadata: Record<s
     .replace(/^## Ce que propose ce logement\s*$/gm, "## Équipements")
     .replace(/^(?:\*\*)?(?:Le logement|Autres remarques)(?:\*\*)?\s*$/gm, "## Description");
   const location = airbnb
-    ? markdown.match(/^## Logement entier[^\n]*? - ([^\n]+)/m)?.[1]?.trim()
+    ? markdown
+        .match(
+          /^## (?:Logement entier|Entire |Gesamte |Alojamiento entero|Intero |Espaço inteiro)[^\n]*? [–-] ([^\n]+)/im,
+        )?.[1]
+        ?.trim()
     : typeof metadata["title"] === "string" && title
       ? metadata["title"]
           .slice(title.length)

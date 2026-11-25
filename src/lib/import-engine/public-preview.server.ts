@@ -3,7 +3,8 @@ import { normalizeUrl, pickAdapter } from "./url-adapters";
 import { runUrlImport } from "./url-source.server";
 import { publicImportPreview } from "./public-preview";
 import { authorizedEvaluationSource } from "./authorized-source";
-import { otaTestAllowed, otaTestExpired } from "./ota-test-policy";
+import { otaListing, otaPlatformHost } from "./ota-listing";
+import { authorizedOtaSource } from "./ota-access.server";
 
 const attempts = new Map<string, number>();
 let windowEnds = 0;
@@ -22,13 +23,13 @@ export async function runPublicPreview(input: string) {
   // Avoid sending links containing private query parameters to the fetcher.
   original.search = "";
   original.hash = "";
-  const url = normalizeUrl(original.href);
+  const listing = otaListing(original.href);
+  if (!listing && otaPlatformHost(original.hostname)) return { status: "invalid" } as const;
+  const url = listing?.url ?? normalizeUrl(original.href);
   if (!url) return { status: "invalid" } as const;
   const source = pickAdapter(url).source;
-  const experimentalPublic = otaTestAllowed(url, process.env);
-  if (otaTestExpired(url, process.env)) return { status: "test_expired" } as const;
-  if (source === "airbnb" && !experimentalPublic)
-    return { status: "authorization_required" } as const;
+  if (listing && !authorizedOtaSource(url))
+    return { status: "authorization_required", platform: listing.platform } as const;
 
   const now = Date.now();
   if (now >= windowEnds) {
@@ -43,10 +44,9 @@ export async function runPublicPreview(input: string) {
   total++;
   running++;
   try {
-    if (authorizedEvaluationSource(url) || experimentalPublic) {
+    if (authorizedEvaluationSource(url) || listing) {
       const { importAuthorizedEvaluationUrl } = await import("./firecrawl.server");
       return await importAuthorizedEvaluationUrl(url, {
-        experimentalPublic,
         testEnvironment:
           process.env["VERCEL_ENV"] === "preview" &&
           process.env["VITE_SUPABASE_PROJECT_ID"] === "mhhtnqfdkyudwyqlmnce",

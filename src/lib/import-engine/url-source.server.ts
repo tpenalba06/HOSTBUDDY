@@ -5,7 +5,8 @@ import { analyzeImportDocument } from "./intelligence.server";
 import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
-import { otaTestAllowed } from "./ota-test-policy";
+import { otaPlatformHost } from "./ota-listing";
+import { authorizedOtaSource } from "./ota-access.server";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
 
@@ -240,11 +241,12 @@ export async function runUrlImport(data: {
   }
   if (!/^https?:$/.test(url.protocol) || isPrivateHost(url.hostname))
     return { ok: false, source, reason: "invalid" };
-  if (otaTestAllowed(url.href, process.env)) {
+  if (otaPlatformHost(url.hostname)) {
+    const authorized = authorizedOtaSource(url.href);
+    if (!authorized) return { ok: false, source, reason: "blocked" };
     const { readFirecrawlEvaluationUrl } = await import("./firecrawl.server");
-    const outcome = await readFirecrawlEvaluationUrl(url.href, {
+    const outcome = await readFirecrawlEvaluationUrl(authorized.url, {
       testEnvironment: true,
-      experimentalPublic: true,
     });
     return outcome.status === "ok"
       ? { ok: true, source, result: outcome.extraction }
@@ -253,7 +255,7 @@ export async function runUrlImport(data: {
   if (url.hostname === "app.sunver.app" && !/^\/[a-z]{2}\/guest\//.test(url.pathname))
     return { ok: false, source, reason: "blocked" };
   const permitted = (target: URL) =>
-    /(^|\.)airbnb\./i.test(target.hostname) ? Promise.resolve(false) : robotsAllows(target);
+    otaPlatformHost(target.hostname) ? Promise.resolve(false) : robotsAllows(target);
   if (!(await permitted(url))) return { ok: false, source, reason: "blocked" };
 
   let html: string;

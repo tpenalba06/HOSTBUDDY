@@ -216,19 +216,14 @@ function PhoneGuide({
                   key: "amenities",
                   title: t("section.amenities"),
                   content: {
-                    items: [
-                      ...items(
-                        text?.equipment,
-                        text?.kitchen,
-                        text?.parking,
-                        text?.pool,
-                        text?.climate,
-                      ),
-                      ...(preview.amenities ?? []).map((key) => ({
-                        label: "",
-                        text: amenityLabels[key],
-                      })),
-                    ],
+                    items: items(
+                      text?.equipment,
+                      text?.kitchen,
+                      text?.parking,
+                      text?.pool,
+                      text?.climate,
+                      ...(preview.amenities ?? []).map((key) => amenityLabels[key]),
+                    ),
                   },
                   media: illustration("house"),
                 },

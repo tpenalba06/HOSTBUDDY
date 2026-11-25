@@ -89,10 +89,10 @@ export function publicImportPreview(
   fromPublicUrl = false,
   pastedName?: string,
 ): PublicImportPreview {
-  const title = pastedName ?? result.propertyName?.trim() ?? "";
+  const title = (pastedName ?? result.propertyName ?? "").replace(/\s+/gu, " ").trim();
   const name =
     (fromPublicUrl || !!pastedName) &&
-    /^[\p{L}][\p{L}\p{M}\d ’'.,&()–-]{1,99}$/u.test(title) &&
+    /^[\p{L}][\p{L}\p{M}\d ’'.,&()–/-]{1,99}$/u.test(title) &&
     !/\d{4}|code|password|passwort|wi[ -]?fi|token|mot de passe|senha|contraseña/iu.test(title)
       ? title
       : undefined;
@@ -131,18 +131,28 @@ export function publicImportPreview(
     snippets(["equipment", "kitchen", "parking", "climate", "pool"]),
   );
   const confirmedRules = matchingKeys(rules, snippets(["rules"]));
-  const wifiAvailable = value("wifi")
-    .split("\n")
-    .some((line) =>
-      /^(?:wi[ -]?fi (?:disponible|disponibile|gratuit|available|dispon[ií]vel|gratuito)|free wi[ -]?fi|kostenloses wlan|wlan verf[uü]gbar)[.!]?$/iu.test(
-        line.trim(),
-      ),
-    );
+  const wifiAvailable =
+    !!result.publicAmenities?.some((item) => /^(?:wi[ -]?fi|wlan)$/iu.test(item)) ||
+    value("wifi")
+      .split("\n")
+      .some((line) =>
+        /^(?:wi[ -]?fi (?:disponible|disponibile|gratuit|available|dispon[ií]vel|gratuito)|free wi[ -]?fi|kostenloses wlan|wlan verf[uü]gbar)[.!]?$/iu.test(
+          line.trim(),
+        ),
+      );
   // Reject credential-bearing evidence as a unit, including continuation lines.
   const sensitive =
     /code|codice|c[oó]dig[oa]|pin\b|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|caja.{0,12}llaves|cassetta.{0,12}chiavi|schl[üu]sselkasten|caixa.{0,12}chaves|password|mot de passe|passwort|senha|contrase[ñn]a|token|secret|identifiant|ssid|wi[ -]?fi|\d{4,}|(?:\d[ .()+-]*){7,}|@/iu;
+  const equipment = fromPublicUrl
+    ? result.publicAmenities?.filter(
+        (item) =>
+          /^[\p{L}\p{N}][\p{L}\p{M}\p{N} ’'.,&()–/-]{1,119}$/u.test(item) && !sensitive.test(item),
+      )
+    : undefined;
   const text = fromPublicUrl
-    ? {}
+    ? equipment?.length
+      ? { equipment: equipment.join("\n") }
+      : {}
     : Object.fromEntries(
         textKeys.flatMap((key) => {
           if (field(key)?.issues?.length) return [];
@@ -163,7 +173,7 @@ export function publicImportPreview(
   const locality = result.publicLocality?.trim();
   const places = result.publicPlaceNames?.map((label) => label.trim()).filter(safeLabel);
   const publicDescription = field("description");
-  const description =
+  const descriptionSource =
     fromPublicUrl &&
     publicDescription?.evidence?.some(
       (entry) =>
@@ -171,17 +181,28 @@ export function publicImportPreview(
         (entry.quote.startsWith("JSON-LD description") ||
           entry.quote.startsWith("Property structured description") ||
           entry.quote === "Sunver public property introduction"),
-    ) &&
-    !sensitive.test(value("description"))
+    )
       ? value("description")
       : "";
+  // An explicit credential or contact marker can disclose a value in a later line.
+  const privateDescription =
+    /password|mot de passe|passwort|senha|contrase[ñn]a|cod[ei][cgo]*|pin\b|serrure|digicode|lockbox|key box|bo[iî]te.{0,6}cl[ée]|caja.{0,12}llaves|cassetta.{0,12}chiavi|schl[üu]sselkasten|caixa.{0,12}chaves|ssid|wi[ -]?fi\s*[:=]|token|secret|identifiant|@/iu;
+  const description = privateDescription.test(descriptionSource)
+    ? ""
+    : sensitive.test(descriptionSource)
+      ? sourceSentences(descriptionSource)
+          .filter((line) => !sensitive.test(line))
+          .join("\n")
+      : descriptionSource;
   const illustrationText = [title, fromPublicUrl ? description : text["description"]]
     .filter(Boolean)
     .join("\n");
   return {
     ...(fromPublicUrl && locality && safeLabel(locality) ? { locality } : {}),
     ...(fromPublicUrl && places?.length ? { places: places.slice(0, 12) } : {}),
-    ...(description ? { text: { description } } : Object.keys(text).length ? { text } : {}),
+    ...(description || Object.keys(text).length
+      ? { text: { ...text, ...(description ? { description } : {}) } }
+      : {}),
     ...(name ? { name } : {}),
     ...(confirmedAmenities.length ? { amenities: confirmedAmenities } : {}),
     ...(confirmedRules.length ? { rules: confirmedRules } : {}),

@@ -10,6 +10,7 @@ import { otaListing, otaPlatformHost } from "./ota-listing";
 import { otaImportAccess } from "./ota-access.server";
 import { accessChallenge } from "./html-snapshot";
 import { authorizedEvaluationSource } from "./authorized-source";
+import { airbnbVisibleFacts } from "./airbnb-visible";
 
 export const UA = "HostBuddyBot/1.0 (+import a la demande du proprietaire)";
 
@@ -132,6 +133,7 @@ export async function extractAccessibleHtml(
   const sunver = sunverGuestDocument(html, resolvedUrl);
   const ota = otaListing(resolvedUrl);
   const visible = sunver?.text ?? htmlDocumentText(page.document);
+  const airbnbFacts = ota?.platform === "airbnb" ? airbnbVisibleFacts(visible) : undefined;
   // Calendar controls repeat the same labels without publishing any check-in/out facts.
   const document = ota
     ? visible
@@ -149,6 +151,21 @@ export async function extractAccessibleHtml(
     localAi,
   });
   const fields = textual.fields.map((field) => {
+    const listingFact =
+      field.key === "capacity" && airbnbFacts?.guests
+        ? `${airbnbFacts.guests} voyageurs`
+        : field.key === "equipment"
+          ? airbnbFacts?.amenities.join("\n")
+          : undefined;
+    if (listingFact)
+      return {
+        key: field.key,
+        value: listingFact,
+        rawValue: listingFact,
+        status: "to_verify" as const,
+        confidence: 0.9,
+        evidence: [{ method: "structured" as const, sourceUrl: resolvedUrl, quote: listingFact }],
+      };
     if (field.key === "description" && sunver?.description)
       return {
         ...field,
@@ -212,9 +229,10 @@ export async function extractAccessibleHtml(
       ? { publicLocality: (sunver?.locality || structured.locality)! }
       : {}),
     ...(sunver?.placeNames.length ? { publicPlaceNames: sunver.placeNames } : {}),
+    ...(airbnbFacts?.amenities.length ? { publicAmenities: airbnbFacts.amenities } : {}),
     propertyName: sunver
       ? textual.propertyName
-      : (structured.name?.slice(0, 120) ?? textual.propertyName),
+      : (structured.name?.replace(/\s+/gu, " ").slice(0, 120) ?? textual.propertyName),
     fields,
     photos: [
       ...new Set([...(sunver?.photos ?? []), ...photoCandidates.map((photo) => photo.url)]),

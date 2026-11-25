@@ -11,6 +11,18 @@ Les catégories correspondent d’abord à une rubrique existante. Les photos de
 
 Sur la Preview isolée TEST, Airbnb et Booking passent directement par le client HTTP et le parseur HTML du moteur. La vérification robots.txt précède le chargement de l'annonce. En cas de redirection vers une autre URL, de défi anti-robot ou de refus HTTP, le moteur s'arrête. Les limites réseau et la vérification des droits média restent actives.
 
+## Fiabilisation des annonces Airbnb
+
+| Perspective       | Décision                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Architecte        | La homepage et le gestionnaire partagent le client HTTP, le DOM et l’extracteur.                                                                                                            |
+| Simplificateur    | Les faits visibles du logement proviennent de son en-tête et de la liste d’équipements. Les scripts de réservation et les appels supplémentaires sont hors parcours.                        |
+| Développeur       | Les variantes redimensionnées d’une même photo sont regroupées. Le moteur privilégie la couverture confirmée par le catalogue et utilise les légendes ou le contexte pour classer le reste. |
+| Contradicteur     | Un libellé du calendrier ne prouve aucun horaire. Une photo sans légende reste générique. Les références photo restent distinctes des droits de réutilisation.                              |
+| Directeur produit | Le téléphone montre les faits disponibles et conserve Smart Fill tant qu’il ne dispose pas d’une photo fournie avec les droits nécessaires.                                                 |
+
+Booking conserve l’arrêt sur une réponse de protection. Firecrawl est indépendant de l’import automatique. Pour un accès pérenne, [Demand API](https://developers.booking.com/demand/docs/getting-started/prerequisites) exige un compte Managed Affiliate Partner et des identifiants. [Connectivity](https://developers.booking.com/connectivity/docs/connections-api/connections-overview) demande une affiliation et l’autorisation du gestionnaire pour les données du logement concerné. Dans les deux cas, vérifier que les droits permettent un livret NONA avant toute copie.
+
 ## Export HTML du gestionnaire
 
 | Perspective       | Décision                                                                                                                                                                                                                                             |

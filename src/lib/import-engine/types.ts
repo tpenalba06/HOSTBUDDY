@@ -27,6 +27,7 @@ export interface ExtractionResult {
   photos?: string[];
   photoCandidates?: import("./photo-roles").LodgingPhoto[];
   publicLocality?: string;
+  publicAmenities?: string[];
   publicPlaceNames?: string[];
   photoRightsConfirmed?: boolean;
   analysis?: {

@@ -23,6 +23,38 @@ it.runIf(process.env["NONA_HTML_LIVE_RECIPE"] === "owned")(
 );
 
 describe("structured listing evidence", () => {
+  it("uses explicit Airbnb listing facts and ranks the deduplicated primary photograph first", async () => {
+    const url = "https://www.airbnb.fr/rooms/21751466";
+    const imageRoot = "https://a0.muscache.com/pictures/hosting";
+    const result = await extractAccessibleHtml(
+      `<meta property=og:image content="${imageRoot}/cover.jpeg?im_w=1200">
+      <script type="application/ld+json">${JSON.stringify({
+        "@type": "VacationRental",
+        name: "Villa\u00a0Porto-Vecchio",
+        description: "La terrasse donne sur le jardin. Le Wi-Fi est disponible.",
+        image: [`${imageRoot}/kitchen.jpeg?im_w=480`, `${imageRoot}/cover.jpeg?im_w=480`],
+      })}</script>
+      <h2>Logement entier : villa - Porto-Vecchio, France</h2><p>8 voyageurs</p>
+      <h2>Ce que propose ce logement</h2><div>Four à micro-ondes</div><div>Wifi</div>
+      <div>Indisponible : Détecteur de fumée</div><div>Afficher les 48 équipements</div>
+      <h2>Sélectionnez la date d'arrivée</h2><div>1 voyageur</div>
+      <img src="${imageRoot}/kitchen.jpeg?im_w=800" alt="Cuisine">
+      <img src="https://a0.muscache.com/pictures/airbnb-platform-assets/logo.png">`,
+      url,
+    );
+    expect(result.photoCandidates?.map(({ role }) => role)).toEqual(["cover", "kitchen"]);
+    expect(result.photoCandidates?.[0]?.url).toBe(`${imageRoot}/cover.jpeg?im_w=1200`);
+    const preview = publicImportPreview(result, true);
+    expect(preview).toMatchObject({
+      name: "Villa Porto-Vecchio",
+      capacity: 8,
+      wifiAvailable: true,
+      text: { description: "La terrasse donne sur le jardin.", equipment: "Four à micro-ondes" },
+    });
+    expect(preview.arrival).toBeUndefined();
+    expect(JSON.stringify(preview)).not.toContain("muscache");
+  });
+
   it("reads public typed embedded JSON and HTML into the existing preview without exposing photo URLs", async () => {
     const url = "https://example.test/lodging";
     const result = await extractAccessibleHtml(

@@ -30,6 +30,8 @@ it("closes the experiment outside bounded TEST", () => {
     NONA_OTA_PUBLIC_TEST_UNTIL: "2026-11-21T13:00:00Z",
   };
   expect(otaTestAllowed(otaReferenceSources[0], env, now)).toBe(true);
+  expect(otaTestAllowed(otaReferenceSources[2], env, now)).toBe(true);
+  expect(otaTestAllowed("https://www.booking.com/hotel/sc/other.fr.html", env, now)).toBe(false);
   for (const changed of [
     { VERCEL_ENV: "production" },
     { VITE_SUPABASE_PROJECT_ID: "other" },
@@ -44,7 +46,7 @@ it.runIf(process.env["NONA_OTA_LIVE_RECIPE"] === "two-references-keyless-no-cach
   "measures actual reference sources without saving source content",
   async () => {
     const results = [];
-    for (const source of otaReferenceSources) {
+    for (const source of otaReferenceSources.slice(0, 2)) {
       const outcome = await importAuthorizedEvaluationUrl(source, {
         testEnvironment: true,
         experimentalPublic: true,

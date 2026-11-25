@@ -1,6 +1,7 @@
 export const otaReferenceSources = [
   "https://www.airbnb.fr/rooms/1086157072408105944",
   "https://www.booking.com/hotel/gr/vallais-villa.fr.html",
+  "https://www.booking.com/hotel/sc/la-digue-island-lodge.fr.html",
 ] as const;
 
 /** Expired TEST access is a configuration state, not a platform extraction

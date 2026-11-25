@@ -86,8 +86,8 @@ export function VillaMarePhone() {
           setMessage(
             response.status === "authorization_required"
               ? fr
-                ? `Lien ${response.platform === "booking" ? "Booking" : "Airbnb"} reconnu. L’import attend une connexion autorisée à cette plateforme.`
-                : `${response.platform === "booking" ? "Booking" : "Airbnb"} link recognized. Import requires an authorized connection to this platform.`
+                ? "Lien reconnu. L’import attend une connexion autorisée à cette plateforme."
+                : "Link recognized. Import requires an authorized connection to this platform."
               : diagnostic?.experimentalPublic
                 ? `TEST · ${response.status} · HTTP ${diagnostic.providerHttpStatus ?? "—"} / ${diagnostic.targetHttpStatus ?? "—"}${diagnostic.providerCode ? ` · ${diagnostic.providerCode}` : ""}`
                 : response.status === "limited"

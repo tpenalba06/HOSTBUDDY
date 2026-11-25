@@ -6,7 +6,7 @@ import { analyzeImportDocument } from "./intelligence.server";
 import { htmlDocumentText, sunverGuestDocument } from "./html-document";
 import type { ExtractedField, ImportSource, UrlImportOutcome } from "./types";
 import { reportOperationalEvent } from "@/lib/operational-events.server";
-import { otaPlatformHost } from "./ota-listing";
+import { otaListing, otaPlatformHost } from "./ota-listing";
 import { otaImportAccess } from "./ota-access.server";
 import { accessChallenge } from "./html-snapshot";
 import { authorizedEvaluationSource } from "./authorized-source";
@@ -130,7 +130,21 @@ export async function extractAccessibleHtml(
 ) {
   const structured = extractStructuredFields(html, resolvedUrl, page);
   const sunver = sunverGuestDocument(html, resolvedUrl);
-  const textual = await analyzeImportDocument(sunver?.text ?? htmlDocumentText(page.document), {
+  const ota = otaListing(resolvedUrl);
+  const visible = sunver?.text ?? htmlDocumentText(page.document);
+  // Calendar controls repeat the same labels without publishing any check-in/out facts.
+  const document = ota
+    ? visible
+        .split("\n")
+        .filter(
+          (line) =>
+            !/^(?:#\s*)?(?:arrivée|départ|check[ -]in|check[ -]out|llegada|salida|anreise|abreise|arrivo|partenza|chegada|saída|ajouter une date|add date|vérifier la disponibilité|check availability|sélectionnez la date d'arrivée|select check-in date)\s*$/iu.test(
+              line.trim(),
+            ) && !/^#\s*(?:évaluation par étoiles|star rating)\s*:/iu.test(line),
+        )
+        .join("\n")
+    : visible;
+  const textual = await analyzeImportDocument(document, {
     sourceUrl: resolvedUrl,
     localAi,
   });
@@ -175,7 +189,12 @@ export async function extractAccessibleHtml(
         },
       ],
       // Preserve competing sources in the review, rather than silently replacing one.
-      ...(field.value &&
+      ...(!(
+        ota &&
+        field.key === "description" &&
+        metadata.rawValue?.startsWith("Property structured description")
+      ) &&
+      field.value &&
       metadata.value &&
       !field.value.includes(metadata.value) &&
       !metadata.value.includes(field.value)
